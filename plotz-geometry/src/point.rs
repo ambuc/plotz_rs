@@ -222,31 +222,6 @@ where
 
 /// A rotation operation, for rotating one point about another. Accepts a |by|
 /// argument in radians.
-///
-/// ```
-/// use plotz_geometry::point::Pt;
-/// use std::f64::consts::PI;
-/// use float_eq::assert_float_eq;
-///
-/// let origin = Pt(0.0, 0.0);
-/// let mut p = Pt(1.0, 0.0);
-///
-/// p.rotate(/*about=*/&origin, PI/2.0);
-/// assert_float_eq!(p.x, 0.0, abs <= 0.000_1);
-/// assert_float_eq!(p.y, 1.0, abs <= 0.000_1);
-///
-/// p.rotate(/*about=*/&origin, PI/2.0);
-/// assert_float_eq!(p.x, -1.0, abs <= 0.000_1);
-/// assert_float_eq!(p.y, 0.0, abs <= 0.000_1);
-///
-/// p.rotate(/*about=*/&origin, PI/2.0);
-/// assert_float_eq!(p.x, 0.0, abs <= 0.000_1);
-/// assert_float_eq!(p.y, -1.0, abs <= 0.000_1);
-///
-/// p.rotate(/*about=*/&origin, PI/2.0);
-/// assert_float_eq!(p.x, 1.0, abs <= 0.000_1);
-/// assert_float_eq!(p.y, 0.0, abs <= 0.000_1);
-/// ```
 impl<T> Pt<T> {
     pub fn rotate(&mut self, about: &Pt<T>, by: T)
     where
@@ -258,5 +233,35 @@ impl<T> Pt<T> {
             (by.sin() * self.x) + (by.cos() * self.y),
         );
         *self += *about;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_rotate() {
+        use float_eq::assert_float_eq;
+        use std::f64::consts::PI;
+
+        let origin = Pt(0.0, 0.0);
+        let mut p = Pt(1.0, 0.0);
+
+        p.rotate(/*about=*/ &origin, PI / 2.0);
+        assert_float_eq!(p.x, 0.0, abs <= 0.000_1);
+        assert_float_eq!(p.y, 1.0, abs <= 0.000_1);
+
+        p.rotate(/*about=*/ &origin, PI / 2.0);
+        assert_float_eq!(p.x, -1.0, abs <= 0.000_1);
+        assert_float_eq!(p.y, 0.0, abs <= 0.000_1);
+
+        p.rotate(/*about=*/ &origin, PI / 2.0);
+        assert_float_eq!(p.x, 0.0, abs <= 0.000_1);
+        assert_float_eq!(p.y, -1.0, abs <= 0.000_1);
+
+        p.rotate(/*about=*/ &origin, PI / 2.0);
+        assert_float_eq!(p.x, 1.0, abs <= 0.000_1);
+        assert_float_eq!(p.y, 0.0, abs <= 0.000_1);
     }
 }
