@@ -191,7 +191,7 @@ where
 ///       Segment(Pt(-1.0,-2.0), Pt(0.0,-1.0))
 /// );
 /// ```
-impl<T> Sub<Pt<T>> for &Segment<T>
+impl<T> Sub<Pt<T>> for Segment<T>
 where
     T: Float,
 {

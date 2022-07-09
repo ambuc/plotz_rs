@@ -9,6 +9,7 @@ edition = "2021"
 
 [workspace]
 members = [
-    "svg-splitter",
     "orchestrator",
+    "plotz-geometry",
+    "svg-splitter",
 ]
