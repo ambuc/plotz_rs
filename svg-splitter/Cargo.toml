@@ -1,0 +1,14 @@
+[package]
+name = "svg_splitter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "*"
+argh = "*"
+lazy_static = "*"
+regex = "*"
+
+[dev-dependencies]
+prettydiff = "*"
+tempdir = "*"

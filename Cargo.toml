@@ -1,0 +1,14 @@
+[package]
+name = "plotz_rs"
+version = "0.0.1"
+authors = ["james.adam.buckland@gmail.com"]
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/ambuc/plotz_rs"
+edition = "2021"
+
+[workspace]
+members = [
+    "svg-splitter",
+    "orchestrator",
+]
