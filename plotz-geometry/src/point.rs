@@ -1,8 +1,9 @@
+use float_cmp::approx_eq;
 use std::convert::From;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, Sub, SubAssign};
 
 /// A point in 2D space.
-#[derive(Debug, Hash, PartialEq, Eq, Copy, Clone, PartialOrd, Ord)]
+#[derive(Debug, Hash, Copy, Clone)]
 pub struct Pt<T> {
     /// The x-coordinate of the point.
     pub x: T,
@@ -20,6 +21,20 @@ pub struct Pt<T> {
 pub fn Pt<T>(x: T, y: T) -> Pt<T> {
     Pt { x, y }
 }
+
+impl PartialEq for Pt<i32> {
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y
+    }
+}
+impl PartialEq for Pt<f32> {
+    fn eq(&self, other: &Self) -> bool {
+        approx_eq!(f32, self.x, other.x, ulps = 2) && approx_eq!(f32, self.y, other.y, ulps = 2)
+    }
+}
+
+impl Eq for Pt<i32> {}
+impl Eq for Pt<f32> {}
 
 /// An implicit constructor from tuples.
 ///

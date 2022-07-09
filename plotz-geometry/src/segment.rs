@@ -2,21 +2,29 @@ use crate::point::Pt;
 use num::Float;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
-/// Returns true if the three points are listed in a counter-clockwise order.
-fn ccw<T>(a: Pt<T>, b: Pt<T>, c: Pt<T>) -> bool
-where
-    T: Float,
-{
-    (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x)
+#[derive(Debug, PartialEq, Eq)]
+enum Orientation {
+    Colinear,
+    Clockwise,
+    CounterClockwise,
 }
 
 /// A segment in 2D space, with initial and final points.
-#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy)]
 pub struct Segment<T> {
     /// The initial point of the segment.
     pub i: Pt<T>,
     /// The final point of the segment.
     pub f: Pt<T>,
+}
+
+impl<T> PartialEq for Segment<T>
+where
+    Pt<T>: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.i == other.i && self.f == other.f
+    }
 }
 
 /// An alternate constructor for segments.
@@ -34,6 +42,21 @@ impl<T> Segment<T>
 where
     T: Float,
 {
+    // Internal helper function; see https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/.
+    fn _ccw(&self, other: &Pt<T>) -> Orientation {
+        use std::cmp::Ordering;
+        match PartialOrd::partial_cmp(
+            &((other.y - self.i.y) * (self.f.x - self.i.x)
+                - (self.f.y - self.i.y) * (other.x - self.i.x)),
+            &T::zero(),
+        ) {
+            Some(Ordering::Equal) => Orientation::Colinear,
+            Some(Ordering::Greater) => Orientation::Clockwise,
+            Some(Ordering::Less) => Orientation::CounterClockwise,
+            None => panic!("!"),
+        }
+    }
+
     /// The slope of a line segment.
     pub fn slope(&self) -> T {
         (self.f.y - self.i.y) / (self.f.x - self.i.x)
@@ -46,6 +69,15 @@ where
         self.f.rotate(about, by);
     }
 
+    // Returns true if this _extended_ line (i.e. the line upon which this line
+    // segment lies) has point |other| along it.
+    fn extended_line_contains_pt(&self, other: &Pt<T>) -> bool {
+        other.x <= self.i.x.max(self.f.x)
+            && other.x >= self.i.x.min(self.f.x)
+            && other.y <= self.i.y.max(self.f.y)
+            && other.y >= self.i.y.min(self.f.y)
+    }
+
     /// Returns true if one line segment intersects another.
     /// If two line segments share a point, returns false.
     /// If two line segments are parallel and overlapping, returns false.
@@ -53,9 +85,18 @@ where
     pub fn intersects(self, other: &Segment<T>) -> bool
     where
         T: Float,
+        Pt<T>: PartialEq,
     {
-        ccw(self.i, other.i, other.f) != ccw(self.f, other.i, other.f)
-            && ccw(self.i, self.f, other.i) != ccw(self.i, self.f, other.f)
+        let o1 = self._ccw(&other.i);
+        let o2 = self._ccw(&other.f);
+        let o3 = other._ccw(&self.i);
+        let o4 = other._ccw(&self.f);
+
+        (o1 != o2 && o3 != o4)
+            || (o1 == Orientation::Colinear && self.extended_line_contains_pt(&other.i))
+            || (o2 == Orientation::Colinear && self.extended_line_contains_pt(&other.f))
+            || (o3 == Orientation::Colinear && other.extended_line_contains_pt(&self.i))
+            || (o4 == Orientation::Colinear && other.extended_line_contains_pt(&self.f))
     }
 }
 
@@ -227,32 +268,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ccw() {
-        let a = Pt(0.0, 0.0);
-        let b = Pt(1.0, 0.0);
-        let c = Pt(1.0, 1.0);
-        let d = Pt(0.0, 1.0);
-        //   ^
-        //   |
-        //   D  C
-        //   |
-        // --A--B->
-        //   |
-
-        // True if three points are listed in counter-clockwise order:
-        assert!(ccw(a, b, c));
-        assert!(ccw(b, c, d));
-        assert!(ccw(c, d, a));
-        assert!(ccw(d, a, b));
-
-        // False if three points listed are not in counter-clockwise order:
-        assert!(!ccw(c, b, a));
-        assert!(!ccw(b, a, d));
-        assert!(!ccw(a, d, c));
-        assert!(!ccw(d, c, b));
-    }
-
-    #[test]
     fn test_slope() {
         //   ^
         //   |
@@ -404,29 +419,32 @@ mod tests {
         let h = Pt(1.0, 0.0);
         let i = Pt(2.0, 0.0);
 
-        // CG intersects AF, AH, and AI.
+        // CG intersects AC, AE, AF, AG, AH, and AI.
+        assert!(Segment(a, c).intersects(&Segment(c, g)));
+        assert!(Segment(a, e).intersects(&Segment(c, g)));
         assert!(Segment(a, f).intersects(&Segment(c, g)));
+        assert!(Segment(a, g).intersects(&Segment(c, g)));
         assert!(Segment(a, h).intersects(&Segment(c, g)));
         assert!(Segment(a, i).intersects(&Segment(c, g)));
 
-        // but CG does not intersect AB, AC, AD, AE, or AG
+        // but CG does not intersect AB or AD
         assert!(!Segment(a, b).intersects(&Segment(c, g)));
-        assert!(!Segment(a, c).intersects(&Segment(c, g)));
         assert!(!Segment(a, d).intersects(&Segment(c, g)));
-        assert!(!Segment(a, e).intersects(&Segment(c, g)));
-        assert!(!Segment(a, g).intersects(&Segment(c, g)));
 
-        // Segments whose points overlap are not intersecting.
-        // AB does not intersect BC.
-        assert!(!Segment(a, b).intersects(&Segment(b, c)));
-        // And AC does not intersect CI.
-        assert!(!Segment(a, c).intersects(&Segment(c, i)));
+        // Segments whose points overlap are intersecting.
+        // AB intersects BC.
+        assert!(Segment(a, b).intersects(&Segment(b, c)));
+        // AC intersects CI.
+        assert!(Segment(a, c).intersects(&Segment(c, i)));
 
         // A segment does intersect itself.
-        assert!(!Segment(a, b).intersects(&Segment(a, b)));
-        assert!(!Segment(a, b).intersects(&Segment(b, a)));
+        assert!(Segment(a, b).intersects(&Segment(a, b)));
+        assert!(Segment(a, b).intersects(&Segment(b, a)));
 
         // A segment does not intersect a parallel segment.
-        assert!(!Segment(a, b).intersects(&Segment(a, c)));
+        assert!(Segment(a, b).intersects(&Segment(a, c)));
+
+        // A segment should intersect another segment which terminates along it.
+        assert!(Segment(a, c).intersects(&Segment(b, f)));
     }
 }

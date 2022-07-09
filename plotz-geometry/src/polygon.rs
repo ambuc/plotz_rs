@@ -93,7 +93,8 @@ impl<T> Polygon<T> {
     /// segment from the other polygon.
     pub fn intersects(&self, other: &Polygon<T>) -> bool
     where
-        T: Copy + Float,
+        T: Copy + Float + PartialOrd,
+        Pt<T>: PartialEq,
     {
         for l1 in self.to_segments() {
             for l2 in other.to_segments() {
@@ -167,5 +168,53 @@ mod tests {
                 Segment(Pt(0, 3), Pt(0, 0)),
             ]
         );
+    }
+
+    #[test]
+    fn test_intersects() {
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
+        let a = Pt(0.0, 2.0);
+        let b = Pt(1.0, 2.0);
+        let c = Pt(2.0, 2.0);
+        let d = Pt(0.0, 1.0);
+        let e = Pt(1.0, 1.0);
+        let f = Pt(2.0, 1.0);
+        let g = Pt(0.0, 0.0);
+        let h = Pt(1.0, 0.0);
+        let i = Pt(2.0, 0.0);
+
+        // Positive area intersection.
+        assert!(Polygon([a, c, i, g])
+            .unwrap()
+            .intersects(&Polygon([b, f, h, d]).unwrap()));
+        assert!(Polygon([a, c, i, g])
+            .unwrap()
+            .intersects(&Polygon([a, b, e, d]).unwrap()));
+        assert!(Polygon([a, c, i, g])
+            .unwrap()
+            .intersects(&Polygon([e, f, i, h]).unwrap()));
+
+        // Shares a corner.
+        assert!(Polygon([a, b, e, d])
+            .unwrap()
+            .intersects(&Polygon([e, f, i, h]).unwrap()));
+        assert!(Polygon([a, b, e, d])
+            .unwrap()
+            .intersects(&Polygon([b, c, f, e]).unwrap()));
+
+        // No intersection.
+        assert!(!Polygon([a, b, d])
+            .unwrap()
+            .intersects(&Polygon([e, f, h]).unwrap()));
+        assert!(!Polygon([a, b, d])
+            .unwrap()
+            .intersects(&Polygon([f, h, i]).unwrap()));
     }
 }
