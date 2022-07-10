@@ -75,13 +75,19 @@ pub enum ContainsPointError {
 }
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
-pub enum CropToPolygonError {}
+pub enum CropToPolygonError {
+    #[error("this polygon is not closed; invalid to crop.")]
+    ThisPolygonNotClosed,
+    #[error("that polygon is not closed; invalid to crop.")]
+    ThatPolygonNotClosed,
+}
 
 #[derive(Debug, PartialEq, Eq)]
-pub enum ContainsResult {
+pub enum PointLoc {
     Outside,
     Inside,
-    AlongBoundary,
+    OnPoint(usize),
+    OnSegment(usize),
 }
 
 impl<T> Polygon<T> {
@@ -126,10 +132,10 @@ impl<T> Polygon<T> {
 
     /// Calculates whether a point is within, without, or along a closed polygon
     /// using the https://en.wikipedia.org/wiki/Winding_number method.
-    pub fn contains_pt(&self, other: &Pt<T>) -> Result<ContainsResult, ContainsPointError>
+    pub fn contains_pt(&self, other: &Pt<T>) -> Result<PointLoc, ContainsPointError>
     where
         T: Float + AddAssign + float_cmp::ApproxEq + std::fmt::Debug,
-        Pt<T>: Sub<Output = Pt<T>> + AddAssign<Pt<T>>,
+        Pt<T>: Sub<Output = Pt<T>> + AddAssign<Pt<T>> + PartialEq,
     {
         // If |self| is open, error out.
         if self.kind == PolygonKind::Open {
@@ -137,12 +143,15 @@ impl<T> Polygon<T> {
         }
 
         // If |other| is along any boundary segments, return AlongBoundary.
-        if self
-            .to_segments()
-            .iter()
-            .any(|seg| seg.line_segment_contains_pt(other))
-        {
-            return Ok(ContainsResult::AlongBoundary);
+        for (idx, pt) in self.pts.iter().enumerate() {
+            if other == pt {
+                return Ok(PointLoc::OnSegment(idx));
+            }
+        }
+        for (idx, seg) in self.to_segments().iter().enumerate() {
+            if seg.line_segment_contains_pt(other) {
+                return Ok(PointLoc::OnPoint(idx));
+            }
         }
 
         let mut theta: T = T::zero();
@@ -151,8 +160,8 @@ impl<T> Polygon<T> {
         }
 
         Ok(match approx_eq!(T, theta, T::zero()) {
-            true => ContainsResult::Outside,
-            false => ContainsResult::Inside,
+            true => PointLoc::Outside,
+            false => PointLoc::Inside,
         })
     }
 
@@ -160,8 +169,28 @@ impl<T> Polygon<T> {
     where
         T: Copy,
     {
-        let _segments_self: Vec<Segment<T>> = self.to_segments();
-        let _segments_other: Vec<Segment<T>> = other.to_segments();
+        if self.kind != PolygonKind::Closed {
+            return Err(CropToPolygonError::ThisPolygonNotClosed);
+        }
+        if other.kind != PolygonKind::Closed {
+            return Err(CropToPolygonError::ThatPolygonNotClosed);
+        }
+
+        /*
+        starting from a point (self.segments()[0].i), it can either be
+        > inside other
+        > along a single segment of other
+        > at an intersection of segments of other
+           -> trace self.segments()[0] from i->f and encounter collisions
+              with any segments of other.
+           -> self.segments[0].f could either be:
+              > inside other
+              > inside along a single segment of other
+              > at an intersection of segments of other
+              > outside other
+        > outside other
+        */
+
         unimplemented!("todo");
     }
 }
@@ -376,41 +405,57 @@ mod tests {
         let frame1 = Polygon([a, c, i, g]).unwrap();
         {
             let p = e;
-            assert_eq!(frame1.contains_pt(&p).unwrap(), ContainsResult::Inside);
+            assert_eq!(frame1.contains_pt(&p).unwrap(), PointLoc::Inside);
         }
-        for p in [a, b, c, d, f, g, h, i] {
-            assert_eq!(
-                frame1.contains_pt(&p).unwrap(),
-                ContainsResult::AlongBoundary,
-            );
-        }
+        assert_eq!(frame1.contains_pt(&a).unwrap(), PointLoc::OnSegment(0));
+        assert_eq!(frame1.contains_pt(&c).unwrap(), PointLoc::OnSegment(1));
+        assert_eq!(frame1.contains_pt(&i).unwrap(), PointLoc::OnSegment(2));
+        assert_eq!(frame1.contains_pt(&g).unwrap(), PointLoc::OnSegment(3));
+
+        assert_eq!(frame1.contains_pt(&b).unwrap(), PointLoc::OnPoint(0));
+        assert_eq!(frame1.contains_pt(&f).unwrap(), PointLoc::OnPoint(1));
+        assert_eq!(frame1.contains_pt(&h).unwrap(), PointLoc::OnPoint(2));
+        assert_eq!(frame1.contains_pt(&d).unwrap(), PointLoc::OnPoint(3));
 
         // frame [a,b,e,d] should contain a, b, d, e...
         let frame2 = Polygon([a, b, e, d]).unwrap();
-        for p in [a, b, d, e] {
-            assert_eq!(
-                frame2.contains_pt(&p).unwrap(),
-                ContainsResult::AlongBoundary
-            );
-        }
+        assert_eq!(frame2.contains_pt(&a).unwrap(), PointLoc::OnSegment(0));
+        assert_eq!(frame2.contains_pt(&b).unwrap(), PointLoc::OnSegment(1));
+        assert_eq!(frame2.contains_pt(&e).unwrap(), PointLoc::OnSegment(2));
+        assert_eq!(frame2.contains_pt(&d).unwrap(), PointLoc::OnSegment(3));
         for p in [c, f, i, h, g] {
-            // broken
-            assert_eq!(frame2.contains_pt(&p).unwrap(), ContainsResult::Outside,);
+            assert_eq!(frame2.contains_pt(&p).unwrap(), PointLoc::Outside);
         }
 
         let frame3 = Polygon([b, f, h, d]).unwrap();
-        for p in [b, f, d, h] {
-            assert_eq!(
-                frame3.contains_pt(&p).unwrap(),
-                ContainsResult::AlongBoundary
-            );
-        }
-        {
-            let p = e;
-            assert_eq!(frame3.contains_pt(&p).unwrap(), ContainsResult::Inside);
-        }
+        assert_eq!(frame3.contains_pt(&b).unwrap(), PointLoc::OnSegment(0));
+        assert_eq!(frame3.contains_pt(&f).unwrap(), PointLoc::OnSegment(1));
+        assert_eq!(frame3.contains_pt(&h).unwrap(), PointLoc::OnSegment(2));
+        assert_eq!(frame3.contains_pt(&d).unwrap(), PointLoc::OnSegment(3));
+        assert_eq!(frame3.contains_pt(&e).unwrap(), PointLoc::Inside);
         for p in [a, c, g, i] {
-            assert_eq!(frame3.contains_pt(&p).unwrap(), ContainsResult::Outside);
+            assert_eq!(frame3.contains_pt(&p).unwrap(), PointLoc::Outside);
         }
+    }
+
+    #[test]
+    fn test_crop_to_polygon() {
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
+        let _a = Pt(0.0, 2.0);
+        let _b = Pt(1.0, 2.0);
+        let _c = Pt(2.0, 2.0);
+        let _d = Pt(0.0, 1.0);
+        let _e = Pt(1.0, 1.0);
+        let _f = Pt(2.0, 1.0);
+        let _g = Pt(0.0, 0.0);
+        let _h = Pt(1.0, 0.0);
+        let _i = Pt(2.0, 0.0);
     }
 }
