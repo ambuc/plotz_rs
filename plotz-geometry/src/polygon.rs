@@ -1,11 +1,13 @@
 use {
     crate::{point::Pt, segment::Segment},
+    float_cmp::approx_eq,
     itertools::zip,
     num::Float,
+    std::ops::{AddAssign, Sub},
     thiserror,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PolygonKind {
     Open,
     Closed,
@@ -66,6 +68,22 @@ pub fn Polygon<T>(
     })
 }
 
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+pub enum ContainsPointError {
+    #[error("polygon is open, not closed; invalid to ask if it contains a point.")]
+    PolygonIsOpen,
+}
+
+#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+pub enum CropToPolygonError {}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum ContainsResult {
+    Outside,
+    Inside,
+    AlongBoundary,
+}
+
 impl<T> Polygon<T> {
     /// Returns the segments of a polygon, one at a time.
     ///
@@ -105,10 +123,66 @@ impl<T> Polygon<T> {
         }
         false
     }
+
+    /// Calculates whether a point is within, without, or along a closed polygon
+    /// using the https://en.wikipedia.org/wiki/Winding_number method.
+    pub fn contains_pt(&self, other: &Pt<T>) -> Result<ContainsResult, ContainsPointError>
+    where
+        T: Float + AddAssign + float_cmp::ApproxEq + std::fmt::Debug,
+        Pt<T>: Sub<Output = Pt<T>> + AddAssign<Pt<T>>,
+    {
+        // If |self| is open, error out.
+        if self.kind == PolygonKind::Open {
+            return Err(ContainsPointError::PolygonIsOpen);
+        }
+
+        // If |other| is along any boundary segments, return AlongBoundary.
+        if self
+            .to_segments()
+            .iter()
+            .any(|seg| seg.line_segment_contains_pt(other))
+        {
+            return Ok(ContainsResult::AlongBoundary);
+        }
+
+        let mut theta: T = T::zero();
+        for (i, j) in zip(self.pts.iter(), self.pts.iter().cycle().skip(1)) {
+            theta += _abp(other, i, j)
+        }
+
+        Ok(match approx_eq!(T, theta, T::zero()) {
+            true => ContainsResult::Outside,
+            false => ContainsResult::Inside,
+        })
+    }
+
+    pub fn _crop_to_polygon(&self, other: &Polygon<T>) -> Result<Polygon<T>, CropToPolygonError>
+    where
+        T: Copy,
+    {
+        let _segments_self: Vec<Segment<T>> = self.to_segments();
+        let _segments_other: Vec<Segment<T>> = other.to_segments();
+        unimplemented!("todo");
+    }
+}
+
+// Angle between points. Projects OI onto OJ and finds the angle IOJ.
+fn _abp<T>(o: &Pt<T>, i: &Pt<T>, j: &Pt<T>) -> T
+where
+    T: Float + std::fmt::Debug,
+{
+    let a: Pt<T> = *i - *o;
+    let b: Pt<T> = *j - *o;
+    T::atan2(
+        /*det=*/ a.x * b.y - a.y * b.x,
+        /*dot=*/ a.x * b.x + a.y * b.y,
+    )
 }
 
 #[cfg(test)]
 mod tests {
+    use float_eq::assert_float_eq;
+
     use super::*;
 
     #[test]
@@ -216,5 +290,127 @@ mod tests {
         assert!(!Polygon([a, b, d])
             .unwrap()
             .intersects(&Polygon([f, h, i]).unwrap()));
+    }
+
+    #[test]
+    fn test_angle_between_points() {
+        use std::f64::consts::PI;
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
+        let a = Pt(0.0, 2.0);
+        let b = Pt(1.0, 2.0);
+        let c = Pt(2.0, 2.0);
+        let d = Pt(0.0, 1.0);
+        let e = Pt(1.0, 1.0);
+        let f = Pt(2.0, 1.0);
+        let g = Pt(0.0, 0.0);
+        let h = Pt(1.0, 0.0);
+        let i = Pt(2.0, 0.0);
+
+        // circle around E. (quadrants 1, 2, 3, 4)
+        assert_float_eq!(_abp(&e, &f, &b), PI / 2.0, ulps <= 10);
+        assert_float_eq!(_abp(&e, &f, &d), PI, ulps <= 10);
+        assert_float_eq!(_abp(&e, &f, &h), -1.0 * PI / 2.0, ulps <= 10);
+        assert_float_eq!(_abp(&e, &f, &f), 0.0, ulps <= 10);
+
+        // circle around E, inverse. (quadrants 1, 2, 3, 4)
+        assert_float_eq!(_abp(&e, &f, &h), -1.0 * PI / 2.0, ulps <= 10);
+        assert_float_eq!(_abp(&e, &f, &d), PI, ulps <= 10);
+        assert_float_eq!(_abp(&e, &f, &b), PI / 2.0, ulps <= 10);
+        assert_float_eq!(_abp(&e, &f, &f), 0.0, ulps <= 10);
+
+        // circle around G. (quadrant 1)
+        assert_float_eq!(_abp(&g, &i, &i), 0.0, ulps <= 10);
+        assert_float_eq!(_abp(&g, &i, &h), 0.0, ulps <= 10);
+        assert_float_eq!(_abp(&g, &i, &f), 0.5.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&g, &i, &e), 1.0.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&g, &i, &c), 1.0.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&g, &i, &b), 2.0.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&g, &i, &d), PI / 2.0, ulps <= 10);
+        assert_float_eq!(_abp(&g, &i, &a), PI / 2.0, ulps <= 10);
+
+        // circle around H (quadrants 1, 2)
+        assert_float_eq!(_abp(&h, &i, &i), 0.0, ulps <= 10);
+        assert_float_eq!(_abp(&h, &i, &b), PI / 2.0, ulps <= 10);
+        assert_float_eq!(_abp(&h, &i, &a), PI / 2.0 + 0.5.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&h, &i, &d), PI / 2.0 + 1.0.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&h, &i, &g), PI, ulps <= 10);
+
+        // circle around B (quadrants 3, 4)
+        assert_float_eq!(_abp(&b, &c, &c), 0.0, ulps <= 10);
+        assert_float_eq!(_abp(&b, &c, &f), -1.0.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&b, &c, &i), -2.0.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&b, &c, &e), -1.0 * PI / 2.0, ulps <= 10);
+        assert_float_eq!(_abp(&b, &c, &h), -1.0 * PI / 2.0, ulps <= 10);
+        assert_float_eq!(_abp(&b, &c, &g), -1.0 * PI / 2.0 - 0.5.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&b, &c, &d), -3.0 * PI / 4.0, ulps <= 10);
+    }
+
+    #[test]
+    fn test_contains_pt() {
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
+        let a = Pt(0.0, 2.0);
+        let b = Pt(1.0, 2.0);
+        let c = Pt(2.0, 2.0);
+        let d = Pt(0.0, 1.0);
+        let e = Pt(1.0, 1.0);
+        let f = Pt(2.0, 1.0);
+        let g = Pt(0.0, 0.0);
+        let h = Pt(1.0, 0.0);
+        let i = Pt(2.0, 0.0);
+
+        // frame [a,c,i,g] should contain a, b, c, d, e, f, g, h, and i.
+        let frame1 = Polygon([a, c, i, g]).unwrap();
+        {
+            let p = e;
+            assert_eq!(frame1.contains_pt(&p).unwrap(), ContainsResult::Inside);
+        }
+        for p in [a, b, c, d, f, g, h, i] {
+            assert_eq!(
+                frame1.contains_pt(&p).unwrap(),
+                ContainsResult::AlongBoundary,
+            );
+        }
+
+        // frame [a,b,e,d] should contain a, b, d, e...
+        let frame2 = Polygon([a, b, e, d]).unwrap();
+        for p in [a, b, d, e] {
+            assert_eq!(
+                frame2.contains_pt(&p).unwrap(),
+                ContainsResult::AlongBoundary
+            );
+        }
+        for p in [c, f, i, h, g] {
+            // broken
+            assert_eq!(frame2.contains_pt(&p).unwrap(), ContainsResult::Outside,);
+        }
+
+        let frame3 = Polygon([b, f, h, d]).unwrap();
+        for p in [b, f, d, h] {
+            assert_eq!(
+                frame3.contains_pt(&p).unwrap(),
+                ContainsResult::AlongBoundary
+            );
+        }
+        {
+            let p = e;
+            assert_eq!(frame3.contains_pt(&p).unwrap(), ContainsResult::Inside);
+        }
+        for p in [a, c, g, i] {
+            assert_eq!(frame3.contains_pt(&p).unwrap(), ContainsResult::Outside);
+        }
     }
 }

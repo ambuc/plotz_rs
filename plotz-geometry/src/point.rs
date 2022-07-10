@@ -1,4 +1,5 @@
 use float_cmp::approx_eq;
+use num::Float;
 use std::convert::From;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, Sub, SubAssign};
 
@@ -235,12 +236,12 @@ where
     }
 }
 
-/// A rotation operation, for rotating one point about another. Accepts a |by|
-/// argument in radians.
 impl<T> Pt<T> {
+    /// A rotation operation, for rotating one point about another. Accepts a |by|
+    /// argument in radians.
     pub fn rotate(&mut self, about: &Pt<T>, by: T)
     where
-        T: num::Float,
+        T: Float,
     {
         *self -= *about;
         *self = Pt(
@@ -249,10 +250,20 @@ impl<T> Pt<T> {
         );
         *self += *about;
     }
+
+    /// Dot prouduct of (origin, self) • (origin, other)
+    pub fn dot(&self, other: &Pt<T>) -> T
+    where
+        T: Float,
+    {
+        (self.x * other.x) + (self.y * other.y)
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use float_eq::assert_float_eq;
+
     use super::*;
 
     #[test]
@@ -278,5 +289,11 @@ mod tests {
         p.rotate(/*about=*/ &origin, PI / 2.0);
         assert_float_eq!(p.x, 1.0, abs <= 0.000_1);
         assert_float_eq!(p.y, 0.0, abs <= 0.000_1);
+    }
+
+    #[test]
+    fn test_dot() {
+        assert_float_eq!(Pt(1.0, 1.0).dot(&Pt(1.0, 0.0)), 1.0, abs <= 0.000_1);
+        assert_float_eq!(Pt(7.0, 2.0).dot(&Pt(3.0, 6.0)), 33.0, abs <= 0.000_1);
     }
 }

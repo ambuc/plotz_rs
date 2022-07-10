@@ -1,4 +1,5 @@
 use crate::point::Pt;
+use float_cmp::approx_eq;
 use num::Float;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
@@ -78,6 +79,16 @@ where
             && other.y >= self.i.y.min(self.f.y)
     }
 
+    // Returns true if this line segment has point |other| along it.
+    pub fn line_segment_contains_pt(&self, other: &Pt<T>) -> bool
+    where
+        T: Float + float_cmp::ApproxEq,
+    {
+        let d1: T = self.abs();
+        let d2: T = Segment(self.i, *other).abs() + Segment(self.f, *other).abs();
+        approx_eq!(T, d1, d2)
+    }
+
     /// Returns true if one line segment intersects another.
     /// If two line segments share a point, returns false.
     /// If two line segments are parallel and overlapping, returns false.
@@ -97,6 +108,14 @@ where
             || (o2 == Orientation::Colinear && self.extended_line_contains_pt(&other.f))
             || (o3 == Orientation::Colinear && other.extended_line_contains_pt(&self.i))
             || (o4 == Orientation::Colinear && other.extended_line_contains_pt(&self.f))
+    }
+
+    pub fn abs(&self) -> T
+    where
+        T: Float,
+    {
+        let two = T::one() + T::one();
+        ((self.f.y - self.i.y).powf(two) + (self.f.x - self.i.x).powf(two)).sqrt()
     }
 }
 
@@ -446,5 +465,16 @@ mod tests {
 
         // A segment should intersect another segment which terminates along it.
         assert!(Segment(a, c).intersects(&Segment(b, f)));
+    }
+
+    #[test]
+    fn test_abs() {
+        assert_eq!(Segment(Pt(0.0, 0.0), Pt(0.0, 1.0)).abs(), 1.0);
+        assert_eq!(Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)).abs(), 2.0.sqrt());
+        assert_eq!(Segment(Pt(1.0, 1.0), Pt(1.0, 1.0)).abs(), 0.0);
+        assert_eq!(
+            Segment(Pt(-1.0, -1.0), Pt(1.0, 1.0)).abs(),
+            2.0 * 2.0.sqrt()
+        );
     }
 }
