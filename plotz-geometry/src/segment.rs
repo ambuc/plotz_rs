@@ -10,6 +10,24 @@ enum Orientation {
     CounterClockwise,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum Contains {
+    Within,
+    AtStart,
+    AtEnd,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Intersect<T>
+where
+    Pt<T>: PartialEq,
+{
+    Same,
+    SameReversed,
+    Colinear,
+    Yes(Contains, Contains, Pt<T>), // (where is the intersection along |self|, where is the intersection along |other|)
+}
+
 /// A segment in 2D space, with initial and final points.
 #[derive(Debug, Clone, Copy)]
 pub struct Segment<T> {
@@ -41,7 +59,7 @@ pub fn Segment<T>(i: Pt<T>, f: Pt<T>) -> Segment<T> {
 
 impl<T> Segment<T>
 where
-    T: Float,
+    T: Float + std::fmt::Debug,
 {
     // Internal helper function; see https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/.
     fn _ccw(&self, other: &Pt<T>) -> Orientation {
@@ -70,44 +88,123 @@ where
         self.f.rotate(about, by);
     }
 
-    // Returns true if this _extended_ line (i.e. the line upon which this line
-    // segment lies) has point |other| along it.
-    fn extended_line_contains_pt(&self, other: &Pt<T>) -> bool {
-        other.x <= self.i.x.max(self.f.x)
-            && other.x >= self.i.x.min(self.f.x)
-            && other.y <= self.i.y.max(self.f.y)
-            && other.y >= self.i.y.min(self.f.y)
-    }
-
     // Returns true if this line segment has point |other| along it.
-    pub fn line_segment_contains_pt(&self, other: &Pt<T>) -> bool
+    pub fn line_segment_contains_pt(&self, other: &Pt<T>) -> Option<Contains>
     where
         T: Float + float_cmp::ApproxEq,
+        Pt<T>: PartialEq,
     {
+        if *other == self.i {
+            return Some(Contains::AtStart);
+        }
+        if *other == self.f {
+            return Some(Contains::AtEnd);
+        }
         let d1: T = self.abs();
         let d2: T = Segment(self.i, *other).abs() + Segment(self.f, *other).abs();
-        approx_eq!(T, d1, d2)
+        if approx_eq!(T, d1, d2) {
+            return Some(Contains::Within);
+        }
+        None
     }
 
     /// Returns true if one line segment intersects another.
     /// If two line segments share a point, returns false.
     /// If two line segments are parallel and overlapping, returns false.
     /// If two line segments are the same, returns false.
-    pub fn intersects(self, other: &Segment<T>) -> bool
+    pub fn intersects(&self, other: &Segment<T>) -> Option<Intersect<T>>
     where
-        T: Float,
+        T: Float + float_cmp::ApproxEq,
         Pt<T>: PartialEq,
     {
-        let o1 = self._ccw(&other.i);
-        let o2 = self._ccw(&other.f);
-        let o3 = other._ccw(&self.i);
-        let o4 = other._ccw(&self.f);
+        if self == other {
+            return Some(Intersect::Same);
+        }
+        if *self == Segment(other.f, other.i) {
+            return Some(Intersect::SameReversed);
+        }
+        if self.slope() == other.slope()
+            && (self.f == other.i || other.f == self.i || self.i == other.i || self.f == other.f)
+        {
+            return Some(Intersect::Colinear);
+        }
 
-        (o1 != o2 && o3 != o4)
-            || (o1 == Orientation::Colinear && self.extended_line_contains_pt(&other.i))
-            || (o2 == Orientation::Colinear && self.extended_line_contains_pt(&other.f))
-            || (o3 == Orientation::Colinear && other.extended_line_contains_pt(&self.i))
-            || (o4 == Orientation::Colinear && other.extended_line_contains_pt(&self.f))
+        match (
+            self.line_segment_contains_pt(&other.i),
+            self.line_segment_contains_pt(&other.f),
+            other.line_segment_contains_pt(&self.i),
+            other.line_segment_contains_pt(&self.f),
+            self.get_line_intersection_inner(
+                self.i.x, self.i.y, self.f.x, self.f.y, other.i.x, other.i.y, other.f.x, other.f.y,
+            ),
+        ) {
+            (Some(Contains::Within), None, None, None, Some(pt)) => {
+                return Some(Intersect::Yes(Contains::Within, Contains::AtStart, pt));
+            }
+            (None, Some(Contains::Within), None, None, Some(pt)) => {
+                return Some(Intersect::Yes(Contains::Within, Contains::AtEnd, pt));
+            }
+            (None, None, Some(Contains::Within), None, Some(pt)) => {
+                return Some(Intersect::Yes(Contains::AtStart, Contains::Within, pt));
+            }
+            (None, None, None, Some(Contains::Within), Some(pt)) => {
+                return Some(Intersect::Yes(Contains::AtEnd, Contains::Within, pt));
+            }
+            (Some(Contains::AtEnd), None, None, Some(Contains::AtStart), Some(pt)) => {
+                return Some(Intersect::Yes(Contains::AtEnd, Contains::AtStart, pt));
+            }
+            (None, Some(Contains::AtEnd), None, Some(Contains::AtEnd), Some(pt)) => {
+                return Some(Intersect::Yes(Contains::AtEnd, Contains::AtEnd, pt));
+            }
+            (None, Some(Contains::AtStart), Some(Contains::AtEnd), None, Some(pt)) => {
+                return Some(Intersect::Yes(Contains::AtStart, Contains::AtEnd, pt));
+            }
+            (Some(Contains::AtStart), None, Some(Contains::AtStart), None, Some(pt)) => {
+                return Some(Intersect::Yes(Contains::AtStart, Contains::AtStart, pt));
+            }
+            (None, None, None, None, Some(pt)) => {
+                return Some(Intersect::Yes(Contains::Within, Contains::Within, pt));
+            }
+            (None, None, None, None, None) => {
+                return None;
+            }
+            (a, b, c, d, pt) => {
+                println!("a {:?} b {:?} c {:?} d {:?} pt {:?}", a, b, c, d, pt);
+                panic!("!");
+            }
+        }
+    }
+
+    /// If two line segments are parallel and overlapping, returns None.
+    /// If two line segments are the same, returns None.
+    fn get_line_intersection_inner(
+        &self,
+        p0_x: T,
+        p0_y: T,
+        p1_x: T,
+        p1_y: T,
+        p2_x: T,
+        p2_y: T,
+        p3_x: T,
+        p3_y: T,
+    ) -> Option<Pt<T>>
+    where
+        T: Float,
+    {
+        let s1_x = p1_x - p0_x;
+        let s1_y = p1_y - p0_y;
+        let s2_x = p3_x - p2_x;
+        let s2_y = p3_y - p2_y;
+
+        let s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
+        let t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
+
+        if s >= T::zero() && s <= T::one() && t >= T::zero() && t <= T::one() {
+            let i_x = p0_x + (t * s1_x);
+            let i_y = p0_y + (t * s1_y);
+            return Some(Pt(i_x, i_y));
+        }
+        return None;
     }
 
     pub fn abs(&self) -> T
@@ -419,6 +516,14 @@ mod tests {
     }
 
     #[test]
+    fn test_equality() {
+        let a = Pt(0.0, 2.0);
+        let b = Pt(1.0, 2.0);
+        assert!(Segment(a, b) == Segment(a, b));
+        assert!(Segment(a, b) != Segment(b, a));
+    }
+
+    #[test]
     fn test_intersects() {
         //   ^
         //   |
@@ -438,33 +543,74 @@ mod tests {
         let h = Pt(1.0, 0.0);
         let i = Pt(2.0, 0.0);
 
-        // CG intersects AC, AE, AF, AG, AH, and AI.
-        assert!(Segment(a, c).intersects(&Segment(c, g)));
-        assert!(Segment(a, e).intersects(&Segment(c, g)));
-        assert!(Segment(a, f).intersects(&Segment(c, g)));
-        assert!(Segment(a, g).intersects(&Segment(c, g)));
-        assert!(Segment(a, h).intersects(&Segment(c, g)));
-        assert!(Segment(a, i).intersects(&Segment(c, g)));
+        // colinear
+        assert_eq!(
+            Segment(a, c).intersects(&Segment(a, c)),
+            Some(Intersect::Same)
+        );
+        assert_eq!(
+            Segment(a, c).intersects(&Segment(c, a)),
+            Some(Intersect::SameReversed)
+        );
+        // induce colinear
+        assert_eq!(
+            Segment(a, b).intersects(&Segment(b, c)),
+            Some(Intersect::Colinear)
+        );
+        assert_eq!(
+            Segment(a, b).intersects(&Segment(c, b)),
+            Some(Intersect::Colinear)
+        );
+        assert_eq!(
+            Segment(b, a).intersects(&Segment(b, c)),
+            Some(Intersect::Colinear)
+        );
+        assert_eq!(
+            Segment(b, a).intersects(&Segment(c, b)),
+            Some(Intersect::Colinear)
+        );
 
-        // but CG does not intersect AB or AD
-        assert!(!Segment(a, b).intersects(&Segment(c, g)));
-        assert!(!Segment(a, d).intersects(&Segment(c, g)));
+        // (s,w), (e,w), (w,s), (w,e)
+        assert_eq!(
+            Segment(e, i).intersects(&Segment(c, g)),
+            Some(Intersect::Yes(Contains::AtStart, Contains::Within, e))
+        );
+        assert_eq!(
+            Segment(a, e).intersects(&Segment(c, g)),
+            Some(Intersect::Yes(Contains::AtEnd, Contains::Within, e))
+        );
+        assert_eq!(
+            Segment(c, g).intersects(&Segment(e, i)),
+            Some(Intersect::Yes(Contains::Within, Contains::AtStart, e))
+        );
+        assert_eq!(
+            Segment(c, g).intersects(&Segment(a, e)),
+            Some(Intersect::Yes(Contains::Within, Contains::AtEnd, e))
+        );
 
-        // Segments whose points overlap are intersecting.
-        // AB intersects BC.
-        assert!(Segment(a, b).intersects(&Segment(b, c)));
-        // AC intersects CI.
-        assert!(Segment(a, c).intersects(&Segment(c, i)));
+        // (s,s), (s,e), (e,s), (e,e)
+        assert_eq!(
+            Segment(a, c).intersects(&Segment(c, i)),
+            Some(Intersect::Yes(Contains::AtEnd, Contains::AtStart, c))
+        );
+        assert_eq!(
+            Segment(a, c).intersects(&Segment(i, c)),
+            Some(Intersect::Yes(Contains::AtEnd, Contains::AtEnd, c))
+        );
+        assert_eq!(
+            Segment(a, c).intersects(&Segment(g, a)),
+            Some(Intersect::Yes(Contains::AtStart, Contains::AtEnd, a))
+        );
+        assert_eq!(
+            Segment(a, c).intersects(&Segment(a, g)),
+            Some(Intersect::Yes(Contains::AtStart, Contains::AtStart, a))
+        );
 
-        // A segment does intersect itself.
-        assert!(Segment(a, b).intersects(&Segment(a, b)));
-        assert!(Segment(a, b).intersects(&Segment(b, a)));
-
-        // A segment does not intersect a parallel segment.
-        assert!(Segment(a, b).intersects(&Segment(a, c)));
-
-        // A segment should intersect another segment which terminates along it.
-        assert!(Segment(a, c).intersects(&Segment(b, f)));
+        // (w,w)
+        assert_eq!(
+            Segment(a, i).intersects(&Segment(c, g)),
+            Some(Intersect::Yes(Contains::Within, Contains::Within, e))
+        );
     }
 
     #[test]
@@ -475,6 +621,32 @@ mod tests {
         assert_eq!(
             Segment(Pt(-1.0, -1.0), Pt(1.0, 1.0)).abs(),
             2.0 * 2.0.sqrt()
+        );
+    }
+
+    #[test]
+    fn test_line_segment_contains_pt() {
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
+        let a = Pt(0.0, 2.0);
+        let b = Pt(1.0, 2.0);
+        let c = Pt(2.0, 2.0);
+        let d = Pt(0.0, 1.0);
+        let e = Pt(1.0, 1.0);
+        let f = Pt(2.0, 1.0);
+        let g = Pt(0.0, 0.0);
+        let h = Pt(1.0, 0.0);
+        let i = Pt(2.0, 0.0);
+
+        assert_eq!(
+            Segment(a, c).line_segment_contains_pt(&a).unwrap(),
+            Contains::AtStart
         );
     }
 }

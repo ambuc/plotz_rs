@@ -1,9 +1,16 @@
 use {
-    crate::{point::Pt, segment::Segment},
+    crate::{
+        point::Pt,
+        segment::{Contains, Segment},
+    },
     float_cmp::approx_eq,
     itertools::zip,
     num::Float,
-    std::ops::{AddAssign, Sub},
+    std::{
+        fmt::Debug,
+        iter::Sum,
+        ops::{AddAssign, Mul, Sub},
+    },
     thiserror,
 };
 
@@ -80,6 +87,16 @@ pub enum CropToPolygonError {
     ThisPolygonNotClosed,
     #[error("that polygon is not closed; invalid to crop.")]
     ThatPolygonNotClosed,
+    #[error("this polygon is not positively oriented; invalid to crop.")]
+    ThisPolygonNotPositivelyOriented,
+    #[error("that polygon is not positively oriented; invalid to crop.")]
+    ThatPolygonNotPositivelyOriented,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum CurveOrientation {
+    Negative, // clockwise
+    Positive, // counter-clockwise
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -117,12 +134,12 @@ impl<T> Polygon<T> {
     /// segment from the other polygon.
     pub fn intersects(&self, other: &Polygon<T>) -> bool
     where
-        T: Copy + Float + PartialOrd,
+        T: Copy + Float + PartialOrd + float_cmp::ApproxEq + std::fmt::Debug,
         Pt<T>: PartialEq,
     {
         for l1 in self.to_segments() {
             for l2 in other.to_segments() {
-                if l1.intersects(&l2) {
+                if l1.intersects(&l2).is_some() {
                     return true;
                 }
             }
@@ -134,7 +151,7 @@ impl<T> Polygon<T> {
     /// using the https://en.wikipedia.org/wiki/Winding_number method.
     pub fn contains_pt(&self, other: &Pt<T>) -> Result<PointLoc, ContainsPointError>
     where
-        T: Float + AddAssign + float_cmp::ApproxEq + std::fmt::Debug,
+        T: Float + AddAssign + float_cmp::ApproxEq + Debug,
         Pt<T>: Sub<Output = Pt<T>> + AddAssign<Pt<T>> + PartialEq,
     {
         // If |self| is open, error out.
@@ -142,15 +159,20 @@ impl<T> Polygon<T> {
             return Err(ContainsPointError::PolygonIsOpen);
         }
 
-        // If |other| is along any boundary segments, return AlongBoundary.
         for (idx, pt) in self.pts.iter().enumerate() {
             if other == pt {
-                return Ok(PointLoc::OnSegment(idx));
+                return Ok(PointLoc::OnPoint(idx));
             }
         }
         for (idx, seg) in self.to_segments().iter().enumerate() {
-            if seg.line_segment_contains_pt(other) {
-                return Ok(PointLoc::OnPoint(idx));
+            match seg.line_segment_contains_pt(other) {
+                Some(Contains::Within) => {
+                    return Ok(PointLoc::OnSegment(idx));
+                }
+                Some(Contains::AtStart | Contains::AtEnd) => {
+                    panic!("?");
+                }
+                _ => {}
             }
         }
 
@@ -165,9 +187,35 @@ impl<T> Polygon<T> {
         })
     }
 
-    pub fn _crop_to_polygon(&self, other: &Polygon<T>) -> Result<Polygon<T>, CropToPolygonError>
+    fn get_curve_orientation(&self) -> CurveOrientation
     where
-        T: Copy,
+        T: Float + AddAssign + Mul + Sum,
+    {
+        if self
+            .to_segments()
+            .iter()
+            .map(|segment| (segment.f.x - segment.i.x) * (segment.f.y + segment.i.y))
+            .sum::<T>()
+            >= T::zero()
+        {
+            return CurveOrientation::Negative;
+        }
+        CurveOrientation::Positive
+    }
+
+    fn orient_curve(&mut self)
+    where
+        T: Float + AddAssign + Mul + Sum,
+    {
+        if self.get_curve_orientation() == CurveOrientation::Positive {
+            self.pts.reverse();
+        }
+    }
+
+    // NB: Polygons must be closed and positively oriented.
+    pub fn crop_to_polygon(&self, other: &Polygon<T>) -> Result<Polygon<T>, CropToPolygonError>
+    where
+        T: Copy + Float + AddAssign + Mul + Sum,
     {
         if self.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThisPolygonNotClosed);
@@ -175,21 +223,21 @@ impl<T> Polygon<T> {
         if other.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThatPolygonNotClosed);
         }
+        if self.get_curve_orientation() != CurveOrientation::Positive {
+            return Err(CropToPolygonError::ThisPolygonNotPositivelyOriented);
+        }
+        if other.get_curve_orientation() != CurveOrientation::Positive {
+            return Err(CropToPolygonError::ThatPolygonNotPositivelyOriented);
+        }
 
-        /*
-        starting from a point (self.segments()[0].i), it can either be
-        > inside other
-        > along a single segment of other
-        > at an intersection of segments of other
-           -> trace self.segments()[0] from i->f and encounter collisions
-              with any segments of other.
-           -> self.segments[0].f could either be:
-              > inside other
-              > inside along a single segment of other
-              > at an intersection of segments of other
-              > outside other
-        > outside other
-        */
+        // let mut intersections: Vec<_> = vec![];
+
+        // for (i, self_segment) in self.to_segments().iter().enumerate() {
+        // for (j, other_segment) in other.to_segments().iter().enumerate() {
+
+        // find intersections of outer segments with inner segments.
+        // I believe we need a way to know whether the points travel cw or ccw around the polygon.
+        // TODO(ambuc)
 
         unimplemented!("todo");
     }
@@ -198,7 +246,7 @@ impl<T> Polygon<T> {
 // Angle between points. Projects OI onto OJ and finds the angle IOJ.
 fn _abp<T>(o: &Pt<T>, i: &Pt<T>, j: &Pt<T>) -> T
 where
-    T: Float + std::fmt::Debug,
+    T: Float + Debug,
 {
     let a: Pt<T> = *i - *o;
     let b: Pt<T> = *j - *o;
@@ -210,9 +258,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use float_eq::assert_float_eq;
-
     use super::*;
+    use float_eq::assert_float_eq;
 
     #[test]
     fn test_multiline_to_segments() {
@@ -407,31 +454,31 @@ mod tests {
             let p = e;
             assert_eq!(frame1.contains_pt(&p).unwrap(), PointLoc::Inside);
         }
-        assert_eq!(frame1.contains_pt(&a).unwrap(), PointLoc::OnSegment(0));
-        assert_eq!(frame1.contains_pt(&c).unwrap(), PointLoc::OnSegment(1));
-        assert_eq!(frame1.contains_pt(&i).unwrap(), PointLoc::OnSegment(2));
-        assert_eq!(frame1.contains_pt(&g).unwrap(), PointLoc::OnSegment(3));
+        assert_eq!(frame1.contains_pt(&a).unwrap(), PointLoc::OnPoint(0));
+        assert_eq!(frame1.contains_pt(&c).unwrap(), PointLoc::OnPoint(1));
+        assert_eq!(frame1.contains_pt(&i).unwrap(), PointLoc::OnPoint(2));
+        assert_eq!(frame1.contains_pt(&g).unwrap(), PointLoc::OnPoint(3));
 
-        assert_eq!(frame1.contains_pt(&b).unwrap(), PointLoc::OnPoint(0));
-        assert_eq!(frame1.contains_pt(&f).unwrap(), PointLoc::OnPoint(1));
-        assert_eq!(frame1.contains_pt(&h).unwrap(), PointLoc::OnPoint(2));
-        assert_eq!(frame1.contains_pt(&d).unwrap(), PointLoc::OnPoint(3));
+        assert_eq!(frame1.contains_pt(&b).unwrap(), PointLoc::OnSegment(0));
+        assert_eq!(frame1.contains_pt(&f).unwrap(), PointLoc::OnSegment(1));
+        assert_eq!(frame1.contains_pt(&h).unwrap(), PointLoc::OnSegment(2));
+        assert_eq!(frame1.contains_pt(&d).unwrap(), PointLoc::OnSegment(3));
 
         // frame [a,b,e,d] should contain a, b, d, e...
         let frame2 = Polygon([a, b, e, d]).unwrap();
-        assert_eq!(frame2.contains_pt(&a).unwrap(), PointLoc::OnSegment(0));
-        assert_eq!(frame2.contains_pt(&b).unwrap(), PointLoc::OnSegment(1));
-        assert_eq!(frame2.contains_pt(&e).unwrap(), PointLoc::OnSegment(2));
-        assert_eq!(frame2.contains_pt(&d).unwrap(), PointLoc::OnSegment(3));
+        assert_eq!(frame2.contains_pt(&a).unwrap(), PointLoc::OnPoint(0));
+        assert_eq!(frame2.contains_pt(&b).unwrap(), PointLoc::OnPoint(1));
+        assert_eq!(frame2.contains_pt(&e).unwrap(), PointLoc::OnPoint(2));
+        assert_eq!(frame2.contains_pt(&d).unwrap(), PointLoc::OnPoint(3));
         for p in [c, f, i, h, g] {
             assert_eq!(frame2.contains_pt(&p).unwrap(), PointLoc::Outside);
         }
 
         let frame3 = Polygon([b, f, h, d]).unwrap();
-        assert_eq!(frame3.contains_pt(&b).unwrap(), PointLoc::OnSegment(0));
-        assert_eq!(frame3.contains_pt(&f).unwrap(), PointLoc::OnSegment(1));
-        assert_eq!(frame3.contains_pt(&h).unwrap(), PointLoc::OnSegment(2));
-        assert_eq!(frame3.contains_pt(&d).unwrap(), PointLoc::OnSegment(3));
+        assert_eq!(frame3.contains_pt(&b).unwrap(), PointLoc::OnPoint(0));
+        assert_eq!(frame3.contains_pt(&f).unwrap(), PointLoc::OnPoint(1));
+        assert_eq!(frame3.contains_pt(&h).unwrap(), PointLoc::OnPoint(2));
+        assert_eq!(frame3.contains_pt(&d).unwrap(), PointLoc::OnPoint(3));
         assert_eq!(frame3.contains_pt(&e).unwrap(), PointLoc::Inside);
         for p in [a, c, g, i] {
             assert_eq!(frame3.contains_pt(&p).unwrap(), PointLoc::Outside);
@@ -442,20 +489,122 @@ mod tests {
     fn test_crop_to_polygon() {
         //   ^
         //   |
+        //   |     |     |     |     |
+        // -0,4---1,4---2,4---3,4---4,4--
+        //   |     |     |     |     |
+        // -0,3---1,3---2,3---3,3---4,3--
+        //   |     |     |     |     |
+        // -0,2---1,2---2,2---3,2---4,2--
+        //   |     |     |     |     |
+        // -0,1---1,1---2,1---3,1---4,1->
+        //   |     |     |     |     |
+        // -0,0---1,0---2,0---3,0---4,0-->
+        //   |
+        let p0_0 = Pt(0.0, 0.0);
+        let p1_0 = Pt(1.0, 0.0);
+        let p2_0 = Pt(2.0, 0.0);
+        let p3_0 = Pt(3.0, 0.0);
+        let p4_0 = Pt(4.0, 0.0);
+        let p0_1 = Pt(0.0, 1.0);
+        let p1_1 = Pt(1.0, 1.0);
+        let p2_1 = Pt(2.0, 1.0);
+        let p3_1 = Pt(3.0, 1.0);
+        let p4_1 = Pt(4.0, 1.0);
+        let p0_2 = Pt(0.0, 2.0);
+        let p1_2 = Pt(1.0, 2.0);
+        let p2_2 = Pt(2.0, 2.0);
+        let p3_2 = Pt(3.0, 2.0);
+        let p4_2 = Pt(4.0, 2.0);
+        let p0_3 = Pt(0.0, 3.0);
+        let p1_3 = Pt(1.0, 3.0);
+        let p2_3 = Pt(2.0, 3.0);
+        let p3_3 = Pt(3.0, 3.0);
+        let p4_3 = Pt(4.0, 3.0);
+        let p0_4 = Pt(0.0, 4.0);
+        let p1_4 = Pt(1.0, 4.0);
+        let p2_4 = Pt(2.0, 4.0);
+        let p3_4 = Pt(3.0, 4.0);
+        let p4_4 = Pt(4.0, 4.0);
+
+        // induce ThisPolygonNotClosed
+        assert_eq!(
+            Multiline([p1_1, p3_1, p3_3, p1_3])
+                .unwrap()
+                .crop_to_polygon(&Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap())
+                .unwrap_err(),
+            CropToPolygonError::ThisPolygonNotClosed
+        );
+
+        // induce ThatPolygonNotClosed
+        assert_eq!(
+            Polygon([p1_1, p3_1, p3_3, p1_3])
+                .unwrap()
+                .crop_to_polygon(&Multiline([p0_0, p4_0, p4_4, p0_4]).unwrap())
+                .unwrap_err(),
+            CropToPolygonError::ThatPolygonNotClosed
+        );
+
+        // induce ThisPolygonNotPositivelyOriented
+        assert_eq!(
+            Polygon([p1_1, p1_3, p3_3, p3_1])
+                .unwrap()
+                .crop_to_polygon(&Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap())
+                .unwrap_err(),
+            CropToPolygonError::ThisPolygonNotPositivelyOriented
+        );
+
+        // induce ThatPolygonNotPositivelyOriented
+        assert_eq!(
+            Polygon([p1_1, p3_1, p3_3, p1_3])
+                .unwrap()
+                .crop_to_polygon(&Polygon([p0_0, p0_4, p4_4, p4_0]).unwrap())
+                .unwrap_err(),
+            CropToPolygonError::ThatPolygonNotPositivelyOriented
+        );
+    }
+
+    #[test]
+    fn test_polygon_get_curve_orientation() {
+        //   ^
+        //   |
         //   A  B  C
         //   |
         //   D  E  F
         //   |
         // --G--H--I->
         //   |
-        let _a = Pt(0.0, 2.0);
-        let _b = Pt(1.0, 2.0);
-        let _c = Pt(2.0, 2.0);
-        let _d = Pt(0.0, 1.0);
-        let _e = Pt(1.0, 1.0);
-        let _f = Pt(2.0, 1.0);
-        let _g = Pt(0.0, 0.0);
-        let _h = Pt(1.0, 0.0);
-        let _i = Pt(2.0, 0.0);
+        let a = Pt(0.0, 2.0);
+        let c = Pt(2.0, 2.0);
+        let g = Pt(0.0, 0.0);
+        let i = Pt(2.0, 0.0);
+
+        assert_eq!(
+            Polygon([a, c, i, g]).unwrap().get_curve_orientation(),
+            CurveOrientation::Negative
+        );
+        assert_eq!(
+            Polygon([a, g, i, c]).unwrap().get_curve_orientation(),
+            CurveOrientation::Positive
+        );
+    }
+
+    #[test]
+    fn test_polygon_orient_curve() {
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
+        let a = Pt(0.0, 2.0);
+        let c = Pt(2.0, 2.0);
+        let g = Pt(0.0, 0.0);
+        let i = Pt(2.0, 0.0);
+        let mut p = Polygon([a, g, i, c]).unwrap();
+        assert_eq!(p.get_curve_orientation(), CurveOrientation::Positive);
+        p.orient_curve();
+        assert_eq!(p.get_curve_orientation(), CurveOrientation::Negative);
     }
 }
