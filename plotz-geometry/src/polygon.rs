@@ -1,7 +1,7 @@
 use {
     crate::{
         point::Pt,
-        segment::{Contains, Segment},
+        segment::{Contains, Intersect, Intersection, Segment},
     },
     float_cmp::approx_eq,
     itertools::zip,
@@ -91,6 +91,8 @@ pub enum CropToPolygonError {
     ThisPolygonNotPositivelyOriented,
     #[error("that polygon is not positively oriented; invalid to crop.")]
     ThatPolygonNotPositivelyOriented,
+    #[error("could not compute a .contains_pt().")]
+    ContainsPointError(#[from] ContainsPointError),
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -214,33 +216,70 @@ impl<T> Polygon<T> {
     }
 
     // NB: Polygons must be closed and positively oriented.
-    pub fn crop_to_polygon(&self, other: &Polygon<T>) -> Result<Polygon<T>, CropToPolygonError>
+    pub fn crop_to_polygon(&self, frame: &Polygon<T>) -> Result<Vec<Polygon<T>>, CropToPolygonError>
     where
-        T: Copy + Float + AddAssign + Mul + Sum,
+        T: Copy + Float + AddAssign + Mul + Sum + float_cmp::ApproxEq + Debug,
+        Pt<T>: PartialEq,
+        f64: From<T>,
     {
         if self.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThisPolygonNotClosed);
         }
-        if other.kind != PolygonKind::Closed {
+        if frame.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThatPolygonNotClosed);
         }
         if self.get_curve_orientation() != CurveOrientation::Positive {
             return Err(CropToPolygonError::ThisPolygonNotPositivelyOriented);
         }
-        if other.get_curve_orientation() != CurveOrientation::Positive {
+        if frame.get_curve_orientation() != CurveOrientation::Positive {
             return Err(CropToPolygonError::ThatPolygonNotPositivelyOriented);
         }
 
-        // let mut intersections: Vec<_> = vec![];
+        // TODO
+        // what if self is totally inside self and there are no intersections?
+        // just return self.
 
-        // for (i, self_segment) in self.to_segments().iter().enumerate() {
-        // for (j, other_segment) in other.to_segments().iter().enumerate() {
+        // TODO
+        // what if frame is totally outside of self and there are no
+        // intersections? just return self.
+
+        let self_segs = self.to_segments();
+        let frame_segs = frame.to_segments();
+
+        let self_pts = self.pts.iter().enumerate();
+
+        let mut resultant_pts: Vec<Pt<T>> = vec![];
+
+        for (curr_self_pt_idx, curr_self_pt) in self_pts {
+            if frame.contains_pt(curr_self_pt)? != PointLoc::Outside {
+                resultant_pts.push(curr_self_pt.clone());
+                let self_seg = self_segs[curr_self_pt_idx];
+                let isxns = frame_segs
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(idx, frame_seg)| match frame_seg.intersects(&self_seg) {
+                        Some(isxn @ Intersect::Yes(i)) if !i.on_points_of_either() => {
+                            Some((idx, isxn))
+                        }
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>();
+                if isxns.is_empty() {
+                    // no action necessary
+                } else {
+                    unimplemented!("{:?}", isxns);
+                }
+            }
+        }
+        println!("resultant pts: {:?}", resultant_pts);
+        Ok(vec![Polygon(resultant_pts).unwrap()])
+
+        // for (i, self_seg) in self.to_segments().iter().enumerate() {
+        // for (j, frame_segment) in frame.to_segments().iter().enumerate() {
 
         // find intersections of outer segments with inner segments.
         // I believe we need a way to know whether the points travel cw or ccw around the polygon.
         // TODO(ambuc)
-
-        unimplemented!("todo");
     }
 }
 
@@ -526,6 +565,44 @@ mod tests {
         let p2_4 = Pt(2.0, 4.0);
         let p3_4 = Pt(3.0, 4.0);
         let p4_4 = Pt(4.0, 4.0);
+
+        // total colinearity. but still totally inside.
+        assert_eq!(
+            Polygon([p1_1, p3_1, p3_3, p1_3])
+                .unwrap()
+                .crop_to_polygon(&Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap())
+                .unwrap()[0]
+                .pts,
+            Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap().pts,
+        );
+
+        // some colinearity but still totally inside.
+        assert_eq!(
+            Polygon([p1_1, p3_1, p3_3, p1_3])
+                .unwrap()
+                .crop_to_polygon(&Polygon([p0_0, p3_0, p3_3, p0_3]).unwrap())
+                .unwrap()[0]
+                .pts,
+            Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap().pts,
+        );
+        assert_eq!(
+            Polygon([p1_1, p3_1, p3_3, p1_3])
+                .unwrap()
+                .crop_to_polygon(&Polygon([p1_1, p4_1, p4_4, p1_4]).unwrap())
+                .unwrap()[0]
+                .pts,
+            Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap().pts,
+        );
+
+        // always inside case
+        assert_eq!(
+            Polygon([p1_1, p3_1, p3_3, p1_3])
+                .unwrap()
+                .crop_to_polygon(&Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap())
+                .unwrap()[0]
+                .pts,
+            Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap().pts,
+        );
 
         // induce ThisPolygonNotClosed
         assert_eq!(

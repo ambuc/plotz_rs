@@ -19,7 +19,7 @@ pub enum Contains {
 }
 
 /// A struct representing an intersection between two line segments.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Intersection {
     /// At which % of the way from self_i to self_f the intersection occurs. Will always be between 0.0 and 1.0.
     /// If this value is 0.0, the intersection is at self_i.
@@ -31,7 +31,25 @@ pub struct Intersection {
     percent_along_other: f64,
 }
 
-#[derive(Debug, PartialEq)]
+impl Intersection {
+    fn on_points_of_self(&self) -> bool {
+        match self.percent_along_self {
+            0.0 | 1.0 => true,
+            _ => false,
+        }
+    }
+    fn on_points_of_other(&self) -> bool {
+        match self.percent_along_other {
+            0.0 | 1.0 => true,
+            _ => false,
+        }
+    }
+    pub fn on_points_of_either(&self) -> bool {
+        self.on_points_of_self() || self.on_points_of_other()
+    }
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Intersect {
     Same,
     SameReversed,
