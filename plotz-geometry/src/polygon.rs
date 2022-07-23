@@ -1,7 +1,7 @@
 use {
     crate::{
         point::Pt,
-        segment::{Contains, Intersect, Intersection, Segment},
+        segment::{Contains, Intersect, Segment},
     },
     float_cmp::approx_eq,
     itertools::zip,
@@ -9,12 +9,12 @@ use {
     std::{
         fmt::Debug,
         iter::Sum,
-        ops::{AddAssign, Mul, Sub},
+        ops::{Add, AddAssign, Mul, Sub},
     },
     thiserror,
 };
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PolygonKind {
     Open,
     Closed,
@@ -27,6 +27,15 @@ pub enum PolygonKind {
 pub struct Polygon<T> {
     pub pts: Vec<Pt<T>>,
     pub kind: PolygonKind,
+}
+
+impl<T> PartialEq for Polygon<T>
+where
+    Pt<T>: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.pts == other.pts && self.kind == other.kind
+    }
 }
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -206,6 +215,7 @@ impl<T> Polygon<T> {
         CurveOrientation::Positive
     }
 
+    #[allow(dead_code)]
     fn orient_curve(&mut self)
     where
         T: Float + AddAssign + Mul + Sum,
@@ -252,7 +262,7 @@ impl<T> Polygon<T> {
 
         for (curr_self_pt_idx, curr_self_pt) in self_pts {
             if frame.contains_pt(curr_self_pt)? != PointLoc::Outside {
-                resultant_pts.push(curr_self_pt.clone());
+                resultant_pts.push(*curr_self_pt);
                 let self_seg = self_segs[curr_self_pt_idx];
                 let isxns = frame_segs
                     .iter()
@@ -294,6 +304,28 @@ where
         /*det=*/ a.x * b.y - a.y * b.x,
         /*dot=*/ a.x * b.x + a.y * b.y,
     )
+}
+
+/// An add operation between a polygon and a point. This can be seen as
+/// transposition by |rhs|.
+///
+/// ```
+/// use plotz_geometry::{point::Pt, polygon::Polygon};
+/// assert_eq!(
+///       &Polygon([Pt(0,0), Pt(1,1), Pt(2,2)]).unwrap()
+///     + Pt(1,0),  
+///    // --------
+///       Polygon([Pt(1,0), Pt(2,1), Pt(3,2)]).unwrap()
+/// );
+/// ```
+impl<T> Add<Pt<T>> for &Polygon<T>
+where
+    T: Add<Output = T> + Copy,
+{
+    type Output = Polygon<T>;
+    fn add(self, rhs: Pt<T>) -> Self::Output {
+        Polygon(self.pts.iter().map(|p| *p + rhs)).unwrap()
+    }
 }
 
 #[cfg(test)]
@@ -566,43 +598,36 @@ mod tests {
         let p3_4 = Pt(3.0, 4.0);
         let p4_4 = Pt(4.0, 4.0);
 
+        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap();
+
         // total colinearity. but still totally inside.
-        assert_eq!(
-            Polygon([p1_1, p3_1, p3_3, p1_3])
-                .unwrap()
-                .crop_to_polygon(&Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap())
-                .unwrap()[0]
-                .pts,
-            Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap().pts,
-        );
+        assert_eq!(inner.crop_to_polygon(&inner).unwrap()[0].pts, inner.pts);
 
-        // some colinearity but still totally inside.
-        assert_eq!(
-            Polygon([p1_1, p3_1, p3_3, p1_3])
-                .unwrap()
-                .crop_to_polygon(&Polygon([p0_0, p3_0, p3_3, p0_3]).unwrap())
-                .unwrap()[0]
-                .pts,
-            Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap().pts,
-        );
-        assert_eq!(
-            Polygon([p1_1, p3_1, p3_3, p1_3])
-                .unwrap()
-                .crop_to_polygon(&Polygon([p1_1, p4_1, p4_4, p1_4]).unwrap())
-                .unwrap()[0]
-                .pts,
-            Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap().pts,
-        );
+        {
+            let frame = Polygon([p0_0, p3_0, p3_3, p0_3]).unwrap();
 
-        // always inside case
-        assert_eq!(
-            Polygon([p1_1, p3_1, p3_3, p1_3])
-                .unwrap()
-                .crop_to_polygon(&Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap())
-                .unwrap()[0]
-                .pts,
-            Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap().pts,
-        );
+            // some colinearity but still totally inside.
+            assert_eq!(inner.crop_to_polygon(&frame).unwrap()[0].pts, inner.pts);
+
+            assert_eq!(
+                inner.crop_to_polygon(&(&frame + Pt(1.0, 0.0))).unwrap()[0].pts,
+                inner.pts
+            );
+            assert_eq!(
+                inner.crop_to_polygon(&(&frame + Pt(0.0, 1.0))).unwrap()[0].pts,
+                inner.pts
+            );
+            assert_eq!(
+                inner.crop_to_polygon(&(&frame + Pt(1.0, 1.0))).unwrap()[0].pts,
+                inner.pts
+            );
+        }
+
+        {
+            // always inside case
+            let frame = Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap();
+            assert_eq!(inner.crop_to_polygon(&frame).unwrap()[0].pts, inner.pts);
+        }
 
         // induce ThisPolygonNotClosed
         assert_eq!(
@@ -633,8 +658,7 @@ mod tests {
 
         // induce ThatPolygonNotPositivelyOriented
         assert_eq!(
-            Polygon([p1_1, p3_1, p3_3, p1_3])
-                .unwrap()
+            inner
                 .crop_to_polygon(&Polygon([p0_0, p0_4, p4_4, p4_0]).unwrap())
                 .unwrap_err(),
             CropToPolygonError::ThatPolygonNotPositivelyOriented

@@ -4,6 +4,7 @@ use float_cmp::approx_eq;
 use num::Float;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
+#[allow(dead_code)]
 #[derive(Debug, PartialEq, Eq)]
 enum Orientation {
     Colinear,
@@ -33,16 +34,10 @@ pub struct Intersection {
 
 impl Intersection {
     fn on_points_of_self(&self) -> bool {
-        match self.percent_along_self {
-            0.0 | 1.0 => true,
-            _ => false,
-        }
+        self.percent_along_self == 0.0 || self.percent_along_self == 1.0
     }
     fn on_points_of_other(&self) -> bool {
-        match self.percent_along_other {
-            0.0 | 1.0 => true,
-            _ => false,
-        }
+        self.percent_along_other == 0.0 || self.percent_along_other == 1.0
     }
     pub fn on_points_of_either(&self) -> bool {
         self.on_points_of_self() || self.on_points_of_other()
@@ -160,7 +155,10 @@ where
         }
 
         if let Some(pt) = self.get_line_intersection_inner(
-            self.i.x, self.i.y, self.f.x, self.f.y, other.i.x, other.i.y, other.f.x, other.f.y,
+            (self.i.x, self.i.y),
+            (self.f.x, self.f.y),
+            (other.i.x, other.i.y),
+            (other.f.x, other.f.y),
         ) {
             return Some(Intersect::Yes(Intersection {
                 percent_along_self: interpolate_2d_checked(self.i, self.f, pt).ok()?,
@@ -174,14 +172,10 @@ where
     /// If two line segments are the same, returns None.
     fn get_line_intersection_inner(
         &self,
-        p0_x: T,
-        p0_y: T,
-        p1_x: T,
-        p1_y: T,
-        p2_x: T,
-        p2_y: T,
-        p3_x: T,
-        p3_y: T,
+        (p0_x, p0_y): (T, T),
+        (p1_x, p1_y): (T, T),
+        (p2_x, p2_y): (T, T),
+        (p3_x, p3_y): (T, T),
     ) -> Option<Pt<T>>
     where
         T: Float,
@@ -199,7 +193,7 @@ where
             let i_y = p0_y + (t * s1_y);
             return Some(Pt(i_x, i_y));
         }
-        return None;
+        None
     }
 
     pub fn abs(&self) -> T
