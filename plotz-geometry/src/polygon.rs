@@ -136,6 +136,7 @@ impl<T> Polygon<T> {
     where
         T: Copy + Float + PartialOrd + float_cmp::ApproxEq + std::fmt::Debug,
         Pt<T>: PartialEq,
+        f64: From<T>,
     {
         for l1 in self.to_segments() {
             for l2 in other.to_segments() {

@@ -1,3 +1,4 @@
+use crate::interpolate::interpolate_2d_checked;
 use crate::point::Pt;
 use float_cmp::approx_eq;
 use num::Float;
@@ -17,15 +18,25 @@ pub enum Contains {
     AtEnd,
 }
 
+/// A struct representing an intersection between two line segments.
 #[derive(Debug, PartialEq)]
-pub enum Intersect<T>
-where
-    Pt<T>: PartialEq,
-{
+pub struct Intersection {
+    /// At which % of the way from self_i to self_f the intersection occurs. Will always be between 0.0 and 1.0.
+    /// If this value is 0.0, the intersection is at self_i.
+    /// If this value is 1.0, the intersection is at self_f.
+    percent_along_self: f64,
+    /// At which % of the way from other_i to other_f the intersection occurs. Will always be between 0.0 and 1.0.
+    /// If this value is 0.0, the intersection is at other_i.
+    /// If this value is 1.0, the intersection is at other_f.
+    percent_along_other: f64,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Intersect {
     Same,
     SameReversed,
     Colinear,
-    Yes(Contains, Contains, Pt<T>), // (where is the intersection along |self|, where is the intersection along |other|)
+    Yes(Intersection),
 }
 
 /// A segment in 2D space, with initial and final points.
@@ -112,10 +123,11 @@ where
     /// If two line segments share a point, returns false.
     /// If two line segments are parallel and overlapping, returns false.
     /// If two line segments are the same, returns false.
-    pub fn intersects(&self, other: &Segment<T>) -> Option<Intersect<T>>
+    pub fn intersects(&self, other: &Segment<T>) -> Option<Intersect>
     where
         T: Float + float_cmp::ApproxEq,
         Pt<T>: PartialEq,
+        f64: From<T>,
     {
         if self == other {
             return Some(Intersect::Same);
@@ -129,50 +141,15 @@ where
             return Some(Intersect::Colinear);
         }
 
-        match (
-            self.line_segment_contains_pt(&other.i),
-            self.line_segment_contains_pt(&other.f),
-            other.line_segment_contains_pt(&self.i),
-            other.line_segment_contains_pt(&self.f),
-            self.get_line_intersection_inner(
-                self.i.x, self.i.y, self.f.x, self.f.y, other.i.x, other.i.y, other.f.x, other.f.y,
-            ),
+        if let Some(pt) = self.get_line_intersection_inner(
+            self.i.x, self.i.y, self.f.x, self.f.y, other.i.x, other.i.y, other.f.x, other.f.y,
         ) {
-            (Some(Contains::Within), None, None, None, Some(pt)) => {
-                return Some(Intersect::Yes(Contains::Within, Contains::AtStart, pt));
-            }
-            (None, Some(Contains::Within), None, None, Some(pt)) => {
-                return Some(Intersect::Yes(Contains::Within, Contains::AtEnd, pt));
-            }
-            (None, None, Some(Contains::Within), None, Some(pt)) => {
-                return Some(Intersect::Yes(Contains::AtStart, Contains::Within, pt));
-            }
-            (None, None, None, Some(Contains::Within), Some(pt)) => {
-                return Some(Intersect::Yes(Contains::AtEnd, Contains::Within, pt));
-            }
-            (Some(Contains::AtEnd), None, None, Some(Contains::AtStart), Some(pt)) => {
-                return Some(Intersect::Yes(Contains::AtEnd, Contains::AtStart, pt));
-            }
-            (None, Some(Contains::AtEnd), None, Some(Contains::AtEnd), Some(pt)) => {
-                return Some(Intersect::Yes(Contains::AtEnd, Contains::AtEnd, pt));
-            }
-            (None, Some(Contains::AtStart), Some(Contains::AtEnd), None, Some(pt)) => {
-                return Some(Intersect::Yes(Contains::AtStart, Contains::AtEnd, pt));
-            }
-            (Some(Contains::AtStart), None, Some(Contains::AtStart), None, Some(pt)) => {
-                return Some(Intersect::Yes(Contains::AtStart, Contains::AtStart, pt));
-            }
-            (None, None, None, None, Some(pt)) => {
-                return Some(Intersect::Yes(Contains::Within, Contains::Within, pt));
-            }
-            (None, None, None, None, None) => {
-                return None;
-            }
-            (a, b, c, d, pt) => {
-                println!("a {:?} b {:?} c {:?} d {:?} pt {:?}", a, b, c, d, pt);
-                panic!("!");
-            }
+            return Some(Intersect::Yes(Intersection {
+                percent_along_self: interpolate_2d_checked(self.i, self.f, pt).ok()?,
+                percent_along_other: interpolate_2d_checked(other.i, other.f, pt).ok()?,
+            }));
         }
+        None
     }
 
     /// If two line segments are parallel and overlapping, returns None.
@@ -573,43 +550,70 @@ mod tests {
         // (s,w), (e,w), (w,s), (w,e)
         assert_eq!(
             Segment(e, i).intersects(&Segment(c, g)),
-            Some(Intersect::Yes(Contains::AtStart, Contains::Within, e))
+            Some(Intersect::Yes(Intersection {
+                percent_along_self: 0.0,
+                percent_along_other: 0.5
+            }))
         );
         assert_eq!(
             Segment(a, e).intersects(&Segment(c, g)),
-            Some(Intersect::Yes(Contains::AtEnd, Contains::Within, e))
+            Some(Intersect::Yes(Intersection {
+                percent_along_self: 1.0,
+                percent_along_other: 0.5
+            }))
         );
         assert_eq!(
             Segment(c, g).intersects(&Segment(e, i)),
-            Some(Intersect::Yes(Contains::Within, Contains::AtStart, e))
+            Some(Intersect::Yes(Intersection {
+                percent_along_self: 0.5,
+                percent_along_other: 0.0
+            }))
         );
         assert_eq!(
             Segment(c, g).intersects(&Segment(a, e)),
-            Some(Intersect::Yes(Contains::Within, Contains::AtEnd, e))
+            Some(Intersect::Yes(Intersection {
+                percent_along_self: 0.5,
+                percent_along_other: 1.0
+            }))
         );
 
-        // (s,s), (s,e), (e,s), (e,e)
+        // // (s,s), (s,e), (e,s), (e,e)
         assert_eq!(
             Segment(a, c).intersects(&Segment(c, i)),
-            Some(Intersect::Yes(Contains::AtEnd, Contains::AtStart, c))
+            Some(Intersect::Yes(Intersection {
+                percent_along_self: 1.0,
+                percent_along_other: 0.0
+            }))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(i, c)),
-            Some(Intersect::Yes(Contains::AtEnd, Contains::AtEnd, c))
+            Some(Intersect::Yes(Intersection {
+                percent_along_self: 1.0,
+                percent_along_other: 1.0
+            }))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(g, a)),
-            Some(Intersect::Yes(Contains::AtStart, Contains::AtEnd, a))
+            Some(Intersect::Yes(Intersection {
+                percent_along_self: 0.0,
+                percent_along_other: 1.0
+            }))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(a, g)),
-            Some(Intersect::Yes(Contains::AtStart, Contains::AtStart, a))
+            Some(Intersect::Yes(Intersection {
+                percent_along_self: 0.0,
+                percent_along_other: 0.0
+            }))
         );
 
-        // (w,w)
+        // // (w,w)
         assert_eq!(
             Segment(a, i).intersects(&Segment(c, g)),
-            Some(Intersect::Yes(Contains::Within, Contains::Within, e))
+            Some(Intersect::Yes(Intersection {
+                percent_along_self: 0.5,
+                percent_along_other: 0.5
+            }))
         );
     }
 
