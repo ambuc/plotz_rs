@@ -250,17 +250,20 @@ impl<T> Polygon<T> {
         let self_segs = self.to_segments();
         let frame_segs = frame.to_segments();
 
-        let frame_pts_in_self: Vec<PointLoc> = frame
-            .pts
-            .iter()
-            .map(|pt| self.contains_pt(pt))
-            .collect::<Result<_, ContainsPointError>>()?;
-
-        let self_pts_in_frame: Vec<PointLoc> = self
-            .pts
-            .iter()
-            .map(|pt| frame.contains_pt(pt))
-            .collect::<Result<_, ContainsPointError>>()?;
+        let frame_pts_in_self: Vec<(usize, PointLoc)> = {
+            let mut v = vec![];
+            for (idx, pt) in frame.pts.iter().enumerate() {
+                v.push((idx, self.contains_pt(pt)?));
+            }
+            Result::<_, ContainsPointError>::Ok(v)
+        }?;
+        let self_pts_in_frame: Vec<(usize, PointLoc)> = {
+            let mut v = vec![];
+            for (idx, pt) in self.pts.iter().enumerate() {
+                v.push((idx, frame.contains_pt(pt)?));
+            }
+            Result::<_, ContainsPointError>::Ok(v)
+        }?;
 
         let frame_self_isxns: Vec<(usize, usize, Intersect)> =
             iproduct!(frame_segs.iter().enumerate(), self_segs.iter().enumerate())
@@ -272,11 +275,15 @@ impl<T> Polygon<T> {
         // If there are no intersections,
         if frame_self_isxns.is_empty() {
             // Then either all of the frame points are inside self,
-            if all(frame_pts_in_self, |isxn| !matches!(isxn, PointLoc::Outside)) {
+            if all(&frame_pts_in_self, |(_idx, isxn)| {
+                !matches!(isxn, PointLoc::Outside)
+            }) {
                 // in which case we ought to return the frame unchanged,
                 return Ok(vec![frame.clone()]);
                 // or all of the self points are inside frame,
-            } else if all(self_pts_in_frame, |isxn| !matches!(isxn, PointLoc::Outside)) {
+            } else if all(&self_pts_in_frame, |(_idx, isxn)| {
+                !matches!(isxn, PointLoc::Outside)
+            }) {
                 // in which case we ought to return self unchanged.
                 return Ok(vec![self.clone()]);
             }
@@ -286,6 +293,8 @@ impl<T> Polygon<T> {
 
         let mut resultant_polygons: Vec<Polygon<T>> = vec![];
         let mut resultant_pts: Vec<Pt<T>> = vec![];
+
+        assert!(!self_pts_in_frame.is_empty());
 
         for (curr_self_pt_idx, curr_self_pt) in self_pts {
             if frame.contains_pt(curr_self_pt)? != PointLoc::Outside {
@@ -750,6 +759,35 @@ mod tests {
         // frame /\ inner = inner
         let crops = frame.crop_to_polygon(&inner).unwrap(); // 🟧
         assert_eq!(crops, vec![inner]);
+    }
+
+    #[test]
+    #[ignore]
+    fn test_crop_to_polygon_two_pivots() {
+        // ⬆️ y
+        // ⬜⬜⬜⬜⬜
+        // ⬜🟥🟥🟥⬜
+        // 🟨🟧🟧🟥⬜
+        // 🟨🟧🟧🟥⬜
+        // 🟨🟨🟨⬜⬜ ➡️ x
+        let p0_0 = Pt(0.0, 0.0);
+        let p0_3 = Pt(0.0, 3.0);
+        let p1_1 = Pt(1.0, 1.0);
+        let p1_3 = Pt(1.0, 3.0);
+        let p1_4 = Pt(1.0, 4.0);
+        let p3_0 = Pt(3.0, 0.0);
+        let p3_1 = Pt(3.0, 1.0);
+        let p3_3 = Pt(3.0, 3.0);
+        let p4_1 = Pt(4.0, 1.0);
+        let p4_4 = Pt(4.0, 4.0);
+        let inner = Polygon([p1_1, p4_1, p4_4, p1_4]).unwrap(); // 🟥
+        let frame = Polygon([p0_0, p3_0, p3_3, p0_3]).unwrap(); // 🟨
+        let expected = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap(); // 🟧
+
+        let crops = inner.crop_to_polygon(&frame).unwrap();
+        assert_eq!(crops, vec![expected.clone()]);
+        let crops = frame.crop_to_polygon(&inner).unwrap();
+        assert_eq!(crops, vec![expected.clone()]);
     }
 
     #[test]
