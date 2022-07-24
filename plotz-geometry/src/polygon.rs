@@ -558,78 +558,15 @@ mod tests {
     }
 
     #[test]
-    fn test_crop_to_polygon() {
-        //   ^
-        //   |
-        //   |     |     |     |     |
-        // -0,4---1,4---2,4---3,4---4,4--
-        //   |     |     |     |     |
-        // -0,3---1,3---2,3---3,3---4,3--
-        //   |     |     |     |     |
-        // -0,2---1,2---2,2---3,2---4,2--
-        //   |     |     |     |     |
-        // -0,1---1,1---2,1---3,1---4,1->
-        //   |     |     |     |     |
-        // -0,0---1,0---2,0---3,0---4,0-->
-        //   |
+    fn test_crop_to_polygon_this_not_closed() {
         let p0_0 = Pt(0.0, 0.0);
-        let p1_0 = Pt(1.0, 0.0);
-        let p2_0 = Pt(2.0, 0.0);
-        let p3_0 = Pt(3.0, 0.0);
-        let p4_0 = Pt(4.0, 0.0);
-        let p0_1 = Pt(0.0, 1.0);
-        let p1_1 = Pt(1.0, 1.0);
-        let p2_1 = Pt(2.0, 1.0);
-        let p3_1 = Pt(3.0, 1.0);
-        let p4_1 = Pt(4.0, 1.0);
-        let p0_2 = Pt(0.0, 2.0);
-        let p1_2 = Pt(1.0, 2.0);
-        let p2_2 = Pt(2.0, 2.0);
-        let p3_2 = Pt(3.0, 2.0);
-        let p4_2 = Pt(4.0, 2.0);
-        let p0_3 = Pt(0.0, 3.0);
-        let p1_3 = Pt(1.0, 3.0);
-        let p2_3 = Pt(2.0, 3.0);
-        let p3_3 = Pt(3.0, 3.0);
-        let p4_3 = Pt(4.0, 3.0);
         let p0_4 = Pt(0.0, 4.0);
-        let p1_4 = Pt(1.0, 4.0);
-        let p2_4 = Pt(2.0, 4.0);
-        let p3_4 = Pt(3.0, 4.0);
+        let p1_1 = Pt(1.0, 1.0);
+        let p1_3 = Pt(1.0, 3.0);
+        let p3_1 = Pt(3.0, 1.0);
+        let p3_3 = Pt(3.0, 3.0);
+        let p4_0 = Pt(4.0, 0.0);
         let p4_4 = Pt(4.0, 4.0);
-
-        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap();
-
-        // total colinearity. but still totally inside.
-        assert_eq!(inner.crop_to_polygon(&inner).unwrap()[0].pts, inner.pts);
-
-        {
-            let frame = Polygon([p0_0, p3_0, p3_3, p0_3]).unwrap();
-
-            // some colinearity but still totally inside.
-            assert_eq!(inner.crop_to_polygon(&frame).unwrap()[0].pts, inner.pts);
-
-            assert_eq!(
-                inner.crop_to_polygon(&(&frame + Pt(1.0, 0.0))).unwrap()[0].pts,
-                inner.pts
-            );
-            assert_eq!(
-                inner.crop_to_polygon(&(&frame + Pt(0.0, 1.0))).unwrap()[0].pts,
-                inner.pts
-            );
-            assert_eq!(
-                inner.crop_to_polygon(&(&frame + Pt(1.0, 1.0))).unwrap()[0].pts,
-                inner.pts
-            );
-        }
-
-        {
-            // always inside case
-            let frame = Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap();
-            assert_eq!(inner.crop_to_polygon(&frame).unwrap()[0].pts, inner.pts);
-        }
-
-        // induce ThisPolygonNotClosed
         assert_eq!(
             Multiline([p1_1, p3_1, p3_3, p1_3])
                 .unwrap()
@@ -637,8 +574,18 @@ mod tests {
                 .unwrap_err(),
             CropToPolygonError::ThisPolygonNotClosed
         );
+    }
 
-        // induce ThatPolygonNotClosed
+    #[test]
+    fn test_crop_to_polygon_that_not_closed() {
+        let p0_0 = Pt(0.0, 0.0);
+        let p0_4 = Pt(0.0, 4.0);
+        let p1_1 = Pt(1.0, 1.0);
+        let p1_3 = Pt(1.0, 3.0);
+        let p3_1 = Pt(3.0, 1.0);
+        let p3_3 = Pt(3.0, 3.0);
+        let p4_0 = Pt(4.0, 0.0);
+        let p4_4 = Pt(4.0, 4.0);
         assert_eq!(
             Polygon([p1_1, p3_1, p3_3, p1_3])
                 .unwrap()
@@ -646,8 +593,18 @@ mod tests {
                 .unwrap_err(),
             CropToPolygonError::ThatPolygonNotClosed
         );
+    }
 
-        // induce ThisPolygonNotPositivelyOriented
+    #[test]
+    fn test_crop_to_polygon_this_not_positively_oriented() {
+        let p0_0 = Pt(0.0, 0.0);
+        let p0_4 = Pt(0.0, 4.0);
+        let p1_1 = Pt(1.0, 1.0);
+        let p1_3 = Pt(1.0, 3.0);
+        let p3_1 = Pt(3.0, 1.0);
+        let p3_3 = Pt(3.0, 3.0);
+        let p4_0 = Pt(4.0, 0.0);
+        let p4_4 = Pt(4.0, 4.0);
         assert_eq!(
             Polygon([p1_1, p1_3, p3_3, p3_1])
                 .unwrap()
@@ -655,14 +612,76 @@ mod tests {
                 .unwrap_err(),
             CropToPolygonError::ThisPolygonNotPositivelyOriented
         );
+    }
 
-        // induce ThatPolygonNotPositivelyOriented
+    #[test]
+    fn test_crop_to_polygon_that_not_positively_oriented() {
+        let p0_0 = Pt(0.0, 0.0);
+        let p0_4 = Pt(0.0, 4.0);
+        let p1_1 = Pt(1.0, 1.0);
+        let p1_3 = Pt(1.0, 3.0);
+        let p3_1 = Pt(3.0, 1.0);
+        let p3_3 = Pt(3.0, 3.0);
+        let p4_0 = Pt(4.0, 0.0);
+        let p4_4 = Pt(4.0, 4.0);
         assert_eq!(
-            inner
+            Polygon([p1_1, p3_1, p3_3, p1_3])
+                .unwrap()
                 .crop_to_polygon(&Polygon([p0_0, p0_4, p4_4, p4_0]).unwrap())
                 .unwrap_err(),
             CropToPolygonError::ThatPolygonNotPositivelyOriented
         );
+    }
+
+    #[test]
+    fn test_crop_to_polygon_inner_equals_outer() {
+        let p1_1 = Pt(1.0, 1.0);
+        let p3_1 = Pt(3.0, 1.0);
+        let p1_3 = Pt(1.0, 3.0);
+        let p3_3 = Pt(3.0, 3.0);
+        let shape = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap();
+        assert_eq!(shape.crop_to_polygon(&shape).unwrap()[0].pts, shape.pts);
+    }
+
+    #[test]
+    fn test_crop_to_polygon_inner_colinear_to_outer() {
+        let p0_0 = Pt(0.0, 0.0);
+        let p0_3 = Pt(0.0, 3.0);
+        let p1_1 = Pt(1.0, 1.0);
+        let p1_3 = Pt(1.0, 3.0);
+        let p3_0 = Pt(3.0, 0.0);
+        let p3_1 = Pt(3.0, 1.0);
+        let p3_3 = Pt(3.0, 3.0);
+        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap();
+        let frame = Polygon([p0_0, p3_0, p3_3, p0_3]).unwrap();
+        assert_eq!(inner.crop_to_polygon(&frame).unwrap()[0].pts, inner.pts);
+        assert_eq!(
+            inner.crop_to_polygon(&(&frame + Pt(1.0, 0.0))).unwrap()[0].pts,
+            inner.pts
+        );
+        assert_eq!(
+            inner.crop_to_polygon(&(&frame + Pt(0.0, 1.0))).unwrap()[0].pts,
+            inner.pts
+        );
+        assert_eq!(
+            inner.crop_to_polygon(&(&frame + Pt(1.0, 1.0))).unwrap()[0].pts,
+            inner.pts
+        );
+    }
+
+    #[test]
+    fn test_crop_to_polygon_inner_totally_within_outer() {
+        let p0_0 = Pt(0.0, 0.0);
+        let p0_4 = Pt(0.0, 4.0);
+        let p1_1 = Pt(1.0, 1.0);
+        let p1_3 = Pt(1.0, 3.0);
+        let p3_1 = Pt(3.0, 1.0);
+        let p3_3 = Pt(3.0, 3.0);
+        let p4_0 = Pt(4.0, 0.0);
+        let p4_4 = Pt(4.0, 4.0);
+        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap();
+        let frame = Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap();
+        assert_eq!(inner.crop_to_polygon(&frame).unwrap()[0].pts, inner.pts);
     }
 
     #[test]
