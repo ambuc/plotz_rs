@@ -655,16 +655,31 @@ mod tests {
 
     #[test]
     fn test_crop_to_polygon_inner_equals_frame() {
+        // ⬆️ y
+        // ⬜⬜⬜⬜⬜
+        // ⬜🟧🟧🟧⬜
+        // ⬜🟧🟧🟧⬜
+        // ⬜🟧🟧🟧⬜
+        // ⬜⬜⬜⬜⬜ ➡️ x
         let p1_1 = Pt(1.0, 1.0);
         let p3_1 = Pt(3.0, 1.0);
         let p1_3 = Pt(1.0, 3.0);
         let p3_3 = Pt(3.0, 3.0);
-        let shape = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap();
-        assert_eq!(shape.crop_to_polygon(&shape).unwrap()[0].pts, shape.pts);
+        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap(); // 🟥
+        let frame = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap(); // 🟨
+        assert_eq!(inner, frame);
+        let crops = inner.crop_to_polygon(&frame).unwrap(); // 🟧
+        assert_eq!(crops, vec![inner]);
     }
 
     #[test]
     fn test_crop_to_polygon_inner_colinear_to_frame() {
+        // ⬆️ y
+        // ⬜⬜⬜⬜⬜
+        // 🟨🟧🟧🟧⬜
+        // 🟨🟧🟧🟧⬜
+        // 🟨🟧🟧🟧⬜
+        // 🟨🟨🟨🟨⬜ ➡️ x
         let p0_0 = Pt(0.0, 0.0);
         let p0_3 = Pt(0.0, 3.0);
         let p1_1 = Pt(1.0, 1.0);
@@ -672,17 +687,38 @@ mod tests {
         let p3_0 = Pt(3.0, 0.0);
         let p3_1 = Pt(3.0, 1.0);
         let p3_3 = Pt(3.0, 3.0);
-        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap();
-        let frame = Polygon([p0_0, p3_0, p3_3, p0_3]).unwrap();
+        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap(); // 🟥
+        let frame = Polygon([p0_0, p3_0, p3_3, p0_3]).unwrap(); // 🟨
         assert_eq!(inner.crop_to_polygon(&frame).unwrap()[0].pts, inner.pts);
+
+        // ⬆️ y
+        // ⬜⬜⬜⬜⬜
+        // ⬜🟧🟧🟧🟨
+        // ⬜🟧🟧🟧🟨
+        // ⬜🟧🟧🟧🟨
+        // ⬜🟨🟨🟨🟨 ➡️ x
         assert_eq!(
             inner.crop_to_polygon(&(&frame + Pt(1.0, 0.0))).unwrap()[0].pts,
             inner.pts
         );
+
+        // ⬆️ y
+        // 🟨🟨🟨🟨⬜
+        // 🟨🟧🟧🟧⬜
+        // 🟨🟧🟧🟧⬜
+        // 🟨🟧🟧🟧⬜
+        // ⬜⬜⬜⬜⬜ ➡ x
         assert_eq!(
             inner.crop_to_polygon(&(&frame + Pt(0.0, 1.0))).unwrap()[0].pts,
             inner.pts
         );
+
+        // ⬆️ y
+        // ⬜🟨🟨🟨🟨
+        // ⬜🟧🟧🟧🟨
+        // ⬜🟧🟧🟧🟨
+        // ⬜🟧🟧🟧🟨
+        // ⬜⬜⬜⬜⬜ ➡ x
         assert_eq!(
             inner.crop_to_polygon(&(&frame + Pt(1.0, 1.0))).unwrap()[0].pts,
             inner.pts
@@ -691,6 +727,12 @@ mod tests {
 
     #[test]
     fn test_crop_to_polygon_inner_totally_within_frame() {
+        // ⬆️ y
+        // 🟨🟨🟨🟨🟨
+        // 🟨🟧🟧🟧🟨
+        // 🟨🟧🟧🟧🟨
+        // 🟨🟧🟧🟧🟨
+        // 🟨🟨🟨🟨🟨 ➡️ x
         let p0_0 = Pt(0.0, 0.0);
         let p0_4 = Pt(0.0, 4.0);
         let p1_1 = Pt(1.0, 1.0);
@@ -699,24 +741,15 @@ mod tests {
         let p3_3 = Pt(3.0, 3.0);
         let p4_0 = Pt(4.0, 0.0);
         let p4_4 = Pt(4.0, 4.0);
-        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap();
-        let frame = Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap();
-        assert_eq!(inner.crop_to_polygon(&frame).unwrap()[0].pts, inner.pts);
-    }
+        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap(); // 🟥
+        let frame = Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap(); // 🟨
 
-    #[test]
-    fn test_crop_to_polygon_frame_totally_within_inner() {
-        let p0_0 = Pt(0.0, 0.0);
-        let p0_4 = Pt(0.0, 4.0);
-        let p1_1 = Pt(1.0, 1.0);
-        let p1_3 = Pt(1.0, 3.0);
-        let p3_1 = Pt(3.0, 1.0);
-        let p3_3 = Pt(3.0, 3.0);
-        let p4_0 = Pt(4.0, 0.0);
-        let p4_4 = Pt(4.0, 4.0);
-        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap();
-        let frame = Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap();
-        assert_eq!(frame.crop_to_polygon(&inner).unwrap()[0].pts, inner.pts);
+        // inner /\ frame == inner
+        let crops = inner.crop_to_polygon(&frame).unwrap(); // 🟧
+        assert_eq!(crops, vec![inner.clone()]);
+        // frame /\ inner = inner
+        let crops = frame.crop_to_polygon(&inner).unwrap(); // 🟧
+        assert_eq!(crops, vec![inner]);
     }
 
     #[test]
