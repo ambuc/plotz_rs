@@ -4,7 +4,7 @@ use {
         segment::{Contains, Intersect, Segment},
     },
     float_cmp::approx_eq,
-    itertools::zip,
+    itertools::{all, iproduct, zip},
     num::Float,
     std::{
         fmt::Debug,
@@ -245,16 +245,22 @@ impl<T> Polygon<T> {
             return Err(CropToPolygonError::ThatPolygonNotPositivelyOriented);
         }
 
-        // TODO
-        // what if self is totally inside self and there are no intersections?
-        // just return self.
-
-        // TODO
-        // what if frame is totally outside of self and there are no
-        // intersections? just return self.
-
         let self_segs = self.to_segments();
         let frame_segs = frame.to_segments();
+
+        // if all the points of frame are within self and there are no
+        // intersections between any segments then just return frame, since it
+        // is totally within.
+        if all(&frame.pts, |pt| {
+            matches!(
+                self.contains_pt(pt),
+                Ok(PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_))
+            )
+        }) && all(iproduct!(&frame_segs, &self_segs), |(a, b)| {
+            a.intersects(b).is_none()
+        }) {
+            return Ok(vec![frame.clone()]);
+        }
 
         let self_pts = self.pts.iter().enumerate();
 
@@ -634,7 +640,7 @@ mod tests {
     }
 
     #[test]
-    fn test_crop_to_polygon_inner_equals_outer() {
+    fn test_crop_to_polygon_inner_equals_frame() {
         let p1_1 = Pt(1.0, 1.0);
         let p3_1 = Pt(3.0, 1.0);
         let p1_3 = Pt(1.0, 3.0);
@@ -644,7 +650,7 @@ mod tests {
     }
 
     #[test]
-    fn test_crop_to_polygon_inner_colinear_to_outer() {
+    fn test_crop_to_polygon_inner_colinear_to_frame() {
         let p0_0 = Pt(0.0, 0.0);
         let p0_3 = Pt(0.0, 3.0);
         let p1_1 = Pt(1.0, 1.0);
@@ -670,7 +676,7 @@ mod tests {
     }
 
     #[test]
-    fn test_crop_to_polygon_inner_totally_within_outer() {
+    fn test_crop_to_polygon_inner_totally_within_frame() {
         let p0_0 = Pt(0.0, 0.0);
         let p0_4 = Pt(0.0, 4.0);
         let p1_1 = Pt(1.0, 1.0);
@@ -682,6 +688,21 @@ mod tests {
         let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap();
         let frame = Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap();
         assert_eq!(inner.crop_to_polygon(&frame).unwrap()[0].pts, inner.pts);
+    }
+
+    #[test]
+    fn test_crop_to_polygon_frame_totally_within_inner() {
+        let p0_0 = Pt(0.0, 0.0);
+        let p0_4 = Pt(0.0, 4.0);
+        let p1_1 = Pt(1.0, 1.0);
+        let p1_3 = Pt(1.0, 3.0);
+        let p3_1 = Pt(3.0, 1.0);
+        let p3_3 = Pt(3.0, 3.0);
+        let p4_0 = Pt(4.0, 0.0);
+        let p4_4 = Pt(4.0, 4.0);
+        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap();
+        let frame = Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap();
+        assert_eq!(frame.crop_to_polygon(&inner).unwrap()[0].pts, inner.pts);
     }
 
     #[test]
