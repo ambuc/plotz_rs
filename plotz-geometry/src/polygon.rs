@@ -102,6 +102,8 @@ pub enum CropToPolygonError {
     ThatPolygonNotPositivelyOriented,
     #[error("could not compute a .contains_pt().")]
     ContainsPointError(#[from] ContainsPointError),
+    #[error("could not construct a polygon.")]
+    PolygonConstructorError(#[from] PolygonConstructorError),
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -260,13 +262,15 @@ impl<T> Polygon<T> {
             .map(|pt| frame.contains_pt(pt))
             .collect::<Result<_, ContainsPointError>>()?;
 
-        let intersections: Vec<(usize, usize, Intersect)> =
+        let frame_self_isxns: Vec<(usize, usize, Intersect)> =
             iproduct!(frame_segs.iter().enumerate(), self_segs.iter().enumerate())
-                .filter_map(|((ai, a), (bi, b))| a.intersects(b).map(|isxn| (ai, bi, isxn)))
+                .filter_map(|((f_idx, f_seg), (s_idx, s_seg))| {
+                    f_seg.intersects(s_seg).map(|isxn| (f_idx, s_idx, isxn))
+                })
                 .collect();
 
         // If there are no intersections,
-        if intersections.is_empty() {
+        if frame_self_isxns.is_empty() {
             // Then either all of the frame points are inside self,
             if all(frame_pts_in_self, |isxn| !matches!(isxn, PointLoc::Outside)) {
                 // in which case we ought to return the frame unchanged,
@@ -280,38 +284,32 @@ impl<T> Polygon<T> {
 
         let self_pts = self.pts.iter().enumerate();
 
+        let mut resultant_polygons: Vec<Polygon<T>> = vec![];
         let mut resultant_pts: Vec<Pt<T>> = vec![];
 
         for (curr_self_pt_idx, curr_self_pt) in self_pts {
             if frame.contains_pt(curr_self_pt)? != PointLoc::Outside {
                 resultant_pts.push(*curr_self_pt);
-                let self_seg = self_segs[curr_self_pt_idx];
-                let isxns = frame_segs
+
+                // If there are any intersections with
+                let relevant_isxns = frame_self_isxns
                     .iter()
-                    .enumerate()
-                    .filter_map(|(idx, frame_seg)| match frame_seg.intersects(&self_seg) {
-                        Some(isxn @ Intersect::Yes(i)) if !i.on_points_of_either() => {
-                            Some((idx, isxn))
-                        }
-                        _ => None,
+                    .filter(|(_f_idx, s_idx, _isxn)| *s_idx == curr_self_pt_idx)
+                    .filter(|(_f_idx, _s_idx, isxn)| {
+                        matches!(isxn, Intersect::Yes(x) if !x.on_points_of_either())
                     })
                     .collect::<Vec<_>>();
-                if isxns.is_empty() {
+
+                if relevant_isxns.is_empty() {
                     // no action necessary
                 } else {
-                    unimplemented!("{:?}", isxns);
+                    unimplemented!("{:?}", relevant_isxns);
                 }
             }
         }
-        println!("resultant pts: {:?}", resultant_pts);
-        Ok(vec![Polygon(resultant_pts).unwrap()])
+        resultant_polygons.push(Polygon(resultant_pts)?);
 
-        // for (i, self_seg) in self.to_segments().iter().enumerate() {
-        // for (j, frame_segment) in frame.to_segments().iter().enumerate() {
-
-        // find intersections of outer segments with inner segments.
-        // I believe we need a way to know whether the points travel cw or ccw around the polygon.
-        // TODO(ambuc)
+        Ok(resultant_polygons)
     }
 }
 
