@@ -525,11 +525,8 @@ mod tests {
         let a = Pt(0.0, 2.0);
         let b = Pt(1.0, 2.0);
         let c = Pt(2.0, 2.0);
-        let d = Pt(0.0, 1.0);
         let e = Pt(1.0, 1.0);
-        let f = Pt(2.0, 1.0);
         let g = Pt(0.0, 0.0);
-        let h = Pt(1.0, 0.0);
         let i = Pt(2.0, 0.0);
 
         // colinear
@@ -651,14 +648,7 @@ mod tests {
         // --G--H--I->
         //   |
         let a = Pt(0.0, 2.0);
-        let b = Pt(1.0, 2.0);
         let c = Pt(2.0, 2.0);
-        let d = Pt(0.0, 1.0);
-        let e = Pt(1.0, 1.0);
-        let f = Pt(2.0, 1.0);
-        let g = Pt(0.0, 0.0);
-        let h = Pt(1.0, 0.0);
-        let i = Pt(2.0, 0.0);
 
         assert_eq!(
             Segment(a, c).line_segment_contains_pt(&a).unwrap(),
