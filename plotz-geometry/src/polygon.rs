@@ -248,18 +248,34 @@ impl<T> Polygon<T> {
         let self_segs = self.to_segments();
         let frame_segs = frame.to_segments();
 
-        // if all the points of frame are within self and there are no
-        // intersections between any segments then just return frame, since it
-        // is totally within.
-        if all(&frame.pts, |pt| {
-            matches!(
-                self.contains_pt(pt),
-                Ok(PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_))
-            )
-        }) && all(iproduct!(&frame_segs, &self_segs), |(a, b)| {
-            a.intersects(b).is_none()
-        }) {
-            return Ok(vec![frame.clone()]);
+        let frame_pts_in_self: Vec<PointLoc> = frame
+            .pts
+            .iter()
+            .map(|pt| self.contains_pt(pt))
+            .collect::<Result<_, ContainsPointError>>()?;
+
+        let self_pts_in_frame: Vec<PointLoc> = self
+            .pts
+            .iter()
+            .map(|pt| frame.contains_pt(pt))
+            .collect::<Result<_, ContainsPointError>>()?;
+
+        let intersections: Vec<(usize, usize, Intersect)> =
+            iproduct!(frame_segs.iter().enumerate(), self_segs.iter().enumerate())
+                .filter_map(|((ai, a), (bi, b))| a.intersects(b).map(|isxn| (ai, bi, isxn)))
+                .collect();
+
+        // If there are no intersections,
+        if intersections.is_empty() {
+            // Then either all of the frame points are inside self,
+            if all(frame_pts_in_self, |isxn| !matches!(isxn, PointLoc::Outside)) {
+                // in which case we ought to return the frame unchanged,
+                return Ok(vec![frame.clone()]);
+                // or all of the self points are inside frame,
+            } else if all(self_pts_in_frame, |isxn| !matches!(isxn, PointLoc::Outside)) {
+                // in which case we ought to return self unchanged.
+                return Ok(vec![self.clone()]);
+            }
         }
 
         let self_pts = self.pts.iter().enumerate();
