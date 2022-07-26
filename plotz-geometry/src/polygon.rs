@@ -300,31 +300,70 @@ impl<T> Polygon<T> {
             }
         }
 
-        let self_pts = self.pts.iter().enumerate();
-        let frame_pts = frame.pts.iter().enumerate();
+        let self_pts: Vec<_> = self.pts.iter().enumerate().collect();
+        let self_pts_len: usize = self_pts.len();
+        let frame_pts: Vec<_> = frame.pts.iter().enumerate().collect();
+        let frame_pts_len: usize = frame_pts.len();
+
+        fn next_idx(idx: usize, len: usize) -> usize {
+            if idx == len - 1 {
+                0
+            } else {
+                idx + 1
+            }
+        }
+        fn next<T: Copy>(idx: usize, pts: &Vec<(usize, T)>, len: usize) -> (usize, T) {
+            let next_idx: usize = next_idx(idx, len);
+            pts[next_idx]
+        }
+
+        let next_self = |idx| next(idx, &self_pts, self_pts_len);
+        let next_frame = |idx| next(idx, &frame_pts, frame_pts_len);
+
+        enum Which<'a, T> {
+            WSelf((usize, &'a Pt<T>)),
+            WFrame((usize, &'a Pt<T>)),
+        }
+        impl<'a, T> Which<'a, T> {
+            fn inner(&'a self) -> (usize, &'a Pt<T>) {
+                match self {
+                    Which::WSelf(x) => *x,
+                    Which::WFrame(x) => *x,
+                }
+            }
+        }
 
         let mut resultant_polygons: Vec<Polygon<T>> = vec![];
         let mut resultant_pts: Vec<Pt<T>> = vec![];
 
         assert!(!self_pts_in_frame.is_empty());
 
-        for (pt_idx, pt) in self_pts {
-            match frame.contains_pt(pt)? {
+        let mut curr: Which<T> = Which::WSelf(self_pts[0]);
+
+        loop {
+            let (curr_idx, curr_pt) = curr.inner();
+            if let Some(first_pt) = resultant_pts.iter().next() {
+                if first_pt == curr_pt {
+                    break;
+                }
+            }
+            match frame.contains_pt(curr_pt)? {
                 PointLoc::Outside => {
                     unimplemented!("?");
                 }
                 PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_) => {
-                    resultant_pts.push(*pt);
+                    resultant_pts.push(*curr_pt);
 
                     // If there are any intersections with
                     let relevant_isxns: Vec<_> = isxns
                         .iter()
-                        .filter(|isxn| isxn.self_idx == pt_idx)
+                        .filter(|isxn| isxn.self_idx == curr_idx)
                         .filter(|isxn| matches!(isxn.outcome, IntersectionOutcome::Yes(intersection) if !intersection.on_points_of_either_polygon()))
                         .collect();
 
                     if relevant_isxns.is_empty() {
                         // no action necessary, proceed to next point.
+                        curr = Which::WSelf(next_self(curr_idx));
                     } else {
                         unimplemented!("{:?}", relevant_isxns);
                     }
