@@ -39,16 +39,16 @@ impl Intersection {
     fn on_points_of_other(&self) -> bool {
         self.percent_along_other == 0.0 || self.percent_along_other == 1.0
     }
-    pub fn on_points_of_either(&self) -> bool {
+    pub fn on_points_of_either_polygon(&self) -> bool {
         self.on_points_of_self() || self.on_points_of_other()
     }
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
-pub enum Intersect {
-    Same,
-    SameReversed,
-    Colinear,
+pub enum IntersectionOutcome {
+    LineSegmentsAreTheSame,
+    LineSegmentsAreTheSameButReversed,
+    LineSegmentsAreColinear,
     Yes(Intersection),
 }
 
@@ -136,22 +136,22 @@ where
     /// If two line segments share a point, returns false.
     /// If two line segments are parallel and overlapping, returns false.
     /// If two line segments are the same, returns false.
-    pub fn intersects(&self, other: &Segment<T>) -> Option<Intersect>
+    pub fn intersects(&self, other: &Segment<T>) -> Option<IntersectionOutcome>
     where
         T: Float + float_cmp::ApproxEq,
         Pt<T>: PartialEq,
         f64: From<T>,
     {
         if self == other {
-            return Some(Intersect::Same);
+            return Some(IntersectionOutcome::LineSegmentsAreTheSame);
         }
         if *self == Segment(other.f, other.i) {
-            return Some(Intersect::SameReversed);
+            return Some(IntersectionOutcome::LineSegmentsAreTheSameButReversed);
         }
         if self.slope() == other.slope()
             && (self.f == other.i || other.f == self.i || self.i == other.i || self.f == other.f)
         {
-            return Some(Intersect::Colinear);
+            return Some(IntersectionOutcome::LineSegmentsAreColinear);
         }
 
         if let Some(pt) = self.get_line_intersection_inner(
@@ -160,7 +160,7 @@ where
             (other.i.x, other.i.y),
             (other.f.x, other.f.y),
         ) {
-            return Some(Intersect::Yes(Intersection {
+            return Some(IntersectionOutcome::Yes(Intersection {
                 percent_along_self: interpolate_2d_checked(self.i, self.f, pt).ok()?,
                 percent_along_other: interpolate_2d_checked(other.i, other.f, pt).ok()?,
             }));
@@ -532,55 +532,55 @@ mod tests {
         // colinear
         assert_eq!(
             Segment(a, c).intersects(&Segment(a, c)),
-            Some(Intersect::Same)
+            Some(IntersectionOutcome::LineSegmentsAreTheSame)
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(c, a)),
-            Some(Intersect::SameReversed)
+            Some(IntersectionOutcome::LineSegmentsAreTheSameButReversed)
         );
         // induce colinear
         assert_eq!(
             Segment(a, b).intersects(&Segment(b, c)),
-            Some(Intersect::Colinear)
+            Some(IntersectionOutcome::LineSegmentsAreColinear)
         );
         assert_eq!(
             Segment(a, b).intersects(&Segment(c, b)),
-            Some(Intersect::Colinear)
+            Some(IntersectionOutcome::LineSegmentsAreColinear)
         );
         assert_eq!(
             Segment(b, a).intersects(&Segment(b, c)),
-            Some(Intersect::Colinear)
+            Some(IntersectionOutcome::LineSegmentsAreColinear)
         );
         assert_eq!(
             Segment(b, a).intersects(&Segment(c, b)),
-            Some(Intersect::Colinear)
+            Some(IntersectionOutcome::LineSegmentsAreColinear)
         );
 
         // (s,w), (e,w), (w,s), (w,e)
         assert_eq!(
             Segment(e, i).intersects(&Segment(c, g)),
-            Some(Intersect::Yes(Intersection {
+            Some(IntersectionOutcome::Yes(Intersection {
                 percent_along_self: 0.0,
                 percent_along_other: 0.5
             }))
         );
         assert_eq!(
             Segment(a, e).intersects(&Segment(c, g)),
-            Some(Intersect::Yes(Intersection {
+            Some(IntersectionOutcome::Yes(Intersection {
                 percent_along_self: 1.0,
                 percent_along_other: 0.5
             }))
         );
         assert_eq!(
             Segment(c, g).intersects(&Segment(e, i)),
-            Some(Intersect::Yes(Intersection {
+            Some(IntersectionOutcome::Yes(Intersection {
                 percent_along_self: 0.5,
                 percent_along_other: 0.0
             }))
         );
         assert_eq!(
             Segment(c, g).intersects(&Segment(a, e)),
-            Some(Intersect::Yes(Intersection {
+            Some(IntersectionOutcome::Yes(Intersection {
                 percent_along_self: 0.5,
                 percent_along_other: 1.0
             }))
@@ -589,28 +589,28 @@ mod tests {
         // // (s,s), (s,e), (e,s), (e,e)
         assert_eq!(
             Segment(a, c).intersects(&Segment(c, i)),
-            Some(Intersect::Yes(Intersection {
+            Some(IntersectionOutcome::Yes(Intersection {
                 percent_along_self: 1.0,
                 percent_along_other: 0.0
             }))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(i, c)),
-            Some(Intersect::Yes(Intersection {
+            Some(IntersectionOutcome::Yes(Intersection {
                 percent_along_self: 1.0,
                 percent_along_other: 1.0
             }))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(g, a)),
-            Some(Intersect::Yes(Intersection {
+            Some(IntersectionOutcome::Yes(Intersection {
                 percent_along_self: 0.0,
                 percent_along_other: 1.0
             }))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(a, g)),
-            Some(Intersect::Yes(Intersection {
+            Some(IntersectionOutcome::Yes(Intersection {
                 percent_along_self: 0.0,
                 percent_along_other: 0.0
             }))
@@ -619,7 +619,7 @@ mod tests {
         // // (w,w)
         assert_eq!(
             Segment(a, i).intersects(&Segment(c, g)),
-            Some(Intersect::Yes(Intersection {
+            Some(IntersectionOutcome::Yes(Intersection {
                 percent_along_self: 0.5,
                 percent_along_other: 0.5
             }))

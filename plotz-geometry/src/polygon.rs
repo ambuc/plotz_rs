@@ -1,7 +1,7 @@
 use {
     crate::{
         point::Pt,
-        segment::{Contains, Intersect, Segment},
+        segment::{Contains, IntersectionOutcome, Segment},
     },
     float_cmp::approx_eq,
     itertools::{all, iproduct, zip},
@@ -118,6 +118,13 @@ pub enum PointLoc {
     Inside,
     OnPoint(usize),
     OnSegment(usize),
+}
+
+#[derive(Debug)]
+struct Isxn {
+    frame_idx: usize,
+    self_idx: usize,
+    outcome: IntersectionOutcome,
 }
 
 impl<T> Polygon<T> {
@@ -265,15 +272,19 @@ impl<T> Polygon<T> {
             Result::<_, ContainsPointError>::Ok(v)
         }?;
 
-        let frame_self_isxns: Vec<(usize, usize, Intersect)> =
+        let isxns: Vec<Isxn> =
             iproduct!(frame_segs.iter().enumerate(), self_segs.iter().enumerate())
-                .filter_map(|((f_idx, f_seg), (s_idx, s_seg))| {
-                    f_seg.intersects(s_seg).map(|isxn| (f_idx, s_idx, isxn))
+                .filter_map(|((frame_idx, f_seg), (self_idx, s_seg))| {
+                    f_seg.intersects(s_seg).map(|outcome| Isxn {
+                        frame_idx,
+                        self_idx,
+                        outcome,
+                    })
                 })
                 .collect();
 
         // If there are no intersections,
-        if frame_self_isxns.is_empty() {
+        if isxns.is_empty() {
             // Then either all of the frame points are inside self,
             if all(&frame_pts_in_self, |(_idx, isxn)| {
                 !matches!(isxn, PointLoc::Outside)
@@ -290,29 +301,33 @@ impl<T> Polygon<T> {
         }
 
         let self_pts = self.pts.iter().enumerate();
+        let frame_pts = frame.pts.iter().enumerate();
 
         let mut resultant_polygons: Vec<Polygon<T>> = vec![];
         let mut resultant_pts: Vec<Pt<T>> = vec![];
 
         assert!(!self_pts_in_frame.is_empty());
 
-        for (curr_self_pt_idx, curr_self_pt) in self_pts {
-            if frame.contains_pt(curr_self_pt)? != PointLoc::Outside {
-                resultant_pts.push(*curr_self_pt);
+        for (pt_idx, pt) in self_pts {
+            match frame.contains_pt(pt)? {
+                PointLoc::Outside => {
+                    unimplemented!("?");
+                }
+                PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_) => {
+                    resultant_pts.push(*pt);
 
-                // If there are any intersections with
-                let relevant_isxns = frame_self_isxns
-                    .iter()
-                    .filter(|(_f_idx, s_idx, _isxn)| *s_idx == curr_self_pt_idx)
-                    .filter(|(_f_idx, _s_idx, isxn)| {
-                        matches!(isxn, Intersect::Yes(x) if !x.on_points_of_either())
-                    })
-                    .collect::<Vec<_>>();
+                    // If there are any intersections with
+                    let relevant_isxns: Vec<_> = isxns
+                        .iter()
+                        .filter(|isxn| isxn.self_idx == pt_idx)
+                        .filter(|isxn| matches!(isxn.outcome, IntersectionOutcome::Yes(intersection) if !intersection.on_points_of_either_polygon()))
+                        .collect();
 
-                if relevant_isxns.is_empty() {
-                    // no action necessary
-                } else {
-                    unimplemented!("{:?}", relevant_isxns);
+                    if relevant_isxns.is_empty() {
+                        // no action necessary, proceed to next point.
+                    } else {
+                        unimplemented!("{:?}", relevant_isxns);
+                    }
                 }
             }
         }
@@ -762,7 +777,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_crop_to_polygon_two_pivots() {
         // ⬆️ y
         // ⬜⬜⬜⬜⬜
