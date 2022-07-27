@@ -357,18 +357,24 @@ impl<T> Polygon<T> {
                 PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_) => {
                     resultant_pts.push(*curr_pt);
 
-                    // If there are any intersections with
+                    // If there are any intersections which
                     let relevant_isxns: Vec<_> = isxns
                         .iter()
+                        // (a) intersect our line (that's line[curr_idx] from pt[curr_idx] to pt[curr_idx]+1)
                         .filter(|isxn| isxn.self_idx == curr_idx)
+                        // (b) is a genuine intersection which does not intersect at a point,
                         .filter(|isxn| matches!(isxn.outcome, IntersectionOutcome::Yes(intersection) if !intersection.on_points_of_either_polygon()))
+                        // then collect them.
                         .collect();
 
+                    // If there aren't any intersections, then pt[curr_idx] runs
+                    // along line[curr_idx] to pt[curr_idx]+1 uninterrupted, and
+                    // pt[curr_idx]+1 is also in frame.
                     if relevant_isxns.is_empty() {
-                        // no action necessary, proceed to next point.
+                        // No action necessary, so increment |curr| and loop.
                         curr = WhichPolygon::WSelf(next_self(curr_idx));
                     } else {
-                        unimplemented!("{:?}", relevant_isxns);
+                        unimplemented!("{relevant_isxns:#?}");
                     }
                 }
             }
@@ -378,7 +384,7 @@ impl<T> Polygon<T> {
         // intersections which did not result in points of resultant polygons.
         // if there are, we need to find other resultants.
         // TODO
-        
+
         resultant_polygons.push(Polygon(resultant_pts)?);
 
         Ok(resultant_polygons)
