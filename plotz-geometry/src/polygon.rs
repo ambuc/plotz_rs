@@ -1,8 +1,9 @@
 use {
     crate::{
         point::Pt,
-        segment::{Contains, IntersectionOutcome, Segment},
+        segment::{Contains, Intersection, IntersectionOutcome, Segment},
     },
+    either::Either,
     float_cmp::approx_eq,
     itertools::{all, iproduct, zip},
     num::Float,
@@ -122,33 +123,70 @@ pub enum PointLoc {
 
 #[derive(Debug)]
 struct Isxn {
-    _frame_idx: usize,
-    self_idx: usize,
+    _frame_segment_idx: usize,
+    self_segment_idx: usize,
     outcome: IntersectionOutcome,
 }
 
-fn next_idx(idx: usize, len: usize) -> usize {
-    if idx == len - 1 {
-        0
-    } else {
-        idx + 1
+#[derive(Debug, Copy, Clone)]
+enum OnPolygon {
+    OnSelf,
+    _OnFrame,
+}
+
+#[derive(Debug, Copy, Clone)]
+struct OnOnePolygon {
+    on_polygon: OnPolygon,
+    at_point_index: usize,
+}
+
+#[derive(Debug, Copy, Clone)]
+struct OnBothPolygons {
+    _intersection: Intersection,
+    _at_segment_index_of_self: usize,
+    _at_segment_index_of_frame: usize,
+}
+
+#[derive(Debug)]
+struct Cursor<'a, T> {
+    // current position
+    position: Either<OnOnePolygon, OnBothPolygons>,
+    _facing: (OnPolygon, usize),      // pt idx
+    facing_along: (OnPolygon, usize), // segment idx
+    // context
+    self_pts: &'a Vec<(usize, &'a Pt<T>)>,
+    self_pts_len: &'a usize,
+    frame_pts: &'a Vec<(usize, &'a Pt<T>)>,
+    frame_pts_len: &'a usize,
+}
+impl<'a, T> Cursor<'a, T> {
+    fn pt(&self) -> &'a Pt<T> {
+        match &self.position {
+            Either::Left(on_one_polygon) => match on_one_polygon.on_polygon {
+                OnPolygon::OnSelf => self.self_pts[on_one_polygon.at_point_index].1,
+                OnPolygon::_OnFrame => self.frame_pts[on_one_polygon.at_point_index].1,
+            },
+            Either::Right(_) => {
+                unimplemented!("?")
+            }
+        }
     }
-}
-
-fn next<T: Copy>(idx: usize, pts: &[(usize, T)], len: usize) -> (usize, T) {
-    let next_idx: usize = next_idx(idx, len);
-    pts[next_idx]
-}
-
-enum WhichPolygon<'a, T> {
-    WSelf((usize, &'a Pt<T>)),
-    _WFrame((usize, &'a Pt<T>)),
-}
-impl<'a, T> WhichPolygon<'a, T> {
-    fn inner(&'a self) -> (usize, &'a Pt<T>) {
-        match self {
-            WhichPolygon::WSelf(x) => *x,
-            WhichPolygon::_WFrame(x) => *x,
+    fn march_to_next_point(&mut self) {
+        match &mut self.position {
+            Either::Left(ref mut on_one_polygon) => {
+                on_one_polygon.at_point_index += 1;
+                if on_one_polygon.at_point_index
+                    >= (match on_one_polygon.on_polygon {
+                        OnPolygon::OnSelf => *self.self_pts_len,
+                        OnPolygon::_OnFrame => *self.frame_pts_len,
+                    })
+                {
+                    on_one_polygon.at_point_index = 0;
+                }
+            }
+            Either::Right(_) => {
+                unimplemented!("?");
+            }
         }
     }
 }
@@ -302,8 +340,8 @@ impl<T> Polygon<T> {
             iproduct!(frame_segs.iter().enumerate(), self_segs.iter().enumerate())
                 .filter_map(|((frame_idx, f_seg), (self_idx, s_seg))| {
                     f_seg.intersects(s_seg).map(|outcome| Isxn {
-                        _frame_idx: frame_idx,
-                        self_idx,
+                        _frame_segment_idx: frame_idx,
+                        self_segment_idx: self_idx,
                         outcome,
                     })
                 })
@@ -331,18 +369,26 @@ impl<T> Polygon<T> {
         let frame_pts: Vec<_> = frame.pts.iter().enumerate().collect();
         let frame_pts_len: usize = frame_pts.len();
 
-        let next_self = |idx| next(idx, &self_pts, self_pts_len);
-        let _next_frame = |idx| next(idx, &frame_pts, frame_pts_len);
-
         let mut resultant_polygons: Vec<Polygon<T>> = vec![];
         let mut resultant_pts: Vec<Pt<T>> = vec![];
 
         assert!(!self_pts_in_frame.is_empty());
 
-        let mut curr: WhichPolygon<T> = WhichPolygon::WSelf(self_pts[0]);
+        let mut curr = Cursor::<T> {
+            position: Either::Left(OnOnePolygon {
+                on_polygon: OnPolygon::OnSelf,
+                at_point_index: 0,
+            }),
+            _facing: (OnPolygon::OnSelf, /*pt_idx*/ 1),
+            facing_along: (OnPolygon::OnSelf, /*pt_idx*/ 0),
+            self_pts: &self_pts,
+            self_pts_len: &self_pts_len,
+            frame_pts: &frame_pts,
+            frame_pts_len: &frame_pts_len,
+        };
 
         loop {
-            let (curr_idx, curr_pt) = curr.inner();
+            let curr_pt = curr.pt();
 
             // If we've made a cycle,
             if resultant_pts.get(0) == Some(curr_pt) {
@@ -361,7 +407,7 @@ impl<T> Polygon<T> {
                     let relevant_isxns: Vec<_> = isxns
                         .iter()
                         // (a) intersect our line (that's line[curr_idx] from pt[curr_idx] to pt[curr_idx]+1)
-                        .filter(|isxn| isxn.self_idx == curr_idx)
+                        .filter(|isxn| isxn.self_segment_idx == curr.facing_along.1)
                         // (b) is a genuine intersection which does not intersect at a point,
                         .filter(|isxn| matches!(isxn.outcome, IntersectionOutcome::Yes(intersection) if !intersection.on_points_of_either_polygon()))
                         // then collect them.
@@ -372,7 +418,8 @@ impl<T> Polygon<T> {
                     // pt[curr_idx]+1 is also in frame.
                     if relevant_isxns.is_empty() {
                         // No action necessary, so increment |curr| and loop.
-                        curr = WhichPolygon::WSelf(next_self(curr_idx));
+                        curr.march_to_next_point();
+                        println!("new cursor: {:?}", curr);
                     } else {
                         unimplemented!("{relevant_isxns:#?}");
                     }
