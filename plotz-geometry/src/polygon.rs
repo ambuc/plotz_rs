@@ -149,7 +149,7 @@ struct Isxn {
     intersection: Intersection,
 }
 impl Isxn {
-    pub fn to_pt_given_self_segs<T>(&self, self_segs: &Vec<(usize, &Segment<T>)>) -> Pt<T>
+    pub fn to_pt_given_self_segs<T>(&self, self_segs: &Vec<(usize, Segment<T>)>) -> Pt<T>
     where
         T: float_cmp::ApproxEq + Float + Copy + From<f64>,
         f64: From<T>,
@@ -162,7 +162,7 @@ impl Isxn {
 #[derive(Debug, Copy, Clone)]
 enum On {
     OnSelf,
-    _OnFrame,
+    OnFrame,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -173,9 +173,9 @@ struct OnePolygon {
 
 #[derive(Debug, Copy, Clone)]
 struct BothPolygons {
-    _intersection: Intersection,
-    _at_segment_index_of_self: usize,
-    _at_segment_index_of_frame: usize,
+    intersection: Intersection,
+    at_segment_index_of_self: usize,
+    at_segment_index_of_frame: usize,
 }
 
 #[derive(Debug)]
@@ -198,7 +198,7 @@ impl<'a, T> Cursor<'a, T> {
         match &self.position {
             Either::Left(one_polygon) => match one_polygon.on_polygon {
                 On::OnSelf => self.self_pts[one_polygon.at_point_index].1,
-                On::_OnFrame => self.frame_pts[one_polygon.at_point_index].1,
+                On::OnFrame => self.frame_pts[one_polygon.at_point_index].1,
             },
             Either::Right(_) => {
                 unimplemented!("?")
@@ -212,7 +212,7 @@ impl<'a, T> Cursor<'a, T> {
                 if one_polygon.at_point_index
                     >= (match one_polygon.on_polygon {
                         On::OnSelf => *self.self_pts_len,
-                        On::_OnFrame => *self.frame_pts_len,
+                        On::OnFrame => *self.frame_pts_len,
                     })
                 {
                     one_polygon.at_point_index = 0;
@@ -335,7 +335,7 @@ impl<T> Polygon<T> {
     // NB: Polygons must be closed and positively oriented.
     pub fn crop_to_polygon(&self, frame: &Polygon<T>) -> Result<Vec<Polygon<T>>, CropToPolygonError>
     where
-        T: Copy + Float + AddAssign + Mul + Sum + float_cmp::ApproxEq + Debug,
+        T: Copy + Float + AddAssign + Mul + Sum + float_cmp::ApproxEq + Debug, // + From<f64>,
         Pt<T>: PartialEq,
         f64: From<T>,
     {
@@ -434,13 +434,13 @@ impl<T> Polygon<T> {
                 break;
             }
 
+            resultant_pts.push(*curr_pt);
+
             match frame.contains_pt(curr_pt)? {
                 PointLoc::Outside => {
                     unimplemented!("?");
                 }
                 PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_) => {
-                    resultant_pts.push(*curr_pt);
-
                     // If there are any intersections which
                     let mut relevant_isxns: Vec<Isxn> = isxn_outcomes
                         .iter()
@@ -470,26 +470,39 @@ impl<T> Polygon<T> {
                                 .percent_along_self
                                 .partial_cmp(&b.intersection.percent_along_self)
                                 .unwrap(),
-                            (On::_OnFrame, _) => a
+                            (On::OnFrame, _) => a
                                 .intersection
                                 .percent_along_other
                                 .partial_cmp(&b.intersection.percent_along_other)
                                 .unwrap(),
                         });
-                        match curr.position {
-                            Either::Left(_) => {
-                                // Since we're currently at a point on just one
-                                // polygon, we should march towards the very first
-                                // relevant_isxn.
-                                let next_isxn: &Isxn = relevant_isxns
-                                    .get(0)
-                                    .expect("I thought you said it wasn't empty?");
-                                //
-                            }
-                            Either::Right(_) => {
-                                unimplemented!("?");
-                            }
-                        }
+                        // match curr.position {
+                        //     Either::Left(one_polygon) => {
+                        //         // Since we're currently at a point on just one
+                        //         // polygon, we should march towards the very first
+                        //         // relevant_isxn.
+                        //         let next_isxn: &Isxn = relevant_isxns
+                        //             .get(0)
+                        //             .expect("I thought you said it wasn't empty?");
+                        //         let _next_pt = next_isxn.to_pt_given_self_segs(&curr.self_segments);
+                        //         // add to resultant pts? or will  this happen enxt time around?
+
+                        //         let new_position = Either::Right(BothPolygons {
+                        //             intersection: next_isxn.intersection.clone(),
+                        //             at_segment_index_of_self: next_isxn.self_segment_idx,
+                        //             at_segment_index_of_frame: next_isxn._frame_segment_idx,
+                        //         });
+                        //         let new_facing_along = match one_polygon.on_polygon {
+                        //             On::OnSelf => (On::OnFrame, next_isxn._frame_segment_idx),
+                        //             On::OnFrame => (On::OnSelf, next_isxn.self_segment_idx),
+                        //         };
+                        //         curr.position = new_position;
+                        //         curr.facing_along = new_facing_along;
+                        //     }
+                        //     Either::Right(_) => {
+                        //         unimplemented!("?");
+                        //     }
+                        // }
                         unimplemented!("{relevant_isxns:#?}");
                     }
                 }
