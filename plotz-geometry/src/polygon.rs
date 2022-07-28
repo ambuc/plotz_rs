@@ -1,3 +1,5 @@
+use crate::interpolate;
+
 use {
     crate::{
         point::Pt,
@@ -122,10 +124,39 @@ pub enum PointLoc {
 }
 
 #[derive(Debug)]
-struct Isxn {
+struct IsxnOutcome {
     _frame_segment_idx: usize,
     self_segment_idx: usize,
     outcome: IntersectionOutcome,
+}
+impl IsxnOutcome {
+    fn to_isxn(&self) -> Option<Isxn> {
+        match self.outcome {
+            IntersectionOutcome::Yes(i) => Some(Isxn {
+                _frame_segment_idx: self._frame_segment_idx,
+                self_segment_idx: self.self_segment_idx,
+                intersection: i,
+            }),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug)]
+struct Isxn {
+    _frame_segment_idx: usize,
+    self_segment_idx: usize,
+    intersection: Intersection,
+}
+impl Isxn {
+    pub fn to_pt_given_self_segs<T>(&self, self_segs: &Vec<(usize, &Segment<T>)>) -> Pt<T>
+    where
+        T: float_cmp::ApproxEq + Float + Copy + From<f64>,
+        f64: From<T>,
+    {
+        let (_, seg) = self_segs[self.self_segment_idx];
+        interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_self.into())
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -157,6 +188,10 @@ struct Cursor<'a, T> {
     self_pts_len: &'a usize,
     frame_pts: &'a Vec<(usize, &'a Pt<T>)>,
     frame_pts_len: &'a usize,
+    self_segments: &'a Vec<(usize, Segment<T>)>,
+    self_segments_len: &'a usize,
+    frame_segments: &'a Vec<(usize, Segment<T>)>,
+    frame_segments_len: &'a usize,
 }
 impl<'a, T> Cursor<'a, T> {
     fn pt(&self) -> &'a Pt<T> {
@@ -317,8 +352,10 @@ impl<T> Polygon<T> {
             return Err(CropToPolygonError::ThatPolygonNotPositivelyOriented);
         }
 
-        let self_segs = self.to_segments();
-        let frame_segs = frame.to_segments();
+        let self_segments: Vec<_> = self.to_segments().into_iter().enumerate().collect();
+        let self_segments_len: usize = self_segments.len();
+        let frame_segments: Vec<_> = frame.to_segments().into_iter().enumerate().collect();
+        let frame_segments_len: usize = frame_segments.len();
 
         let frame_pts_in_self: Vec<(usize, PointLoc)> = {
             let mut v = vec![];
@@ -335,19 +372,18 @@ impl<T> Polygon<T> {
             Result::<_, ContainsPointError>::Ok(v)
         }?;
 
-        let isxns: Vec<Isxn> =
-            iproduct!(frame_segs.iter().enumerate(), self_segs.iter().enumerate())
-                .filter_map(|((frame_idx, f_seg), (self_idx, s_seg))| {
-                    f_seg.intersects(s_seg).map(|outcome| Isxn {
-                        _frame_segment_idx: frame_idx,
-                        self_segment_idx: self_idx,
-                        outcome,
-                    })
+        let isxn_outcomes: Vec<IsxnOutcome> = iproduct!(&frame_segments, &self_segments)
+            .filter_map(|((frame_idx, f_seg), (self_idx, s_seg))| {
+                f_seg.intersects(&s_seg).map(|outcome| IsxnOutcome {
+                    _frame_segment_idx: *frame_idx,
+                    self_segment_idx: *self_idx,
+                    outcome,
                 })
-                .collect();
+            })
+            .collect();
 
         // If there are no intersections,
-        if isxns.is_empty() {
+        if isxn_outcomes.is_empty() {
             // Then either all of the frame points are inside self,
             if all(&frame_pts_in_self, |(_idx, isxn)| {
                 !matches!(isxn, PointLoc::Outside)
@@ -383,6 +419,10 @@ impl<T> Polygon<T> {
             self_pts_len: &self_pts_len,
             frame_pts: &frame_pts,
             frame_pts_len: &frame_pts_len,
+            self_segments: &self_segments,
+            self_segments_len: &self_segments_len,
+            frame_segments: &frame_segments,
+            frame_segments_len: &frame_segments_len,
         };
 
         loop {
@@ -402,12 +442,13 @@ impl<T> Polygon<T> {
                     resultant_pts.push(*curr_pt);
 
                     // If there are any intersections which
-                    let relevant_isxns: Vec<_> = isxns
+                    let mut relevant_isxns: Vec<Isxn> = isxn_outcomes
                         .iter()
+                        .filter_map(|isxn_outcome| isxn_outcome.to_isxn())
                         // (a) intersect our line (that's line[curr_idx] from pt[curr_idx] to pt[curr_idx]+1)
                         .filter(|isxn| isxn.self_segment_idx == curr.facing_along.1)
                         // (b) is a genuine intersection which does not intersect at a point,
-                        .filter(|isxn| matches!(isxn.outcome, IntersectionOutcome::Yes(intersection) if !intersection.on_points_of_either_polygon()))
+                        .filter(|isxn| !isxn.intersection.on_points_of_either_polygon())
                         // then collect them.
                         .collect();
 
@@ -419,6 +460,36 @@ impl<T> Polygon<T> {
                         curr.march_to_next_point();
                         println!("new cursor: {:?}", curr);
                     } else {
+                        // must take the list of relevant isxns and sort them by
+                        // distance along current segment, and discard the ones
+                        // behind self.
+                        // TODO
+                        relevant_isxns.sort_by(|a: &Isxn, b: &Isxn| match &curr.facing_along {
+                            (On::OnSelf, _) => a
+                                .intersection
+                                .percent_along_self
+                                .partial_cmp(&b.intersection.percent_along_self)
+                                .unwrap(),
+                            (On::_OnFrame, _) => a
+                                .intersection
+                                .percent_along_other
+                                .partial_cmp(&b.intersection.percent_along_other)
+                                .unwrap(),
+                        });
+                        match curr.position {
+                            Either::Left(_) => {
+                                // Since we're currently at a point on just one
+                                // polygon, we should march towards the very first
+                                // relevant_isxn.
+                                let next_isxn: &Isxn = relevant_isxns
+                                    .get(0)
+                                    .expect("I thought you said it wasn't empty?");
+                                //
+                            }
+                            Either::Right(_) => {
+                                unimplemented!("?");
+                            }
+                        }
                         unimplemented!("{relevant_isxns:#?}");
                     }
                 }

@@ -63,6 +63,14 @@ where
     }
 }
 
+pub fn extrapolate_2d<T>(a: Pt<T>, b: Pt<T>, p: T) -> Pt<T>
+where
+    T: Float,
+    Pt<T>: std::ops::Sub<Output = Pt<T>>,
+{
+    a + ((b - a) / p)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

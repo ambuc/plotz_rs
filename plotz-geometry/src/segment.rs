@@ -25,11 +25,11 @@ pub struct Intersection {
     /// At which % of the way from self_i to self_f the intersection occurs. Will always be between 0.0 and 1.0.
     /// If this value is 0.0, the intersection is at self_i.
     /// If this value is 1.0, the intersection is at self_f.
-    percent_along_self: f64,
+    pub percent_along_self: f64,
     /// At which % of the way from other_i to other_f the intersection occurs. Will always be between 0.0 and 1.0.
     /// If this value is 0.0, the intersection is at other_i.
     /// If this value is 1.0, the intersection is at other_f.
-    percent_along_other: f64,
+    pub percent_along_other: f64,
 }
 
 impl Intersection {
