@@ -129,19 +129,19 @@ struct Isxn {
 }
 
 #[derive(Debug, Copy, Clone)]
-enum OnPolygon {
+enum On {
     OnSelf,
     _OnFrame,
 }
 
 #[derive(Debug, Copy, Clone)]
-struct OnOnePolygon {
-    on_polygon: OnPolygon,
+struct OnePolygon {
+    on_polygon: On,
     at_point_index: usize,
 }
 
 #[derive(Debug, Copy, Clone)]
-struct OnBothPolygons {
+struct BothPolygons {
     _intersection: Intersection,
     _at_segment_index_of_self: usize,
     _at_segment_index_of_frame: usize,
@@ -150,9 +150,8 @@ struct OnBothPolygons {
 #[derive(Debug)]
 struct Cursor<'a, T> {
     // current position
-    position: Either<OnOnePolygon, OnBothPolygons>,
-    _facing: (OnPolygon, usize),      // pt idx
-    facing_along: (OnPolygon, usize), // segment idx
+    position: Either<OnePolygon, BothPolygons>,
+    facing_along: (On, usize), // segment idx
     // context
     self_pts: &'a Vec<(usize, &'a Pt<T>)>,
     self_pts_len: &'a usize,
@@ -162,9 +161,9 @@ struct Cursor<'a, T> {
 impl<'a, T> Cursor<'a, T> {
     fn pt(&self) -> &'a Pt<T> {
         match &self.position {
-            Either::Left(on_one_polygon) => match on_one_polygon.on_polygon {
-                OnPolygon::OnSelf => self.self_pts[on_one_polygon.at_point_index].1,
-                OnPolygon::_OnFrame => self.frame_pts[on_one_polygon.at_point_index].1,
+            Either::Left(one_polygon) => match one_polygon.on_polygon {
+                On::OnSelf => self.self_pts[one_polygon.at_point_index].1,
+                On::_OnFrame => self.frame_pts[one_polygon.at_point_index].1,
             },
             Either::Right(_) => {
                 unimplemented!("?")
@@ -173,15 +172,15 @@ impl<'a, T> Cursor<'a, T> {
     }
     fn march_to_next_point(&mut self) {
         match &mut self.position {
-            Either::Left(ref mut on_one_polygon) => {
-                on_one_polygon.at_point_index += 1;
-                if on_one_polygon.at_point_index
-                    >= (match on_one_polygon.on_polygon {
-                        OnPolygon::OnSelf => *self.self_pts_len,
-                        OnPolygon::_OnFrame => *self.frame_pts_len,
+            Either::Left(ref mut one_polygon) => {
+                one_polygon.at_point_index += 1;
+                if one_polygon.at_point_index
+                    >= (match one_polygon.on_polygon {
+                        On::OnSelf => *self.self_pts_len,
+                        On::_OnFrame => *self.frame_pts_len,
                     })
                 {
-                    on_one_polygon.at_point_index = 0;
+                    one_polygon.at_point_index = 0;
                 }
             }
             Either::Right(_) => {
@@ -375,12 +374,11 @@ impl<T> Polygon<T> {
         assert!(!self_pts_in_frame.is_empty());
 
         let mut curr = Cursor::<T> {
-            position: Either::Left(OnOnePolygon {
-                on_polygon: OnPolygon::OnSelf,
+            position: Either::Left(OnePolygon {
+                on_polygon: On::OnSelf,
                 at_point_index: 0,
             }),
-            _facing: (OnPolygon::OnSelf, /*pt_idx*/ 1),
-            facing_along: (OnPolygon::OnSelf, /*pt_idx*/ 0),
+            facing_along: (On::OnSelf, /*pt_idx*/ 0),
             self_pts: &self_pts,
             self_pts_len: &self_pts_len,
             frame_pts: &frame_pts,
