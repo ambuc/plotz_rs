@@ -1,6 +1,5 @@
 use crate::point::Pt;
-use float_cmp::{approx_eq, ApproxEq};
-use num::Float;
+use float_cmp::approx_eq;
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum InterpolationError {
@@ -10,19 +9,15 @@ pub enum InterpolationError {
     AboveOne,
 }
 
-fn interpolate_checked<T>(a: T, b: T, i: T) -> Result<f64, InterpolationError>
-where
-    T: Float + Copy,
-    f64: From<T>,
-{
+fn interpolate_checked(a: f64, b: f64, i: f64) -> Result<f64, InterpolationError> {
     let v = (i - a) / (b - a);
-    if v < T::zero() {
+    if v < 0_f64 {
         return Err(InterpolationError::BelowZero);
     }
-    if v > T::one() {
+    if v > 1_f64 {
         return Err(InterpolationError::AboveOne);
     }
-    Ok(f64::from(v))
+    Ok(v)
 }
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -35,26 +30,22 @@ pub enum Interpolation2dError {
     PointNotOnLine,
 }
 
-pub fn interpolate_2d_checked<T>(a: Pt<T>, b: Pt<T>, i: Pt<T>) -> Result<f64, Interpolation2dError>
-where
-    T: ApproxEq + Float + Copy,
-    f64: From<T>,
-{
-    let x_same = approx_eq!(T, a.x, b.x);
-    let y_same = approx_eq!(T, a.y, b.y);
+pub fn interpolate_2d_checked(a: Pt, b: Pt, i: Pt) -> Result<f64, Interpolation2dError> {
+    let x_same = approx_eq!(f64, a.x.0, b.x.0);
+    let y_same = approx_eq!(f64, a.y.0, b.y.0);
     match (x_same, y_same) {
         (true, true) => Err(Interpolation2dError::PointsSame),
         (false, true) => {
-            let v_x = interpolate_checked(a.x, b.x, i.x)?;
+            let v_x = interpolate_checked(a.x.0, b.x.0, i.x.0)?;
             Ok(v_x)
         }
         (true, false) => {
-            let v_y = interpolate_checked(a.y, b.y, i.y)?;
+            let v_y = interpolate_checked(a.y.0, b.y.0, i.y.0)?;
             Ok(v_y)
         }
         (false, false) => {
-            let v_x = interpolate_checked(a.x, b.x, i.x)?;
-            let v_y = interpolate_checked(a.y, b.y, i.y)?;
+            let v_x = interpolate_checked(a.x.0, b.x.0, i.x.0)?;
+            let v_y = interpolate_checked(a.y.0, b.y.0, i.y.0)?;
             match approx_eq!(f64, v_x, v_y) {
                 true => Ok(v_x),
                 false => Err(Interpolation2dError::PointNotOnLine),
@@ -63,11 +54,7 @@ where
     }
 }
 
-pub fn extrapolate_2d<T>(a: Pt<T>, b: Pt<T>, p: T) -> Pt<T>
-where
-    T: Float,
-    Pt<T>: std::ops::Sub<Output = Pt<T>>,
-{
+pub fn extrapolate_2d(a: Pt, b: Pt, p: f64) -> Pt {
     a + ((b - a) / p)
 }
 

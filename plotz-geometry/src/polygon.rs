@@ -8,11 +8,10 @@ use {
     either::Either,
     float_cmp::approx_eq,
     itertools::{all, iproduct, zip},
-    num::Float,
     std::{
+        cmp::{Eq, PartialEq},
         fmt::Debug,
-        iter::Sum,
-        ops::{Add, AddAssign, Mul, Sub},
+        ops::Add,
     },
     thiserror,
 };
@@ -27,15 +26,12 @@ pub enum PolygonKind {
 /// If constructed with PolygonKind::Open, this is a multiline (unshaded).
 /// If constructed with PolygonKind::Closed, this is a closed, shaded polygon.
 #[derive(Debug, Clone)]
-pub struct Polygon<T> {
-    pub pts: Vec<Pt<T>>,
+pub struct Polygon {
+    pub pts: Vec<Pt>,
     pub kind: PolygonKind,
 }
 
-impl<T> PartialEq for Polygon<T>
-where
-    Pt<T>: PartialEq,
-{
+impl PartialEq for Polygon {
     fn eq(&self, other: &Self) -> bool {
         self.pts == other.pts && self.kind == other.kind
     }
@@ -51,10 +47,8 @@ pub enum MultilineConstructorError {
 /// must have two or more points. Constructing a multiline from one or fewer
 /// points will result in a MultilineConstructorError.
 #[allow(non_snake_case)]
-pub fn Multiline<T>(
-    a: impl IntoIterator<Item = Pt<T>>,
-) -> Result<Polygon<T>, MultilineConstructorError> {
-    let pts: Vec<Pt<T>> = a.into_iter().collect();
+pub fn Multiline(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, MultilineConstructorError> {
+    let pts: Vec<Pt> = a.into_iter().collect();
     if pts.len() <= 1 {
         return Err(MultilineConstructorError::OneOrFewerPoints);
     }
@@ -74,10 +68,8 @@ pub enum PolygonConstructorError {
 /// three or more points. Constructing a polygon from two or fewer points will
 /// result in a PolygonConstructorErrorip
 #[allow(non_snake_case)]
-pub fn Polygon<T>(
-    a: impl IntoIterator<Item = Pt<T>>,
-) -> Result<Polygon<T>, PolygonConstructorError> {
-    let pts: Vec<Pt<T>> = a.into_iter().collect();
+pub fn Polygon(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, PolygonConstructorError> {
+    let pts: Vec<Pt> = a.into_iter().collect();
     if pts.len() <= 2 {
         return Err(PolygonConstructorError::TwoOrFewerPoints);
     }
@@ -149,13 +141,9 @@ struct Isxn {
     intersection: Intersection,
 }
 impl Isxn {
-    pub fn to_pt_given_self_segs<T>(&self, self_segs: &Vec<(usize, Segment<T>)>) -> Pt<T>
-    where
-        T: float_cmp::ApproxEq + Float + Copy + From<f64>,
-        f64: From<T>,
-    {
+    pub fn to_pt_given_self_segs(&self, self_segs: &[(usize, Segment)]) -> Pt {
         let (_, seg) = self_segs[self.self_segment_idx];
-        interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_self.into())
+        interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_self)
     }
 }
 
@@ -179,22 +167,22 @@ struct BothPolygons {
 }
 
 #[derive(Debug)]
-struct Cursor<'a, T> {
+struct Cursor<'a> {
     // current position
     position: Either<OnePolygon, BothPolygons>,
     facing_along: (On, usize), // segment idx
     // context
-    self_pts: &'a Vec<(usize, &'a Pt<T>)>,
+    self_pts: &'a Vec<(usize, &'a Pt)>,
     self_pts_len: &'a usize,
-    frame_pts: &'a Vec<(usize, &'a Pt<T>)>,
+    frame_pts: &'a Vec<(usize, &'a Pt)>,
     frame_pts_len: &'a usize,
-    self_segments: &'a Vec<(usize, Segment<T>)>,
+    self_segments: &'a Vec<(usize, Segment)>,
     self_segments_len: &'a usize,
-    frame_segments: &'a Vec<(usize, Segment<T>)>,
+    frame_segments: &'a Vec<(usize, Segment)>,
     frame_segments_len: &'a usize,
 }
-impl<'a, T> Cursor<'a, T> {
-    fn pt(&self) -> &'a Pt<T> {
+impl<'a> Cursor<'a> {
+    fn pt(&self) -> &'a Pt {
         match &self.position {
             Either::Left(one_polygon) => match one_polygon.on_polygon {
                 On::OnSelf => self.self_pts[one_polygon.at_point_index].1,
@@ -225,7 +213,7 @@ impl<'a, T> Cursor<'a, T> {
     }
 }
 
-impl<T> Polygon<T> {
+impl Polygon {
     /// Returns the segments of a polygon, one at a time.
     ///
     /// If this is an open polygon, we return only the line segments without the
@@ -235,10 +223,7 @@ impl<T> Polygon<T> {
     ///
     /// See test_multiline_to_segments() and test_polygon_to_segments() for
     /// examples.
-    pub fn to_segments(&self) -> Vec<Segment<T>>
-    where
-        T: Copy,
-    {
+    pub fn to_segments(&self) -> Vec<Segment> {
         match self.kind {
             PolygonKind::Open => zip(self.pts.iter(), self.pts.iter().skip(1))
                 .map(|(x, y)| Segment(*x, *y))
@@ -250,12 +235,7 @@ impl<T> Polygon<T> {
     }
     /// Returns true if any line segment from this polygon intersects any line
     /// segment from the other polygon.
-    pub fn intersects(&self, other: &Polygon<T>) -> bool
-    where
-        T: Copy + Float + PartialOrd + float_cmp::ApproxEq + std::fmt::Debug,
-        Pt<T>: PartialEq,
-        f64: From<T>,
-    {
+    pub fn intersects(&self, other: &Polygon) -> bool {
         for l1 in self.to_segments() {
             for l2 in other.to_segments() {
                 if l1.intersects(&l2).is_some() {
@@ -268,11 +248,7 @@ impl<T> Polygon<T> {
 
     /// Calculates whether a point is within, without, or along a closed polygon
     /// using the https://en.wikipedia.org/wiki/Winding_number method.
-    pub fn contains_pt(&self, other: &Pt<T>) -> Result<PointLoc, ContainsPointError>
-    where
-        T: Float + AddAssign + float_cmp::ApproxEq + Debug,
-        Pt<T>: Sub<Output = Pt<T>> + AddAssign<Pt<T>> + PartialEq,
-    {
+    pub fn contains_pt(&self, other: &Pt) -> Result<PointLoc, ContainsPointError> {
         // If |self| is open, error out.
         if self.kind == PolygonKind::Open {
             return Err(ContainsPointError::PolygonIsOpen);
@@ -295,27 +271,24 @@ impl<T> Polygon<T> {
             }
         }
 
-        let mut theta: T = T::zero();
+        let mut theta = 0_f64;
         for (i, j) in zip(self.pts.iter(), self.pts.iter().cycle().skip(1)) {
             theta += _abp(other, i, j)
         }
 
-        Ok(match approx_eq!(T, theta, T::zero()) {
+        Ok(match approx_eq!(f64, theta, 0_f64) {
             true => PointLoc::Outside,
             false => PointLoc::Inside,
         })
     }
 
-    fn get_curve_orientation(&self) -> CurveOrientation
-    where
-        T: Float + AddAssign + Mul + Sum,
-    {
+    fn get_curve_orientation(&self) -> CurveOrientation {
         if self
             .to_segments()
             .iter()
-            .map(|segment| (segment.f.x - segment.i.x) * (segment.f.y + segment.i.y))
-            .sum::<T>()
-            >= T::zero()
+            .map(|segment| (segment.f.x.0 - segment.i.x.0) * (segment.f.y.0 + segment.i.y.0))
+            .sum::<f64>()
+            >= 0_f64
         {
             return CurveOrientation::Negative;
         }
@@ -323,22 +296,14 @@ impl<T> Polygon<T> {
     }
 
     #[allow(dead_code)]
-    fn orient_curve(&mut self)
-    where
-        T: Float + AddAssign + Mul + Sum,
-    {
+    fn orient_curve(&mut self) {
         if self.get_curve_orientation() == CurveOrientation::Positive {
             self.pts.reverse();
         }
     }
 
     // NB: Polygons must be closed and positively oriented.
-    pub fn crop_to_polygon(&self, frame: &Polygon<T>) -> Result<Vec<Polygon<T>>, CropToPolygonError>
-    where
-        T: Copy + Float + AddAssign + Mul + Sum + float_cmp::ApproxEq + Debug, // + From<f64>,
-        Pt<T>: PartialEq,
-        f64: From<T>,
-    {
+    pub fn crop_to_polygon(&self, frame: &Polygon) -> Result<Vec<Polygon>, CropToPolygonError> {
         if self.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThisPolygonNotClosed);
         }
@@ -374,7 +339,7 @@ impl<T> Polygon<T> {
 
         let isxn_outcomes: Vec<IsxnOutcome> = iproduct!(&frame_segments, &self_segments)
             .filter_map(|((frame_idx, f_seg), (self_idx, s_seg))| {
-                f_seg.intersects(&s_seg).map(|outcome| IsxnOutcome {
+                f_seg.intersects(s_seg).map(|outcome| IsxnOutcome {
                     _frame_segment_idx: *frame_idx,
                     self_segment_idx: *self_idx,
                     outcome,
@@ -404,12 +369,12 @@ impl<T> Polygon<T> {
         let frame_pts: Vec<_> = frame.pts.iter().enumerate().collect();
         let frame_pts_len: usize = frame_pts.len();
 
-        let mut resultant_polygons: Vec<Polygon<T>> = vec![];
-        let mut resultant_pts: Vec<Pt<T>> = vec![];
+        let mut resultant_polygons: Vec<Polygon> = vec![];
+        let mut resultant_pts: Vec<Pt> = vec![];
 
         assert!(!self_pts_in_frame.is_empty());
 
-        let mut curr = Cursor::<T> {
+        let mut curr = Cursor {
             position: Either::Left(OnePolygon {
                 on_polygon: On::OnSelf,
                 at_point_index: 0,
@@ -521,15 +486,12 @@ impl<T> Polygon<T> {
 }
 
 // Angle between points. Projects OI onto OJ and finds the angle IOJ.
-fn _abp<T>(o: &Pt<T>, i: &Pt<T>, j: &Pt<T>) -> T
-where
-    T: Float + Debug,
-{
-    let a: Pt<T> = *i - *o;
-    let b: Pt<T> = *j - *o;
-    T::atan2(
-        /*det=*/ a.x * b.y - a.y * b.x,
-        /*dot=*/ a.x * b.x + a.y * b.y,
+fn _abp(o: &Pt, i: &Pt, j: &Pt) -> f64 {
+    let a: Pt = *i - *o;
+    let b: Pt = *j - *o;
+    f64::atan2(
+        /*det=*/ a.x.0 * b.y.0 - a.y.0 * b.x.0,
+        /*dot=*/ a.x.0 * b.x.0 + a.y.0 * b.y.0,
     )
 }
 
@@ -545,12 +507,9 @@ where
 ///       Polygon([Pt(1,0), Pt(2,1), Pt(3,2)]).unwrap()
 /// );
 /// ```
-impl<T> Add<Pt<T>> for &Polygon<T>
-where
-    T: Add<Output = T> + Copy,
-{
-    type Output = Polygon<T>;
-    fn add(self, rhs: Pt<T>) -> Self::Output {
+impl Add<Pt> for &Polygon {
+    type Output = Polygon;
+    fn add(self, rhs: Pt) -> Self::Output {
         Polygon(self.pts.iter().map(|p| *p + rhs)).unwrap()
     }
 }
@@ -703,27 +662,31 @@ mod tests {
         // circle around G. (quadrant 1)
         assert_float_eq!(_abp(&g, &i, &i), 0.0, ulps <= 10);
         assert_float_eq!(_abp(&g, &i, &h), 0.0, ulps <= 10);
-        assert_float_eq!(_abp(&g, &i, &f), 0.5.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&g, &i, &e), 1.0.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&g, &i, &c), 1.0.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&g, &i, &b), 2.0.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&g, &i, &f), 0.5_f64.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&g, &i, &e), 1.0_f64.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&g, &i, &c), 1.0_f64.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&g, &i, &b), 2.0_f64.atan(), ulps <= 10);
         assert_float_eq!(_abp(&g, &i, &d), PI / 2.0, ulps <= 10);
         assert_float_eq!(_abp(&g, &i, &a), PI / 2.0, ulps <= 10);
 
         // circle around H (quadrants 1, 2)
         assert_float_eq!(_abp(&h, &i, &i), 0.0, ulps <= 10);
         assert_float_eq!(_abp(&h, &i, &b), PI / 2.0, ulps <= 10);
-        assert_float_eq!(_abp(&h, &i, &a), PI / 2.0 + 0.5.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&h, &i, &d), PI / 2.0 + 1.0.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&h, &i, &a), PI / 2.0 + 0.5_f64.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&h, &i, &d), PI / 2.0 + 1.0_f64.atan(), ulps <= 10);
         assert_float_eq!(_abp(&h, &i, &g), PI, ulps <= 10);
 
         // circle around B (quadrants 3, 4)
         assert_float_eq!(_abp(&b, &c, &c), 0.0, ulps <= 10);
-        assert_float_eq!(_abp(&b, &c, &f), -1.0.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&b, &c, &i), -2.0.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&b, &c, &f), -1.0_f64.atan(), ulps <= 10);
+        assert_float_eq!(_abp(&b, &c, &i), -2.0_f64.atan(), ulps <= 10);
         assert_float_eq!(_abp(&b, &c, &e), -1.0 * PI / 2.0, ulps <= 10);
         assert_float_eq!(_abp(&b, &c, &h), -1.0 * PI / 2.0, ulps <= 10);
-        assert_float_eq!(_abp(&b, &c, &g), -1.0 * PI / 2.0 - 0.5.atan(), ulps <= 10);
+        assert_float_eq!(
+            _abp(&b, &c, &g),
+            -1.0 * PI / 2.0 - 0.5_f64.atan(),
+            ulps <= 10
+        );
         assert_float_eq!(_abp(&b, &c, &d), -3.0 * PI / 4.0, ulps <= 10);
     }
 

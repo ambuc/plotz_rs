@@ -1,8 +1,11 @@
 use crate::interpolate::interpolate_2d_checked;
 use crate::point::Pt;
 use float_cmp::approx_eq;
-use num::Float;
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
+use std::{
+    cmp::PartialOrd,
+    fmt::Debug,
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
+};
 
 #[allow(dead_code)]
 #[derive(Debug, PartialEq, Eq)]
@@ -54,17 +57,14 @@ pub enum IntersectionOutcome {
 
 /// A segment in 2D space, with initial and final points.
 #[derive(Debug, Clone, Copy)]
-pub struct Segment<T> {
+pub struct Segment {
     /// The initial point of the segment.
-    pub i: Pt<T>,
+    pub i: Pt,
     /// The final point of the segment.
-    pub f: Pt<T>,
+    pub f: Pt,
 }
 
-impl<T> PartialEq for Segment<T>
-where
-    Pt<T>: PartialEq,
-{
+impl PartialEq for Segment {
     fn eq(&self, other: &Self) -> bool {
         self.i == other.i && self.f == other.f
     }
@@ -77,21 +77,18 @@ where
 /// assert_eq!(Segment{i: Pt(0,0), f: Pt(0,1)}, Segment(Pt(0,0), Pt(0,1)));
 /// ```
 #[allow(non_snake_case)]
-pub fn Segment<T>(i: Pt<T>, f: Pt<T>) -> Segment<T> {
+pub fn Segment(i: Pt, f: Pt) -> Segment {
     Segment { i, f }
 }
 
-impl<T> Segment<T>
-where
-    T: Float + std::fmt::Debug,
-{
+impl Segment {
     // Internal helper function; see https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/.
-    fn _ccw(&self, other: &Pt<T>) -> Orientation {
+    fn _ccw(&self, other: &Pt) -> Orientation {
         use std::cmp::Ordering;
         match PartialOrd::partial_cmp(
-            &((other.y - self.i.y) * (self.f.x - self.i.x)
-                - (self.f.y - self.i.y) * (other.x - self.i.x)),
-            &T::zero(),
+            &((other.y.0 - self.i.y.0) * (self.f.x.0 - self.i.x.0)
+                - (self.f.y.0 - self.i.y.0) * (other.x.0 - self.i.x.0)),
+            &0_f64,
         ) {
             Some(Ordering::Equal) => Orientation::Colinear,
             Some(Ordering::Greater) => Orientation::Clockwise,
@@ -101,32 +98,28 @@ where
     }
 
     /// The slope of a line segment.
-    pub fn slope(&self) -> T {
-        (self.f.y - self.i.y) / (self.f.x - self.i.x)
+    pub fn slope(&self) -> f64 {
+        (self.f.y.0 - self.i.y.0) / (self.f.x.0 - self.i.x.0)
     }
 
     /// A rotation operation, for rotating a line segment about a point. Accepts
     /// a |by| argument in radians.
-    pub fn rotate(&mut self, about: &Pt<T>, by: T) {
+    pub fn rotate(&mut self, about: &Pt, by: f64) {
         self.i.rotate(about, by);
         self.f.rotate(about, by);
     }
 
     // Returns true if this line segment has point |other| along it.
-    pub fn line_segment_contains_pt(&self, other: &Pt<T>) -> Option<Contains>
-    where
-        T: Float + float_cmp::ApproxEq,
-        Pt<T>: PartialEq,
-    {
+    pub fn line_segment_contains_pt(&self, other: &Pt) -> Option<Contains> {
         if *other == self.i {
             return Some(Contains::AtStart);
         }
         if *other == self.f {
             return Some(Contains::AtEnd);
         }
-        let d1: T = self.abs();
-        let d2: T = Segment(self.i, *other).abs() + Segment(self.f, *other).abs();
-        if approx_eq!(T, d1, d2) {
+        let d1: f64 = self.abs();
+        let d2: f64 = Segment(self.i, *other).abs() + Segment(self.f, *other).abs();
+        if approx_eq!(f64, d1, d2) {
             return Some(Contains::Within);
         }
         None
@@ -136,12 +129,7 @@ where
     /// If two line segments share a point, returns false.
     /// If two line segments are parallel and overlapping, returns false.
     /// If two line segments are the same, returns false.
-    pub fn intersects(&self, other: &Segment<T>) -> Option<IntersectionOutcome>
-    where
-        T: Float + float_cmp::ApproxEq,
-        Pt<T>: PartialEq,
-        f64: From<T>,
-    {
+    pub fn intersects(&self, other: &Segment) -> Option<IntersectionOutcome> {
         if self == other {
             return Some(IntersectionOutcome::LineSegmentsAreTheSame);
         }
@@ -155,10 +143,10 @@ where
         }
 
         if let Some(pt) = self.get_line_intersection_inner(
-            (self.i.x, self.i.y),
-            (self.f.x, self.f.y),
-            (other.i.x, other.i.y),
-            (other.f.x, other.f.y),
+            (self.i.x.0, self.i.y.0),
+            (self.f.x.0, self.f.y.0),
+            (other.i.x.0, other.i.y.0),
+            (other.f.x.0, other.f.y.0),
         ) {
             return Some(IntersectionOutcome::Yes(Intersection {
                 percent_along_self: interpolate_2d_checked(self.i, self.f, pt).ok()?,
@@ -172,14 +160,11 @@ where
     /// If two line segments are the same, returns None.
     fn get_line_intersection_inner(
         &self,
-        (p0_x, p0_y): (T, T),
-        (p1_x, p1_y): (T, T),
-        (p2_x, p2_y): (T, T),
-        (p3_x, p3_y): (T, T),
-    ) -> Option<Pt<T>>
-    where
-        T: Float,
-    {
+        (p0_x, p0_y): (f64, f64),
+        (p1_x, p1_y): (f64, f64),
+        (p2_x, p2_y): (f64, f64),
+        (p3_x, p3_y): (f64, f64),
+    ) -> Option<Pt> {
         let s1_x = p1_x - p0_x;
         let s1_y = p1_y - p0_y;
         let s2_x = p3_x - p2_x;
@@ -188,7 +173,7 @@ where
         let s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
         let t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
 
-        if s >= T::zero() && s <= T::one() && t >= T::zero() && t <= T::one() {
+        if (0_f64..=1_f64).contains(&s) && t >= 0_f64 && t <= 1_f64 {
             let i_x = p0_x + (t * s1_x);
             let i_y = p0_y + (t * s1_y);
             return Some(Pt(i_x, i_y));
@@ -196,12 +181,9 @@ where
         None
     }
 
-    pub fn abs(&self) -> T
-    where
-        T: Float,
-    {
-        let two = T::one() + T::one();
-        ((self.f.y - self.i.y).powf(two) + (self.f.x - self.i.x).powf(two)).sqrt()
+    pub fn abs(&self) -> f64 {
+        let two = 2_f64;
+        ((self.f.y.0 - self.i.y.0).powf(two) + (self.f.x.0 - self.i.x.0).powf(two)).sqrt()
     }
 }
 
@@ -217,12 +199,9 @@ where
 ///       Segment(Pt(1,0), Pt(2,1))
 /// );
 /// ```
-impl<T> Add<Pt<T>> for Segment<T>
-where
-    T: Add<Output = T> + Copy,
-{
-    type Output = Segment<T>;
-    fn add(self, rhs: Pt<T>) -> Self::Output {
+impl Add<Pt> for Segment {
+    type Output = Segment;
+    fn add(self, rhs: Pt) -> Self::Output {
         Segment(self.i + rhs, self.f + rhs)
     }
 }
@@ -236,11 +215,8 @@ where
 /// s += Pt(1,0);
 /// assert_eq!(s, Segment(Pt(1,0), Pt(2,1)));
 /// ```
-impl<T> AddAssign<Pt<T>> for Segment<T>
-where
-    T: Add<Output = T> + Copy,
-{
-    fn add_assign(&mut self, rhs: Pt<T>) {
+impl AddAssign<Pt> for Segment {
+    fn add_assign(&mut self, rhs: Pt) {
         *self = Segment(self.i + rhs, self.f + rhs);
     }
 }
@@ -257,12 +233,9 @@ where
 ///       Segment(Pt(0.0,0.0), Pt(0.5,0.5))
 /// );
 /// ```
-impl<T> Div<T> for Segment<T>
-where
-    T: Float,
-{
-    type Output = Segment<T>;
-    fn div(self, rhs: T) -> Self::Output {
+impl Div<f64> for Segment {
+    type Output = Segment;
+    fn div(self, rhs: f64) -> Self::Output {
         Segment(self.i / rhs, self.f / rhs)
     }
 }
@@ -276,11 +249,8 @@ where
 /// s /= 2.0;
 /// assert_eq!(s, Segment(Pt(0.0,0.0), Pt(0.5,0.5)));
 /// ```
-impl<T> DivAssign<T> for Segment<T>
-where
-    T: Float,
-{
-    fn div_assign(&mut self, rhs: T) {
+impl DivAssign<f64> for Segment {
+    fn div_assign(&mut self, rhs: f64) {
         *self = Segment(self.i / rhs, self.f / rhs)
     }
 }
@@ -297,12 +267,9 @@ where
 ///       Segment(Pt(0.0,0.0), Pt(2.0,2.0))
 /// );
 /// ```
-impl<T> Mul<T> for Segment<T>
-where
-    T: Float,
-{
-    type Output = Segment<T>;
-    fn mul(self, rhs: T) -> Self::Output {
+impl Mul<f64> for Segment {
+    type Output = Segment;
+    fn mul(self, rhs: f64) -> Self::Output {
         Segment(self.i * rhs, self.f * rhs)
     }
 }
@@ -316,11 +283,8 @@ where
 /// s *= 2.0;
 /// assert_eq!(s, Segment(Pt(0.0,0.0), Pt(2.0,2.0)));
 /// ```
-impl<T> MulAssign<T> for Segment<T>
-where
-    T: Float,
-{
-    fn mul_assign(&mut self, rhs: T) {
+impl MulAssign<f64> for Segment {
+    fn mul_assign(&mut self, rhs: f64) {
         *self = Segment(self.i * rhs, self.f * rhs);
     }
 }
@@ -337,12 +301,9 @@ where
 ///       Segment(Pt(-1.0,-2.0), Pt(0.0,-1.0))
 /// );
 /// ```
-impl<T> Sub<Pt<T>> for Segment<T>
-where
-    T: Float,
-{
-    type Output = Segment<T>;
-    fn sub(self, rhs: Pt<T>) -> Self::Output {
+impl Sub<Pt> for Segment {
+    type Output = Segment;
+    fn sub(self, rhs: Pt) -> Self::Output {
         Segment {
             i: self.i - rhs,
             f: self.f - rhs,
@@ -359,11 +320,8 @@ where
 /// s -= Pt(1.0,2.0);
 /// assert_eq!(s, Segment(Pt(-1.0,-2.0), Pt(0.0,-1.0)));
 /// ```
-impl<T> SubAssign<Pt<T>> for Segment<T>
-where
-    T: Sub<Output = T> + Copy,
-{
-    fn sub_assign(&mut self, rhs: Pt<T>) {
+impl SubAssign<Pt> for Segment {
+    fn sub_assign(&mut self, rhs: Pt) {
         *self = Segment(self.i - rhs, self.f - rhs);
     }
 }
@@ -459,10 +417,10 @@ mod tests {
         //      |
         //      |
         //      v
-        assert_float_eq!(s.i.x, 0.0, abs <= 0.000_1);
-        assert_float_eq!(s.i.y, 1.0, abs <= 0.000_1);
-        assert_float_eq!(s.f.x, -0.5, abs <= 0.000_1);
-        assert_float_eq!(s.f.y, 1.0, abs <= 0.000_1);
+        assert_float_eq!(s.i.x.0, 0.0, abs <= 0.000_1);
+        assert_float_eq!(s.i.y.0, 1.0, abs <= 0.000_1);
+        assert_float_eq!(s.f.x.0, -0.5, abs <= 0.000_1);
+        assert_float_eq!(s.f.y.0, 1.0, abs <= 0.000_1);
 
         s.rotate(/*about=*/ &origin, PI / 2.0);
         //      ^
@@ -472,10 +430,10 @@ mod tests {
         //   F  |
         //      |
         //      v
-        assert_float_eq!(s.i.x, -1.0, abs <= 0.000_1);
-        assert_float_eq!(s.i.y, 0.0, abs <= 0.000_1);
-        assert_float_eq!(s.f.x, -1.0, abs <= 0.000_1);
-        assert_float_eq!(s.f.y, -0.5, abs <= 0.000_1);
+        assert_float_eq!(s.i.x.0, -1.0, abs <= 0.000_1);
+        assert_float_eq!(s.i.y.0, 0.0, abs <= 0.000_1);
+        assert_float_eq!(s.f.x.0, -1.0, abs <= 0.000_1);
+        assert_float_eq!(s.f.y.0, -0.5, abs <= 0.000_1);
 
         s.rotate(/*about=*/ &origin, PI / 2.0);
         //      ^
@@ -485,10 +443,10 @@ mod tests {
         //      |
         //      IF
         //      v
-        assert_float_eq!(s.i.x, 0.0, abs <= 0.000_1);
-        assert_float_eq!(s.i.y, -1.0, abs <= 0.000_1);
-        assert_float_eq!(s.f.x, 0.5, abs <= 0.000_1);
-        assert_float_eq!(s.f.y, -1.0, abs <= 0.000_1);
+        assert_float_eq!(s.i.x.0, 0.0, abs <= 0.000_1);
+        assert_float_eq!(s.i.y.0, -1.0, abs <= 0.000_1);
+        assert_float_eq!(s.f.x.0, 0.5, abs <= 0.000_1);
+        assert_float_eq!(s.f.y.0, -1.0, abs <= 0.000_1);
 
         s.rotate(/*about=*/ &origin, PI / 2.0);
         //      ^
@@ -498,10 +456,10 @@ mod tests {
         //      |
         //      |
         //      v
-        assert_float_eq!(s.i.x, 1.0, abs <= 0.000_1);
-        assert_float_eq!(s.i.y, 0.0, abs <= 0.000_1);
-        assert_float_eq!(s.f.x, 1.0, abs <= 0.000_1);
-        assert_float_eq!(s.f.y, 0.5, abs <= 0.000_1);
+        assert_float_eq!(s.i.x.0, 1.0, abs <= 0.000_1);
+        assert_float_eq!(s.i.y.0, 0.0, abs <= 0.000_1);
+        assert_float_eq!(s.f.x.0, 1.0, abs <= 0.000_1);
+        assert_float_eq!(s.f.y.0, 0.5, abs <= 0.000_1);
     }
 
     #[test]
@@ -629,11 +587,11 @@ mod tests {
     #[test]
     fn test_abs() {
         assert_eq!(Segment(Pt(0.0, 0.0), Pt(0.0, 1.0)).abs(), 1.0);
-        assert_eq!(Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)).abs(), 2.0.sqrt());
+        assert_eq!(Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)).abs(), 2.0_f64.sqrt());
         assert_eq!(Segment(Pt(1.0, 1.0), Pt(1.0, 1.0)).abs(), 0.0);
         assert_eq!(
             Segment(Pt(-1.0, -1.0), Pt(1.0, 1.0)).abs(),
-            2.0 * 2.0.sqrt()
+            2.0 * 2.0_f64.sqrt()
         );
     }
 

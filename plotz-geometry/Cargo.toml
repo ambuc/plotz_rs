@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 either = "*"
 float-cmp = "*"
+float-ord = "*"
 itertools = "*"
 num = "*"
 num-traits = "*"
