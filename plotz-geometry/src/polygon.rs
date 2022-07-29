@@ -141,7 +141,7 @@ struct Isxn {
     intersection: Intersection,
 }
 impl Isxn {
-    pub fn to_pt_given_self_segs(&self, self_segs: &[(usize, Segment)]) -> Pt {
+    pub fn pt_given_self_segs(&self, self_segs: &[(usize, Segment)]) -> Pt {
         let (_, seg) = self_segs[self.self_segment_idx];
         interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_self)
     }
@@ -181,7 +181,7 @@ impl<'a> Cursor<'a> {
                 On::OnSelf => *self.self_pts[one_polygon.at_point_index].1,
                 On::OnFrame => *self.frame_pts[one_polygon.at_point_index].1,
             },
-            Either::Right(isxn) => isxn.to_pt_given_self_segs(&self.self_segments),
+            Either::Right(isxn) => isxn.pt_given_self_segs(self.self_segments),
         }
     }
     fn march_to_next_point(&mut self) {
@@ -468,7 +468,7 @@ impl Polygon {
                                 let next_isxn: &Isxn = relevant_isxns
                                     .get(0)
                                     .expect("I thought you said it wasn't empty?");
-                                let _next_pt = next_isxn.to_pt_given_self_segs(&curr.self_segments);
+                                let _next_pt = next_isxn.pt_given_self_segs(curr.self_segments);
                                 // add to resultant pts? or will  this happen enxt time around?
 
                                 println!("\tSetting new next point based on pivot, not marching.");
@@ -509,8 +509,7 @@ impl Polygon {
                                     }
                                 });
                                 if let Some(next_isxn) = relevant_isxns.get(0) {
-                                    let _next_pt =
-                                        next_isxn.to_pt_given_self_segs(&curr.self_segments);
+                                    let _next_pt = next_isxn.pt_given_self_segs(curr.self_segments);
 
                                     let new_position: Either<_, Isxn> = Either::Right(*next_isxn);
                                     let new_facing_along = match curr.facing_along {

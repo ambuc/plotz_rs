@@ -15,11 +15,6 @@ pub struct Pt {
 }
 
 /// An alternate constructor for points.
-///
-/// ```
-/// use plotz_geometry::point::Pt;
-/// assert_eq!(Pt{x:1, y:2}, Pt(1, 2));
-/// ```
 #[allow(non_snake_case)]
 pub fn Pt<T>(x: T, y: T) -> Pt
 where
@@ -32,11 +27,6 @@ where
 }
 
 /// An implicit constructor from tuples.
-///
-/// ```
-/// use plotz_geometry::point::Pt;
-/// assert_eq!(Pt{x:1, y:2}, (1, 2).into());
-/// ```
 impl From<(f64, f64)> for Pt {
     fn from((x, y): (f64, f64)) -> Pt {
         Pt(x, y)
@@ -136,7 +126,7 @@ impl SubAssign<Pt> for Pt {
 ///
 /// ```
 /// use plotz_geometry::point::Pt;
-/// assert_eq!(Pt(1, 2) * 2, Pt(2, 4));
+/// assert_eq!(Pt(1.0, 2.0) * 2.0, Pt(2.0, 4.0));
 /// ```
 impl Mul<f64> for Pt {
     type Output = Self;
@@ -165,7 +155,6 @@ impl MulAssign<f64> for Pt {
 /// ```
 /// use plotz_geometry::point::Pt;
 /// assert_eq!(Pt(1.0, 2.0) / 2.0, Pt(0.5, 1.0)); // floats
-/// assert_eq!(Pt(1, 2) / 2, Pt(0, 1)); // ints
 /// ```
 impl Div<f64> for Pt {
     type Output = Self;

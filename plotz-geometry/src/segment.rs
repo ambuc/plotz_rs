@@ -173,7 +173,7 @@ impl Segment {
         let s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
         let t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
 
-        if (0_f64..=1_f64).contains(&s) && t >= 0_f64 && t <= 1_f64 {
+        if (0_f64..=1_f64).contains(&s) && (0_f64..=1_f64).contains(&t) {
             let i_x = p0_x + (t * s1_x);
             let i_y = p0_y + (t * s1_y);
             return Some(Pt(i_x, i_y));
