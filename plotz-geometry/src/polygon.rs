@@ -242,12 +242,16 @@ impl<'a> Cursor<'a> {
         self.facing_along_segment_idx = v;
     }
 
-    fn march_to_isxn(&mut self, next_isxn: Isxn) {
+    fn march_to_isxn(&mut self, next_isxn: Isxn, should_flip: bool) {
         let new_position: Either<_, Isxn> = Either::Right(next_isxn);
-        let new_facing_along = self.facing_along.flip();
-        let new_facing_along_segment_idx = match self.facing_along {
-            On::OnSelf => next_isxn.frame_segment_idx,
-            On::OnFrame => next_isxn.self_segment_idx,
+        let new_facing_along = if should_flip {
+            self.facing_along.flip()
+        } else {
+            self.facing_along
+        };
+        let new_facing_along_segment_idx = match new_facing_along {
+            On::OnFrame => next_isxn.frame_segment_idx,
+            On::OnSelf => next_isxn.self_segment_idx,
         };
         self.position = new_position;
         self.facing_along = new_facing_along;
@@ -441,71 +445,61 @@ impl Polygon {
                 }
             }
 
+            let mut relevant_isxns: Vec<Isxn> = isxn_outcomes
+                .iter()
+                .filter_map(|isxn_outcome| isxn_outcome.to_isxn())
+                // (a) intersect our line
+                .filter(|isxn| {
+                    (match curr.facing_along {
+                        On::OnSelf => isxn.self_segment_idx,
+                        On::OnFrame => isxn.frame_segment_idx,
+                    }) == curr.facing_along_segment_idx
+                })
+                // (b) is a genuine intersection which does not intersect at a point,
+                .filter(|isxn| !isxn.intersection.on_points_of_either_polygon())
+                // then collect them.
+                .collect();
+            if !relevant_isxns.is_empty() {
+                relevant_isxns.sort_by(|a: &Isxn, b: &Isxn| match &curr.facing_along {
+                    On::OnSelf => a
+                        .intersection
+                        .percent_along_self
+                        .partial_cmp(&b.intersection.percent_along_self)
+                        .unwrap(),
+                    On::OnFrame => a
+                        .intersection
+                        .percent_along_other
+                        .partial_cmp(&b.intersection.percent_along_other)
+                        .unwrap(),
+                });
+            }
+
             match frame.contains_pt(&curr_pt)? {
                 PointLoc::Outside => {
-                    // println!("\tThe current point is outside of the frame.");
-                    // TODO(ambuc): This really should be 'until next intersection' TBH.
-                    curr.march_to_next_point();
+                    if relevant_isxns.is_empty() {
+                        curr.march_to_next_point();
+                    } else {
+                        match curr.position {
+                            Either::Left(_) => {
+                                let next_isxn = relevant_isxns.first().expect("?");
+                                curr.march_to_isxn(*next_isxn, /*should_flip */ false);
+                            }
+                            Either::Right(_) => {
+                                unimplemented!(" 01 ?");
+                                //
+                            }
+                        }
+                    }
                 }
                 PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_) => {
                     resultant_pts.push(curr_pt);
-                    // println!("Current point: {:?}", curr_pt);
-                    // println!("Current direction: {:?}", curr.facing_along);
-                    // println!( "Current on segment idx : {:?}", curr.facing_along_segment_idx);
-                    // println!( "\tThe current point is inside of the frame (or on a point or segment).");
-
-                    // If there are any intersections which
-                    let mut relevant_isxns: Vec<Isxn> = isxn_outcomes
-                        .iter()
-                        .filter_map(|isxn_outcome| isxn_outcome.to_isxn())
-                        // (a) intersect our line
-                        .filter(|isxn| {
-                            (match curr.facing_along {
-                                On::OnSelf => isxn.self_segment_idx,
-                                On::OnFrame => isxn.frame_segment_idx,
-                            }) == curr.facing_along_segment_idx
-                        })
-                        // (b) is a genuine intersection which does not intersect at a point,
-                        .filter(|isxn| !isxn.intersection.on_points_of_either_polygon())
-                        // then collect them.
-                        .collect();
-
                     if !relevant_isxns.is_empty() {
-                        relevant_isxns.sort_by(|a: &Isxn, b: &Isxn| match &curr.facing_along {
-                            On::OnSelf => a
-                                .intersection
-                                .percent_along_self
-                                .partial_cmp(&b.intersection.percent_along_self)
-                                .unwrap(),
-                            On::OnFrame => a
-                                .intersection
-                                .percent_along_other
-                                .partial_cmp(&b.intersection.percent_along_other)
-                                .unwrap(),
-                        });
                         match curr.position {
                             Either::Left(_) => {
-                                // println!("\tSince our current point is on a polygon,");
-                                // println!("\trelevant isxns: {:?}", relevant_isxns);
-                                match relevant_isxns.first() {
-                                    Some(next_isxn) => {
-                                        // println!("\tSetting new next point based on pivot, not marching.");
-                                        // println!("\t\tfound isxn {:?}", next_isxn);
-                                        // println!("\t\tcurrently at {:?}", curr_pt);
-                                        // println!("\t\tcurrently facing {:?}", curr.facing_along);
-                                        curr.march_to_isxn(*next_isxn);
-                                        // println!("\t\tmarched to {:?}", curr.pt());
-                                        // println!("\t\tnow marching along {:?}", curr.facing_along);
-                                    }
-                                    None => {
-                                        panic!("I thought you said that |relevant_isxns| wasn't empty!");
-                                    }
-                                }
+                                let next_isxn = relevant_isxns.first().expect("?");
+                                curr.march_to_isxn(*next_isxn, /*should_flip */ true);
                             }
                             Either::Right(this_isxn) => {
-                                // println!("\tsince our current point is on an intersection,");
-                                // if we're currently  at an intersection, we
-                                // should march towards the next relevant_ixsn which is along our current along, but which is ahead of us.
                                 relevant_isxns.drain_filter(|isxn| match curr.facing_along {
                                     On::OnSelf => {
                                         isxn.intersection.percent_along_self
@@ -518,7 +512,7 @@ impl Polygon {
                                 });
                                 match relevant_isxns.get(0) {
                                     Some(next_isxn) => {
-                                        curr.march_to_isxn(*next_isxn);
+                                        curr.march_to_isxn(*next_isxn, /*should_flip */ true);
                                     }
                                     None => {
                                         curr.march_to_next_point();
@@ -527,16 +521,7 @@ impl Polygon {
                             }
                         }
                     } else {
-                        // println!("\tSince no intersections, marching fwd.");
-                        // println!("\t\tcurrently at {:?}", curr.pt());
-                        // println!("\t\tcurrently facing {:?}", curr.facing_along);
-                        // else if there aren't any intersections, then pt[curr_idx] runs
-                        // along line[curr_idx] to pt[curr_idx]+1 uninterrupted, and
-                        // pt[curr_idx]+1 is also in frame.
-                        // No action necessary, so increment |curr| and loop.
                         curr.march_to_next_point();
-                        // println!("\t\tnow at {:?}", curr.pt());
-                        // println!("\t\tnow facing {:?}", curr.facing_along);
                     }
                 }
             }
@@ -1028,12 +1013,8 @@ mod tests {
         let crops = inner.crop_to_polygon(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
 
-        // TODO right now this doesn't work because no point at all is inside
-        // the frame. we really don't want to march, we want to intersect and
-        // find that.  TODO
-        //
-        // let crops = frame.crop_to_polygon(&inner).unwrap();
-        // assert_eq!(crops, vec![expected.clone()]);
+        let crops = frame.crop_to_polygon(&inner).unwrap();
+        assert_eq!(crops, vec![expected.clone()]);
     }
 
     #[test]
