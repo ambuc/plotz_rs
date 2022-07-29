@@ -182,6 +182,14 @@ enum On {
     OnSelf,
     OnFrame,
 }
+impl On {
+    pub fn flip(&self) -> On {
+        match self {
+            On::OnSelf => On::OnFrame,
+            On::OnFrame => On::OnSelf,
+        }
+    }
+}
 
 #[derive(Debug, Copy, Clone)]
 struct OnePolygon {
@@ -194,17 +202,13 @@ struct Cursor<'a> {
     // current position
     position: Either<OnePolygon, Isxn>,
     facing_along: On,
-    facing_along_segment_idx: usize, //segment index
-
+    facing_along_segment_idx: usize, // segment index
     // context
     self_pts: &'a Vec<(usize, &'a Pt)>,
     self_pts_len: &'a usize,
     frame_pts: &'a Vec<(usize, &'a Pt)>,
     frame_pts_len: &'a usize,
     self_segments: &'a Vec<(usize, Segment)>,
-    self_segments_len: &'a usize,
-    frame_segments: &'a Vec<(usize, Segment)>,
-    frame_segments_len: &'a usize,
 }
 impl<'a> Cursor<'a> {
     fn pt(&self) -> Pt {
@@ -216,46 +220,38 @@ impl<'a> Cursor<'a> {
             Either::Right(isxn) => isxn.pt_given_self_segs(self.self_segments),
         }
     }
-    fn march_to_next_point(&mut self) {
-        match (
-            &mut self.position,
-            self.facing_along,
-            self.facing_along_segment_idx,
-        ) {
-            (Either::Left(ref mut one_polygon), on, _) => {
-                println!("\tL: {:?} {:?}", one_polygon, self.facing_along_segment_idx);
-                let mut v = one_polygon.at_point_index + 1;
-                if v >= (match on {
-                    On::OnSelf => *self.self_pts_len,
-                    On::OnFrame => *self.frame_pts_len,
-                }) {
-                    v = 0;
-                }
-                one_polygon.at_point_index = v;
-                self.facing_along_segment_idx = v;
-            }
-            (Either::Right(isxn), on, _) => {
-                println!("\tR, isxn {:?}", isxn);
-                let mut new_index = match on {
-                    On::OnSelf => isxn.self_segment_idx,
-                    On::OnFrame => isxn.frame_segment_idx,
-                } + 1;
-                if new_index
-                    >= match on {
-                        On::OnSelf => *self.self_pts_len,
-                        On::OnFrame => *self.frame_pts_len,
-                    }
-                {
-                    new_index = 0;
-                }
-
-                self.position = Either::Left(OnePolygon {
-                    on_polygon: on,
-                    at_point_index: new_index,
-                });
-                self.facing_along_segment_idx = new_index;
-            }
+    fn pts_len(&self, on: On) -> usize {
+        match on {
+            On::OnSelf => *self.self_pts_len,
+            On::OnFrame => *self.frame_pts_len,
         }
+    }
+    fn march_to_next_point(&mut self) {
+        let v = (match self.position {
+            Either::Left(one_polygon) => one_polygon.at_point_index,
+            Either::Right(isxn) => match self.facing_along {
+                On::OnSelf => isxn.self_segment_idx,
+                On::OnFrame => isxn.frame_segment_idx,
+            },
+        } + 1)
+            % self.pts_len(self.facing_along);
+        self.position = Either::Left(OnePolygon {
+            on_polygon: self.facing_along,
+            at_point_index: v,
+        });
+        self.facing_along_segment_idx = v;
+    }
+
+    fn march_to_isxn(&mut self, next_isxn: Isxn) {
+        let new_position: Either<_, Isxn> = Either::Right(next_isxn);
+        let new_facing_along = self.facing_along.flip();
+        let new_facing_along_segment_idx = match self.facing_along {
+            On::OnSelf => next_isxn.frame_segment_idx,
+            On::OnFrame => next_isxn.self_segment_idx,
+        };
+        self.position = new_position;
+        self.facing_along = new_facing_along;
+        self.facing_along_segment_idx = new_facing_along_segment_idx;
     }
 }
 
@@ -364,9 +360,7 @@ impl Polygon {
         }
 
         let self_segments: Vec<_> = self.to_segments().into_iter().enumerate().collect();
-        let self_segments_len: usize = self_segments.len();
         let frame_segments: Vec<_> = frame.to_segments().into_iter().enumerate().collect();
-        let frame_segments_len: usize = frame_segments.len();
 
         let frame_pts_in_self: Vec<(usize, PointLoc)> = {
             let mut v = vec![];
@@ -433,9 +427,6 @@ impl Polygon {
             frame_pts: &frame_pts,
             frame_pts_len: &frame_pts_len,
             self_segments: &self_segments,
-            self_segments_len: &self_segments_len,
-            frame_segments: &frame_segments,
-            frame_segments_len: &frame_segments_len,
         };
 
         'outer: loop {
@@ -445,33 +436,29 @@ impl Polygon {
             if let Some(pt) = resultant_pts.get(0) {
                 if *pt == curr_pt {
                     // then break out of it.
-                    println!("Detected a cycle, breaking out.");
+                    // println!("Detected a cycle, breaking out.");
                     break 'outer;
                 }
             }
 
             match frame.contains_pt(&curr_pt)? {
                 PointLoc::Outside => {
-                    println!("\tThe current point is outside of the frame.");
-                    // advance until we are inside the frame :)
+                    // println!("\tThe current point is outside of the frame.");
+                    // TODO(ambuc): This really should be 'until next intersection' TBH.
                     curr.march_to_next_point();
                 }
                 PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_) => {
                     resultant_pts.push(curr_pt);
-                    println!("Current point: {:?}", curr_pt);
-                    println!("Current direction: {:?}", curr.facing_along);
-                    println!(
-                        "Current on segment idx : {:?}",
-                        curr.facing_along_segment_idx
-                    );
-                    println!(
-                        "\tThe current point is inside of the frame (or on a point or segment)."
-                    );
+                    // println!("Current point: {:?}", curr_pt);
+                    // println!("Current direction: {:?}", curr.facing_along);
+                    // println!( "Current on segment idx : {:?}", curr.facing_along_segment_idx);
+                    // println!( "\tThe current point is inside of the frame (or on a point or segment).");
+
                     // If there are any intersections which
                     let mut relevant_isxns: Vec<Isxn> = isxn_outcomes
                         .iter()
                         .filter_map(|isxn_outcome| isxn_outcome.to_isxn())
-                        // (a) intersect our line (that's line[curr_idx] from pt[curr_idx] to pt[curr_idx]+1)
+                        // (a) intersect our line
                         .filter(|isxn| {
                             (match curr.facing_along {
                                 On::OnSelf => isxn.self_segment_idx,
@@ -484,11 +471,6 @@ impl Polygon {
                         .collect();
 
                     if !relevant_isxns.is_empty() {
-                        println!("\tFound some intersections marching forwards.");
-                        // must take the list of relevant isxns and sort them by
-                        // distance along current segment, and discard the ones
-                        // behind self.
-                        // TODO
                         relevant_isxns.sort_by(|a: &Isxn, b: &Isxn| match &curr.facing_along {
                             On::OnSelf => a
                                 .intersection
@@ -502,41 +484,26 @@ impl Polygon {
                                 .unwrap(),
                         });
                         match curr.position {
-                            Either::Left(one_polygon) => {
-                                println!("\tSince our current point is on a polygon,");
-                                println!("\trelevant isxns: {:?}", relevant_isxns);
-                                let next_isxn: &Isxn = relevant_isxns
-                                    .get(0)
-                                    .expect("I thought you said it wasn't empty?");
-                                let _next_pt = next_isxn.pt_given_self_segs(curr.self_segments);
-
-                                println!("\tSetting new next point based on pivot, not marching.");
-                                println!("\t\tfound isxn {:?}", next_isxn);
-                                println!("\t\tcurrently at {:?}", curr_pt);
-                                println!("\t\tcurrently facing {:?}", curr.facing_along);
-                                let new_position: Either<_, Isxn> = Either::Right(*next_isxn);
-                                let (new_facing_along, new_facing_along_segment_idx) =
-                                    match one_polygon.on_polygon {
-                                        On::OnSelf => (On::OnFrame, next_isxn.frame_segment_idx),
-                                        On::OnFrame => (On::OnSelf, next_isxn.self_segment_idx),
-                                    };
-                                // if next_isxn.intersection.on_points_of_either_polygon() {
-                                //     println!("\t\tbut since we are at a corner, gotta bump the index.");
-                                //
-                                //     let (_, mut idx) = new_facing_along;
-                                //     idx += 1;
-                                // }
-
-                                // TODO ambuc, we need to bump the segment index IF this point is an corner.
-
-                                curr.position = new_position;
-                                curr.facing_along = new_facing_along;
-                                curr.facing_along_segment_idx = new_facing_along_segment_idx;
-                                println!("\t\tmarched to {:?}", curr.pt());
-                                println!("\t\tnow marching along {:?}", curr.facing_along);
+                            Either::Left(_) => {
+                                // println!("\tSince our current point is on a polygon,");
+                                // println!("\trelevant isxns: {:?}", relevant_isxns);
+                                match relevant_isxns.first() {
+                                    Some(next_isxn) => {
+                                        // println!("\tSetting new next point based on pivot, not marching.");
+                                        // println!("\t\tfound isxn {:?}", next_isxn);
+                                        // println!("\t\tcurrently at {:?}", curr_pt);
+                                        // println!("\t\tcurrently facing {:?}", curr.facing_along);
+                                        curr.march_to_isxn(*next_isxn);
+                                        // println!("\t\tmarched to {:?}", curr.pt());
+                                        // println!("\t\tnow marching along {:?}", curr.facing_along);
+                                    }
+                                    None => {
+                                        panic!("I thought you said that |relevant_isxns| wasn't empty!");
+                                    }
+                                }
                             }
                             Either::Right(this_isxn) => {
-                                println!("\tsince our current point is on an intersection,");
+                                // println!("\tsince our current point is on an intersection,");
                                 // if we're currently  at an intersection, we
                                 // should march towards the next relevant_ixsn which is along our current along, but which is ahead of us.
                                 relevant_isxns.drain_filter(|isxn| match curr.facing_along {
@@ -549,37 +516,27 @@ impl Polygon {
                                             <= this_isxn.intersection.percent_along_other
                                     }
                                 });
-                                if let Some(next_isxn) = relevant_isxns.get(0) {
-                                    let _next_pt = next_isxn.pt_given_self_segs(curr.self_segments);
-
-                                    let new_position: Either<_, Isxn> = Either::Right(*next_isxn);
-                                    let new_facing_along = match curr.facing_along {
-                                        On::OnSelf => On::OnFrame,
-                                        On::OnFrame => On::OnSelf,
-                                    };
-                                    let new_facing_along_segment_idx = match curr.facing_along {
-                                        On::OnSelf => next_isxn.frame_segment_idx,
-                                        On::OnFrame => next_isxn.self_segment_idx,
-                                    };
-                                    curr.position = new_position;
-                                    curr.facing_along = new_facing_along;
-                                    curr.facing_along_segment_idx = new_facing_along_segment_idx;
+                                match relevant_isxns.get(0) {
+                                    Some(next_isxn) => {
+                                        curr.march_to_isxn(*next_isxn);
+                                    }
+                                    None => {
+                                        curr.march_to_next_point();
+                                    }
                                 }
                             }
                         }
-                    }
-
-                    if relevant_isxns.is_empty() {
-                        println!("\tSince no intersections, marching fwd.");
-                        println!("\t\tcurrently at {:?}", curr.pt());
-                        println!("\t\tcurrently facing {:?}", curr.facing_along);
+                    } else {
+                        // println!("\tSince no intersections, marching fwd.");
+                        // println!("\t\tcurrently at {:?}", curr.pt());
+                        // println!("\t\tcurrently facing {:?}", curr.facing_along);
                         // else if there aren't any intersections, then pt[curr_idx] runs
                         // along line[curr_idx] to pt[curr_idx]+1 uninterrupted, and
                         // pt[curr_idx]+1 is also in frame.
                         // No action necessary, so increment |curr| and loop.
                         curr.march_to_next_point();
-                        println!("\t\tnow at {:?}", curr.pt());
-                        println!("\t\tnow facing {:?}", curr.facing_along);
+                        // println!("\t\tnow at {:?}", curr.pt());
+                        // println!("\t\tnow facing {:?}", curr.facing_along);
                     }
                 }
             }
@@ -1060,6 +1017,101 @@ mod tests {
 
         let crops = frame.crop_to_polygon(&inner).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
+    }
+
+    #[test]
+    fn test_crop_to_polygon_two_pivots_02() {
+        // ⬆️ y
+        // ⬜⬜⬜⬜⬜
+        // 🟨🟨🟨⬜⬜
+        // 🟨🟧🟧🟥⬜
+        // 🟨🟧🟧🟥⬜
+        // ⬜🟥🟥🟥⬜ ➡️ x
+        let p0_0 = Pt(0.0, 0.0);
+        let p0_1 = Pt(0.0, 1.0);
+        let p0_3 = Pt(0.0, 3.0);
+        let p0_4 = Pt(0.0, 4.0);
+        let p1_0 = Pt(1.0, 0.0);
+        let p1_1 = Pt(1.0, 1.0);
+        let p1_3 = Pt(1.0, 3.0);
+        let p1_4 = Pt(1.0, 4.0);
+        let p3_0 = Pt(3.0, 0.0);
+        let p3_1 = Pt(3.0, 1.0);
+        let p3_3 = Pt(3.0, 3.0);
+        let p3_4 = Pt(3.0, 4.0);
+        let p4_0 = Pt(4.0, 0.0);
+        let p4_1 = Pt(4.0, 1.0);
+        let p4_3 = Pt(4.0, 3.0);
+        let p4_4 = Pt(4.0, 4.0);
+        let inner = Polygon([p1_0, p4_0, p4_3, p1_3]).unwrap(); // 🟥
+        let frame = Polygon([p0_1, p3_1, p3_4, p0_4]).unwrap(); // 🟨
+        let expected = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap(); // 🟧
+
+        let crops = inner.crop_to_polygon(&frame).unwrap();
+        assert_eq!(crops, vec![expected.clone()]);
+
+        let crops = frame.crop_to_polygon(&inner).unwrap();
+        assert_eq!(crops, vec![expected.clone()]);
+    }
+
+    #[test]
+    fn test_crop_to_polygon_many_pivots_01() {
+        // ⬆️ y
+        // ⬜🟥⬜🟥⬜
+        // 🟨🟧🟨🟧🟨
+        // 🟨🟧🟧🟧🟨
+        // 🟨🟧🟨🟧🟨
+        // ⬜🟥⬜🟥⬜
+        let p0_0 = Pt(0.0, 0.0);
+        let p0_1 = Pt(0.0, 1.0);
+        let p0_2 = Pt(0.0, 2.0);
+        let p0_3 = Pt(0.0, 3.0);
+        let p0_4 = Pt(0.0, 4.0);
+        let p0_5 = Pt(0.0, 5.0);
+        let p1_0 = Pt(1.0, 0.0);
+        let p1_1 = Pt(1.0, 1.0);
+        let p1_2 = Pt(1.0, 2.0);
+        let p1_3 = Pt(1.0, 3.0);
+        let p1_4 = Pt(1.0, 4.0);
+        let p1_5 = Pt(1.0, 5.0);
+        let p2_0 = Pt(2.0, 0.0);
+        let p2_1 = Pt(2.0, 1.0);
+        let p2_2 = Pt(2.0, 2.0);
+        let p2_3 = Pt(2.0, 3.0);
+        let p2_4 = Pt(2.0, 4.0);
+        let p2_5 = Pt(2.0, 5.0);
+        let p3_0 = Pt(3.0, 0.0);
+        let p3_1 = Pt(3.0, 1.0);
+        let p3_2 = Pt(3.0, 2.0);
+        let p3_3 = Pt(3.0, 3.0);
+        let p3_4 = Pt(3.0, 4.0);
+        let p3_5 = Pt(3.0, 5.0);
+        let p4_0 = Pt(4.0, 0.0);
+        let p4_1 = Pt(4.0, 1.0);
+        let p4_2 = Pt(4.0, 2.0);
+        let p4_4 = Pt(4.0, 4.0);
+        let p4_5 = Pt(4.0, 5.0);
+        let p5_1 = Pt(5.0, 1.0);
+        let p5_4 = Pt(5.0, 4.0);
+        let inner = Polygon([
+            p1_0, p2_0, p2_2, p3_2, p3_0, p3_0, p4_0, p4_5, p3_5, p3_3, p2_3, p2_5, p1_5,
+        ])
+        .unwrap(); // 🟥
+        let frame = Polygon([p0_1, p5_1, p5_4, p0_4]).unwrap(); // 🟨
+        let expected = Polygon([
+            p1_1, p2_1, p2_2, p3_2, p3_1, p4_1, p4_4, p3_4, p3_3, p2_3, p2_4, p1_4,
+        ])
+        .unwrap(); // 🟧
+
+        let crops = inner.crop_to_polygon(&frame).unwrap();
+        assert_eq!(crops, vec![expected.clone()]);
+
+        // TODO right now this doesn't work because no point at all is inside
+        // the frame. we really don't want to march, we want to intersect and
+        // find that.  TODO
+        //
+        // let crops = frame.crop_to_polygon(&inner).unwrap();
+        // assert_eq!(crops, vec![expected.clone()]);
     }
 
     #[test]
