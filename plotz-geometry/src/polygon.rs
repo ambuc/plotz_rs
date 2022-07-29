@@ -817,18 +817,12 @@ mod tests {
 
     #[test]
     fn test_crop_to_polygon_this_not_closed() {
-        let p0_0 = Pt(0.0, 0.0);
-        let p0_4 = Pt(0.0, 4.0);
-        let p1_1 = Pt(1.0, 1.0);
-        let p1_3 = Pt(1.0, 3.0);
-        let p3_1 = Pt(3.0, 1.0);
-        let p3_3 = Pt(3.0, 3.0);
-        let p4_0 = Pt(4.0, 0.0);
-        let p4_4 = Pt(4.0, 4.0);
         assert_eq!(
-            Multiline([p1_1, p3_1, p3_3, p1_3])
+            Multiline([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)])
                 .unwrap()
-                .crop_to_polygon(&Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap())
+                .crop_to_polygon(
+                    &Polygon([Pt(0.0, 0.0), Pt(4.0, 0.0), Pt(4.0, 4.0), Pt(0.0, 4.0)]).unwrap()
+                )
                 .unwrap_err(),
             CropToPolygonError::ThisPolygonNotClosed
         );
@@ -836,18 +830,12 @@ mod tests {
 
     #[test]
     fn test_crop_to_polygon_that_not_closed() {
-        let p0_0 = Pt(0.0, 0.0);
-        let p0_4 = Pt(0.0, 4.0);
-        let p1_1 = Pt(1.0, 1.0);
-        let p1_3 = Pt(1.0, 3.0);
-        let p3_1 = Pt(3.0, 1.0);
-        let p3_3 = Pt(3.0, 3.0);
-        let p4_0 = Pt(4.0, 0.0);
-        let p4_4 = Pt(4.0, 4.0);
         assert_eq!(
-            Polygon([p1_1, p3_1, p3_3, p1_3])
+            Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)])
                 .unwrap()
-                .crop_to_polygon(&Multiline([p0_0, p4_0, p4_4, p0_4]).unwrap())
+                .crop_to_polygon(
+                    &Multiline([Pt(0.0, 0.0), Pt(4.0, 0.0), Pt(4.0, 4.0), Pt(0.0, 4.0)]).unwrap()
+                )
                 .unwrap_err(),
             CropToPolygonError::ThatPolygonNotClosed
         );
@@ -855,18 +843,12 @@ mod tests {
 
     #[test]
     fn test_crop_to_polygon_this_not_positively_oriented() {
-        let p0_0 = Pt(0.0, 0.0);
-        let p0_4 = Pt(0.0, 4.0);
-        let p1_1 = Pt(1.0, 1.0);
-        let p1_3 = Pt(1.0, 3.0);
-        let p3_1 = Pt(3.0, 1.0);
-        let p3_3 = Pt(3.0, 3.0);
-        let p4_0 = Pt(4.0, 0.0);
-        let p4_4 = Pt(4.0, 4.0);
         assert_eq!(
-            Polygon([p1_1, p1_3, p3_3, p3_1])
+            Polygon([Pt(1.0, 1.0), Pt(1.0, 3.0), Pt(3.0, 3.0), Pt(3.0, 1.0)])
                 .unwrap()
-                .crop_to_polygon(&Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap())
+                .crop_to_polygon(
+                    &Polygon([Pt(0.0, 0.0), Pt(4.0, 0.0), Pt(4.0, 4.0), Pt(0.0, 4.0)]).unwrap()
+                )
                 .unwrap_err(),
             CropToPolygonError::ThisPolygonNotPositivelyOriented
         );
@@ -874,18 +856,12 @@ mod tests {
 
     #[test]
     fn test_crop_to_polygon_that_not_positively_oriented() {
-        let p0_0 = Pt(0.0, 0.0);
-        let p0_4 = Pt(0.0, 4.0);
-        let p1_1 = Pt(1.0, 1.0);
-        let p1_3 = Pt(1.0, 3.0);
-        let p3_1 = Pt(3.0, 1.0);
-        let p3_3 = Pt(3.0, 3.0);
-        let p4_0 = Pt(4.0, 0.0);
-        let p4_4 = Pt(4.0, 4.0);
         assert_eq!(
-            Polygon([p1_1, p3_1, p3_3, p1_3])
+            Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)])
                 .unwrap()
-                .crop_to_polygon(&Polygon([p0_0, p0_4, p4_4, p4_0]).unwrap())
+                .crop_to_polygon(
+                    &Polygon([Pt(0.0, 0.0), Pt(0.0, 4.0), Pt(4.0, 4.0), Pt(4.0, 0.0)]).unwrap()
+                )
                 .unwrap_err(),
             CropToPolygonError::ThatPolygonNotPositivelyOriented
         );
@@ -899,12 +875,8 @@ mod tests {
         // ⬜🟧🟧🟧⬜
         // ⬜🟧🟧🟧⬜
         // ⬜⬜⬜⬜⬜ ➡️ x
-        let p1_1 = Pt(1.0, 1.0);
-        let p3_1 = Pt(3.0, 1.0);
-        let p1_3 = Pt(1.0, 3.0);
-        let p3_3 = Pt(3.0, 3.0);
-        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap(); // 🟥
-        let frame = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap(); // 🟨
+        let inner = Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟥
+        let frame = Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟨
         assert_eq!(inner, frame);
         let crops = inner.crop_to_polygon(&frame).unwrap(); // 🟧
         assert_eq!(crops, vec![inner]);
@@ -918,15 +890,8 @@ mod tests {
         // 🟨🟧🟧🟧⬜
         // 🟨🟧🟧🟧⬜
         // 🟨🟨🟨🟨⬜ ➡️ x
-        let p0_0 = Pt(0.0, 0.0);
-        let p0_3 = Pt(0.0, 3.0);
-        let p1_1 = Pt(1.0, 1.0);
-        let p1_3 = Pt(1.0, 3.0);
-        let p3_0 = Pt(3.0, 0.0);
-        let p3_1 = Pt(3.0, 1.0);
-        let p3_3 = Pt(3.0, 3.0);
-        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap(); // 🟥
-        let frame = Polygon([p0_0, p3_0, p3_3, p0_3]).unwrap(); // 🟨
+        let inner = Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟥
+        let frame = Polygon([Pt(0.0, 0.0), Pt(3.0, 0.0), Pt(3.0, 3.0), Pt(0.0, 3.0)]).unwrap(); // 🟨
         assert_eq!(inner.crop_to_polygon(&frame).unwrap()[0].pts, inner.pts);
 
         // ⬆️ y
@@ -971,16 +936,8 @@ mod tests {
         // 🟨🟧🟧🟧🟨
         // 🟨🟧🟧🟧🟨
         // 🟨🟨🟨🟨🟨 ➡️ x
-        let p0_0 = Pt(0.0, 0.0);
-        let p0_4 = Pt(0.0, 4.0);
-        let p1_1 = Pt(1.0, 1.0);
-        let p1_3 = Pt(1.0, 3.0);
-        let p3_1 = Pt(3.0, 1.0);
-        let p3_3 = Pt(3.0, 3.0);
-        let p4_0 = Pt(4.0, 0.0);
-        let p4_4 = Pt(4.0, 4.0);
-        let inner = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap(); // 🟥
-        let frame = Polygon([p0_0, p4_0, p4_4, p0_4]).unwrap(); // 🟨
+        let inner = Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟥
+        let frame = Polygon([Pt(0.0, 0.0), Pt(4.0, 0.0), Pt(4.0, 4.0), Pt(0.0, 4.0)]).unwrap(); // 🟨
 
         // inner /\ frame == inner
         let crops = inner.crop_to_polygon(&frame).unwrap(); // 🟧
@@ -998,19 +955,9 @@ mod tests {
         // 🟨🟧🟧🟥⬜
         // 🟨🟧🟧🟥⬜
         // 🟨🟨🟨⬜⬜ ➡️ x
-        let p0_0 = Pt(0.0, 0.0);
-        let p0_3 = Pt(0.0, 3.0);
-        let p1_1 = Pt(1.0, 1.0);
-        let p1_3 = Pt(1.0, 3.0);
-        let p1_4 = Pt(1.0, 4.0);
-        let p3_0 = Pt(3.0, 0.0);
-        let p3_1 = Pt(3.0, 1.0);
-        let p3_3 = Pt(3.0, 3.0);
-        let p4_1 = Pt(4.0, 1.0);
-        let p4_4 = Pt(4.0, 4.0);
-        let inner = Polygon([p1_1, p4_1, p4_4, p1_4]).unwrap(); // 🟥
-        let frame = Polygon([p0_0, p3_0, p3_3, p0_3]).unwrap(); // 🟨
-        let expected = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap(); // 🟧
+        let inner = Polygon([Pt(1.0, 1.0), Pt(4.0, 1.0), Pt(4.0, 4.0), Pt(1.0, 4.0)]).unwrap(); // 🟥
+        let frame = Polygon([Pt(0.0, 0.0), Pt(3.0, 0.0), Pt(3.0, 3.0), Pt(0.0, 3.0)]).unwrap(); // 🟨
+        let expected = Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟧
 
         let crops = inner.crop_to_polygon(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
@@ -1027,25 +974,9 @@ mod tests {
         // 🟨🟧🟧🟥⬜
         // 🟨🟧🟧🟥⬜
         // ⬜🟥🟥🟥⬜ ➡️ x
-        let p0_0 = Pt(0.0, 0.0);
-        let p0_1 = Pt(0.0, 1.0);
-        let p0_3 = Pt(0.0, 3.0);
-        let p0_4 = Pt(0.0, 4.0);
-        let p1_0 = Pt(1.0, 0.0);
-        let p1_1 = Pt(1.0, 1.0);
-        let p1_3 = Pt(1.0, 3.0);
-        let p1_4 = Pt(1.0, 4.0);
-        let p3_0 = Pt(3.0, 0.0);
-        let p3_1 = Pt(3.0, 1.0);
-        let p3_3 = Pt(3.0, 3.0);
-        let p3_4 = Pt(3.0, 4.0);
-        let p4_0 = Pt(4.0, 0.0);
-        let p4_1 = Pt(4.0, 1.0);
-        let p4_3 = Pt(4.0, 3.0);
-        let p4_4 = Pt(4.0, 4.0);
-        let inner = Polygon([p1_0, p4_0, p4_3, p1_3]).unwrap(); // 🟥
-        let frame = Polygon([p0_1, p3_1, p3_4, p0_4]).unwrap(); // 🟨
-        let expected = Polygon([p1_1, p3_1, p3_3, p1_3]).unwrap(); // 🟧
+        let inner = Polygon([Pt(1.0, 0.0), Pt(4.0, 0.0), Pt(4.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟥
+        let frame = Polygon([Pt(0.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 4.0), Pt(0.0, 4.0)]).unwrap(); // 🟨
+        let expected = Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟧
 
         let crops = inner.crop_to_polygon(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
@@ -1062,44 +993,35 @@ mod tests {
         // 🟨🟧🟧🟧🟨
         // 🟨🟧🟨🟧🟨
         // ⬜🟥⬜🟥⬜
-        let p0_0 = Pt(0.0, 0.0);
-        let p0_1 = Pt(0.0, 1.0);
-        let p0_2 = Pt(0.0, 2.0);
-        let p0_3 = Pt(0.0, 3.0);
-        let p0_4 = Pt(0.0, 4.0);
-        let p0_5 = Pt(0.0, 5.0);
-        let p1_0 = Pt(1.0, 0.0);
-        let p1_1 = Pt(1.0, 1.0);
-        let p1_2 = Pt(1.0, 2.0);
-        let p1_3 = Pt(1.0, 3.0);
-        let p1_4 = Pt(1.0, 4.0);
-        let p1_5 = Pt(1.0, 5.0);
-        let p2_0 = Pt(2.0, 0.0);
-        let p2_1 = Pt(2.0, 1.0);
-        let p2_2 = Pt(2.0, 2.0);
-        let p2_3 = Pt(2.0, 3.0);
-        let p2_4 = Pt(2.0, 4.0);
-        let p2_5 = Pt(2.0, 5.0);
-        let p3_0 = Pt(3.0, 0.0);
-        let p3_1 = Pt(3.0, 1.0);
-        let p3_2 = Pt(3.0, 2.0);
-        let p3_3 = Pt(3.0, 3.0);
-        let p3_4 = Pt(3.0, 4.0);
-        let p3_5 = Pt(3.0, 5.0);
-        let p4_0 = Pt(4.0, 0.0);
-        let p4_1 = Pt(4.0, 1.0);
-        let p4_2 = Pt(4.0, 2.0);
-        let p4_4 = Pt(4.0, 4.0);
-        let p4_5 = Pt(4.0, 5.0);
-        let p5_1 = Pt(5.0, 1.0);
-        let p5_4 = Pt(5.0, 4.0);
         let inner = Polygon([
-            p1_0, p2_0, p2_2, p3_2, p3_0, p3_0, p4_0, p4_5, p3_5, p3_3, p2_3, p2_5, p1_5,
+            Pt(1.0, 0.0),
+            Pt(2.0, 0.0),
+            Pt(2.0, 2.0),
+            Pt(3.0, 2.0),
+            Pt(3.0, 0.0),
+            Pt(4.0, 0.0),
+            Pt(4.0, 5.0),
+            Pt(3.0, 5.0),
+            Pt(3.0, 3.0),
+            Pt(2.0, 3.0),
+            Pt(2.0, 5.0),
+            Pt(1.0, 5.0),
         ])
         .unwrap(); // 🟥
-        let frame = Polygon([p0_1, p5_1, p5_4, p0_4]).unwrap(); // 🟨
+        let frame = Polygon([Pt(0.0, 1.0), Pt(5.0, 1.0), Pt(5.0, 4.0), Pt(0.0, 4.0)]).unwrap(); // 🟨
         let expected = Polygon([
-            p1_1, p2_1, p2_2, p3_2, p3_1, p4_1, p4_4, p3_4, p3_3, p2_3, p2_4, p1_4,
+            Pt(1.0, 1.0),
+            Pt(2.0, 1.0),
+            Pt(2.0, 2.0),
+            Pt(3.0, 2.0),
+            Pt(3.0, 1.0),
+            Pt(4.0, 1.0),
+            Pt(4.0, 4.0),
+            Pt(3.0, 4.0),
+            Pt(3.0, 3.0),
+            Pt(2.0, 3.0),
+            Pt(2.0, 4.0),
+            Pt(1.0, 4.0),
         ])
         .unwrap(); // 🟧
 
