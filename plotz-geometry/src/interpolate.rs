@@ -55,7 +55,7 @@ pub fn interpolate_2d_checked(a: Pt, b: Pt, i: Pt) -> Result<f64, Interpolation2
 }
 
 pub fn extrapolate_2d(a: Pt, b: Pt, p: f64) -> Pt {
-    a + ((b - a) / p)
+    a + ((b - a) * p)
 }
 
 #[cfg(test)]
