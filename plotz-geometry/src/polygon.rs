@@ -33,7 +33,37 @@ pub struct Polygon {
 
 impl PartialEq for Polygon {
     fn eq(&self, other: &Self) -> bool {
-        self.pts == other.pts && self.kind == other.kind
+        let self_idx_of_min = self
+            .pts
+            .iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| a.cmp(b))
+            .map(|(idx, _)| idx)
+            .unwrap();
+        let self_new_pts: Vec<_> = self
+            .pts
+            .iter()
+            .cycle()
+            .skip(self_idx_of_min)
+            .take(self.pts.len())
+            .collect();
+
+        let other_idx_of_min = other
+            .pts
+            .iter()
+            .enumerate()
+            .max_by(|(_, a), (_, b)| a.cmp(b))
+            .map(|(idx, _)| idx)
+            .unwrap();
+        let other_new_pts: Vec<_> = other
+            .pts
+            .iter()
+            .cycle()
+            .skip(other_idx_of_min)
+            .take(other.pts.len())
+            .collect();
+
+        self_new_pts == other_new_pts && self.kind == other.kind
     }
 }
 
@@ -163,7 +193,9 @@ struct OnePolygon {
 struct Cursor<'a> {
     // current position
     position: Either<OnePolygon, Isxn>,
-    facing_along: (On, usize), // segment idx
+    facing_along: On,
+    facing_along_segment_idx: usize, //segment index
+
     // context
     self_pts: &'a Vec<(usize, &'a Pt)>,
     self_pts_len: &'a usize,
@@ -185,21 +217,25 @@ impl<'a> Cursor<'a> {
         }
     }
     fn march_to_next_point(&mut self) {
-        match (&mut self.position, self.facing_along) {
-            (Either::Left(ref mut one_polygon), (on, _)) => {
-                println!("L");
-                one_polygon.at_point_index += 1;
-                if one_polygon.at_point_index
-                    >= (match on {
-                        On::OnSelf => *self.self_pts_len,
-                        On::OnFrame => *self.frame_pts_len,
-                    })
-                {
-                    one_polygon.at_point_index = 0;
+        match (
+            &mut self.position,
+            self.facing_along,
+            self.facing_along_segment_idx,
+        ) {
+            (Either::Left(ref mut one_polygon), on, _) => {
+                println!("\tL: {:?} {:?}", one_polygon, self.facing_along_segment_idx);
+                let mut v = one_polygon.at_point_index + 1;
+                if v >= (match on {
+                    On::OnSelf => *self.self_pts_len,
+                    On::OnFrame => *self.frame_pts_len,
+                }) {
+                    v = 0;
                 }
+                one_polygon.at_point_index = v;
+                self.facing_along_segment_idx = v;
             }
-            (Either::Right(isxn), (on, _)) => {
-                println!("R, isxn {:?}", isxn);
+            (Either::Right(isxn), on, _) => {
+                println!("\tR, isxn {:?}", isxn);
                 let mut new_index = match on {
                     On::OnSelf => isxn.self_segment_idx,
                     On::OnFrame => isxn.frame_segment_idx,
@@ -217,7 +253,7 @@ impl<'a> Cursor<'a> {
                     on_polygon: on,
                     at_point_index: new_index,
                 });
-                self.facing_along.1 = new_index;
+                self.facing_along_segment_idx = new_index;
             }
         }
     }
@@ -389,7 +425,9 @@ impl Polygon {
                 on_polygon: On::OnSelf,
                 at_point_index: 0,
             }),
-            facing_along: (On::OnSelf, /*pt_idx*/ 0),
+            facing_along: On::OnSelf,
+            facing_along_segment_idx: 0_usize,
+            //
             self_pts: &self_pts,
             self_pts_len: &self_pts_len,
             frame_pts: &frame_pts,
@@ -412,15 +450,20 @@ impl Polygon {
                 }
             }
 
-            resultant_pts.push(curr_pt);
-            println!("Current point: {:?}", curr_pt);
-
             match frame.contains_pt(&curr_pt)? {
                 PointLoc::Outside => {
                     println!("\tThe current point is outside of the frame.");
-                    unimplemented!("{curr_pt:#?}");
+                    // advance until we are inside the frame :)
+                    curr.march_to_next_point();
                 }
                 PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_) => {
+                    resultant_pts.push(curr_pt);
+                    println!("Current point: {:?}", curr_pt);
+                    println!("Current direction: {:?}", curr.facing_along);
+                    println!(
+                        "Current on segment idx : {:?}",
+                        curr.facing_along_segment_idx
+                    );
                     println!(
                         "\tThe current point is inside of the frame (or on a point or segment)."
                     );
@@ -431,9 +474,9 @@ impl Polygon {
                         // (a) intersect our line (that's line[curr_idx] from pt[curr_idx] to pt[curr_idx]+1)
                         .filter(|isxn| {
                             (match curr.facing_along {
-                                (On::OnSelf, _) => isxn.self_segment_idx,
-                                (On::OnFrame, _) => isxn.frame_segment_idx,
-                            }) == curr.facing_along.1
+                                On::OnSelf => isxn.self_segment_idx,
+                                On::OnFrame => isxn.frame_segment_idx,
+                            }) == curr.facing_along_segment_idx
                         })
                         // (b) is a genuine intersection which does not intersect at a point,
                         .filter(|isxn| !isxn.intersection.on_points_of_either_polygon())
@@ -447,12 +490,12 @@ impl Polygon {
                         // behind self.
                         // TODO
                         relevant_isxns.sort_by(|a: &Isxn, b: &Isxn| match &curr.facing_along {
-                            (On::OnSelf, _) => a
+                            On::OnSelf => a
                                 .intersection
                                 .percent_along_self
                                 .partial_cmp(&b.intersection.percent_along_self)
                                 .unwrap(),
-                            (On::OnFrame, _) => a
+                            On::OnFrame => a
                                 .intersection
                                 .percent_along_other
                                 .partial_cmp(&b.intersection.percent_along_other)
@@ -461,25 +504,22 @@ impl Polygon {
                         match curr.position {
                             Either::Left(one_polygon) => {
                                 println!("\tSince our current point is on a polygon,");
-                                // Since we're currently at a point on just one
-                                // polygon, we should march towards the very first
-                                // relevant_isxn.
-                                println!("relevant isxns: {:?}", relevant_isxns);
+                                println!("\trelevant isxns: {:?}", relevant_isxns);
                                 let next_isxn: &Isxn = relevant_isxns
                                     .get(0)
                                     .expect("I thought you said it wasn't empty?");
                                 let _next_pt = next_isxn.pt_given_self_segs(curr.self_segments);
-                                // add to resultant pts? or will  this happen enxt time around?
 
                                 println!("\tSetting new next point based on pivot, not marching.");
                                 println!("\t\tfound isxn {:?}", next_isxn);
                                 println!("\t\tcurrently at {:?}", curr_pt);
                                 println!("\t\tcurrently facing {:?}", curr.facing_along);
                                 let new_position: Either<_, Isxn> = Either::Right(*next_isxn);
-                                let new_facing_along = match one_polygon.on_polygon {
-                                    On::OnSelf => (On::OnFrame, next_isxn.frame_segment_idx),
-                                    On::OnFrame => (On::OnSelf, next_isxn.self_segment_idx),
-                                };
+                                let (new_facing_along, new_facing_along_segment_idx) =
+                                    match one_polygon.on_polygon {
+                                        On::OnSelf => (On::OnFrame, next_isxn.frame_segment_idx),
+                                        On::OnFrame => (On::OnSelf, next_isxn.self_segment_idx),
+                                    };
                                 // if next_isxn.intersection.on_points_of_either_polygon() {
                                 //     println!("\t\tbut since we are at a corner, gotta bump the index.");
                                 //
@@ -491,6 +531,7 @@ impl Polygon {
 
                                 curr.position = new_position;
                                 curr.facing_along = new_facing_along;
+                                curr.facing_along_segment_idx = new_facing_along_segment_idx;
                                 println!("\t\tmarched to {:?}", curr.pt());
                                 println!("\t\tnow marching along {:?}", curr.facing_along);
                             }
@@ -499,11 +540,11 @@ impl Polygon {
                                 // if we're currently  at an intersection, we
                                 // should march towards the next relevant_ixsn which is along our current along, but which is ahead of us.
                                 relevant_isxns.drain_filter(|isxn| match curr.facing_along {
-                                    (On::OnSelf, _) => {
+                                    On::OnSelf => {
                                         isxn.intersection.percent_along_self
                                             <= this_isxn.intersection.percent_along_self
                                     }
-                                    (On::OnFrame, _) => {
+                                    On::OnFrame => {
                                         isxn.intersection.percent_along_other
                                             <= this_isxn.intersection.percent_along_other
                                     }
@@ -513,15 +554,16 @@ impl Polygon {
 
                                     let new_position: Either<_, Isxn> = Either::Right(*next_isxn);
                                     let new_facing_along = match curr.facing_along {
-                                        (On::OnSelf, _) => {
-                                            (On::OnFrame, next_isxn.frame_segment_idx)
-                                        }
-                                        (On::OnFrame, _) => {
-                                            (On::OnSelf, next_isxn.self_segment_idx)
-                                        }
+                                        On::OnSelf => On::OnFrame,
+                                        On::OnFrame => On::OnSelf,
+                                    };
+                                    let new_facing_along_segment_idx = match curr.facing_along {
+                                        On::OnSelf => next_isxn.frame_segment_idx,
+                                        On::OnFrame => next_isxn.self_segment_idx,
                                     };
                                     curr.position = new_position;
                                     curr.facing_along = new_facing_along;
+                                    curr.facing_along_segment_idx = new_facing_along_segment_idx;
                                 }
                             }
                         }
@@ -1015,8 +1057,9 @@ mod tests {
 
         let crops = inner.crop_to_polygon(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
-        // let crops = frame.crop_to_polygon(&inner).unwrap();
-        // assert_eq!(crops, vec![expected.clone()]);
+
+        let crops = frame.crop_to_polygon(&inner).unwrap();
+        assert_eq!(crops, vec![expected.clone()]);
     }
 
     #[test]
