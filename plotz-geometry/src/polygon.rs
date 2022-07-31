@@ -550,16 +550,6 @@ fn _abp(o: &Pt, i: &Pt, j: &Pt) -> f64 {
 
 /// An add operation between a polygon and a point. This can be seen as
 /// transposition by |rhs|.
-///
-/// ```
-/// use plotz_geometry::{point::Pt, polygon::Polygon};
-/// assert_eq!(
-///       &Polygon([Pt(0,0), Pt(1,1), Pt(2,2)]).unwrap()
-///     + Pt(1,0),  
-///    // --------
-///       Polygon([Pt(1,0), Pt(2,1), Pt(3,2)]).unwrap()
-/// );
-/// ```
 impl Add<Pt> for &Polygon {
     type Output = Polygon;
     fn add(self, rhs: Pt) -> Self::Output {
@@ -1060,5 +1050,13 @@ mod tests {
         assert_eq!(p.get_curve_orientation(), CurveOrientation::Positive);
         p.orient_curve();
         assert_eq!(p.get_curve_orientation(), CurveOrientation::Negative);
+    }
+
+    #[test]
+    fn test_add() {
+        assert_eq!(
+            &Polygon([Pt(0, 0), Pt(1, 1), Pt(2, 2)]).unwrap() + Pt(1, 0),
+            Polygon([Pt(1, 0), Pt(2, 1), Pt(3, 2)]).unwrap()
+        );
     }
 }

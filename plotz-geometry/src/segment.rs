@@ -71,11 +71,6 @@ impl PartialEq for Segment {
 }
 
 /// An alternate constructor for segments.
-///
-/// ```
-/// use plotz_geometry::{point::Pt, segment::Segment};
-/// assert_eq!(Segment{i: Pt(0,0), f: Pt(0,1)}, Segment(Pt(0,0), Pt(0,1)));
-/// ```
 #[allow(non_snake_case)]
 pub fn Segment(i: Pt, f: Pt) -> Segment {
     Segment { i, f }
@@ -189,16 +184,6 @@ impl Segment {
 
 /// An add operation between a segment and a point. This can be seen as
 /// transposition by |rhs|.
-///
-/// ```
-/// use plotz_geometry::{point::Pt, segment::Segment};
-/// assert_eq!(
-///       Segment(Pt(0,0), Pt(1,1))
-///     + Pt(1,0),  
-///    // --------
-///       Segment(Pt(1,0), Pt(2,1))
-/// );
-/// ```
 impl Add<Pt> for Segment {
     type Output = Segment;
     fn add(self, rhs: Pt) -> Self::Output {
@@ -208,13 +193,6 @@ impl Add<Pt> for Segment {
 
 /// An add-assign operation between a segment and a point. This can be seen as a
 /// transposition by |rhs|.
-///
-/// ```
-/// use plotz_geometry::{point::Pt, segment::Segment};
-/// let mut s = Segment(Pt(0,0), Pt(1,1));
-/// s += Pt(1,0);
-/// assert_eq!(s, Segment(Pt(1,0), Pt(2,1)));
-/// ```
 impl AddAssign<Pt> for Segment {
     fn add_assign(&mut self, rhs: Pt) {
         *self = Segment(self.i + rhs, self.f + rhs);
@@ -223,16 +201,6 @@ impl AddAssign<Pt> for Segment {
 
 /// A division operation between a segment and a point. This can be seen as
 /// scaling by |rhs|.
-///
-/// ```
-/// use plotz_geometry::{point::Pt, segment::Segment};
-/// assert_eq!(
-///       Segment(Pt(0.0,0.0), Pt(1.0,1.0))
-///     / 2.0,  
-///    // --------
-///       Segment(Pt(0.0,0.0), Pt(0.5,0.5))
-/// );
-/// ```
 impl Div<f64> for Segment {
     type Output = Segment;
     fn div(self, rhs: f64) -> Self::Output {
@@ -242,13 +210,6 @@ impl Div<f64> for Segment {
 
 /// An division-assign operation between a segment and a point. This can be seen
 /// as a scaling by |rhs|.
-///
-/// ```
-/// use plotz_geometry::{point::Pt, segment::Segment};
-/// let mut s = Segment(Pt(0.0,0.0), Pt(1.0,1.0));
-/// s /= 2.0;
-/// assert_eq!(s, Segment(Pt(0.0,0.0), Pt(0.5,0.5)));
-/// ```
 impl DivAssign<f64> for Segment {
     fn div_assign(&mut self, rhs: f64) {
         *self = Segment(self.i / rhs, self.f / rhs)
@@ -257,16 +218,6 @@ impl DivAssign<f64> for Segment {
 
 /// A multiplication operation between a segment and a point. This can be seen
 /// as scaling by |rhs|.
-///
-/// ```
-/// use plotz_geometry::{point::Pt, segment::Segment};
-/// assert_eq!(
-///       Segment(Pt(0.0,0.0), Pt(1.0,1.0))
-///     * 2.0,  
-///    // --------
-///       Segment(Pt(0.0,0.0), Pt(2.0,2.0))
-/// );
-/// ```
 impl Mul<f64> for Segment {
     type Output = Segment;
     fn mul(self, rhs: f64) -> Self::Output {
@@ -276,13 +227,6 @@ impl Mul<f64> for Segment {
 
 /// An multiplication-assign operation between a segment and a point. This can
 /// be seen as a scaling by |rhs|.
-///
-/// ```
-/// use plotz_geometry::{point::Pt, segment::Segment};
-/// let mut s = Segment(Pt(0.0,0.0), Pt(1.0,1.0));
-/// s *= 2.0;
-/// assert_eq!(s, Segment(Pt(0.0,0.0), Pt(2.0,2.0)));
-/// ```
 impl MulAssign<f64> for Segment {
     fn mul_assign(&mut self, rhs: f64) {
         *self = Segment(self.i * rhs, self.f * rhs);
@@ -291,16 +235,6 @@ impl MulAssign<f64> for Segment {
 
 /// A subtraction operation between a segment and a point. This can be seen
 /// as translation by |rhs|.
-///
-/// ```
-/// use plotz_geometry::{point::Pt, segment::Segment};
-/// assert_eq!(
-///       Segment(Pt(0.0,0.0), Pt(1.0,1.0))
-///     - Pt(1.0,2.0),
-///    // --------
-///       Segment(Pt(-1.0,-2.0), Pt(0.0,-1.0))
-/// );
-/// ```
 impl Sub<Pt> for Segment {
     type Output = Segment;
     fn sub(self, rhs: Pt) -> Self::Output {
@@ -313,13 +247,6 @@ impl Sub<Pt> for Segment {
 
 /// An subtraction-assign operation between a segment and a point. This can
 /// be seen as translation by |rhs|.
-///
-/// ```
-/// use plotz_geometry::{point::Pt, segment::Segment};
-/// let mut s = Segment(Pt(0.0,0.0), Pt(1.0,1.0));
-/// s -= Pt(1.0,2.0);
-/// assert_eq!(s, Segment(Pt(-1.0,-2.0), Pt(0.0,-1.0)));
-/// ```
 impl SubAssign<Pt> for Segment {
     fn sub_assign(&mut self, rhs: Pt) {
         *self = Segment(self.i - rhs, self.f - rhs);
@@ -612,5 +539,76 @@ mod tests {
             Segment(a, c).line_segment_contains_pt(&a).unwrap(),
             Contains::AtStart
         );
+    }
+    #[test]
+    fn test_segment() {
+        assert_eq!(
+            Segment {
+                i: Pt(0, 0),
+                f: Pt(0, 1)
+            },
+            Segment(Pt(0, 0), Pt(0, 1))
+        );
+    }
+
+    #[test]
+    fn test_add() {
+        assert_eq!(
+            Segment(Pt(0, 0), Pt(1, 1)) + Pt(1, 0),
+            Segment(Pt(1, 0), Pt(2, 1))
+        );
+    }
+
+    #[test]
+    fn test_add_assign() {
+        let mut s = Segment(Pt(0, 0), Pt(1, 1));
+        s += Pt(1, 0);
+        assert_eq!(s, Segment(Pt(1, 0), Pt(2, 1)));
+    }
+
+    #[test]
+    fn test_div() {
+        assert_eq!(
+            Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)) / 2.0,
+            Segment(Pt(0.0, 0.0), Pt(0.5, 0.5))
+        );
+    }
+
+    #[test]
+    fn test_div_assign() {
+        let mut s = Segment(Pt(0.0, 0.0), Pt(1.0, 1.0));
+        s /= 2.0;
+        assert_eq!(s, Segment(Pt(0.0, 0.0), Pt(0.5, 0.5)));
+    }
+
+    #[test]
+    fn test_mul() {
+        assert_eq!(
+            Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)) * 2.0,
+            Segment(Pt(0.0, 0.0), Pt(2.0, 2.0))
+        );
+    }
+
+    #[test]
+    fn test_mul_assign() {
+        let mut s = Segment(Pt(0.0, 0.0), Pt(1.0, 1.0));
+        s *= 2.0;
+        assert_eq!(s, Segment(Pt(0.0, 0.0), Pt(2.0, 2.0)));
+    }
+
+    #[test]
+    fn test_sub() {
+        assert_eq!(
+            Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)) - Pt(1.0, 2.0),
+            // --------
+            Segment(Pt(-1.0, -2.0), Pt(0.0, -1.0))
+        );
+    }
+
+    #[test]
+    fn test_sub_assign() {
+        let mut s = Segment(Pt(0.0, 0.0), Pt(1.0, 1.0));
+        s -= Pt(1.0, 2.0);
+        assert_eq!(s, Segment(Pt(-1.0, -2.0), Pt(0.0, -1.0)));
     }
 }

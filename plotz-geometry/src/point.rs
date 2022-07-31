@@ -34,11 +34,6 @@ impl From<(f64, f64)> for Pt {
 }
 
 /// A modulo operator for rounding points.
-///
-/// ```
-/// use plotz_geometry::point::Pt;
-/// assert_eq!(Pt(1.5, 1.5) % (1.0, 1.0), Pt(0.5, 0.5));
-/// ```
 impl Rem<(f64, f64)> for Pt {
     type Output = Self;
 
@@ -48,13 +43,6 @@ impl Rem<(f64, f64)> for Pt {
 }
 
 /// A div-assign operator for points.
-///
-/// ```
-/// use plotz_geometry::point::Pt;
-/// let mut p = Pt(1.5, 1.5);
-/// p /= 2.0;
-/// assert_eq!(p, Pt(0.75, 0.75));
-/// ```
 impl DivAssign<f64> for Pt {
     fn div_assign(&mut self, rhs: f64) {
         self.x.0 /= rhs;
@@ -64,10 +52,6 @@ impl DivAssign<f64> for Pt {
 
 /// A addition operator for points.
 ///
-/// ```
-/// use plotz_geometry::point::Pt;
-/// assert_eq!(Pt(1, 2) + Pt(3, 4), Pt(4, 6));
-/// ```
 impl Add<Pt> for Pt {
     type Output = Self;
     fn add(self, rhs: Pt) -> Self::Output {
@@ -76,13 +60,6 @@ impl Add<Pt> for Pt {
 }
 
 /// A add-assign operator for points.
-///
-/// ```
-/// use plotz_geometry::point::Pt;
-/// let mut p = Pt(2, 4);
-/// p += Pt(1, 2);
-/// assert_eq!(p, Pt(3, 6));
-/// ```
 impl AddAssign<Pt> for Pt {
     fn add_assign(&mut self, other: Self) {
         *self = Self {
@@ -93,11 +70,6 @@ impl AddAssign<Pt> for Pt {
 }
 
 /// A subtraction operator for points.
-///
-/// ```
-/// use plotz_geometry::point::Pt;
-/// assert_eq!(Pt(1, 2) - Pt(3, 4), Pt(-2, -2));
-/// ```
 impl Sub<Pt> for Pt {
     type Output = Self;
     fn sub(self, rhs: Pt) -> Self::Output {
@@ -106,13 +78,6 @@ impl Sub<Pt> for Pt {
 }
 
 /// A sub-assign operator for points.
-///
-/// ```
-/// use plotz_geometry::point::Pt;
-/// let mut p = Pt(2, 4);
-/// p -= Pt(1, 2);
-/// assert_eq!(p, Pt(1, 2));
-/// ```
 impl SubAssign<Pt> for Pt {
     fn sub_assign(&mut self, other: Self) {
         *self = Self {
@@ -123,11 +88,6 @@ impl SubAssign<Pt> for Pt {
 }
 
 /// A multiplication operator for points.
-///
-/// ```
-/// use plotz_geometry::point::Pt;
-/// assert_eq!(Pt(1.0, 2.0) * 2.0, Pt(2.0, 4.0));
-/// ```
 impl Mul<f64> for Pt {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
@@ -136,13 +96,6 @@ impl Mul<f64> for Pt {
 }
 
 /// A sub-assign operator for points.
-///
-/// ```
-/// use plotz_geometry::point::Pt;
-/// let mut p = Pt(2, 4);
-/// p -= Pt(1, 2);
-/// assert_eq!(p, Pt(1, 2));
-/// ```
 impl MulAssign<f64> for Pt {
     fn mul_assign(&mut self, rhs: f64) {
         self.x.0 *= rhs;
@@ -151,11 +104,6 @@ impl MulAssign<f64> for Pt {
 }
 
 /// A division operator for points.
-///
-/// ```
-/// use plotz_geometry::point::Pt;
-/// assert_eq!(Pt(1.0, 2.0) / 2.0, Pt(0.5, 1.0)); // floats
-/// ```
 impl Div<f64> for Pt {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
@@ -216,5 +164,51 @@ mod tests {
     fn test_dot() {
         assert_float_eq!(Pt(1.0, 1.0).dot(&Pt(1.0, 0.0)), 1.0, abs <= 0.000_1);
         assert_float_eq!(Pt(7.0, 2.0).dot(&Pt(3.0, 6.0)), 33.0, abs <= 0.000_1);
+    }
+
+    #[test]
+    fn test_rem() {
+        assert_eq!(Pt(1.5, 1.5) % (1.0, 1.0), Pt(0.5, 0.5));
+    }
+
+    #[test]
+    fn test_div_assign() {
+        let mut p = Pt(1.5, 1.5);
+        p /= 2.0;
+        assert_eq!(p, Pt(0.75, 0.75));
+    }
+
+    #[test]
+    fn test_add() {
+        assert_eq!(Pt(1, 2) + Pt(3, 4), Pt(4, 6));
+    }
+
+    #[test]
+    fn test_add_assign() {
+        let mut p = Pt(2, 4);
+        p += Pt(1, 2);
+        assert_eq!(p, Pt(3, 6));
+    }
+
+    #[test]
+    fn test_sub() {
+        assert_eq!(Pt(1, 2) - Pt(3, 4), Pt(-2, -2));
+    }
+
+    #[test]
+    fn test_sub_assign() {
+        let mut p = Pt(2, 4);
+        p -= Pt(1, 2);
+        assert_eq!(p, Pt(1, 2));
+    }
+
+    #[test]
+    fn test_mul() {
+        assert_eq!(Pt(1.0, 2.0) * 2.0, Pt(2.0, 4.0));
+    }
+
+    #[test]
+    fn test_div() {
+        assert_eq!(Pt(1.0, 2.0) / 2.0, Pt(0.5, 1.0)); // floats
     }
 }
