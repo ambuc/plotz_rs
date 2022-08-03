@@ -1,7 +1,6 @@
-use crate::interpolate;
-
 use {
     crate::{
+        interpolate,
         point::Pt,
         segment::{Contains, Intersection, IntersectionOutcome, Segment},
     },
@@ -11,6 +10,7 @@ use {
     itertools::{all, iproduct, zip},
     std::{
         cmp::{Eq, PartialEq},
+        collections::HashSet,
         fmt::Debug,
         ops::Add,
     },
@@ -167,7 +167,7 @@ impl IsxnOutcome {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 struct Isxn {
     frame_segment_idx: usize,
     self_segment_idx: usize,
@@ -176,7 +176,7 @@ struct Isxn {
 impl Isxn {
     pub fn pt_given_self_segs(&self, self_segs: &[(usize, Segment)]) -> Pt {
         let (_, seg) = self_segs[self.self_segment_idx];
-        interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_self)
+        interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_self.0)
     }
 }
 
@@ -425,7 +425,7 @@ impl Polygon {
         let mut resultant_polygons: Vec<Polygon> = vec![];
         let mut resultant_pts: Vec<Pt> = vec![];
 
-        let mut visited: Vec<Pt> = vec![];
+        let mut visited_pts: Vec<Pt> = vec![];
 
         assert!(!self_pts_in_frame.is_empty());
 
@@ -456,10 +456,10 @@ impl Polygon {
             }
 
             // If we've revisited a point otherwise, it is an error.
-            if visited.contains(&curr_pt) {
+            if visited_pts.contains(&curr_pt) {
                 return Err(CropToPolygonError::CycleError);
             }
-            visited.push(curr_pt);
+            visited_pts.push(curr_pt);
 
             let mut relevant_isxns: Vec<Isxn> = isxn_outcomes
                 .iter()
@@ -491,8 +491,8 @@ impl Polygon {
                         let (_drained, v) = relevant_isxns.into_iter().partition(|isxn| match curr
                             .facing_along
                         {
-                            On::OnSelf => isxn.intersection.percent_along_self == 0.0,
-                            On::OnFrame => isxn.intersection.percent_along_other == 0.0,
+                            On::OnSelf => isxn.intersection.percent_along_self.0 == 0.0,
+                            On::OnFrame => isxn.intersection.percent_along_other.0 == 0.0,
                         });
                         relevant_isxns = v;
                     }
@@ -526,7 +526,6 @@ impl Polygon {
                             }
                             Either::Right(_) => {
                                 unimplemented!(" 01 ?");
-                                //
                             }
                         }
                     }
@@ -1089,6 +1088,36 @@ mod tests {
         assert_eq!(crops, vec![expected.clone()]);
         let crops = frame.crop_to_polygon(&inner).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
+    }
+
+    #[test]
+    fn test_crop_to_polygon_concavities_01() {
+        // ⬆️ y
+        // ⬜🟨🟨🟨⬜
+        // ⬜🟨⬜🟨⬜
+        // 🟥🟧🟥🟧🟥
+        // 🟥🟧🟥🟧🟥
+        // ⬜🟨⬜🟨⬜
+        let inner = Polygon([
+            Pt(1, 0),
+            Pt(2, 0),
+            Pt(2, 4),
+            Pt(3, 4),
+            Pt(3, 0),
+            Pt(4, 0),
+            Pt(4, 5),
+            Pt(1, 5),
+        ])
+        .unwrap();
+        let frame = Polygon([Pt(0, 1), Pt(5, 1), Pt(5, 3), Pt(0, 3)]).unwrap();
+        let expected = vec![
+            Polygon([Pt(1, 1), Pt(2, 1), Pt(2, 3), Pt(1, 3)]).unwrap(),
+            Polygon([Pt(3, 1), Pt(4, 1), Pt(4, 3), Pt(3, 3)]).unwrap(),
+        ];
+        let crops = inner.crop_to_polygon(&frame).unwrap();
+        assert_eq!(crops.len(), 2);
+        assert_eq!(crops[0], expected[0]);
+        assert_eq!(crops[1], expected[1]);
     }
 
     #[test]

@@ -1,6 +1,7 @@
 use crate::interpolate::interpolate_2d_checked;
 use crate::point::Pt;
 use float_cmp::approx_eq;
+use float_ord::FloatOrd;
 use std::{
     cmp::PartialOrd,
     fmt::Debug,
@@ -23,24 +24,24 @@ pub enum Contains {
 }
 
 /// A struct representing an intersection between two line segments.
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone, Eq, Hash)]
 pub struct Intersection {
     /// At which % of the way from self_i to self_f the intersection occurs. Will always be between 0.0 and 1.0.
     /// If this value is 0.0, the intersection is at self_i.
     /// If this value is 1.0, the intersection is at self_f.
-    pub percent_along_self: f64,
+    pub percent_along_self: FloatOrd<f64>,
     /// At which % of the way from other_i to other_f the intersection occurs. Will always be between 0.0 and 1.0.
     /// If this value is 0.0, the intersection is at other_i.
     /// If this value is 1.0, the intersection is at other_f.
-    pub percent_along_other: f64,
+    pub percent_along_other: FloatOrd<f64>,
 }
 
 impl Intersection {
     fn on_points_of_self(&self) -> bool {
-        self.percent_along_self == 0.0 || self.percent_along_self == 1.0
+        self.percent_along_self.0 == 0.0 || self.percent_along_self.0 == 1.0
     }
     fn on_points_of_other(&self) -> bool {
-        self.percent_along_other == 0.0 || self.percent_along_other == 1.0
+        self.percent_along_other.0 == 0.0 || self.percent_along_other.0 == 1.0
     }
     pub fn on_points_of_either_polygon(&self) -> bool {
         self.on_points_of_self() || self.on_points_of_other()
@@ -144,8 +145,8 @@ impl Segment {
             (other.f.x.0, other.f.y.0),
         ) {
             return Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_self: interpolate_2d_checked(self.i, self.f, pt).ok()?,
-                percent_along_other: interpolate_2d_checked(other.i, other.f, pt).ok()?,
+                percent_along_self: FloatOrd(interpolate_2d_checked(self.i, self.f, pt).ok()?),
+                percent_along_other: FloatOrd(interpolate_2d_checked(other.i, other.f, pt).ok()?),
             }));
         }
         None
@@ -445,29 +446,29 @@ mod tests {
         assert_eq!(
             Segment(e, i).intersects(&Segment(c, g)),
             Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_self: 0.0,
-                percent_along_other: 0.5
+                percent_along_self: FloatOrd(0.0),
+                percent_along_other: FloatOrd(0.5)
             }))
         );
         assert_eq!(
             Segment(a, e).intersects(&Segment(c, g)),
             Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_self: 1.0,
-                percent_along_other: 0.5
+                percent_along_self: FloatOrd(1.0),
+                percent_along_other: FloatOrd(0.5)
             }))
         );
         assert_eq!(
             Segment(c, g).intersects(&Segment(e, i)),
             Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_self: 0.5,
-                percent_along_other: 0.0
+                percent_along_self: FloatOrd(0.5),
+                percent_along_other: FloatOrd(0.0)
             }))
         );
         assert_eq!(
             Segment(c, g).intersects(&Segment(a, e)),
             Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_self: 0.5,
-                percent_along_other: 1.0
+                percent_along_self: FloatOrd(0.5),
+                percent_along_other: FloatOrd(1.0)
             }))
         );
 
@@ -475,29 +476,29 @@ mod tests {
         assert_eq!(
             Segment(a, c).intersects(&Segment(c, i)),
             Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_self: 1.0,
-                percent_along_other: 0.0
+                percent_along_self: FloatOrd(1.0),
+                percent_along_other: FloatOrd(-0.0)
             }))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(i, c)),
             Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_self: 1.0,
-                percent_along_other: 1.0
+                percent_along_self: FloatOrd(1.0),
+                percent_along_other: FloatOrd(1.0)
             }))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(g, a)),
             Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_self: 0.0,
-                percent_along_other: 1.0
+                percent_along_self: FloatOrd(0.0),
+                percent_along_other: FloatOrd(1.0)
             }))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(a, g)),
             Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_self: 0.0,
-                percent_along_other: 0.0
+                percent_along_self: FloatOrd(0.0),
+                percent_along_other: FloatOrd(-0.0)
             }))
         );
 
@@ -505,8 +506,8 @@ mod tests {
         assert_eq!(
             Segment(a, i).intersects(&Segment(c, g)),
             Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_self: 0.5,
-                percent_along_other: 0.5
+                percent_along_self: FloatOrd(0.5),
+                percent_along_other: FloatOrd(0.5)
             }))
         );
     }
