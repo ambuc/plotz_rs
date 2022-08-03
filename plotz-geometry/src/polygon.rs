@@ -1003,6 +1003,37 @@ mod tests {
     }
 
     #[test]
+    fn test_crop_to_polygon_many_pivots_02() {
+        // ⬆️ y
+        // ⬜⬜⬜⬜⬜
+        // 🟨🟧🟨🟧🟨
+        // 🟨🟧🟧🟧🟨
+        // 🟨🟧🟨🟧🟨
+        // ⬜⬜⬜⬜⬜
+        let inner = Polygon([
+            Pt(1, 1),
+            Pt(2, 1),
+            Pt(2, 2),
+            Pt(3, 2),
+            Pt(3, 1),
+            Pt(4, 1),
+            Pt(4, 4),
+            Pt(3, 4),
+            Pt(3, 3),
+            Pt(2, 3),
+            Pt(2, 4),
+            Pt(1, 4),
+        ])
+        .unwrap(); // 🟥
+        let frame = Polygon([Pt(0, 1), Pt(5, 1), Pt(5, 4), Pt(0, 4)]).unwrap(); // 🟨
+        let expected = inner.clone();
+        let crops = inner.crop_to_polygon(&frame).unwrap();
+        assert_eq!(crops, vec![expected.clone()]);
+        let crops = frame.crop_to_polygon(&inner).unwrap();
+        assert_eq!(crops, vec![expected.clone()]);
+    }
+
+    #[test]
     fn test_polygon_get_curve_orientation() {
         //   ^
         //   |
