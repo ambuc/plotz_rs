@@ -513,39 +513,28 @@ impl Polygon {
                 }
             }
 
-            match frame.contains_pt(&curr_pt)? {
-                PointLoc::Outside => {
-                    match (&relevant_isxns[..], curr.position) {
-                        ([], _) => {
-                            curr.march_to_next_point();
-                        }
-                        (_, Either::Left(_)) => {
-                            let next_isxn = relevant_isxns.first().expect("?");
-                            curr.march_to_isxn(*next_isxn, /*should_flip */ false);
-                        }
-                        (_, Either::Right(_)) => {
-                            unimplemented!(" 01 ?");
-                        }
+            if !matches!(frame.contains_pt(&curr_pt)?, PointLoc::Outside) {
+                resultant_pts.push(curr_pt);
+            }
+
+            if relevant_isxns.is_empty() {
+                curr.march_to_next_point();
+            } else {
+                match curr.position {
+                    Either::Left(_) => {
+                        let next_isxn = relevant_isxns.first().expect("?");
+                        curr.march_to_isxn(
+                            *next_isxn, /*should_flip */
+                            !matches!(frame.contains_pt(&curr_pt)?, PointLoc::Outside),
+                        );
                     }
-                }
-                PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_) => {
-                    resultant_pts.push(curr_pt);
-                    match (&relevant_isxns[..], curr.position) {
-                        ([], _) => {
-                            curr.march_to_next_point();
-                        }
-                        (_, Either::Left(_)) => {
-                            let next_isxn = relevant_isxns.first().expect("?");
-                            curr.march_to_isxn(*next_isxn, /*should_flip */ true);
-                        }
-                        (_, Either::Right(_)) => {
-                            match relevant_isxns.get(0) {
-                                Some(next_isxn) => {
-                                    curr.march_to_isxn(*next_isxn, /*should_flip */ true);
-                                }
-                                None => {
-                                    curr.march_to_next_point();
-                                }
+                    Either::Right(_) => {
+                        match relevant_isxns.get(0) {
+                            Some(next_isxn) => {
+                                curr.march_to_isxn(*next_isxn, /*should_flip */ true);
+                            }
+                            None => {
+                                curr.march_to_next_point();
                             }
                         }
                     }
