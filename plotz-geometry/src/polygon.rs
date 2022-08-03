@@ -5,6 +5,7 @@ use {
         point::Pt,
         segment::{Contains, Intersection, IntersectionOutcome, Segment},
     },
+    derivative::Derivative,
     either::Either,
     float_cmp::approx_eq,
     itertools::{all, iproduct, zip},
@@ -129,6 +130,8 @@ pub enum CropToPolygonError {
     ContainsPointError(#[from] ContainsPointError),
     #[error("could not construct a polygon.")]
     PolygonConstructorError(#[from] PolygonConstructorError),
+    #[error("could not construct a polygon, we cycled. check the logs please")]
+    CycleError,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -197,17 +200,23 @@ struct OnePolygon {
     at_point_index: usize,
 }
 
-#[derive(Debug)]
+#[derive(Derivative)]
+#[derivative(Debug)]
 struct Cursor<'a> {
     // current position
     position: Either<OnePolygon, Isxn>,
     facing_along: On,
     facing_along_segment_idx: usize, // segment index
     // context
+    #[derivative(Debug = "ignore")]
     self_pts: &'a Vec<(usize, &'a Pt)>,
+    #[derivative(Debug = "ignore")]
     self_pts_len: &'a usize,
+    #[derivative(Debug = "ignore")]
     frame_pts: &'a Vec<(usize, &'a Pt)>,
+    #[derivative(Debug = "ignore")]
     frame_pts_len: &'a usize,
+    #[derivative(Debug = "ignore")]
     self_segments: &'a Vec<(usize, Segment)>,
 }
 impl<'a> Cursor<'a> {
@@ -416,6 +425,8 @@ impl Polygon {
         let mut resultant_polygons: Vec<Polygon> = vec![];
         let mut resultant_pts: Vec<Pt> = vec![];
 
+        let mut visited: Vec<Pt> = vec![];
+
         assert!(!self_pts_in_frame.is_empty());
 
         let mut curr = Cursor {
@@ -440,10 +451,15 @@ impl Polygon {
             if let Some(pt) = resultant_pts.get(0) {
                 if *pt == curr_pt {
                     // then break out of it.
-                    // println!("Detected a cycle, breaking out.");
                     break 'outer;
                 }
             }
+
+            // If we've revisited a point otherwise, it is an error.
+            if visited.contains(&curr_pt) {
+                return Err(CropToPolygonError::CycleError);
+            }
+            visited.push(curr_pt);
 
             let mut relevant_isxns: Vec<Isxn> = isxn_outcomes
                 .iter()
@@ -455,8 +471,6 @@ impl Polygon {
                         On::OnFrame => isxn.frame_segment_idx,
                     }) == curr.facing_along_segment_idx
                 })
-                // (b) is a genuine intersection which does not intersect at a point,
-                .filter(|isxn| !isxn.intersection.on_points_of_either_polygon())
                 // then collect them.
                 .collect();
             if !relevant_isxns.is_empty() {
@@ -472,6 +486,32 @@ impl Polygon {
                         .partial_cmp(&b.intersection.percent_along_other)
                         .unwrap(),
                 });
+                match curr.position {
+                    Either::Left(_) => {
+                        let (_drained, v) = relevant_isxns.into_iter().partition(|isxn| match curr
+                            .facing_along
+                        {
+                            On::OnSelf => isxn.intersection.percent_along_self == 0.0,
+                            On::OnFrame => isxn.intersection.percent_along_other == 0.0,
+                        });
+                        relevant_isxns = v;
+                    }
+                    Either::Right(this_isxn) => {
+                        let (_drained, v) = relevant_isxns.into_iter().partition(|isxn| match curr
+                            .facing_along
+                        {
+                            On::OnSelf => {
+                                isxn.intersection.percent_along_self
+                                    <= this_isxn.intersection.percent_along_self
+                            }
+                            On::OnFrame => {
+                                isxn.intersection.percent_along_other
+                                    <= this_isxn.intersection.percent_along_other
+                            }
+                        });
+                        relevant_isxns = v;
+                    }
+                }
             }
 
             match frame.contains_pt(&curr_pt)? {
@@ -499,20 +539,7 @@ impl Polygon {
                                 let next_isxn = relevant_isxns.first().expect("?");
                                 curr.march_to_isxn(*next_isxn, /*should_flip */ true);
                             }
-                            Either::Right(this_isxn) => {
-                                let (_drained, v) = relevant_isxns.into_iter().partition(|isxn| {
-                                    match curr.facing_along {
-                                        On::OnSelf => {
-                                            isxn.intersection.percent_along_self
-                                                <= this_isxn.intersection.percent_along_self
-                                        }
-                                        On::OnFrame => {
-                                            isxn.intersection.percent_along_other
-                                                <= this_isxn.intersection.percent_along_other
-                                        }
-                                    }
-                                });
-                                relevant_isxns = v;
+                            Either::Right(_) => {
                                 match relevant_isxns.get(0) {
                                     Some(next_isxn) => {
                                         curr.march_to_isxn(*next_isxn, /*should_flip */ true);
@@ -1026,6 +1053,37 @@ mod tests {
         ])
         .unwrap(); // 🟥
         let frame = Polygon([Pt(0, 1), Pt(5, 1), Pt(5, 4), Pt(0, 4)]).unwrap(); // 🟨
+        let expected = inner.clone();
+        let crops = inner.crop_to_polygon(&frame).unwrap();
+        assert_eq!(crops, vec![expected.clone()]);
+        let crops = frame.crop_to_polygon(&inner).unwrap();
+        assert_eq!(crops, vec![expected.clone()]);
+    }
+
+    #[test]
+    fn test_crop_to_polygon_many_pivots_03() {
+        // ⬆️ y
+        // ⬜⬜⬜⬜⬜
+        // ⬜🟧🟨🟧⬜
+        // ⬜🟧🟧🟧⬜
+        // ⬜🟧🟨🟧⬜
+        // ⬜⬜⬜⬜⬜
+        let inner = Polygon([
+            Pt(1, 1),
+            Pt(2, 1),
+            Pt(2, 2),
+            Pt(3, 2),
+            Pt(3, 1),
+            Pt(4, 1),
+            Pt(4, 4),
+            Pt(3, 4),
+            Pt(3, 3),
+            Pt(2, 3),
+            Pt(2, 4),
+            Pt(1, 4),
+        ])
+        .unwrap(); // 🟥
+        let frame = Polygon([Pt(1, 1), Pt(4, 1), Pt(4, 4), Pt(1, 4)]).unwrap(); // 🟨
         let expected = inner.clone();
         let crops = inner.crop_to_polygon(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
