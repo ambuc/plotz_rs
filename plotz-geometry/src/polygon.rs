@@ -634,15 +634,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0.0, 2.0);
-        let b = Pt(1.0, 2.0);
-        let c = Pt(2.0, 2.0);
-        let d = Pt(0.0, 1.0);
-        let e = Pt(1.0, 1.0);
-        let f = Pt(2.0, 1.0);
-        let g = Pt(0.0, 0.0);
-        let h = Pt(1.0, 0.0);
-        let i = Pt(2.0, 0.0);
+        let a = Pt(0, 2);
+        let b = Pt(1, 2);
+        let c = Pt(2, 2);
+        let d = Pt(0, 1);
+        let e = Pt(1, 1);
+        let f = Pt(2, 1);
+        let g = Pt(0, 0);
+        let h = Pt(1, 0);
+        let i = Pt(2, 0);
 
         // Positive area intersection.
         assert!(Polygon([a, c, i, g])
@@ -683,15 +683,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0.0, 2.0);
-        let b = Pt(1.0, 2.0);
-        let c = Pt(2.0, 2.0);
-        let d = Pt(0.0, 1.0);
-        let e = Pt(1.0, 1.0);
-        let f = Pt(2.0, 1.0);
-        let g = Pt(0.0, 0.0);
-        let h = Pt(1.0, 0.0);
-        let i = Pt(2.0, 0.0);
+        let a = Pt(0, 2);
+        let b = Pt(1, 2);
+        let c = Pt(2, 2);
+        let d = Pt(0, 1);
+        let e = Pt(1, 1);
+        let f = Pt(2, 1);
+        let g = Pt(0, 0);
+        let h = Pt(1, 0);
+        let i = Pt(2, 0);
 
         // circle around E. (quadrants 1, 2, 3, 4)
         assert_float_eq!(_abp(&e, &f, &b), PI / 2.0, ulps <= 10);
@@ -746,15 +746,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0.0, 2.0);
-        let b = Pt(1.0, 2.0);
-        let c = Pt(2.0, 2.0);
-        let d = Pt(0.0, 1.0);
-        let e = Pt(1.0, 1.0);
-        let f = Pt(2.0, 1.0);
-        let g = Pt(0.0, 0.0);
-        let h = Pt(1.0, 0.0);
-        let i = Pt(2.0, 0.0);
+        let a = Pt(0, 2);
+        let b = Pt(1, 2);
+        let c = Pt(2, 2);
+        let d = Pt(0, 1);
+        let e = Pt(1, 1);
+        let f = Pt(2, 1);
+        let g = Pt(0, 0);
+        let h = Pt(1, 0);
+        let i = Pt(2, 0);
 
         // frame [a,c,i,g] should contain a, b, c, d, e, f, g, h, and i.
         let frame1 = Polygon([a, c, i, g]).unwrap();
@@ -796,11 +796,9 @@ mod tests {
     #[test]
     fn test_crop_to_polygon_this_not_closed() {
         assert_eq!(
-            Multiline([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)])
+            Multiline([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)])
                 .unwrap()
-                .crop_to_polygon(
-                    &Polygon([Pt(0.0, 0.0), Pt(4.0, 0.0), Pt(4.0, 4.0), Pt(0.0, 4.0)]).unwrap()
-                )
+                .crop_to_polygon(&Polygon([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
                 .unwrap_err(),
             CropToPolygonError::ThisPolygonNotClosed
         );
@@ -809,11 +807,9 @@ mod tests {
     #[test]
     fn test_crop_to_polygon_that_not_closed() {
         assert_eq!(
-            Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)])
+            Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)])
                 .unwrap()
-                .crop_to_polygon(
-                    &Multiline([Pt(0.0, 0.0), Pt(4.0, 0.0), Pt(4.0, 4.0), Pt(0.0, 4.0)]).unwrap()
-                )
+                .crop_to_polygon(&Multiline([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
                 .unwrap_err(),
             CropToPolygonError::ThatPolygonNotClosed
         );
@@ -822,11 +818,9 @@ mod tests {
     #[test]
     fn test_crop_to_polygon_this_not_positively_oriented() {
         assert_eq!(
-            Polygon([Pt(1.0, 1.0), Pt(1.0, 3.0), Pt(3.0, 3.0), Pt(3.0, 1.0)])
+            Polygon([Pt(1, 1), Pt(1, 3), Pt(3, 3), Pt(3, 1)])
                 .unwrap()
-                .crop_to_polygon(
-                    &Polygon([Pt(0.0, 0.0), Pt(4.0, 0.0), Pt(4.0, 4.0), Pt(0.0, 4.0)]).unwrap()
-                )
+                .crop_to_polygon(&Polygon([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
                 .unwrap_err(),
             CropToPolygonError::ThisPolygonNotPositivelyOriented
         );
@@ -835,11 +829,9 @@ mod tests {
     #[test]
     fn test_crop_to_polygon_that_not_positively_oriented() {
         assert_eq!(
-            Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)])
+            Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)])
                 .unwrap()
-                .crop_to_polygon(
-                    &Polygon([Pt(0.0, 0.0), Pt(0.0, 4.0), Pt(4.0, 4.0), Pt(4.0, 0.0)]).unwrap()
-                )
+                .crop_to_polygon(&Polygon([Pt(0, 0), Pt(0, 4), Pt(4, 4), Pt(4, 0)]).unwrap())
                 .unwrap_err(),
             CropToPolygonError::ThatPolygonNotPositivelyOriented
         );
@@ -853,8 +845,8 @@ mod tests {
         // ⬜🟧🟧🟧⬜
         // ⬜🟧🟧🟧⬜
         // ⬜⬜⬜⬜⬜ ➡️ x
-        let inner = Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟥
-        let frame = Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟨
+        let inner = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟥
+        let frame = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟨
         assert_eq!(inner, frame);
         let crops = inner.crop_to_polygon(&frame).unwrap(); // 🟧
         assert_eq!(crops, vec![inner]);
@@ -868,8 +860,8 @@ mod tests {
         // 🟨🟧🟧🟧⬜
         // 🟨🟧🟧🟧⬜
         // 🟨🟨🟨🟨⬜ ➡️ x
-        let inner = Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟥
-        let frame = Polygon([Pt(0.0, 0.0), Pt(3.0, 0.0), Pt(3.0, 3.0), Pt(0.0, 3.0)]).unwrap(); // 🟨
+        let inner = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟥
+        let frame = Polygon([Pt(0, 0), Pt(3, 0), Pt(3, 3), Pt(0, 3)]).unwrap(); // 🟨
         assert_eq!(inner.crop_to_polygon(&frame).unwrap()[0].pts, inner.pts);
 
         // ⬆️ y
@@ -879,7 +871,7 @@ mod tests {
         // ⬜🟧🟧🟧🟨
         // ⬜🟨🟨🟨🟨 ➡️ x
         assert_eq!(
-            inner.crop_to_polygon(&(&frame + Pt(1.0, 0.0))).unwrap()[0].pts,
+            inner.crop_to_polygon(&(&frame + Pt(1, 0))).unwrap()[0].pts,
             inner.pts
         );
 
@@ -890,7 +882,7 @@ mod tests {
         // 🟨🟧🟧🟧⬜
         // ⬜⬜⬜⬜⬜ ➡ x
         assert_eq!(
-            inner.crop_to_polygon(&(&frame + Pt(0.0, 1.0))).unwrap()[0].pts,
+            inner.crop_to_polygon(&(&frame + Pt(0, 1))).unwrap()[0].pts,
             inner.pts
         );
 
@@ -901,7 +893,7 @@ mod tests {
         // ⬜🟧🟧🟧🟨
         // ⬜⬜⬜⬜⬜ ➡ x
         assert_eq!(
-            inner.crop_to_polygon(&(&frame + Pt(1.0, 1.0))).unwrap()[0].pts,
+            inner.crop_to_polygon(&(&frame + Pt(1, 1))).unwrap()[0].pts,
             inner.pts
         );
     }
@@ -914,8 +906,8 @@ mod tests {
         // 🟨🟧🟧🟧🟨
         // 🟨🟧🟧🟧🟨
         // 🟨🟨🟨🟨🟨 ➡️ x
-        let inner = Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟥
-        let frame = Polygon([Pt(0.0, 0.0), Pt(4.0, 0.0), Pt(4.0, 4.0), Pt(0.0, 4.0)]).unwrap(); // 🟨
+        let inner = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟥
+        let frame = Polygon([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap(); // 🟨
 
         // inner /\ frame == inner
         let crops = inner.crop_to_polygon(&frame).unwrap(); // 🟧
@@ -933,9 +925,9 @@ mod tests {
         // 🟨🟧🟧🟥⬜
         // 🟨🟧🟧🟥⬜
         // 🟨🟨🟨⬜⬜ ➡️ x
-        let inner = Polygon([Pt(1.0, 1.0), Pt(4.0, 1.0), Pt(4.0, 4.0), Pt(1.0, 4.0)]).unwrap(); // 🟥
-        let frame = Polygon([Pt(0.0, 0.0), Pt(3.0, 0.0), Pt(3.0, 3.0), Pt(0.0, 3.0)]).unwrap(); // 🟨
-        let expected = Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟧
+        let inner = Polygon([Pt(1, 1), Pt(4, 1), Pt(4, 4), Pt(1, 4)]).unwrap(); // 🟥
+        let frame = Polygon([Pt(0, 0), Pt(3, 0), Pt(3, 3), Pt(0, 3)]).unwrap(); // 🟨
+        let expected = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟧
 
         let crops = inner.crop_to_polygon(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
@@ -952,9 +944,9 @@ mod tests {
         // 🟨🟧🟧🟥⬜
         // 🟨🟧🟧🟥⬜
         // ⬜🟥🟥🟥⬜ ➡️ x
-        let inner = Polygon([Pt(1.0, 0.0), Pt(4.0, 0.0), Pt(4.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟥
-        let frame = Polygon([Pt(0.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 4.0), Pt(0.0, 4.0)]).unwrap(); // 🟨
-        let expected = Polygon([Pt(1.0, 1.0), Pt(3.0, 1.0), Pt(3.0, 3.0), Pt(1.0, 3.0)]).unwrap(); // 🟧
+        let inner = Polygon([Pt(1, 0), Pt(4, 0), Pt(4, 3), Pt(1, 3)]).unwrap(); // 🟥
+        let frame = Polygon([Pt(0, 1), Pt(3, 1), Pt(3, 4), Pt(0, 4)]).unwrap(); // 🟨
+        let expected = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟧
 
         let crops = inner.crop_to_polygon(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
@@ -972,34 +964,34 @@ mod tests {
         // 🟨🟧🟨🟧🟨
         // ⬜🟥⬜🟥⬜
         let inner = Polygon([
-            Pt(1.0, 0.0),
-            Pt(2.0, 0.0),
-            Pt(2.0, 2.0),
-            Pt(3.0, 2.0),
-            Pt(3.0, 0.0),
-            Pt(4.0, 0.0),
-            Pt(4.0, 5.0),
-            Pt(3.0, 5.0),
-            Pt(3.0, 3.0),
-            Pt(2.0, 3.0),
-            Pt(2.0, 5.0),
-            Pt(1.0, 5.0),
+            Pt(1, 0),
+            Pt(2, 0),
+            Pt(2, 2),
+            Pt(3, 2),
+            Pt(3, 0),
+            Pt(4, 0),
+            Pt(4, 5),
+            Pt(3, 5),
+            Pt(3, 3),
+            Pt(2, 3),
+            Pt(2, 5),
+            Pt(1, 5),
         ])
         .unwrap(); // 🟥
-        let frame = Polygon([Pt(0.0, 1.0), Pt(5.0, 1.0), Pt(5.0, 4.0), Pt(0.0, 4.0)]).unwrap(); // 🟨
+        let frame = Polygon([Pt(0, 1), Pt(5, 1), Pt(5, 4), Pt(0, 4)]).unwrap(); // 🟨
         let expected = Polygon([
-            Pt(1.0, 1.0),
-            Pt(2.0, 1.0),
-            Pt(2.0, 2.0),
-            Pt(3.0, 2.0),
-            Pt(3.0, 1.0),
-            Pt(4.0, 1.0),
-            Pt(4.0, 4.0),
-            Pt(3.0, 4.0),
-            Pt(3.0, 3.0),
-            Pt(2.0, 3.0),
-            Pt(2.0, 4.0),
-            Pt(1.0, 4.0),
+            Pt(1, 1),
+            Pt(2, 1),
+            Pt(2, 2),
+            Pt(3, 2),
+            Pt(3, 1),
+            Pt(4, 1),
+            Pt(4, 4),
+            Pt(3, 4),
+            Pt(3, 3),
+            Pt(2, 3),
+            Pt(2, 4),
+            Pt(1, 4),
         ])
         .unwrap(); // 🟧
 
@@ -1020,10 +1012,10 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0.0, 2.0);
-        let c = Pt(2.0, 2.0);
-        let g = Pt(0.0, 0.0);
-        let i = Pt(2.0, 0.0);
+        let a = Pt(0, 2);
+        let c = Pt(2, 2);
+        let g = Pt(0, 0);
+        let i = Pt(2, 0);
 
         assert_eq!(
             Polygon([a, c, i, g]).unwrap().get_curve_orientation(),
@@ -1045,10 +1037,10 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0.0, 2.0);
-        let c = Pt(2.0, 2.0);
-        let g = Pt(0.0, 0.0);
-        let i = Pt(2.0, 0.0);
+        let a = Pt(0, 2);
+        let c = Pt(2, 2);
+        let g = Pt(0, 0);
+        let i = Pt(2, 0);
         let mut p = Polygon([a, g, i, c]).unwrap();
         assert_eq!(p.get_curve_orientation(), CurveOrientation::Positive);
         p.orient_curve();
