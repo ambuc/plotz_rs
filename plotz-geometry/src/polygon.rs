@@ -500,16 +500,19 @@ impl Polygon {
                                 curr.march_to_isxn(*next_isxn, /*should_flip */ true);
                             }
                             Either::Right(this_isxn) => {
-                                relevant_isxns.drain_filter(|isxn| match curr.facing_along {
-                                    On::OnSelf => {
-                                        isxn.intersection.percent_along_self
-                                            <= this_isxn.intersection.percent_along_self
-                                    }
-                                    On::OnFrame => {
-                                        isxn.intersection.percent_along_other
-                                            <= this_isxn.intersection.percent_along_other
+                                let (_drained, v) = relevant_isxns.into_iter().partition(|isxn| {
+                                    match curr.facing_along {
+                                        On::OnSelf => {
+                                            isxn.intersection.percent_along_self
+                                                <= this_isxn.intersection.percent_along_self
+                                        }
+                                        On::OnFrame => {
+                                            isxn.intersection.percent_along_other
+                                                <= this_isxn.intersection.percent_along_other
+                                        }
                                     }
                                 });
+                                relevant_isxns = v;
                                 match relevant_isxns.get(0) {
                                     Some(next_isxn) => {
                                         curr.march_to_isxn(*next_isxn, /*should_flip */ true);
