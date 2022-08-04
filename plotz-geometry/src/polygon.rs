@@ -12,7 +12,7 @@ use {
         cmp::{Eq, PartialEq},
         collections::HashSet,
         fmt::Debug,
-        ops::Add,
+        ops::{Add, Div, Mul, Sub},
     },
     thiserror,
 };
@@ -358,6 +358,8 @@ impl Polygon {
     }
 
     // NB: Polygons must be closed and positively oriented.
+    // Known bug: if multiple resultant polygons are present, this will only return one.
+    // One day I will return to fix this.
     pub fn crop_to_polygon(&self, frame: &Polygon) -> Result<Vec<Polygon>, CropToPolygonError> {
         if self.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThisPolygonNotClosed);
@@ -569,6 +571,12 @@ impl Add<Pt> for &Polygon {
     type Output = Polygon;
     fn add(self, rhs: Pt) -> Self::Output {
         Polygon(self.pts.iter().map(|p| *p + rhs)).unwrap()
+    }
+}
+impl Sub<Pt> for &Polygon {
+    type Output = Polygon;
+    fn sub(self, rhs: Pt) -> Self::Output {
+        Polygon(self.pts.iter().map(|p| *p - rhs)).unwrap()
     }
 }
 
@@ -1157,6 +1165,14 @@ mod tests {
         assert_eq!(
             &Polygon([Pt(0, 0), Pt(1, 1), Pt(2, 2)]).unwrap() + Pt(1, 0),
             Polygon([Pt(1, 0), Pt(2, 1), Pt(3, 2)]).unwrap()
+        );
+    }
+
+    #[test]
+    fn test_sub() {
+        assert_eq!(
+            &Polygon([Pt(0, 0), Pt(1, 1), Pt(2, 2)]).unwrap() - Pt(1, 0),
+            Polygon([Pt(-1, 0), Pt(0, 1), Pt(1, 2)]).unwrap()
         );
     }
 }
