@@ -1,5 +1,4 @@
-use crate::interpolate::interpolate_2d_checked;
-use crate::point::Pt;
+use crate::{bounded::Bounded, interpolate::interpolate_2d_checked, point::Pt};
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::{
@@ -251,6 +250,21 @@ impl Sub<Pt> for Segment {
 impl SubAssign<Pt> for Segment {
     fn sub_assign(&mut self, rhs: Pt) {
         *self = Segment(self.i - rhs, self.f - rhs);
+    }
+}
+
+impl Bounded for Segment {
+    fn top_bound(&self) -> f64 {
+        std::cmp::max(self.i.y, self.f.y).0
+    }
+    fn bottom_bound(&self) -> f64 {
+        std::cmp::min(self.i.y, self.f.y).0
+    }
+    fn left_bound(&self) -> f64 {
+        std::cmp::min(self.i.x, self.f.x).0
+    }
+    fn right_bound(&self) -> f64 {
+        std::cmp::max(self.i.x, self.f.x).0
     }
 }
 
@@ -611,5 +625,23 @@ mod tests {
         let mut s = Segment(Pt(0.0, 0.0), Pt(1.0, 1.0));
         s -= Pt(1.0, 2.0);
         assert_eq!(s, Segment(Pt(-1.0, -2.0), Pt(0.0, -1.0)));
+    }
+
+    #[test]
+    fn test_bounded_segment() {
+        use crate::polygon::Polygon;
+        let s = Segment(Pt(0, 1), Pt(1, 2));
+        assert_eq!(s.bottom_bound(), 1.0);
+        assert_eq!(s.top_bound(), 2.0);
+        assert_eq!(s.left_bound(), 0.0);
+        assert_eq!(s.right_bound(), 1.0);
+        assert_eq!(s.bl_bound(), Pt(0, 1));
+        assert_eq!(s.tl_bound(), Pt(0, 2));
+        assert_eq!(s.br_bound(), Pt(1, 1));
+        assert_eq!(s.tr_bound(), Pt(1, 2));
+        assert_eq!(
+            s.bbox(),
+            Ok(Polygon([Pt(0, 1), Pt(0, 2), Pt(1, 2), Pt(1, 1)]).unwrap())
+        );
     }
 }

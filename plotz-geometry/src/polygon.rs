@@ -1,5 +1,6 @@
 use {
     crate::{
+        bounded::Bounded,
         interpolate,
         point::Pt,
         segment::{Contains, Intersection, IntersectionOutcome, Segment},
@@ -12,7 +13,7 @@ use {
         cmp::{Eq, PartialEq},
         collections::HashSet,
         fmt::Debug,
-        ops::{Add, Div, Mul, Sub},
+        ops::{Add, Sub},
     },
     thiserror,
 };
@@ -577,6 +578,21 @@ impl Sub<Pt> for &Polygon {
     type Output = Polygon;
     fn sub(self, rhs: Pt) -> Self::Output {
         Polygon(self.pts.iter().map(|p| *p - rhs)).unwrap()
+    }
+}
+
+impl Bounded for Polygon {
+    fn top_bound(&self) -> f64 {
+        self.pts.iter().map(|p| p.y).max().expect("not empty").0
+    }
+    fn bottom_bound(&self) -> f64 {
+        self.pts.iter().map(|p| p.y).min().expect("not empty").0
+    }
+    fn left_bound(&self) -> f64 {
+        self.pts.iter().map(|p| p.x).min().expect("not empty").0
+    }
+    fn right_bound(&self) -> f64 {
+        self.pts.iter().map(|p| p.x).max().expect("not empty").0
     }
 }
 
@@ -1173,6 +1189,35 @@ mod tests {
         assert_eq!(
             &Polygon([Pt(0, 0), Pt(1, 1), Pt(2, 2)]).unwrap() - Pt(1, 0),
             Polygon([Pt(-1, 0), Pt(0, 1), Pt(1, 2)]).unwrap()
+        );
+    }
+
+    #[test]
+    fn test_bounded() {
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
+        let h = Pt(1, 0);
+        let f = Pt(2, 1);
+        let b = Pt(1, 2);
+        let d = Pt(0, 1);
+        let p = Polygon([h, f, b, d]).unwrap();
+        assert_eq!(p.top_bound(), 2.0);
+        assert_eq!(p.bottom_bound(), 0.0);
+        assert_eq!(p.left_bound(), 0.0);
+        assert_eq!(p.right_bound(), 2.0);
+        assert_eq!(p.tl_bound(), Pt(0, 2));
+        assert_eq!(p.bl_bound(), Pt(0, 0));
+        assert_eq!(p.tr_bound(), Pt(2, 2));
+        assert_eq!(p.br_bound(), Pt(2, 0));
+        assert_eq!(
+            p.bbox(),
+            Ok(Polygon([Pt(0, 2), Pt(2, 2), Pt(2, 0), Pt(0, 0)]).unwrap())
         );
     }
 }
