@@ -192,6 +192,7 @@ fn do_layer(s: &str, special_name: Option<&str>) {
                 pb.set_style(
                     indicatif::ProgressStyle::default_bar()
                         .template("[{elapsed_precise}] {bar:40.yellow/red} {pos:>7}/{len:7} {msg}")
+                        .unwrap()
                         .progress_chars("##-"),
                 );
 
@@ -275,6 +276,7 @@ fn main() {
     pb.set_style(
         indicatif::ProgressStyle::default_bar()
             .template("[{elapsed_precise}] {bar:40.green/blue} {pos:>7}/{len:7} {msg}")
+            .unwrap()
             .progress_chars("##-"),
     );
 

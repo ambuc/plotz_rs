@@ -1,3 +1,5 @@
+use crate::interpolate::interpolate_2d_checked;
+
 use {
     crate::{
         bounded::Bounded,
@@ -152,7 +154,7 @@ pub enum PointLoc {
 #[derive(Debug)]
 struct IsxnOutcome {
     frame_segment_idx: usize,
-    self_segment_idx: usize,
+    inner_segment_idx: usize,
     outcome: IntersectionOutcome,
 }
 impl IsxnOutcome {
@@ -160,7 +162,7 @@ impl IsxnOutcome {
         match self.outcome {
             IntersectionOutcome::Yes(i) => Some(Isxn {
                 frame_segment_idx: self.frame_segment_idx,
-                self_segment_idx: self.self_segment_idx,
+                inner_segment_idx: self.inner_segment_idx,
                 intersection: i,
             }),
             _ => None,
@@ -171,26 +173,26 @@ impl IsxnOutcome {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 struct Isxn {
     frame_segment_idx: usize,
-    self_segment_idx: usize,
+    inner_segment_idx: usize,
     intersection: Intersection,
 }
 impl Isxn {
     pub fn pt_given_self_segs(&self, self_segs: &[(usize, Segment)]) -> Pt {
-        let (_, seg) = self_segs[self.self_segment_idx];
-        interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_self.0)
+        let (_, seg) = self_segs[self.inner_segment_idx];
+        interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_inner.0)
     }
 }
 
 #[derive(Debug, Copy, Clone)]
 enum On {
-    OnSelf,
+    OnInner,
     OnFrame,
 }
 impl On {
     pub fn flip(&self) -> On {
         match self {
-            On::OnSelf => On::OnFrame,
-            On::OnFrame => On::OnSelf,
+            On::OnInner => On::OnFrame,
+            On::OnFrame => On::OnInner,
         }
     }
 }
@@ -210,29 +212,29 @@ struct Cursor<'a> {
     facing_along_segment_idx: usize, // segment index
     // context
     #[derivative(Debug = "ignore")]
-    self_pts: &'a Vec<(usize, &'a Pt)>,
+    inner_pts: &'a Vec<(usize, &'a Pt)>,
     #[derivative(Debug = "ignore")]
-    self_pts_len: &'a usize,
+    inner_pts_len: &'a usize,
     #[derivative(Debug = "ignore")]
     frame_pts: &'a Vec<(usize, &'a Pt)>,
     #[derivative(Debug = "ignore")]
     frame_pts_len: &'a usize,
     #[derivative(Debug = "ignore")]
-    self_segments: &'a Vec<(usize, Segment)>,
+    inner_segments: &'a Vec<(usize, Segment)>,
 }
 impl<'a> Cursor<'a> {
     fn pt(&self) -> Pt {
         match &self.position {
             Either::Left(one_polygon) => match one_polygon.on_polygon {
-                On::OnSelf => *self.self_pts[one_polygon.at_point_index].1,
+                On::OnInner => *self.inner_pts[one_polygon.at_point_index].1,
                 On::OnFrame => *self.frame_pts[one_polygon.at_point_index].1,
             },
-            Either::Right(isxn) => isxn.pt_given_self_segs(self.self_segments),
+            Either::Right(isxn) => isxn.pt_given_self_segs(self.inner_segments),
         }
     }
     fn pts_len(&self, on: On) -> usize {
         match on {
-            On::OnSelf => *self.self_pts_len,
+            On::OnInner => *self.inner_pts_len,
             On::OnFrame => *self.frame_pts_len,
         }
     }
@@ -240,7 +242,7 @@ impl<'a> Cursor<'a> {
         let v = (match self.position {
             Either::Left(one_polygon) => one_polygon.at_point_index,
             Either::Right(isxn) => match self.facing_along {
-                On::OnSelf => isxn.self_segment_idx,
+                On::OnInner => isxn.inner_segment_idx,
                 On::OnFrame => isxn.frame_segment_idx,
             },
         } + 1)
@@ -261,7 +263,7 @@ impl<'a> Cursor<'a> {
         };
         let new_facing_along_segment_idx = match new_facing_along {
             On::OnFrame => next_isxn.frame_segment_idx,
-            On::OnSelf => next_isxn.self_segment_idx,
+            On::OnInner => next_isxn.inner_segment_idx,
         };
         self.position = new_position;
         self.facing_along = new_facing_along;
@@ -358,6 +360,57 @@ impl Polygon {
         }
     }
 
+    pub fn as_frame_to_polygon(&self, inner: &Polygon) -> Result<Vec<Polygon>, CropToPolygonError> {
+        inner.crop_to_polygon(self)
+    }
+
+    pub fn as_frame_to_segment(&self, inner: &Segment) -> Result<Vec<Segment>, CropToPolygonError> {
+        let frame_segments = self.to_segments();
+        let mut resultants: Vec<Segment> = vec![];
+        let mut curr_pt = inner.i;
+        let mut curr_pen_down = !matches!(self.contains_pt(&inner.i)?, PointLoc::Outside);
+        loop {
+            if curr_pt == inner.f {
+                break;
+            }
+
+            let mut isxns = frame_segments
+                .iter()
+                .filter_map(|f| inner.intersects(&f))
+                .filter_map(|isxn_outcome| match isxn_outcome {
+                    IntersectionOutcome::Yes(isxn) => Some(isxn),
+                    _ => None,
+                })
+                .collect::<Vec<Intersection>>();
+            isxns.sort_by(|i, j| i.percent_along_inner.cmp(&j.percent_along_inner));
+            let (_, vs) = isxns.into_iter().partition(|i| {
+                i.percent_along_inner.0
+                    <= interpolate_2d_checked(inner.i, inner.f, curr_pt).unwrap()
+            });
+            isxns = vs;
+
+            match isxns.iter().next() {
+                Some(intersection) => {
+                    let new_pt = interpolate::extrapolate_2d(
+                        inner.i,
+                        inner.f,
+                        intersection.percent_along_inner.0,
+                    );
+                    if !matches!(self.contains_pt(&new_pt)?, PointLoc::Outside) && curr_pen_down {
+                        resultants.push(Segment(curr_pt, new_pt));
+                    }
+                    curr_pt = new_pt;
+                    curr_pen_down = !curr_pen_down;
+                }
+                None => {
+                    return Ok(resultants);
+                }
+            }
+        }
+
+        Ok(resultants)
+    }
+
     // NB: Polygons must be closed and positively oriented.
     // Known bug: if multiple resultant polygons are present, this will only return one.
     // One day I will return to fix this.
@@ -375,14 +428,14 @@ impl Polygon {
             return Err(CropToPolygonError::ThatPolygonNotPositivelyOriented);
         }
 
-        let self_segments: Vec<_> = self.to_segments().into_iter().enumerate().collect();
+        let inner_segments: Vec<_> = self.to_segments().into_iter().enumerate().collect();
         let frame_segments: Vec<_> = frame.to_segments().into_iter().enumerate().collect();
 
-        let isxn_outcomes: Vec<IsxnOutcome> = iproduct!(&self_segments, &frame_segments)
-            .filter_map(|((self_idx, s_seg), (frame_idx, f_seg))| {
-                s_seg.intersects(f_seg).map(|outcome| IsxnOutcome {
+        let isxn_outcomes: Vec<IsxnOutcome> = iproduct!(&inner_segments, &frame_segments)
+            .filter_map(|((inner_idx, i_seg), (frame_idx, f_seg))| {
+                i_seg.intersects(f_seg).map(|outcome| IsxnOutcome {
                     frame_segment_idx: *frame_idx,
-                    self_segment_idx: *self_idx,
+                    inner_segment_idx: *inner_idx,
                     outcome,
                 })
             })
@@ -390,14 +443,14 @@ impl Polygon {
 
         // If there are no intersections,
         if isxn_outcomes.is_empty() {
-            let frame_pts_in_self: Vec<(usize, PointLoc)> = {
+            let frame_pts_in_inner: Vec<(usize, PointLoc)> = {
                 let mut v = vec![];
                 for (idx, pt) in frame.pts.iter().enumerate() {
                     v.push((idx, self.contains_pt(pt)?));
                 }
                 Result::<_, ContainsPointError>::Ok(v)
             }?;
-            let self_pts_in_frame: Vec<(usize, PointLoc)> = {
+            let inner_pts_in_frame: Vec<(usize, PointLoc)> = {
                 let mut v = vec![];
                 for (idx, pt) in self.pts.iter().enumerate() {
                     v.push((idx, frame.contains_pt(pt)?));
@@ -405,25 +458,25 @@ impl Polygon {
                 Result::<_, ContainsPointError>::Ok(v)
             }?;
 
-            let all_frame_points_in_self = all(&frame_pts_in_self, |(_idx, isxn)| {
+            let all_frame_points_in_inner = all(&frame_pts_in_inner, |(_idx, isxn)| {
                 !matches!(isxn, PointLoc::Outside)
             });
-            let all_self_points_in_frame = all(&self_pts_in_frame, |(_idx, isxn)| {
+            let all_inner_points_in_frame = all(&inner_pts_in_frame, |(_idx, isxn)| {
                 !matches!(isxn, PointLoc::Outside)
             });
 
-            // Then either all of the frame points are inside self,
-            if all_frame_points_in_self {
+            // Then either all of the frame points are inside inner,
+            if all_frame_points_in_inner {
                 // in which case we ought to return the frame unchanged,
                 return Ok(vec![frame.clone()]);
-                // or all of the self points are inside frame,
-            } else if all_self_points_in_frame {
-                // in which case we ought to return self unchanged.
+                // or all of the inner points are inside frame,
+            } else if all_inner_points_in_frame {
+                // in which case we ought to return inner unchanged.
                 return Ok(vec![self.clone()]);
             }
         }
 
-        let self_pts: Vec<_> = self.pts.iter().enumerate().collect();
+        let inner_pts: Vec<_> = self.pts.iter().enumerate().collect();
         let frame_pts: Vec<_> = frame.pts.iter().enumerate().collect();
 
         let mut resultant_polygons: Vec<Polygon> = vec![];
@@ -433,17 +486,17 @@ impl Polygon {
 
         let mut curr = Cursor {
             position: Either::Left(OnePolygon {
-                on_polygon: On::OnSelf,
+                on_polygon: On::OnInner,
                 at_point_index: 0,
             }),
-            facing_along: On::OnSelf,
+            facing_along: On::OnInner,
             facing_along_segment_idx: 0_usize,
             //
-            self_pts: &self_pts,
-            self_pts_len: &self_pts.len(),
+            inner_pts: &inner_pts,
+            inner_pts_len: &inner_pts.len(),
             frame_pts: &frame_pts,
             frame_pts_len: &frame_pts.len(),
-            self_segments: &self_segments,
+            inner_segments: &inner_segments,
         };
 
         'outer: loop {
@@ -467,7 +520,7 @@ impl Polygon {
                 .filter_map(|isxn_outcome| isxn_outcome.to_isxn())
                 .filter(|isxn| {
                     (match curr.facing_along {
-                        On::OnSelf => isxn.self_segment_idx,
+                        On::OnInner => isxn.inner_segment_idx,
                         On::OnFrame => isxn.frame_segment_idx,
                     }) == curr.facing_along_segment_idx
                 })
@@ -475,15 +528,15 @@ impl Polygon {
                 .collect();
 
             relevant_isxns.sort_by(|a: &Isxn, b: &Isxn| match &curr.facing_along {
-                On::OnSelf => a
+                On::OnInner => a
                     .intersection
-                    .percent_along_self
-                    .partial_cmp(&b.intersection.percent_along_self)
+                    .percent_along_inner
+                    .partial_cmp(&b.intersection.percent_along_inner)
                     .unwrap(),
                 On::OnFrame => a
                     .intersection
-                    .percent_along_other
-                    .partial_cmp(&b.intersection.percent_along_other)
+                    .percent_along_frame
+                    .partial_cmp(&b.intersection.percent_along_frame)
                     .unwrap(),
             });
 
@@ -493,8 +546,8 @@ impl Polygon {
                         relevant_isxns
                             .into_iter()
                             .partition(|isxn| match curr.facing_along {
-                                On::OnSelf => isxn.intersection.percent_along_self.0 == 0.0,
-                                On::OnFrame => isxn.intersection.percent_along_other.0 == 0.0,
+                                On::OnInner => isxn.intersection.percent_along_inner.0 == 0.0,
+                                On::OnFrame => isxn.intersection.percent_along_frame.0 == 0.0,
                             });
                     relevant_isxns = v;
                 }
@@ -503,13 +556,13 @@ impl Polygon {
                         relevant_isxns
                             .into_iter()
                             .partition(|isxn| match curr.facing_along {
-                                On::OnSelf => {
-                                    isxn.intersection.percent_along_self
-                                        <= this_isxn.intersection.percent_along_self
+                                On::OnInner => {
+                                    isxn.intersection.percent_along_inner
+                                        <= this_isxn.intersection.percent_along_inner
                                 }
                                 On::OnFrame => {
-                                    isxn.intersection.percent_along_other
-                                        <= this_isxn.intersection.percent_along_other
+                                    isxn.intersection.percent_along_frame
+                                        <= this_isxn.intersection.percent_along_frame
                                 }
                             });
                     relevant_isxns = v;
@@ -545,7 +598,7 @@ impl Polygon {
             }
         }
 
-        // here, check that there aren't any unaccounted-for self points or
+        // here, check that there aren't any unaccounted-for inner points or
         // intersections which did not result in points of resultant polygons.
         // if there are, we need to find other resultants.
         // TODO
@@ -1218,6 +1271,83 @@ mod tests {
         assert_eq!(
             p.bbox(),
             Ok(Polygon([Pt(0, 2), Pt(2, 2), Pt(2, 0), Pt(0, 0)]).unwrap())
+        );
+    }
+
+    #[test]
+    fn test_frame_to_segment_many_outputs() {
+        // ^ y
+        // |
+        // 4 - - + - - + - - + - - + - - +
+        // |xxxxx|xxxxx|xxxxx| .   |xxxxx|
+        // |xxxxx|xxxxx|xxxxx| .   |xxxxx|
+        // 3 - - + - - + - - + - - + - - +
+        // |xxxxx| .   |xxxxx| .   |xxxxx|
+        // |xxxxx| .   |xxxxx| .   |xxxxx|
+        // 2OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+        // |xxxxx| .   |xxxxx| .   |xxxxx|
+        // |xxxxx| .   |xxxxx| .   |xxxxx|
+        // 1 - - + - - + - - + - - + - - +
+        // |xxxxx| .   |xxxxx|xxxxx|xxxxx|
+        // |xxxxx| .   |xxxxx|xxxxx|xxxxx|
+        // 0 - - 1 - - 2 - - 3 - - 4 - - 5 -> x
+
+        let frame = Polygon([
+            Pt(0, 0),
+            Pt(1, 0),
+            Pt(1, 3),
+            Pt(2, 3),
+            Pt(2, 0),
+            Pt(5, 0),
+            Pt(5, 4),
+            Pt(4, 4),
+            Pt(4, 1),
+            Pt(3, 1),
+            Pt(3, 5),
+            Pt(0, 5),
+        ])
+        .unwrap();
+        let segment = Segment(Pt(0, 2), Pt(5, 2));
+        assert_eq!(
+            frame.as_frame_to_segment(&segment).unwrap(),
+            vec![
+                Segment(Pt(0, 2), Pt(1, 2)),
+                Segment(Pt(2, 2), Pt(3, 2)),
+                Segment(Pt(4, 2), Pt(5, 2)),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_frame_to_segment_crop() {
+        let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]).unwrap();
+        assert_eq!(
+            frame.as_frame_to_segment(&Segment(Pt(0, 2), Pt(2, 0))),
+            Ok(vec![Segment(Pt(0.5, 1.5), Pt(1.5, 0.5))])
+        );
+    }
+    #[test]
+    fn test_frame_to_segment_crop_02() {
+        let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]).unwrap();
+        assert_eq!(
+            frame.as_frame_to_segment(&Segment(Pt(0, 0), Pt(2, 2))),
+            Ok(vec![Segment(Pt(0.5, 0.5), Pt(1.5, 1.5))])
+        );
+    }
+    #[test]
+    fn test_frame_to_segment_crop_empty() {
+        let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]).unwrap();
+        assert_eq!(
+            frame.as_frame_to_segment(&Segment(Pt(0, 2), Pt(2, 2))),
+            Ok(vec![])
+        );
+    }
+    #[test]
+    fn test_frame_to_segment_crop_unchanged() {
+        let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]).unwrap();
+        assert_eq!(
+            frame.as_frame_to_segment(&Segment(Pt(0, 1), Pt(2, 1))),
+            Ok(vec![Segment(Pt(0, 1), Pt(2, 1))])
         );
     }
 }
