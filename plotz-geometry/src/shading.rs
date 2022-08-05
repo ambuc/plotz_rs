@@ -35,16 +35,11 @@ fn shade_polygon(
     let bbox = polygon.bbox()?;
     let mut segments: Vec<Segment> = vec![];
 
-    // slope = rise / run
     let slope_height = bbox.width() / slope;
-    let mut i: Pt = bbox.tr_bound() - Pt(bbox.width(), slope_height) - epsilon;
-    let mut f: Pt = i + Pt(bbox.width(), slope_height) + epsilon;
-    if slope < 0.0 {
-        i += Pt(0.0, slope_height);
-        f += Pt(0.0, slope_height);
-    }
+    let mut i: Pt = bbox.bl_bound() - Pt(0.0, slope_height) - epsilon;
+    let mut f: Pt = bbox.br_bound();
 
-    while [i.y, f.y].iter().any(|x| x.0 < bbox.bottom_bound()) {
+    while [i, f].iter().any(|p| p.y.0 <= bbox.top_bound()) {
         let full_stroke = Segment(i, f);
         let cropped_strokes = polygon.as_frame_to_segment(&full_stroke)?;
         segments.extend(cropped_strokes.iter());
@@ -70,54 +65,77 @@ mod tests {
         approx_eq_pt(a.f, b.f);
     }
 
-    fn approx_eq_segments<'a>(
-        a: impl Iterator<Item = &'a Segment>,
-        b: impl Iterator<Item = &'a Segment>,
-    ) {
-        for (i, j) in a.zip(b) {
+    fn approx_eq_segments<'a>(a: Vec<Segment>, b: Vec<Segment>) {
+        assert_eq!(a.len(), b.len(), "a {:?} b {:?}", a, b);
+        for (i, j) in a.iter().zip(b.iter()) {
             approx_eq_segment(i, j);
         }
     }
 
     #[test]
-    fn test_shade_square() {
-        // ^ y
-        // |
-        // 4 - - + - - + - - + - - + - - +
-        // |xxxxx|xxxxx|xxxxx| .   |xxxxx|
-        // |xxxxx|xxxxx|xxxxx| .   |xxxxx|
-        // 3 - - + - - + - - + - - + - - +
-        // |xxxxx| .   |xxxxx| .   |xxxxx|
-        // |xxxxx| .   |xxxxx| .   |xxxxx|
-        // 2OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
-        // |xxxxx| .   |xxxxx| .   |xxxxx|
-        // |xxxxx| .   |xxxxx| .   |xxxxx|
-        // 1 - - + - - + - - + - - + - - +
-        // |xxxxx| .   |xxxxx|xxxxx|xxxxx|
-        // |xxxxx| .   |xxxxx|xxxxx|xxxxx|
-        // 0 - - 1 - - 2 - - 3 - - 4 - - 5 -> x
+    fn test_shade_square_gap_1_0_slope_1_0() {
+        let frame = Polygon([Pt(0, 0), Pt(1, 0), Pt(1, 1), Pt(0, 1)]).unwrap();
 
-        let frame = Polygon([
-            Pt(0, 0),
-            Pt(1, 0),
-            Pt(1, 3),
-            Pt(2, 3),
-            Pt(2, 0),
-            Pt(5, 0),
-            Pt(5, 4),
-            Pt(4, 4),
-            Pt(4, 1),
-            Pt(3, 1),
-            Pt(3, 5),
-            Pt(0, 5),
-        ])
-        .unwrap();
-
+        // +-----+-----/
+        // | .   | . / |
+        // | .   | /   |
+        // +-----/-----+
+        // |   / | .   |
+        // | /   | .   |
+        // /-----+-----+
         approx_eq_segments(
-            shade_polygon(/*gap=*/ 1.0, /*slope=*/ 1.0, &frame)
-                .unwrap()
-                .iter(),
-            vec![Segment(Pt(0, 0), Pt(1, 1)), Segment(Pt(2, 2), Pt(3, 3))].iter(),
+            shade_polygon(/*gap */ 1.0, /*slope=*/ 1.0, &frame).unwrap(),
+            vec![Segment(Pt(0, 0), Pt(1, 1))],
+        );
+    }
+
+    #[test]
+    fn test_shade_square_gap_0_5_slope_1_0() {
+        let frame = Polygon([Pt(0, 0), Pt(1, 0), Pt(1, 1), Pt(0, 1)]).unwrap();
+
+        // +-----/-----/
+        // | . / | . / |
+        // | /   | /   |
+        // /-----/-----/
+        // |   / | . / |
+        // | /   | /   |
+        // /-----/-----+
+        approx_eq_segments(
+            shade_polygon(/*gap */ 0.5, /*slope=*/ 1.0, &frame).unwrap(),
+            vec![
+                Segment(Pt(0.5, 0.0), Pt(1.0, 0.5)),
+                Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)),
+                Segment(Pt(0.0, 0.5), Pt(0.5, 1.0)),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_shade_square_gap_0_5_slope_0_5() {
+        let frame = Polygon([Pt(0, 0), Pt(1, 0), Pt(1, 1), Pt(0, 1)]).unwrap();
+
+        // +-----/-----/
+        // | . / | . / |
+        // | /   | /   |
+        // / .   / .   /
+        // | . / | . / |
+        // | /   | /   |
+        // /-----/-----/
+        // | . / | . / |
+        // | /   | /   |
+        // / .   / .   /
+        // | . / | . / |
+        // | /   | /   |
+        // /-----/-----+
+        approx_eq_segments(
+            shade_polygon(/*gap */ 0.5, /*slope=*/ 0.5, &frame).unwrap(),
+            vec![
+                Segment(Pt(0.5, 0.0), Pt(1.0, 0.25)),
+                Segment(Pt(0.0, 0.0), Pt(1.0, 0.5)),
+                Segment(Pt(0.0, 0.25), Pt(1.0, 0.75)),
+                Segment(Pt(0.0, 0.5), Pt(1.0, 1.0)),
+                Segment(Pt(0.0, 0.75), Pt(0.5, 1.0)),
+            ],
         );
     }
 }
