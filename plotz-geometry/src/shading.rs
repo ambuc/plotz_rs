@@ -1,3 +1,4 @@
+//! Shading and crosshatching algorithms.
 use crate::{
     bounded::{Bounded, BoundingBoxError},
     point::Pt,
@@ -5,16 +6,22 @@ use crate::{
     segment::Segment,
 };
 
+/// A general error arising from shading a polygon.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum ShadePolygonError {
-    #[error("polygon was open")]
+    /// The frame polygon was open, so shading its internal area is underspecified.
+    #[error("The frame polygon was open, so shading its internal area is underspecified.")]
     PolygonIsOpen,
-    #[error("could not get bounding box of polygon")]
+    /// An error arose trying to compute the bounding box of a polygon to shade.
+    #[error("An error arose trying to compute the bounding box of a polygon to shade.")]
     BoundingBoxError(#[from] BoundingBoxError),
-    #[error("could not crop stroke to polygon")]
+    /// An error arose trying to crop some stroke to a bounding polygon.
+    #[error("An error arose trying to crop some stroke to a bounding polygon.")]
     CropError(#[from] CropToPolygonError),
 }
 
+// Gap controls how far to step between crosshatched lines
+// Slope controls the angle of the lines.
 fn shade_polygon(
     gap: f64,
     slope: f64,

@@ -1,5 +1,4 @@
-use crate::interpolate::interpolate_2d_checked;
-
+//! A 2D polygon (or multiline).
 use {
     crate::{
         bounded::Bounded,
@@ -20,9 +19,14 @@ use {
     thiserror,
 };
 
+/// Whether a polygon is open (there should be no line drawn between its last
+/// and first points) or closed (a line should be drawn between its last and
+/// first points).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PolygonKind {
+    /// A polygon is open.
     Open,
+    /// A polygon is closed.
     Closed,
 }
 
@@ -31,7 +35,9 @@ pub enum PolygonKind {
 /// If constructed with PolygonKind::Closed, this is a closed, shaded polygon.
 #[derive(Debug, Clone)]
 pub struct Polygon {
+    /// The points which describe a polygon or multiline.
     pub pts: Vec<Pt>,
+    /// Whether this polygon is open or closed.
     pub kind: PolygonKind,
 }
 
@@ -71,9 +77,11 @@ impl PartialEq for Polygon {
     }
 }
 
+/// A general error arising from trying to construct a Multiline.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum MultilineConstructorError {
-    #[error("one or fewer points")]
+    /// It is not possible to construct a multiline from one or fewer points.
+    #[error("It is not possible to construct a multiline from one or fewer points.")]
     OneOrFewerPoints,
 }
 
@@ -92,9 +100,11 @@ pub fn Multiline(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, MultilineCo
     })
 }
 
+/// A general error arising from trying to construct a Polygon.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum PolygonConstructorError {
-    #[error("two or fewer points")]
+    /// It is not possible to construct a polygon from two or fewer points.
+    #[error("It is not possible to construct a polygon from two or fewer points.")]
     TwoOrFewerPoints,
 }
 
@@ -113,41 +123,62 @@ pub fn Polygon(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, PolygonConstr
     })
 }
 
+/// A general error arising from trying to inspect whether a point lies in a
+/// polygon.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum ContainsPointError {
-    #[error("polygon is open, not closed; invalid to ask if it contains a point.")]
+    /// The bounding polygon is Open (not Closed) and so it is underspecified to
+    /// ask whether it contains a point.
+    #[error("The bounding polygon is Open (not Closed) and so it is underspecified to ask whether it contains a point.")]
     PolygonIsOpen,
 }
 
+/// A general error arising from trying to crop something to a bounding polygon.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
 pub enum CropToPolygonError {
-    #[error("this polygon is not closed; invalid to crop.")]
+    /// The frame polygon is not closed.
+    #[error("The frame polygon is not closed.")]
     ThisPolygonNotClosed,
-    #[error("that polygon is not closed; invalid to crop.")]
+    /// The inner polygon is not closed.
+    #[error("The inner polygon is not closed.")]
     ThatPolygonNotClosed,
-    #[error("this polygon is not positively oriented; invalid to crop.")]
+    /// The frame polygon is not positively oriented.
+    #[error("The frame polygon is not positively oriented.")]
     ThisPolygonNotPositivelyOriented,
-    #[error("that polygon is not positively oriented; invalid to crop.")]
+    /// The inner polygon is not positively oriented.
+    #[error("The inner polygon is not positively oriented.")]
     ThatPolygonNotPositivelyOriented,
-    #[error("could not compute a .contains_pt().")]
+    /// Some inspection of whether a point lies in a polygon failed.
+    #[error("Some inspection of whether a point lies in a polygon failed.")]
     ContainsPointError(#[from] ContainsPointError),
-    #[error("could not construct a polygon.")]
+    /// Some Polygon construction failed.
+    #[error("Some Polygon construction failed.")]
     PolygonConstructorError(#[from] PolygonConstructorError),
-    #[error("could not construct a polygon, we cycled. check the logs please")]
+    /// Constructing a resultant polygon failed because we encountered a cycle.
+    #[error("Constructing a resultant polygon failed because we encountered a cycle.")]
     CycleError,
 }
 
+/// Whether a curve is positively or negatively oriented (whether its points are
+/// listed in clockwise or counter-clockwise order).
 #[derive(Debug, PartialEq, Eq)]
 pub enum CurveOrientation {
-    Negative, // clockwise
-    Positive, // counter-clockwise
+    /// Negatively oriented, i.e. points listed in clockwise order.
+    Negative,
+    /// Positively oriented, i.e. points listed in counter-clockwise order.
+    Positive,
 }
 
+/// Whether a point lies outside, inside, or on a vertex or edge of a polygon.
 #[derive(Debug, PartialEq, Eq)]
 pub enum PointLoc {
+    /// A point lies outside a polygon.
     Outside,
+    /// A point lies inside a polygon.
     Inside,
+    /// A point lies on the nth point of a polygon.
     OnPoint(usize),
+    /// A point lies on the nth segment of a polygon.
     OnSegment(usize),
 }
 
@@ -360,10 +391,12 @@ impl Polygon {
         }
     }
 
+    /// Treating this polygon as a frame, crop an |inner| polygon to it.
     pub fn as_frame_to_polygon(&self, inner: &Polygon) -> Result<Vec<Polygon>, CropToPolygonError> {
         inner.crop_to_polygon(self)
     }
 
+    /// Treating this polygon as a frame, crop an |inner| segment to it.
     pub fn as_frame_to_segment(&self, inner: &Segment) -> Result<Vec<Segment>, CropToPolygonError> {
         let frame_segments = self.to_segments();
         let mut resultants: Vec<Segment> = vec![];
@@ -385,7 +418,7 @@ impl Polygon {
             isxns.sort_by(|i, j| i.percent_along_inner.cmp(&j.percent_along_inner));
             let (_, vs) = isxns.into_iter().partition(|i| {
                 i.percent_along_inner.0
-                    <= interpolate_2d_checked(inner.i, inner.f, curr_pt).unwrap()
+                    <= interpolate::interpolate_2d_checked(inner.i, inner.f, curr_pt).unwrap()
             });
             isxns = vs;
 
@@ -411,9 +444,11 @@ impl Polygon {
         Ok(resultants)
     }
 
-    // NB: Polygons must be closed and positively oriented.
-    // Known bug: if multiple resultant polygons are present, this will only return one.
-    // One day I will return to fix this.
+    /// Crop this polygon to some frame. Returns a list of resultant polygons.
+    /// Both polygons must already be closed and positively oriented.
+    ///
+    /// Known bug: If multiple resultant polygons are present, this will return
+    /// only one.
     pub fn crop_to_polygon(&self, frame: &Polygon) -> Result<Vec<Polygon>, CropToPolygonError> {
         if self.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThisPolygonNotClosed);

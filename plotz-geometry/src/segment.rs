@@ -1,3 +1,4 @@
+//! A 2D segment.
 use crate::{bounded::Bounded, interpolate::interpolate_2d_checked, point::Pt};
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
@@ -15,10 +16,14 @@ enum Orientation {
     CounterClockwise,
 }
 
+/// Whether a line segment contains a point, and if so where.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Contains {
+    /// A line segment contains a point along it.
     Within,
+    /// A line segment contains a point at its head.
     AtStart,
+    /// A line segment contains a point at its tail.
     AtEnd,
 }
 
@@ -42,16 +47,24 @@ impl Intersection {
     fn on_points_of_other(&self) -> bool {
         self.percent_along_frame.0 == 0.0 || self.percent_along_frame.0 == 1.0
     }
+    /// Returns true if the intersection occurs at the head or tail of either
+    /// intersecting segment.
     pub fn on_points_of_either_polygon(&self) -> bool {
         self.on_points_of_self() || self.on_points_of_other()
     }
 }
 
+/// An enum representing whether an intersection occurred and where.
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum IntersectionOutcome {
+    /// Two line segments intersect because they are the same.
     LineSegmentsAreTheSame,
+    /// Two line segments intersect because they are the same but reversed.
     LineSegmentsAreTheSameButReversed,
+    /// Two line segments intersect at multiple points because they are colinear,
+    /// but they are not the same.
     LineSegmentsAreColinear,
+    /// Two line segments intersect at one point, defined by |Intersection|.
     Yes(Intersection),
 }
 
@@ -104,7 +117,7 @@ impl Segment {
         self.f.rotate(about, by);
     }
 
-    // Returns true if this line segment has point |other| along it.
+    /// Returns true if this line segment has point |other| along it.
     pub fn line_segment_contains_pt(&self, other: &Pt) -> Option<Contains> {
         if *other == self.i {
             return Some(Contains::AtStart);
@@ -176,6 +189,7 @@ impl Segment {
         None
     }
 
+    /// Returns the absolute value of the length of this segment.
     pub fn abs(&self) -> f64 {
         let two = 2_f64;
         ((self.f.y.0 - self.i.y.0).powf(two) + (self.f.x.0 - self.i.x.0).powf(two)).sqrt()

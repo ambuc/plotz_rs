@@ -1,8 +1,11 @@
-use float_ord::FloatOrd;
-use std::convert::From;
-use std::{
-    hash::Hash,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, Sub, SubAssign},
+//! A 2D point.
+use {
+    float_ord::FloatOrd,
+    std::{
+        convert::From,
+        hash::Hash,
+        ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, Sub, SubAssign},
+    },
 };
 
 /// A point in 2D space.
