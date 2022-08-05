@@ -3,6 +3,7 @@ A collection of pen plotter libraries, binaries, and utilities.
 
 - [plotz_rs](#plotz_rs)
   - [Binaries](#binaries)
+  - [Libraries](#libraries)
 - [Questions?](#questions)
 - [Authors](#authors)
 - [Contributing](#contributing)
@@ -14,6 +15,10 @@ A collection of pen plotter libraries, binaries, and utilities.
 
 * [`orchestrator`](orchestrator/README.md), a tool for managing long-running prints.
 * [`svg-splitter`](svg-splitter/README.md), a tool for splitting very large SVG files which already have inherent groupings.
+
+## Libraries
+* [`plotz-geometry`](plotz-geometry/README.md), a library for 2D geometry.
+* [`plotz-geojson`](plotz-geojson/README.md), a library for parsing GeoJSON into `plotz-geometry` types.
 
 # Questions?
 

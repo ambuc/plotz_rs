@@ -1,0 +1,10 @@
+[package]
+name = "plotz-geojson"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+plotz-geometry = { path = "../plotz-geometry" }
+serde_json = "*"
+string-interner = "*"
+thiserror = "*"

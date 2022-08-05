@@ -11,5 +11,6 @@ edition = "2021"
 members = [
     "orchestrator",
     "plotz-geometry",
+    "plotz-geojson",
     "svg-splitter",
 ]
