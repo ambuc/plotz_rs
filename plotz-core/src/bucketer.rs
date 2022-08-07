@@ -1,6 +1,5 @@
 use crate::bucket::{Area, Bucket, Path};
 use lazy_static::lazy_static;
-use std::collections::HashMap;
 use thiserror::Error;
 
 trait Bucketer {
