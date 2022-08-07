@@ -1,0 +1,114 @@
+{
+  "type": "FeatureCollection",
+  "generator": "overpass-ide",
+  "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
+  "timestamp": "2022-06-12T12:05:41Z",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "relation/2389611",
+        "natural": "water",
+        "type": "multipolygon",
+        "water": "river"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              0.0,
+              0.0
+            ],
+            [
+              1.0,
+              2.5
+            ],
+            [
+              2.0,
+              5.0
+            ]
+          ]
+        ]
+      },
+      "id": "relation/2389611"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "way/5668999",
+        "cycleway": "shared_lane",
+        "highway": "residential",
+        "lanes": "1",
+        "maxspeed": "25 mph",
+        "name": "Old Slip",
+        "oneway": "yes",
+        "surface": "asphalt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            1.0,
+            1.0
+          ],
+          [
+            1.0,
+            2.5
+          ],
+          [
+            2.0,
+            5.0
+          ]
+        ]
+      },
+      "id": "way/5668999"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "relation/2389633",
+        "natural": "water",
+        "type": "multipolygon",
+        "water": "river"
+      },
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                2.0,
+                2.0
+              ],
+              [
+                1.0,
+                2.5
+              ],
+              [
+                2.0,
+                5.0
+              ]
+            ]
+          ],
+          [
+            [
+              [
+                3.0,
+                3.0
+              ],
+              [
+                1.0,
+                2.5
+              ],
+              [
+                2.0,
+                5.0
+              ]
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

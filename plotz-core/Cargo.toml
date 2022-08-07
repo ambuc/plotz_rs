@@ -8,5 +8,6 @@ plotz-color = { path = "../plotz-color" }
 plotz-geometry = { path = "../plotz-geometry" }
 plotz-geojson = { path = "../plotz-geojson" }
 string-interner = "*"
+serde_json = "*"
 thiserror = "*"
 lazy_static = "*"
