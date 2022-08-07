@@ -10,7 +10,9 @@ edition = "2021"
 [workspace]
 members = [
     "orchestrator",
-    "plotz-geometry",
+    "plotz-core",
+    "plotz-color",
     "plotz-geojson",
+    "plotz-geometry",
     "svg-splitter",
 ]

@@ -1,0 +1,12 @@
+[package]
+name = "plotz-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+plotz-color = { path = "../plotz-color" }
+plotz-geometry = { path = "../plotz-geometry" }
+plotz-geojson = { path = "../plotz-geojson" }
+string-interner = "*"
+thiserror = "*"
+lazy_static = "*"
