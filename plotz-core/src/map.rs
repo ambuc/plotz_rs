@@ -33,7 +33,6 @@ impl Map {
             &mut interner,
             serde_json::from_reader(BufReader::new(File::open(&self.file_path)?))?,
         )?;
-        println!("polygons = {:?}", polygons);
 
         Ok(vec![polygons.iter().map(|(p, _)| p.clone()).collect()])
     }

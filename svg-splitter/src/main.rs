@@ -27,7 +27,6 @@ fn main_inner(args: Args) -> Result<()> {
         static ref RE_1: Regex = Regex::new(r#"<\?xml.*>"#).unwrap();
     }
     assert!(RE_1.is_match(&xml_header));
-    println!("Matched first line...");
 
     // assert second line
     let svg_header: String = lines.next().expect("second line").expect("second line");
@@ -35,7 +34,6 @@ fn main_inner(args: Args) -> Result<()> {
         static ref RE_2: Regex = Regex::new(r#"<svg.*>"#).unwrap();
     }
     assert!(RE_2.is_match(&svg_header));
-    println!("Matched second line...");
 
     loop {
         if !consume_group(
@@ -69,7 +67,6 @@ fn consume_lines(
     split: &Option<u64>,
     index: Option<u64>,
 ) -> Result<bool> {
-    println!("consume lines: {:?}", index);
     let f = File::create(
         [
             output_prefix.to_string(),
@@ -147,7 +144,6 @@ fn consume_group(
     split: &Option<u64>,
     index: Option<u64>,
 ) -> Result<bool> {
-    println!("consuming group: {:?}", index);
     lazy_static! {
         static ref RE_GROUP_OPEN: Regex =
             Regex::new(r#"(\s*)<g id="([A-Za-z_]*)\s([A-Za-z_]*)".*>"#).unwrap();
