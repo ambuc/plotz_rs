@@ -2,12 +2,12 @@ use crate::bucket::{Area, Bucket, Path};
 use lazy_static::lazy_static;
 use thiserror::Error;
 
-trait Bucketer {
+pub trait Bucketer {
     type Tag;
     type Bucket;
     type Error;
     /// Given a set of tags, sort into a bucket or return an error.
-    fn bucket(tags: Self::Tag) -> Result<Self::Bucket, Self::Error>;
+    fn bucket(&self, tags: Self::Tag) -> Result<Self::Bucket, Self::Error>;
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -19,12 +19,17 @@ pub enum BucketerError {
 pub struct DefaultBucketer {
     //
 }
+impl DefaultBucketer {
+    pub fn new() -> DefaultBucketer {
+        DefaultBucketer {}
+    }
+}
 
 impl Bucketer for DefaultBucketer {
     type Tag = (&'static str, &'static str);
     type Bucket = Bucket;
     type Error = BucketerError;
-    fn bucket(tag: Self::Tag) -> Result<Self::Bucket, Self::Error> {
+    fn bucket(&self, tag: Self::Tag) -> Result<Self::Bucket, Self::Error> {
         TAGS.iter()
             .find_map(|(tags, bucket)| if *tags == tag { Some(*bucket) } else { None })
             .ok_or(BucketerError::BucketerError)
@@ -90,11 +95,11 @@ mod test_super {
     #[test]
     fn test_bucket() {
         assert_eq!(
-            DefaultBucketer::bucket(("natural", "sand")),
+            DefaultBucketer::new().bucket(("natural", "sand")),
             Ok(Bucket::Area(Area::Beach))
         );
         assert_eq!(
-            DefaultBucketer::bucket(("natural", "")),
+            DefaultBucketer::new().bucket(("natural", "")),
             Err(BucketerError::BucketerError)
         );
     }
