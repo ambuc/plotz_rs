@@ -1,7 +1,7 @@
 use crate::{
     bucket::Bucket,
     bucketer::{Bucketer, DefaultBucketer},
-    colorer::DefaultColorer,
+    colorer::{Colorer, DefaultColorer},
     colorer_builder::DefaultColorerBuilder,
 };
 use plotz_color::ColorRGB;
@@ -47,9 +47,9 @@ impl Map {
     }
 
     pub fn render(&self) -> Result<Vec<Vec<Polygon>>, MapError> {
-        let bucketer = DefaultBucketer {};
-        let colorer = DefaultColorerBuilder::default();
         let mut interner = StringInterner::new();
+        let bucketer = DefaultBucketer::new(&mut interner);
+        let colorer: DefaultColorer = DefaultColorerBuilder::default();
 
         let mut layered_annotated_polygons: Vec<Vec<AnnotatedPolygon>> = vec![];
 
@@ -59,13 +59,19 @@ impl Map {
                 serde_json::from_reader(BufReader::new(file))?,
             )?
             .iter()
-            .map(|(polygon, tags): &(Polygon, Vec<(SymbolU32, SymbolU32)>)| {
-                return AnnotatedPolygon {
-                    polygon: *polygon,
-                    // bucket,
-                    // color,
-                    tags: *tags,
-                };
+            .filter_map(|(polygon, tags): &(Polygon, Vec<(SymbolU32, SymbolU32)>)| -> Option<AnnotatedPolygon> {
+                let bucket = tags
+                    .iter()
+                    .map(|t| bucketer.bucket(*t))
+                    .filter_map(|r| r.ok())
+                    .next()?;
+
+                Some(AnnotatedPolygon {
+                    polygon: polygon.clone(),
+                    bucket,
+                    color: colorer.color(bucket).ok()?,
+                    tags: tags.clone(),
+                })
             })
             .collect();
             layered_annotated_polygons.push(annotated_polygons);

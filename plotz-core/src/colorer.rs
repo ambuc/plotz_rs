@@ -2,7 +2,7 @@ use crate::bucket::Bucket;
 use plotz_color::*;
 use thiserror::Error;
 
-trait Colorer {
+pub trait Colorer {
     type Bucket;
     type Color;
     type Error;

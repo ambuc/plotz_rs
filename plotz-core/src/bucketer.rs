@@ -1,5 +1,6 @@
 use crate::bucket::{Area, Bucket, Path};
 use lazy_static::lazy_static;
+use string_interner::{symbol::SymbolU32, StringInterner, Symbol};
 use thiserror::Error;
 
 pub trait Bucketer {
@@ -18,19 +19,29 @@ pub enum BucketerError {
 
 pub struct DefaultBucketer {
     //
+    list: Vec<((SymbolU32, SymbolU32), Bucket)>,
 }
+
 impl DefaultBucketer {
-    pub fn new() -> DefaultBucketer {
-        DefaultBucketer {}
+    pub fn new(interner: &mut StringInterner) -> DefaultBucketer {
+        let mut list = vec![];
+        for ((tag0, tag1), bucket) in TAGS.iter() {
+            list.push((
+                (interner.get_or_intern(tag0), interner.get_or_intern(tag1)),
+                *bucket,
+            ));
+        }
+        DefaultBucketer { list }
     }
 }
 
 impl Bucketer for DefaultBucketer {
-    type Tag = (&'static str, &'static str);
+    type Tag = (SymbolU32, SymbolU32);
     type Bucket = Bucket;
     type Error = BucketerError;
     fn bucket(&self, tag: Self::Tag) -> Result<Self::Bucket, Self::Error> {
-        TAGS.iter()
+        self.list
+            .iter()
             .find_map(|(tags, bucket)| if *tags == tag { Some(*bucket) } else { None })
             .ok_or(BucketerError::BucketerError)
     }
@@ -94,12 +105,20 @@ mod test_super {
 
     #[test]
     fn test_bucket() {
+        let mut interner = StringInterner::new();
+        let bucketer = DefaultBucketer::new(&mut interner);
         assert_eq!(
-            DefaultBucketer::new().bucket(("natural", "sand")),
+            bucketer.bucket((
+                interner.get_or_intern("natural"),
+                interner.get_or_intern("sand")
+            )),
             Ok(Bucket::Area(Area::Beach))
         );
         assert_eq!(
-            DefaultBucketer::new().bucket(("natural", "")),
+            bucketer.bucket((
+                interner.get_or_intern("natural"),
+                interner.get_or_intern("")
+            )),
             Err(BucketerError::BucketerError)
         );
     }
