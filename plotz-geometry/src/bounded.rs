@@ -3,6 +3,7 @@ use crate::{
     point::Pt,
     polygon::{Polygon, PolygonConstructorError},
 };
+use float_ord::FloatOrd;
 
 /// A general error arising from trying to derive the bounding box for a thing.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -66,5 +67,90 @@ pub trait Bounded {
             self.left_bound() + (self.width() / 2.0),
             self.top_bound() + (self.height() / 2.0),
         )
+    }
+}
+
+struct BoundsCollector {
+    bound_t: Option<FloatOrd<f64>>,
+    bound_b: Option<FloatOrd<f64>>,
+    bound_l: Option<FloatOrd<f64>>,
+    bound_r: Option<FloatOrd<f64>>,
+}
+
+impl BoundsCollector {
+    pub fn new() -> BoundsCollector {
+        BoundsCollector {
+            bound_t: None,
+            bound_b: None,
+            bound_l: None,
+            bound_r: None,
+        }
+    }
+    pub fn incorporate(&mut self, b: &impl Bounded) {
+        // top
+        self.bound_t = Some(match self.bound_t {
+            None => FloatOrd(b.top_bound()),
+            Some(existing) => std::cmp::max(existing, FloatOrd(b.top_bound())),
+        });
+        // bottom
+        self.bound_b = Some(match self.bound_b {
+            None => FloatOrd(b.bottom_bound()),
+            Some(existing) => std::cmp::min(existing, FloatOrd(b.bottom_bound())),
+        });
+        // right
+        self.bound_r = Some(match self.bound_r {
+            None => FloatOrd(b.right_bound()),
+            Some(existing) => std::cmp::max(existing, FloatOrd(b.right_bound())),
+        });
+        // left
+        self.bound_l = Some(match self.bound_l {
+            None => FloatOrd(b.left_bound()),
+            Some(existing) => std::cmp::min(existing, FloatOrd(b.left_bound())),
+        });
+    }
+}
+
+impl Bounded for BoundsCollector {
+    fn top_bound(&self) -> f64 {
+        self.bound_t.expect("top bound should be present").0
+    }
+    fn bottom_bound(&self) -> f64 {
+        self.bound_b.expect("bottom bound should be present").0
+    }
+    fn left_bound(&self) -> f64 {
+        self.bound_l.expect("left bound should be present").0
+    }
+    fn right_bound(&self) -> f64 {
+        self.bound_r.expect("right bound should be present").0
+    }
+}
+
+/// Given an iterator of bounded items, computes the bounding box for that
+/// collection.
+pub fn streaming_bbox<'a, T: 'a + Bounded>(
+    it: impl IntoIterator<Item = &'a T>,
+) -> Result<Polygon, BoundingBoxError> {
+    let mut bc = BoundsCollector::new();
+    for i in it {
+        bc.incorporate(i);
+    }
+    bc.bbox()
+}
+
+#[cfg(test)]
+mod test_super {
+    use super::*;
+
+    #[test]
+    fn test_streaming_bbox() {
+        let polygons = vec![
+            Polygon([Pt(0, 0), Pt(1, 0), Pt(1, 1)]).unwrap(),
+            Polygon([Pt(2, 0), Pt(3, 0), Pt(3, 1)]).unwrap(),
+            Polygon([Pt(0, 2), Pt(1, 2), Pt(1, 3)]).unwrap(),
+        ];
+        assert_eq!(
+            streaming_bbox(&polygons).unwrap(),
+            Polygon([Pt(0, 0), Pt(0, 3), Pt(3, 3), Pt(3, 0)]).unwrap()
+        );
     }
 }

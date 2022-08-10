@@ -4,10 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-plotz-color = { path = "../plotz-color" }
-plotz-geometry = { path = "../plotz-geometry" }
-plotz-geojson = { path = "../plotz-geojson" }
-string-interner = "*"
-serde_json = "*"
-thiserror = "*"
 lazy_static = "*"
+plotz-color = { path = "../plotz-color" }
+plotz-geojson = { path = "../plotz-geojson" }
+plotz-geometry = { path = "../plotz-geometry" }
+serde_json = "*"
+string-interner = "*"
+thiserror = "*"
+cairo-rs = { version = "0.14.9", features = ["png", "svg"] }
+
+[dev-dependencies]
+tempdir = "*"
