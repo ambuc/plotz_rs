@@ -85,7 +85,15 @@ mod test_super {
         let tmp_dir = TempDir::new("example").unwrap();
         let path = tmp_dir.path().join("out.svg");
 
-        write_layer_to_svg(Size{width:1024, height:1024}, path.to_str().unwrap(), vec![]).unwrap();
+        write_layer_to_svg(
+            Size {
+                width: 1024,
+                height: 1024,
+            },
+            path.to_str().unwrap(),
+            vec![],
+        )
+        .unwrap();
 
         let actual = std::fs::read_to_string(path).unwrap();
         assert!(actual.contains("width=\"1024pt\""));

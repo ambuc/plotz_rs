@@ -57,13 +57,12 @@ pub fn parse_geojson(
         let coords = &feature["geometry"]["coordinates"];
         for polygon in match geom_type {
             "LineString" => parse_to_linestring(coords)?,
+            "MultiLineString" => parse_to_multilinestring(coords)?,
             "Polygon" => parse_to_polygon(coords)?,
             "MultiPolygon" => parse_to_multipolygon(coords)?,
             "Point" => vec![],
             other @ _ => {
-                // TODO(amubc) : implement these
-                // unimplemented!("other: {:?}", other);
-                vec![]
+                unimplemented!("other: {:?}", other);
             }
         } {
             lines.push((polygon, tags_list.clone()));
@@ -75,18 +74,34 @@ pub fn parse_geojson(
 fn parse_to_linestring<'a>(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConversionError> {
     let mut lines: Vec<_> = vec![];
     match coordinates {
-        Value::Array(pts) => lines.push(
-            Multiline(pts.iter().map(|p| {
+        Value::Array(pts) => {
+            if let Ok(ml) = Multiline(pts.iter().map(|p| {
                 Pt(
                     p[0].as_f64().expect("value not f64"),
                     p[1].as_f64().expect("value not f64"),
                 )
-            }))
-            .unwrap(),
-        ),
+            })) {
+                lines.push(ml);
+            }
+        }
         _ => {
             unimplemented!("?");
         }
+    }
+    Ok(lines)
+}
+
+fn parse_to_multilinestring<'a>(
+    coordinates: &Value,
+) -> Result<Vec<Polygon>, GeoJsonConversionError> {
+    let mut lines: Vec<Polygon> = vec![];
+    match coordinates {
+        Value::Array(linestrings) => {
+            for linestring in linestrings.iter() {
+                lines.append(&mut parse_to_linestring(linestring)?);
+            }
+        }
+        _ => unimplemented!("?"),
     }
     Ok(lines)
 }
