@@ -3,5 +3,5 @@ mod bucketer;
 mod colored_polygon;
 mod colorer;
 mod colorer_builder;
-mod map;
+pub mod map;
 mod svg;

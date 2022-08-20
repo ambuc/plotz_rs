@@ -16,3 +16,10 @@ members = [
     "plotz-geometry",
     "svg-splitter",
 ]
+
+
+[dependencies]
+argh = "*"
+plotz-core = { path = "plotz-core" }
+glob = "*"
+thiserror = "*"

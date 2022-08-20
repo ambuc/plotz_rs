@@ -13,7 +13,7 @@ use plotz_geometry::{
     point::Pt,
     polygon::Polygon,
 };
-use std::{fs::File, io::BufReader};
+use std::{fs::File, io::BufReader, path::Path};
 use string_interner::{symbol::SymbolU32, StringInterner};
 use thiserror::Error;
 
@@ -69,7 +69,7 @@ impl Map {
             .for_each(|ap| ap.polygon += shift);
     }
 
-    fn render(mut self) -> Result<(), MapError> {
+    pub fn render(mut self) -> Result<(), MapError> {
         // first compute current bbox and shift everything positive.
         let shift = self.get_shift()?;
         self.apply_shift(shift);
@@ -96,7 +96,7 @@ pub struct MapConfig {
 
 impl MapConfig {
     pub fn new_from_files(
-        file_paths: Vec<&str>,
+        file_paths: impl IntoIterator<Item = impl AsRef<Path>>,
         output_file_prefix: String,
     ) -> Result<MapConfig, MapError> {
         let mut files = vec![];
@@ -112,10 +112,10 @@ impl MapConfig {
         file_path: &str,
         output_file_prefix: String,
     ) -> Result<MapConfig, MapError> {
-        Self::new_from_files(vec![file_path], output_file_prefix)
+        Self::new_from_files(std::iter::once(file_path), output_file_prefix)
     }
 
-    pub fn render(self) -> Result<Map, MapError> {
+    pub fn make_map(self) -> Result<Map, MapError> {
         let mut interner = StringInterner::new();
         let bucketer = DefaultBucketer::new(&mut interner);
         let colorer: DefaultColorer = DefaultColorerBuilder::default();
@@ -168,7 +168,7 @@ mod tests {
             tmp_dir.path().as_os_str().to_string_lossy().to_string(),
         )
         .unwrap()
-        .render()
+        .make_map()
         .unwrap();
     }
 }
