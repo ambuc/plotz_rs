@@ -1,4 +1,6 @@
 //! A 2D polygon (or multiline).
+
+use std::ops::AddAssign;
 use {
     crate::{
         bounded::Bounded,
@@ -660,6 +662,11 @@ impl Add<Pt> for &Polygon {
     type Output = Polygon;
     fn add(self, rhs: Pt) -> Self::Output {
         Polygon(self.pts.iter().map(|p| *p + rhs)).unwrap()
+    }
+}
+impl AddAssign<Pt> for Polygon {
+    fn add_assign(&mut self, rhs: Pt) {
+        self.pts.iter_mut().for_each(|p| *p += rhs);
     }
 }
 impl Sub<Pt> for &Polygon {

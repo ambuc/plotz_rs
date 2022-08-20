@@ -4,12 +4,13 @@ use crate::{
     colored_polygon::ColoredPolygon,
     colorer::{Colorer, DefaultColorer},
     colorer_builder::DefaultColorerBuilder,
-    svg::{write_layers_to_svgs, SvgWriteError},
+    svg::{write_layer_to_svg, SvgWriteError},
 };
 use plotz_color::ColorRGB;
 use plotz_geojson::GeoJsonConversionError;
 use plotz_geometry::{
     bounded::{streaming_bbox, Bounded, BoundingBoxError},
+    point::Pt,
     polygon::Polygon,
 };
 use std::{fs::File, io::BufReader};
@@ -38,36 +39,88 @@ pub struct AnnotatedPolygon {
     color: ColorRGB,
     tags: Vec<(SymbolU32, SymbolU32)>,
 }
+impl AnnotatedPolygon {
+    pub fn to_colored_polygon(self) -> ColoredPolygon {
+        ColoredPolygon {
+            polygon: self.polygon,
+            color: self.color,
+        }
+    }
+}
 
 pub struct Map {
+    config: MapConfig,
+    layers: Vec<Vec<AnnotatedPolygon>>,
+}
+impl Map {
+    fn get_shift(&self) -> Result<Pt, MapError> {
+        Ok(streaming_bbox(
+            self.layers
+                .iter()
+                .flatten()
+                .map(|AnnotatedPolygon { polygon, .. }| polygon),
+        )?
+        .bl_bound())
+    }
+    fn apply_shift(&mut self, shift: Pt) {
+        self.layers
+            .iter_mut()
+            .flatten()
+            .for_each(|ap| ap.polygon += shift);
+    }
+
+    fn render(mut self) -> Result<(), MapError> {
+        // first compute current bbox and shift everything positive.
+        let shift = self.get_shift()?;
+        self.apply_shift(shift);
+
+        // then scale up to hit frame.
+        // center the whole thing.
+
+        for (idx, layer) in self.layers.into_iter().enumerate() {
+            write_layer_to_svg(
+                /*width,height=*/ (1024.0, 1024.0),
+                /*path=*/ format!("{}_{}.svg", self.config.output_file_prefix, idx),
+                /*polygons=*/ layer.into_iter().map(|ap| ap.to_colored_polygon()),
+            )?;
+        }
+
+        Ok(())
+    }
+}
+
+pub struct MapConfig {
     input_files: Vec<File>,
     output_file_prefix: String,
 }
 
-impl Map {
+impl MapConfig {
     pub fn new_from_files(
         file_paths: Vec<&str>,
         output_file_prefix: String,
-    ) -> Result<Map, MapError> {
+    ) -> Result<MapConfig, MapError> {
         let mut files = vec![];
         for fp in file_paths {
             files.push(File::open(fp)?);
         }
-        Ok(Map {
+        Ok(MapConfig {
             input_files: files,
             output_file_prefix,
         })
     }
-    pub fn new_from_file(file_path: &str, output_file_prefix: String) -> Result<Map, MapError> {
+    pub fn new_from_file(
+        file_path: &str,
+        output_file_prefix: String,
+    ) -> Result<MapConfig, MapError> {
         Self::new_from_files(vec![file_path], output_file_prefix)
     }
 
-    pub fn render(&self) -> Result<(), MapError> {
+    pub fn render(self) -> Result<Map, MapError> {
         let mut interner = StringInterner::new();
         let bucketer = DefaultBucketer::new(&mut interner);
         let colorer: DefaultColorer = DefaultColorerBuilder::default();
 
-        let mut layered_annotated_polygons: Vec<Vec<AnnotatedPolygon>> = self
+        let layers: Vec<Vec<AnnotatedPolygon>> = self
             .input_files
             .iter()
             .map(|file| {
@@ -94,27 +147,10 @@ impl Map {
             })
             .collect::<Result<_, MapError>>()?;
 
-        // first compute current bbox and shift everything positive.
-        let shift = streaming_bbox(
-            layered_annotated_polygons
-                .iter()
-                .flatten()
-                .map(|AnnotatedPolygon { polygon, .. }| polygon),
-        )?
-        .bl_bound();
-        // then rotate (doesn't affect pan+scan later)
-        // then scale up to hit frame.
-        // center the whole thing.
-
-        let layers: Vec<Vec<ColoredPolygon>> = vec![];
-        let output_files = layers
-            .iter()
-            .enumerate()
-            .map(|(idx, _layer)| format!("{}_{}.svg", self.output_file_prefix, idx))
-            .collect::<Vec<_>>();
-        write_layers_to_svgs((1024.0, 1024.0), output_files, layers.into_iter())?;
-
-        Ok(())
+        Ok(Map {
+            config: self,
+            layers,
+        })
     }
 }
 
@@ -127,7 +163,7 @@ mod tests {
     fn test_render() {
         let tmp_dir = TempDir::new("example").unwrap();
 
-        Map::new_from_file(
+        MapConfig::new_from_file(
             "testdata/example.geojson",
             tmp_dir.path().as_os_str().to_string_lossy().to_string(),
         )
