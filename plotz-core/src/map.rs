@@ -6,14 +6,13 @@ use crate::{
     colored_polygon::ColoredPolygon,
     colorer::{Colorer, DefaultColorer},
     colorer_builder::DefaultColorerBuilder,
-    svg::{write_layer_to_svg, SvgWriteError},
+    svg::{write_layer_to_svg, Size, SvgWriteError},
 };
 use float_ord::FloatOrd;
 use plotz_color::ColorRGB;
 use plotz_geojson::GeoJsonConversionError;
 use plotz_geometry::{
     bounded::{streaming_bbox, Bounded, BoundingBoxError},
-    point::Pt,
     polygon::Polygon,
 };
 use std::{
@@ -91,22 +90,18 @@ impl Map {
     /// file(s).
     pub fn render(mut self) -> Result<(), MapError> {
         // first compute current bbox and shift everything positive.
-        dbg!(&self.get_bbox());
 
         let shift = self.get_bbox()?.bl_bound();
         self.apply(&|p| *p -= shift);
 
-        dbg!(&self.get_bbox());
-
         let bbox = self.get_bbox()?;
-        let scaling_factor = std::cmp::max(FloatOrd(bbox.width()), FloatOrd(bbox.height())).0;
-        self.apply(&|p| *p *= 1.0 / scaling_factor);
-
-        dbg!(&self.get_bbox());
+        let scaling_factor = 1.0 / std::cmp::max(FloatOrd(bbox.width()), FloatOrd(bbox.height())).0
+            * self.config.size.max() as f64;
+        self.apply(&|p| *p *= scaling_factor);
 
         for (idx, layer) in self.layers.into_iter().enumerate() {
             write_layer_to_svg(
-                /*width,height=*/ (1024.0, 1024.0),
+                /*width,height=*/ self.config.size,
                 /*path=*/ self.config.output_directory.join(format!("{}.svg", idx)),
                 /*polygons=*/ layer.into_iter().map(|ap| ap.to_colored_polygon()),
             )?;
@@ -121,6 +116,7 @@ impl Map {
 pub struct MapConfig {
     input_files: Vec<File>,
     output_directory: PathBuf,
+    size: Size,
 }
 
 impl MapConfig {
@@ -128,6 +124,7 @@ impl MapConfig {
     pub fn new_from_files(
         file_paths: impl IntoIterator<Item = impl AsRef<Path>>,
         output_directory: PathBuf,
+        size: Size,
     ) -> Result<MapConfig, MapError> {
         let mut files = vec![];
         for fp in file_paths {
@@ -136,6 +133,7 @@ impl MapConfig {
         Ok(MapConfig {
             input_files: files,
             output_directory,
+            size,
         })
     }
 
@@ -143,8 +141,9 @@ impl MapConfig {
     pub fn new_from_file(
         file_path: &str,
         output_directory: PathBuf,
+        size: Size,
     ) -> Result<MapConfig, MapError> {
-        Self::new_from_files(std::iter::once(file_path), output_directory)
+        Self::new_from_files(std::iter::once(file_path), output_directory, size)
     }
 
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
@@ -200,6 +199,11 @@ mod tests {
         MapConfig::new_from_file(
             /*file_path=*/ "../testdata/example.geojson",
             /*output_file_prefix=*/ tmp_dir.path().to_path_buf(),
+            /*size= */
+            Size {
+                width: 1024,
+                height: 1024,
+            },
         )
         .unwrap()
         .make_map()

@@ -4,7 +4,7 @@
 
 use argh::FromArgs;
 use glob::glob;
-use plotz_core::map::MapConfig;
+use plotz_core::{map::MapConfig, svg::Size};
 
 #[derive(FromArgs)]
 #[argh(description = "...")]
@@ -13,6 +13,10 @@ struct Args {
     input_glob: String,
     #[argh(option, description = "output file prefix")]
     output_directory: std::path::PathBuf,
+    #[argh(option, description = "width")]
+    width: usize,
+    #[argh(option, description = "height")]
+    height: usize,
 }
 
 fn main() {
@@ -29,6 +33,10 @@ fn main_inner(args: Args) {
             .collect::<Result<Vec<_>, _>>()
             .unwrap(),
         args.output_directory,
+        Size {
+            width: args.width,
+            height: args.height,
+        },
     )
     .expect("failed to produce MapConfig")
     .make_map()
@@ -66,12 +74,14 @@ mod test_super {
         let args = Args {
             input_glob: "testdata/wuppertal*.geojson".to_string(),
             output_directory: tmp_dir.path().to_path_buf(),
+            width: 1024,
+            height: 1024,
         };
 
         main_inner(args);
 
         let output_svg = std::fs::read_to_string(tmp_dir.path().join("0.svg")).expect("foo");
-        // println!("{}", output_svg);
+        println!("{}", output_svg);
 
         // TODO(ambuc): make w/h adjustable.
         let png = write_svg_to_pixmap((1024, 1024), &output_svg);

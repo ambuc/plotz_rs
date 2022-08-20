@@ -1,10 +1,29 @@
+//! SVG plotting utilities.
+//!
 use crate::colored_polygon::ColoredPolygon;
 use plotz_color::BLACK;
 use plotz_geometry::polygon::PolygonKind;
 use thiserror::Error;
 
+/// The size of a canvas.
+#[derive(Debug, Copy, Clone)]
+pub struct Size {
+    /// width
+    pub width: usize,
+    /// height
+    pub height: usize,
+}
+impl Size {
+    /// the height or width, whichever is larger.
+    pub fn max(&self) -> usize {
+        std::cmp::max(self.width, self.height)
+    }
+}
+
+/// A general error which might be encountered while writing an SVG.
 #[derive(Debug, Error)]
 pub enum SvgWriteError {
+    /// cairo error
     #[error("cairo error")]
     CairoError(#[from] cairo::Error),
 }
@@ -29,12 +48,13 @@ fn write_polygon_to_context(
     Ok(())
 }
 
+/// Writes a single iterator of polygons to an SVG of some size at some path.
 pub fn write_layer_to_svg<P: AsRef<std::path::Path>>(
-    (width, height): (f64, f64),
+    size: Size,
     path: P,
     polygons: impl IntoIterator<Item = ColoredPolygon>,
 ) -> Result<(), SvgWriteError> {
-    let svg_surface = cairo::SvgSurface::new(width, height, Some(path))?;
+    let svg_surface = cairo::SvgSurface::new(size.width as f64, size.height as f64, Some(path))?;
     let mut ctx = cairo::Context::new(&svg_surface)?;
     for p in polygons {
         write_polygon_to_context(&p, &mut ctx)?;
@@ -43,12 +63,12 @@ pub fn write_layer_to_svg<P: AsRef<std::path::Path>>(
 }
 
 fn _write_layers_to_svgs<P: AsRef<std::path::Path>>(
-    (width, height): (f64, f64),
+    size: Size,
     paths: impl IntoIterator<Item = P>,
     polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = ColoredPolygon>>,
 ) -> Result<(), SvgWriteError> {
     for (path, polygons) in paths.into_iter().zip(polygon_layers.into_iter()) {
-        write_layer_to_svg((width, height), path, polygons)?;
+        write_layer_to_svg(size, path, polygons)?;
     }
     Ok(())
 }
@@ -65,7 +85,7 @@ mod test_super {
         let tmp_dir = TempDir::new("example").unwrap();
         let path = tmp_dir.path().join("out.svg");
 
-        write_layer_to_svg((1024.0, 1024.0), path.to_str().unwrap(), vec![]).unwrap();
+        write_layer_to_svg(Size{width:1024, height:1024}, path.to_str().unwrap(), vec![]).unwrap();
 
         let actual = std::fs::read_to_string(path).unwrap();
         assert!(actual.contains("width=\"1024pt\""));
@@ -80,7 +100,10 @@ mod test_super {
         let path = tmp_dir.path().join("out.svg");
 
         write_layer_to_svg(
-            (1024.0, 1024.0),
+            Size {
+                width: 1024,
+                height: 1024,
+            },
             path.to_str().unwrap(),
             vec![ColoredPolygon {
                 color: BLACK,
@@ -102,7 +125,10 @@ mod test_super {
         let path = tmp_dir.path().join("out.svg");
 
         write_layer_to_svg(
-            (1024.0, 1024.0),
+            Size {
+                width: 1024,
+                height: 1024,
+            },
             path.to_str().unwrap(),
             vec![
                 ColoredPolygon {
