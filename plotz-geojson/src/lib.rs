@@ -1,3 +1,8 @@
+#![deny(missing_docs)]
+
+//! A crate for reading GeoJSON files and parsing them to plotz_geometry
+//! structs.
+
 use {
     plotz_geometry::{
         point::Pt,
@@ -28,6 +33,7 @@ pub enum GeoJsonConversionError {
     CoordinatesNotArray,
 }
 
+/// Parses a GeoJSON file and returns a list of tagged polygons.
 pub fn parse_geojson(
     interner: &mut StringInterner,
     geo_json: Value,

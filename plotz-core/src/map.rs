@@ -1,3 +1,5 @@
+//! The core logic of plotz-core, including Map and MapConfig.
+
 use crate::{
     bucket::Bucket,
     bucketer::{Bucketer, DefaultBucketer},
@@ -22,22 +24,30 @@ use string_interner::{symbol::SymbolU32, StringInterner};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
+/// A general error you might encounter when rendering a Map.
 pub enum MapError {
+    /// could not map
     #[error("could not map")]
     MapError,
+    /// geojson conversion error
     #[error("geojson conversion error")]
     GeoJsonConversionError(#[from] GeoJsonConversionError),
+    /// file read error
     #[error("file read error")]
     FileReadError(#[from] std::io::Error),
+    /// serde parse error
     #[error("serde parse error")]
     SerdeParseError(#[from] serde_json::Error),
+    /// bounding box error
     #[error("bounding box error")]
     BoundingBoxError(#[from] BoundingBoxError),
+    /// svg write error
     #[error("svg write error")]
     SvgWriteError(#[from] SvgWriteError),
 }
 
 #[derive(Debug)]
+/// A polygon with some annotations (bucket, color, tags, etc.).
 pub struct AnnotatedPolygon {
     polygon: Polygon,
     _bucket: Bucket,
@@ -45,6 +55,7 @@ pub struct AnnotatedPolygon {
     _tags: Vec<(SymbolU32, SymbolU32)>,
 }
 impl AnnotatedPolygon {
+    /// Consumes an AnnotatedPolygon and casts down to a ColoredPolygon.
     pub fn to_colored_polygon(self) -> ColoredPolygon {
         ColoredPolygon {
             polygon: self.polygon,
@@ -53,6 +64,7 @@ impl AnnotatedPolygon {
     }
 }
 
+/// An unadjusted set of annotated polygons, ready to be printed to SVG.
 pub struct Map {
     config: MapConfig,
     layers: Vec<Vec<AnnotatedPolygon>>,
@@ -89,6 +101,8 @@ impl Map {
             .for_each(|ap| ap.polygon *= scaling_factor);
     }
 
+    /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
+    /// file(s).
     pub fn render(mut self) -> Result<(), MapError> {
         // first compute current bbox and shift everything positive.
         dbg!(&self.get_bbox());
@@ -118,12 +132,15 @@ impl Map {
     }
 }
 
+/// A set of config arguments for reading geometry from a geojson file and
+/// writing SVG(s) to output file(s).
 pub struct MapConfig {
     input_files: Vec<File>,
     output_directory: PathBuf,
 }
 
 impl MapConfig {
+    /// Instantiates a new MapConfig from many file paths.
     pub fn new_from_files(
         file_paths: impl IntoIterator<Item = impl AsRef<Path>>,
         output_directory: PathBuf,
@@ -137,6 +154,8 @@ impl MapConfig {
             output_directory,
         })
     }
+
+    /// Instantiates a new MapConfig from one file path.
     pub fn new_from_file(
         file_path: &str,
         output_directory: PathBuf,
@@ -144,6 +163,8 @@ impl MapConfig {
         Self::new_from_files(std::iter::once(file_path), output_directory)
     }
 
+    /// Consumes MapConfig, performs bucketing and coloring, and returns an
+    /// unadjusted Map instance.
     pub fn make_map(self) -> Result<Map, MapError> {
         let mut interner = StringInterner::new();
         let bucketer = DefaultBucketer::new(&mut interner);
