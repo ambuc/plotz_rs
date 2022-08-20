@@ -1,4 +1,6 @@
 //! A 2D point.
+
+use std::fmt::Debug;
 use {
     float_ord::FloatOrd,
     std::{
@@ -9,12 +11,18 @@ use {
 };
 
 /// A point in 2D space.
-#[derive(Debug, Hash, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Hash, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Pt {
     /// The x-coordinate of the point.
     pub x: FloatOrd<f64>,
     /// The y-coordinate of the point.
     pub y: FloatOrd<f64>,
+}
+
+impl Debug for Pt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Pt({:.2}, {:.2})", self.x.0, self.y.0)
+    }
 }
 
 /// An alternate constructor for points.

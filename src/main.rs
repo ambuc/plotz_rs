@@ -71,7 +71,7 @@ mod test_super {
         main_inner(args);
 
         let output_svg = std::fs::read_to_string(tmp_dir.path().join("0.svg")).expect("foo");
-        println!("{}", output_svg);
+        // println!("{}", output_svg);
 
         // TODO(ambuc): make w/h adjustable.
         let png = write_svg_to_pixmap((1024, 1024), &output_svg);
