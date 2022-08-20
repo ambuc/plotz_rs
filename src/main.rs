@@ -42,6 +42,23 @@ mod test_super {
     use super::*;
     use tempdir::TempDir;
 
+    fn write_svg_to_pixmap((width, height): (u32, u32), svg: &str) -> tiny_skia::Pixmap {
+        let usvg_options = usvg::Options::default();
+        let svg_tree = usvg::Tree::from_str(&svg, &usvg_options.to_ref()).expect("invalid svg");
+        let mut actual_png = tiny_skia::Pixmap::new(width, height).expect("make pixmap");
+        assert!(resvg::render(
+            &svg_tree,
+            usvg::FitTo::Original,
+            tiny_skia::Transform::identity(),
+            actual_png.as_mut()
+        )
+        .is_some());
+        assert!(actual_png
+            .save_png("/Users/jamesbuckland/Desktop/output.png")
+            .is_ok());
+        actual_png
+    }
+
     #[test]
     fn test_main_inner() {
         let tmp_dir = TempDir::new("tmp").unwrap();
@@ -56,20 +73,7 @@ mod test_super {
         let output_svg = std::fs::read_to_string(tmp_dir.path().join("0.svg")).expect("foo");
         println!("{}", output_svg);
 
-        let usvg_options = usvg::Options::default();
-        let svg_tree =
-            usvg::Tree::from_str(&output_svg, &usvg_options.to_ref()).expect("invalid svg");
-        let mut actual_png =
-            tiny_skia::Pixmap::new(/*width */ 1024, /*height */ 1024).expect("make pixmap");
-        assert!(resvg::render(
-            &svg_tree,
-            usvg::FitTo::Original,
-            tiny_skia::Transform::identity(),
-            actual_png.as_mut()
-        )
-        .is_some());
-        assert!(actual_png
-            .save_png("/Users/jamesbuckland/Desktop/output.png")
-            .is_ok());
+        // TODO(ambuc): make w/h adjustable.
+        let png = write_svg_to_pixmap((1024, 1024), &output_svg);
     }
 }

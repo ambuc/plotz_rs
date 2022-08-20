@@ -8,6 +8,7 @@ use crate::{
     colorer_builder::DefaultColorerBuilder,
     svg::{write_layer_to_svg, SvgWriteError},
 };
+use float_ord::FloatOrd;
 use plotz_color::ColorRGB;
 use plotz_geojson::GeoJsonConversionError;
 use plotz_geometry::{
@@ -79,26 +80,11 @@ impl Map {
         )?)
     }
 
-    fn get_shift(&self) -> Result<Pt, MapError> {
-        Ok(self.get_bbox()?.bl_bound())
-    }
-    fn get_scaling_factor(&self) -> Result<f64, MapError> {
-        unimplemented!();
-        //
-    }
-
-    fn apply_shift(&mut self, shift: Pt) {
+    fn apply(&mut self, f: &dyn Fn(&mut Polygon)) {
         self.layers
             .iter_mut()
             .flatten()
-            .for_each(|ap| ap.polygon -= shift);
-    }
-
-    fn apply_scaling_factor(&mut self, scaling_factor: f64) {
-        self.layers
-            .iter_mut()
-            .flatten()
-            .for_each(|ap| ap.polygon *= scaling_factor);
+            .for_each(|ap| f(&mut ap.polygon));
     }
 
     /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
@@ -107,18 +93,16 @@ impl Map {
         // first compute current bbox and shift everything positive.
         dbg!(&self.get_bbox());
 
-        let shift = self.get_shift()?;
-        self.apply_shift(shift);
+        let shift = self.get_bbox()?.bl_bound();
+        self.apply(&|p| *p -= shift);
 
         dbg!(&self.get_bbox());
 
-        let scaling_factor = self.get_scaling_factor()?;
-        self.apply_scaling_factor(scaling_factor);
+        let bbox = self.get_bbox()?;
+        let scaling_factor = std::cmp::max(FloatOrd(bbox.width()), FloatOrd(bbox.height())).0;
+        self.apply(&|p| *p *= 1.0 / scaling_factor);
 
         dbg!(&self.get_bbox());
-
-        // then scale up to hit frame.
-        // center the whole thing.
 
         for (idx, layer) in self.layers.into_iter().enumerate() {
             write_layer_to_svg(
