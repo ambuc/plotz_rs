@@ -1,7 +1,6 @@
 use argh::FromArgs;
 use glob::glob;
 use plotz_core::map::MapConfig;
-use std::path::PathBuf;
 
 #[derive(FromArgs)]
 #[argh(description = "...")]
@@ -9,7 +8,7 @@ struct Args {
     #[argh(option, description = "all geojson")]
     input_glob: String,
     #[argh(option, description = "output file prefix")]
-    output_file_prefix: String,
+    output_directory: std::path::PathBuf,
 }
 
 fn main() {
@@ -25,7 +24,7 @@ fn main_inner(args: Args) {
             .into_iter()
             .collect::<Result<Vec<_>, _>>()
             .unwrap(),
-        args.output_file_prefix,
+        args.output_directory,
     )
     .expect("failed to produce MapConfig")
     .make_map()
@@ -37,9 +36,36 @@ fn main_inner(args: Args) {
 #[cfg(test)]
 mod test_super {
     use super::*;
+    use tempdir::TempDir;
 
     #[test]
     fn test_main_inner() {
-        //
+        let tmp_dir = TempDir::new("tmp").unwrap();
+
+        let args = Args {
+            input_glob: "testdata/wuppertal*.geojson".to_string(),
+            output_directory: tmp_dir.path().to_path_buf(),
+        };
+
+        main_inner(args);
+
+        let output_svg = std::fs::read_to_string(tmp_dir.path().join("0.svg")).expect("foo");
+        println!("{}", output_svg);
+
+        let usvg_options = usvg::Options::default();
+        let svg_tree =
+            usvg::Tree::from_str(&output_svg, &usvg_options.to_ref()).expect("invalid svg");
+        let mut actual_png =
+            tiny_skia::Pixmap::new(/*width */ 1024, /*height */ 1024).expect("make pixmap");
+        assert!(resvg::render(
+            &svg_tree,
+            usvg::FitTo::Original,
+            tiny_skia::Transform::identity(),
+            actual_png.as_mut()
+        )
+        .is_some());
+        assert!(actual_png
+            .save_png("/Users/jamesbuckland/Desktop/output.png")
+            .is_ok());
     }
 }

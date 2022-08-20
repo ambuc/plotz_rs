@@ -1,6 +1,5 @@
 //! A 2D polygon (or multiline).
 
-use std::ops::AddAssign;
 use {
     crate::{
         bounded::Bounded,
@@ -16,7 +15,7 @@ use {
         cmp::{Eq, PartialEq},
         collections::HashSet,
         fmt::Debug,
-        ops::{Add, Sub},
+        ops::{Add, AddAssign, MulAssign, Sub, SubAssign},
     },
     thiserror,
 };
@@ -673,6 +672,16 @@ impl Sub<Pt> for &Polygon {
     type Output = Polygon;
     fn sub(self, rhs: Pt) -> Self::Output {
         Polygon(self.pts.iter().map(|p| *p - rhs)).unwrap()
+    }
+}
+impl SubAssign<Pt> for Polygon {
+    fn sub_assign(&mut self, rhs: Pt) {
+        self.pts.iter_mut().for_each(|p| *p -= rhs);
+    }
+}
+impl MulAssign<f64> for Polygon {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.pts.iter_mut().for_each(|p| *p *= rhs);
     }
 }
 

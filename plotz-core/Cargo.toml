@@ -11,6 +11,7 @@ plotz-geometry = { path = "../plotz-geometry" }
 serde_json = "*"
 string-interner = "*"
 thiserror = "*"
+log = "*"
 cairo-rs = { version = "0.14.9", features = ["png", "svg"] }
 
 [dev-dependencies]

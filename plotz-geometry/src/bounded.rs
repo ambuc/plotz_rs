@@ -11,6 +11,10 @@ pub enum BoundingBoxError {
     /// Could not construct the bounding box polygon.
     #[error("Could not construct bounding box polygon.")]
     PolygonConstructorError(#[from] PolygonConstructorError),
+
+    /// No items were seen, so no bounding box could be constructed.
+    #[error("No items were seen, so no bounding box can be constructed.")]
+    NoItemsSeen,
 }
 
 /// An object which is Bounded implements four cardinal bounds; the trait allows
@@ -75,6 +79,7 @@ struct BoundsCollector {
     bound_b: Option<FloatOrd<f64>>,
     bound_l: Option<FloatOrd<f64>>,
     bound_r: Option<FloatOrd<f64>>,
+    items_seen: usize,
 }
 
 impl BoundsCollector {
@@ -84,6 +89,7 @@ impl BoundsCollector {
             bound_b: None,
             bound_l: None,
             bound_r: None,
+            items_seen: 0_usize,
         }
     }
     pub fn incorporate(&mut self, b: &impl Bounded) {
@@ -107,6 +113,7 @@ impl BoundsCollector {
             None => FloatOrd(b.left_bound()),
             Some(existing) => std::cmp::min(existing, FloatOrd(b.left_bound())),
         });
+        self.items_seen += 1;
     }
 }
 
@@ -133,6 +140,9 @@ pub fn streaming_bbox<'a, T: 'a + Bounded>(
     let mut bc = BoundsCollector::new();
     for i in it {
         bc.incorporate(i);
+    }
+    if bc.items_seen == 0 {
+        return Err(BoundingBoxError::NoItemsSeen);
     }
     bc.bbox()
 }

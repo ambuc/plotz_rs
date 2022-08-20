@@ -55,7 +55,9 @@ pub fn parse_geojson(
             "MultiPolygon" => parse_to_multipolygon(coords)?,
             "Point" => vec![],
             other @ _ => {
-                unimplemented!("other: {:?}", other);
+                // TODO(amubc) : implement these
+                // unimplemented!("other: {:?}", other);
+                vec![]
             }
         } {
             lines.push((polygon, tags_list.clone()));
@@ -105,15 +107,14 @@ fn parse_to_polygon<'a>(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConv
             for points_list in points_lists {
                 match points_list {
                     Value::Array(pts) => {
-                        lines.push(
-                            Polygon(pts.iter().map(|p| {
-                                Pt(
-                                    p[0].as_f64().expect("value not f64"),
-                                    p[1].as_f64().expect("value not f64"),
-                                )
-                            }))
-                            .unwrap(),
-                        );
+                        if let Ok(p) = Polygon(pts.iter().map(|p| {
+                            Pt(
+                                p[0].as_f64().expect("value not f64"),
+                                p[1].as_f64().expect("value not f64"),
+                            )
+                        })) {
+                            lines.push(p);
+                        }
                     }
                     _ => {
                         unimplemented!("?");

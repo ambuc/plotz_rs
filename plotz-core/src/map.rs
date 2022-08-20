@@ -13,7 +13,11 @@ use plotz_geometry::{
     point::Pt,
     polygon::Polygon,
 };
-use std::{fs::File, io::BufReader, path::Path};
+use std::{
+    fs::File,
+    io::BufReader,
+    path::{Path, PathBuf},
+};
 use string_interner::{symbol::SymbolU32, StringInterner};
 use thiserror::Error;
 
@@ -33,11 +37,12 @@ pub enum MapError {
     SvgWriteError(#[from] SvgWriteError),
 }
 
+#[derive(Debug)]
 pub struct AnnotatedPolygon {
     polygon: Polygon,
-    bucket: Bucket,
+    _bucket: Bucket,
     color: ColorRGB,
-    tags: Vec<(SymbolU32, SymbolU32)>,
+    _tags: Vec<(SymbolU32, SymbolU32)>,
 }
 impl AnnotatedPolygon {
     pub fn to_colored_polygon(self) -> ColoredPolygon {
@@ -53,26 +58,50 @@ pub struct Map {
     layers: Vec<Vec<AnnotatedPolygon>>,
 }
 impl Map {
-    fn get_shift(&self) -> Result<Pt, MapError> {
+    fn get_bbox(&self) -> Result<Polygon, MapError> {
         Ok(streaming_bbox(
             self.layers
                 .iter()
                 .flatten()
                 .map(|AnnotatedPolygon { polygon, .. }| polygon),
-        )?
-        .bl_bound())
+        )?)
     }
+
+    fn get_shift(&self) -> Result<Pt, MapError> {
+        Ok(self.get_bbox()?.bl_bound())
+    }
+    fn get_scaling_factor(&self) -> Result<f64, MapError> {
+        unimplemented!();
+        //
+    }
+
     fn apply_shift(&mut self, shift: Pt) {
         self.layers
             .iter_mut()
             .flatten()
-            .for_each(|ap| ap.polygon += shift);
+            .for_each(|ap| ap.polygon -= shift);
+    }
+
+    fn apply_scaling_factor(&mut self, scaling_factor: f64) {
+        self.layers
+            .iter_mut()
+            .flatten()
+            .for_each(|ap| ap.polygon *= scaling_factor);
     }
 
     pub fn render(mut self) -> Result<(), MapError> {
         // first compute current bbox and shift everything positive.
+        dbg!(&self.get_bbox());
+
         let shift = self.get_shift()?;
         self.apply_shift(shift);
+
+        dbg!(&self.get_bbox());
+
+        let scaling_factor = self.get_scaling_factor()?;
+        self.apply_scaling_factor(scaling_factor);
+
+        dbg!(&self.get_bbox());
 
         // then scale up to hit frame.
         // center the whole thing.
@@ -80,7 +109,7 @@ impl Map {
         for (idx, layer) in self.layers.into_iter().enumerate() {
             write_layer_to_svg(
                 /*width,height=*/ (1024.0, 1024.0),
-                /*path=*/ format!("{}_{}.svg", self.config.output_file_prefix, idx),
+                /*path=*/ self.config.output_directory.join(format!("{}.svg", idx)),
                 /*polygons=*/ layer.into_iter().map(|ap| ap.to_colored_polygon()),
             )?;
         }
@@ -91,13 +120,13 @@ impl Map {
 
 pub struct MapConfig {
     input_files: Vec<File>,
-    output_file_prefix: String,
+    output_directory: PathBuf,
 }
 
 impl MapConfig {
     pub fn new_from_files(
         file_paths: impl IntoIterator<Item = impl AsRef<Path>>,
-        output_file_prefix: String,
+        output_directory: PathBuf,
     ) -> Result<MapConfig, MapError> {
         let mut files = vec![];
         for fp in file_paths {
@@ -105,14 +134,14 @@ impl MapConfig {
         }
         Ok(MapConfig {
             input_files: files,
-            output_file_prefix,
+            output_directory,
         })
     }
     pub fn new_from_file(
         file_path: &str,
-        output_file_prefix: String,
+        output_directory: PathBuf,
     ) -> Result<MapConfig, MapError> {
-        Self::new_from_files(std::iter::once(file_path), output_file_prefix)
+        Self::new_from_files(std::iter::once(file_path), output_directory)
     }
 
     pub fn make_map(self) -> Result<Map, MapError> {
@@ -138,9 +167,9 @@ impl MapConfig {
 
                     Some(AnnotatedPolygon {
                         polygon: polygon.clone(),
-                        bucket,
+                        _bucket: bucket,
                         color: colorer.color(bucket).ok()?,
-                        tags: tags.clone(),
+                        _tags: tags.clone(),
                     })
                 })
                 .collect::<Vec<_>>())
@@ -164,8 +193,8 @@ mod tests {
         let tmp_dir = TempDir::new("example").unwrap();
 
         MapConfig::new_from_file(
-            "testdata/example.geojson",
-            tmp_dir.path().as_os_str().to_string_lossy().to_string(),
+            /*file_path=*/ "../testdata/example.geojson",
+            /*output_file_prefix=*/ tmp_dir.path().to_path_buf(),
         )
         .unwrap()
         .make_map()

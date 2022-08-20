@@ -22,7 +22,7 @@ pub enum ShadePolygonError {
 
 // Gap controls how far to step between crosshatched lines
 // Slope controls the angle of the lines.
-fn shade_polygon(
+fn _shade_polygon(
     gap: f64,
     slope: f64,
     polygon: &Polygon,
@@ -84,7 +84,7 @@ mod tests {
         // | /   | .   |
         // /-----+-----+
         approx_eq_segments(
-            shade_polygon(/*gap */ 1.0, /*slope=*/ 1.0, &frame).unwrap(),
+            _shade_polygon(/*gap */ 1.0, /*slope=*/ 1.0, &frame).unwrap(),
             vec![Segment(Pt(0, 0), Pt(1, 1))],
         );
     }
@@ -101,7 +101,7 @@ mod tests {
         // | /   | /   |
         // /-----/-----+
         approx_eq_segments(
-            shade_polygon(/*gap */ 0.5, /*slope=*/ 1.0, &frame).unwrap(),
+            _shade_polygon(/*gap */ 0.5, /*slope=*/ 1.0, &frame).unwrap(),
             vec![
                 Segment(Pt(0.5, 0.0), Pt(1.0, 0.5)),
                 Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)),
@@ -128,7 +128,7 @@ mod tests {
         // | /   | /   |
         // /-----/-----+
         approx_eq_segments(
-            shade_polygon(/*gap */ 0.5, /*slope=*/ 0.5, &frame).unwrap(),
+            _shade_polygon(/*gap */ 0.5, /*slope=*/ 0.5, &frame).unwrap(),
             vec![
                 Segment(Pt(0.5, 0.0), Pt(1.0, 0.25)),
                 Segment(Pt(0.0, 0.0), Pt(1.0, 0.5)),

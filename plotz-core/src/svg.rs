@@ -1,6 +1,6 @@
 use crate::colored_polygon::ColoredPolygon;
-use plotz_color::{ColorRGB, BLACK};
-use plotz_geometry::polygon::{Polygon, PolygonKind};
+use plotz_color::BLACK;
+use plotz_geometry::polygon::PolygonKind;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -42,7 +42,7 @@ pub fn write_layer_to_svg<P: AsRef<std::path::Path>>(
     Ok(())
 }
 
-pub fn write_layers_to_svgs<P: AsRef<std::path::Path>>(
+fn _write_layers_to_svgs<P: AsRef<std::path::Path>>(
     (width, height): (f64, f64),
     paths: impl IntoIterator<Item = P>,
     polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = ColoredPolygon>>,

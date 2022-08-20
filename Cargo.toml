@@ -23,3 +23,9 @@ argh = "*"
 plotz-core = { path = "plotz-core" }
 glob = "*"
 thiserror = "*"
+
+[dev-dependencies]
+tempdir = "*"
+resvg = "*"
+usvg = "*"
+tiny-skia = "*"
