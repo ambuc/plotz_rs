@@ -418,7 +418,7 @@ impl Polygon {
 
             let mut isxns = frame_segments
                 .iter()
-                .filter_map(|f| inner.intersects(&f))
+                .filter_map(|f| inner.intersects(f))
                 .filter_map(|isxn_outcome| match isxn_outcome {
                     IntersectionOutcome::Yes(isxn) => Some(isxn),
                     _ => None,
@@ -431,7 +431,7 @@ impl Polygon {
             });
             isxns = vs;
 
-            match isxns.iter().next() {
+            match isxns.get(0) {
                 Some(intersection) => {
                     let new_pt = interpolate::extrapolate_2d(
                         inner.i,
@@ -1081,7 +1081,7 @@ mod tests {
         assert_eq!(crops, vec![expected.clone()]);
 
         let crops = frame.crop_to_polygon(&inner).unwrap();
-        assert_eq!(crops, vec![expected.clone()]);
+        assert_eq!(crops, vec![expected]);
     }
 
     #[test]
@@ -1100,7 +1100,7 @@ mod tests {
         assert_eq!(crops, vec![expected.clone()]);
 
         let crops = frame.crop_to_polygon(&inner).unwrap();
-        assert_eq!(crops, vec![expected.clone()]);
+        assert_eq!(crops, vec![expected]);
     }
 
     #[test]
@@ -1147,7 +1147,7 @@ mod tests {
         assert_eq!(crops, vec![expected.clone()]);
 
         let crops = frame.crop_to_polygon(&inner).unwrap();
-        assert_eq!(crops, vec![expected.clone()]);
+        assert_eq!(crops, vec![expected]);
     }
 
     #[test]
@@ -1178,7 +1178,7 @@ mod tests {
         let crops = inner.crop_to_polygon(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
         let crops = frame.crop_to_polygon(&inner).unwrap();
-        assert_eq!(crops, vec![expected.clone()]);
+        assert_eq!(crops, vec![expected]);
     }
 
     #[test]
@@ -1209,7 +1209,7 @@ mod tests {
         let crops = inner.crop_to_polygon(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
         let crops = frame.crop_to_polygon(&inner).unwrap();
-        assert_eq!(crops, vec![expected.clone()]);
+        assert_eq!(crops, vec![expected]);
     }
 
     #[test]

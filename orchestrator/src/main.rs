@@ -173,9 +173,10 @@ fn do_layer(s: &str, special_name: Option<&str>) {
         special_name
             .map(|s| format!(" ({})", s))
             .unwrap_or_default(),
-        predicted_duration
-            .map(|s| format!("{}", style(format!(" Est. {:?}", s)).yellow()))
-            .unwrap_or_else(|| "".to_string()),
+        predicted_duration.map_or_else(
+            || "".to_string(),
+            |s| format!("{}", style(format!(" Est. {:?}", s)).yellow())
+        ),
         match n_runs {
             0 => "".to_string(),
             _n => format!(" {}", style("(again)").red()),
@@ -245,8 +246,8 @@ fn main() {
     // other files
     let files: Vec<PathBuf> = glob(&args.glob)
         .expect("Failed to read glob pattern")
-        .filter(|x| x.is_ok())
-        .map(|x| x.unwrap())
+        .filter(std::result::Result::is_ok)
+        .map(std::result::Result::unwrap)
         .collect::<Vec<_>>();
 
     if files.is_empty() {
@@ -281,6 +282,6 @@ fn main() {
     );
 
     for layer in pb.wrap_iter(layers_to_print.iter()) {
-        do_layer(&layer, None);
+        do_layer(layer, None);
     }
 }
