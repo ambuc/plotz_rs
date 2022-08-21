@@ -25,7 +25,7 @@ pub struct DefaultBucketer {
 impl DefaultBucketer {
     pub fn new(interner: &mut StringInterner) -> DefaultBucketer {
         let mut list = vec![];
-        for ((tag0, tag1), bucket) in TAGS.iter() {
+        for (bucket, (tag0, tag1)) in TAGS.iter() {
             list.push((
                 (interner.get_or_intern(tag0), interner.get_or_intern(tag1)),
                 *bucket,
@@ -48,47 +48,47 @@ impl Bucketer for DefaultBucketer {
 }
 
 lazy_static! {
-    pub static ref TAGS: Vec<((&'static str, &'static str), Bucket)> = vec![
-        (("amenity", "school"), Bucket::Area(Area::Fun)),
-        (("boundary", "administrative"), Bucket::Path(Path::Boundary)),
-        (("building", "apartments"), Bucket::Area(Area::Building)),
-        (("building", "garages"), Bucket::Area(Area::Building)),
-        (("building", "yes"), Bucket::Area(Area::Building)),
-        (("fitness_station", "box"), Bucket::Area(Area::Fun)),
-        (("highway", "cycleway"), Bucket::Path(Path::Cycleway)),
-        (("highway", "footway"), Bucket::Path(Path::Pedestrian)),
-        (("highway", "pedestrian"), Bucket::Path(Path::Pedestrian)),
-        (("highway", "primary"), Bucket::Path(Path::Highway1)),
-        (("highway", "primary_link"), Bucket::Path(Path::Highway4)),
-        (("highway", "residential"), Bucket::Path(Path::Pedestrian)),
-        (("highway", "secondary"), Bucket::Path(Path::Highway2)),
-        (("highway", "secondary_link"), Bucket::Path(Path::Highway4)),
-        (("highway", "service"), Bucket::Path(Path::Highway4)),
-        (("highway", "steps"), Bucket::Path(Path::Pedestrian)),
-        (("highway", "tertiary"), Bucket::Path(Path::Highway3)),
-        (("landuse", "brownfield"), Bucket::Area(Area::Park)),
-        (("landuse", "cemetery"), Bucket::Area(Area::Park)),
-        (("landuse", "commercial"), Bucket::Area(Area::Business)),
-        (("landuse", "construction"), Bucket::Area(Area::Business)),
-        (("landuse", "grass"), Bucket::Area(Area::Park)),
-        (("landuse", "greenfield"), Bucket::Area(Area::Park)),
-        (("landuse", "industrial"), Bucket::Area(Area::Business)),
-        (("landuse", "meadow"), Bucket::Area(Area::Park)),
-        (("landuse", "railway"), Bucket::Area(Area::Rail)),
-        (("leisure", "garden"), Bucket::Area(Area::Park)),
-        (("leisure", "park"), Bucket::Area(Area::Park)),
-        (("leisure", "pitch"), Bucket::Area(Area::Fun)),
-        (("leisure", "playground"), Bucket::Area(Area::Fun)),
-        (("leisure", "swimming_pool"), Bucket::Area(Area::Fun)),
-        (("natural", "bare_rock"), Bucket::Area(Area::NaturalRock)),
-        (("natural", "bay"), Bucket::Area(Area::Water)),
-        (("natural", "beach"), Bucket::Area(Area::Beach)),
-        (("natural", "coastline"), Bucket::Area(Area::Water)),
-        (("natural", "sand"), Bucket::Area(Area::Beach)),
-        (("natural", "scrub"), Bucket::Area(Area::Park)),
-        (("natural", "tree"), Bucket::Area(Area::Tree)),
-        (("natural", "water"), Bucket::Area(Area::Water)),
-        (("railway", "rail"), Bucket::Path(Path::Rail)),
+    pub static ref TAGS: Vec<(Bucket, (&'static str, &'static str))> = vec![
+        (Bucket::Area(Area::Beach), ("natural", "beach")),
+        (Bucket::Area(Area::Beach), ("natural", "sand")),
+        (Bucket::Area(Area::Building), ("building", "apartments")),
+        (Bucket::Area(Area::Building), ("building", "garages")),
+        (Bucket::Area(Area::Building), ("building", "yes")),
+        (Bucket::Area(Area::Business), ("landuse", "commercial")),
+        (Bucket::Area(Area::Business), ("landuse", "construction")),
+        (Bucket::Area(Area::Business), ("landuse", "industrial")),
+        (Bucket::Area(Area::Fun), ("amenity", "school")),
+        (Bucket::Area(Area::Fun), ("fitness_station", "box")),
+        (Bucket::Area(Area::Fun), ("leisure", "pitch")),
+        (Bucket::Area(Area::Fun), ("leisure", "playground")),
+        (Bucket::Area(Area::Fun), ("leisure", "swimming_pool")),
+        (Bucket::Area(Area::NaturalRock), ("natural", "bare_rock")),
+        (Bucket::Area(Area::Park), ("landuse", "brownfield")),
+        (Bucket::Area(Area::Park), ("landuse", "cemetery")),
+        (Bucket::Area(Area::Park), ("landuse", "grass")),
+        (Bucket::Area(Area::Park), ("landuse", "greenfield")),
+        (Bucket::Area(Area::Park), ("landuse", "meadow")),
+        (Bucket::Area(Area::Park), ("leisure", "garden")),
+        (Bucket::Area(Area::Park), ("leisure", "park")),
+        (Bucket::Area(Area::Park), ("natural", "scrub")),
+        (Bucket::Area(Area::Rail), ("landuse", "railway")),
+        (Bucket::Area(Area::Tree), ("natural", "tree")),
+        (Bucket::Area(Area::Water), ("natural", "bay")),
+        (Bucket::Area(Area::Water), ("natural", "coastline")),
+        (Bucket::Area(Area::Water), ("natural", "water")),
+        (Bucket::Path(Path::Boundary), ("boundary", "administrative")),
+        (Bucket::Path(Path::Cycleway), ("highway", "cycleway")),
+        (Bucket::Path(Path::Highway1), ("highway", "primary")),
+        (Bucket::Path(Path::Highway2), ("highway", "secondary")),
+        (Bucket::Path(Path::Highway3), ("highway", "tertiary")),
+        (Bucket::Path(Path::Highway4), ("highway", "primary_link")),
+        (Bucket::Path(Path::Highway4), ("highway", "secondary_link")),
+        (Bucket::Path(Path::Highway4), ("highway", "service")),
+        (Bucket::Path(Path::Pedestrian), ("highway", "footway")),
+        (Bucket::Path(Path::Pedestrian), ("highway", "pedestrian")),
+        (Bucket::Path(Path::Pedestrian), ("highway", "residential")),
+        (Bucket::Path(Path::Pedestrian), ("highway", "steps")),
+        (Bucket::Path(Path::Rail), ("railway", "rail")),
     ];
 }
 
@@ -99,7 +99,7 @@ mod test_super {
 
     #[test]
     fn test_tags_marked_interesting() {
-        for ((k, v), _) in TAGS.iter() {
+        for (_, (k, v)) in TAGS.iter() {
             assert!(INTERESTING_PROPERTIES.contains(k), "{}", k);
             assert!(INTERESTING_PROPERTIES.contains(v), "{}", v);
         }
