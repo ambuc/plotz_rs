@@ -46,9 +46,9 @@ fn write_polygon_to_context(
     if p.polygon.kind == PolygonKind::Closed {
         context.line_to(p.polygon.pts[0].x.0, p.polygon.pts[0].y.0);
     }
-    context.set_source_rgb(p.color.0, p.color.1, p.color.2);
+    context.set_source_rgb(p.color.r, p.color.g, p.color.b);
     context.stroke()?;
-    context.set_source_rgb(BLACK.0, BLACK.1, BLACK.2);
+    context.set_source_rgb(BLACK.r, BLACK.g, BLACK.b);
     Ok(())
 }
 

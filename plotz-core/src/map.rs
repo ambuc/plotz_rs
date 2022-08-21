@@ -9,6 +9,7 @@ use crate::{
     svg::{write_layer_to_svg, Size, SvgWriteError},
 };
 use float_ord::FloatOrd;
+use log::info;
 use plotz_color::ColorRGB;
 use plotz_geojson::GeoJsonConversionError;
 use plotz_geometry::{
@@ -94,6 +95,7 @@ impl Map {
     /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
     /// file(s).
     pub fn render(mut self) -> Result<(), MapError> {
+        info!("Rendering map.");
         // first compute current bbox and shift everything positive.
 
         self.apply(&|p| p.flip_y());
@@ -114,9 +116,16 @@ impl Map {
         self.apply(&|p| *p *= scaling_factor);
 
         for (idx, layer) in self.layers.into_iter().enumerate() {
+            let path = self.config.output_directory.join(format!("{}.svg", idx));
+            info!(
+                "Writing layer #{:?} ({:?} polygons) to {:?}",
+                idx,
+                layer.len(),
+                path
+            );
             write_layer_to_svg(
                 /*width,height=*/ self.config.size,
-                /*path=*/ self.config.output_directory.join(format!("{}.svg", idx)),
+                /*path=*/ path,
                 /*polygons=*/ layer.into_iter().map(|ap| ap.to_colored_polygon()),
             )?;
         }
@@ -167,6 +176,9 @@ impl MapConfig {
         let bucketer = DefaultBucketer::new(&mut interner);
         let colorer: DefaultColorer = DefaultColorerBuilder::default();
 
+        let mut buckets_histogram = std::collections::HashMap::<Bucket, usize>::new();
+        let mut colors_histogram = std::collections::HashMap::<ColorRGB, usize>::new();
+
         let layers: Vec<Vec<AnnotatedPolygon>> = self
             .input_files
             .iter()
@@ -182,17 +194,22 @@ impl MapConfig {
                         .map(|t| bucketer.bucket(*t))
                         .filter_map(|r| r.ok())
                         .next()?;
+                    *buckets_histogram.entry(bucket).or_default() += 1;
+
+                    let color = colorer.color(bucket).ok()?;
+                    *colors_histogram.entry(color).or_default() += 1;
 
                     Some(AnnotatedPolygon {
                         polygon: polygon.clone(),
                         _bucket: bucket,
-                        color: colorer.color(bucket).ok()?,
+                        color,
                         _tags: tags.clone(),
                     })
                 })
                 .collect::<Vec<_>>())
             })
             .collect::<Result<_, MapError>>()?;
+        info!("Got buckets {:?}", buckets_histogram);
 
         Ok(Map {
             config: self,

@@ -23,6 +23,7 @@ argh = "*"
 plotz-core = { path = "plotz-core" }
 glob = "*"
 thiserror = "*"
+pretty_env_logger = "*"
 
 [dev-dependencies]
 tempdir = "*"

@@ -20,6 +20,8 @@ struct Args {
 }
 
 fn main() {
+    pretty_env_logger::init();
+
     let args: Args = argh::from_env();
     main_inner(args);
 }
