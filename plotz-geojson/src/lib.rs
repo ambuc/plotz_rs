@@ -11,14 +11,13 @@ use {
         polygon::{Multiline, MultilineConstructorError, Polygon, PolygonConstructorError},
     },
     serde_json::Value,
-    std::collections::{HashMap, HashSet},
+    std::collections::HashSet,
     string_interner::{symbol::SymbolU32, StringInterner},
     thiserror::Error,
 };
 
 type KeySymbol = SymbolU32;
 type ValueSymbol = SymbolU32;
-type TagsMap = HashMap<KeySymbol, ValueSymbol>;
 type TagsList = Vec<(KeySymbol, ValueSymbol)>;
 
 /// A general error arising from converting GeoJSON to plotz-geometry Polygons.
@@ -100,35 +99,40 @@ pub fn parse_geojson(
         .iter()
         .enumerate()
     {
-        let mut tags = TagsMap::new();
+        let tags = feature["properties"]
+            .as_object()
+            .expect("not object")
+            .into_iter()
+            .filter(|(k, _v)| INTERESTING_PROPERTIES.contains(k.as_str()))
+            .filter(|(_k, v)| v.as_str().is_some())
+            .filter(|(_k, v)| INTERESTING_PROPERTIES.contains(v.as_str().unwrap()))
+            .map(|(k, v)| {
+                (
+                    interner.get_or_intern(k),
+                    interner.get_or_intern(v.as_str().unwrap()),
+                )
+            })
+            .collect::<TagsList>();
 
-        for (k, v) in feature["properties"].as_object().expect("not obj") {
-            if !INTERESTING_PROPERTIES.contains(k.as_str()) {
-                continue;
-            }
-            if let Some(val_str) = v.as_str() {
-                if !INTERESTING_PROPERTIES.contains(val_str) {
-                    continue;
-                }
-                tags.insert(interner.get_or_intern(k), interner.get_or_intern(val_str));
-            }
+        if tags.is_empty() {
+            continue;
         }
-        let tags_list: TagsList = tags.iter().map(|(k, v)| (*k, *v)).collect();
-
-        info!(
-            "parsing feature {:?} with tags {:?}",
-            idx,
-            tags_list
-                .iter()
-                .map(|(k, v)| (interner.resolve(*k).unwrap(), interner.resolve(*v).unwrap()))
-                .collect::<Vec<_>>()
-        );
 
         let geom_type: &str = feature["geometry"]["type"]
             .as_str()
             .expect("type not string");
 
         let coords = &feature["geometry"]["coordinates"];
+
+        info!(
+            "parsing feature {:?} \n\tgeom: {}\n\ttags {:?}",
+            idx,
+            geom_type,
+            tags.iter()
+                .map(|(k, v)| (interner.resolve(*k).unwrap(), interner.resolve(*v).unwrap()))
+                .collect::<Vec<_>>(),
+        );
+
         for polygon in match geom_type {
             "LineString" => parse_to_linestring(coords)?,
             "MultiLineString" => parse_to_multilinestring(coords)?,
@@ -139,7 +143,7 @@ pub fn parse_geojson(
                 unimplemented!("other: {:?}", other);
             }
         } {
-            lines.push((polygon, tags_list.clone()));
+            lines.push((polygon, tags.clone()));
         }
     }
     Ok(lines)
