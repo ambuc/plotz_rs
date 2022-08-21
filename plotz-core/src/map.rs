@@ -64,6 +64,11 @@ impl AnnotatedPolygon {
     }
 }
 
+fn latitude_to_y(latitude: f64) -> f64 {
+    use std::f64::consts::PI;
+    (((latitude + 90.0) / 360.0 * PI).tan()).ln() / PI * 180.0
+}
+
 /// An unadjusted set of annotated polygons, ready to be printed to SVG.
 pub struct Map {
     config: MapConfig,
@@ -91,12 +96,21 @@ impl Map {
     pub fn render(mut self) -> Result<(), MapError> {
         // first compute current bbox and shift everything positive.
 
+        self.apply(&|p| p.flip_y());
+        self.apply(&|p| {
+            p.pts
+                .iter_mut()
+                .for_each(|pt| pt.y.0 = latitude_to_y(pt.y.0))
+        });
+
         let shift = self.get_bbox()?.bl_bound();
         self.apply(&|p| *p -= shift);
 
         let bbox = self.get_bbox()?;
-        let scaling_factor = 1.0 / std::cmp::max(FloatOrd(bbox.width()), FloatOrd(bbox.height())).0
-            * self.config.size.max() as f64;
+        let scaling_factor = 1.0
+            / std::cmp::max(FloatOrd(bbox.width().abs()), FloatOrd(bbox.height().abs())).0
+            * self.config.size.max() as f64
+            * 0.73; // why 0.73?
         self.apply(&|p| *p *= scaling_factor);
 
         for (idx, layer) in self.layers.into_iter().enumerate() {

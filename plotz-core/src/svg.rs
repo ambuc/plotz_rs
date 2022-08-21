@@ -18,6 +18,10 @@ impl Size {
     pub fn max(&self) -> usize {
         std::cmp::max(self.width, self.height)
     }
+    /// the height or width, whichever is smaller.
+    pub fn min(&self) -> usize {
+        std::cmp::min(self.width, self.height)
+    }
 }
 
 /// A general error which might be encountered while writing an SVG.

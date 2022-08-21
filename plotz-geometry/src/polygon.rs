@@ -17,7 +17,7 @@ use {
         fmt::Debug,
         ops::{Add, AddAssign, MulAssign, Sub, SubAssign},
     },
-    thiserror,
+    thiserror::Error,
 };
 
 /// Whether a polygon is open (there should be no line drawn between its last
@@ -79,7 +79,7 @@ impl PartialEq for Polygon {
 }
 
 /// A general error arising from trying to construct a Multiline.
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[derive(Debug, Error, PartialEq, Eq)]
 pub enum MultilineConstructorError {
     /// It is not possible to construct a multiline from one or fewer points.
     #[error("It is not possible to construct a multiline from one or fewer points.")]
@@ -102,7 +102,7 @@ pub fn Multiline(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, MultilineCo
 }
 
 /// A general error arising from trying to construct a Polygon.
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[derive(Debug, Error, PartialEq, Eq)]
 pub enum PolygonConstructorError {
     /// It is not possible to construct a polygon from two or fewer points.
     #[error("It is not possible to construct a polygon from two or fewer points.")]
@@ -126,7 +126,7 @@ pub fn Polygon(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, PolygonConstr
 
 /// A general error arising from trying to inspect whether a point lies in a
 /// polygon.
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[derive(Debug, Error, PartialEq, Eq)]
 pub enum ContainsPointError {
     /// The bounding polygon is Open (not Closed) and so it is underspecified to
     /// ask whether it contains a point.
@@ -135,7 +135,7 @@ pub enum ContainsPointError {
 }
 
 /// A general error arising from trying to crop something to a bounding polygon.
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[derive(Debug, Error, PartialEq, Eq)]
 pub enum CropToPolygonError {
     /// The frame polygon is not closed.
     #[error("The frame polygon is not closed.")]
@@ -304,6 +304,14 @@ impl<'a> Cursor<'a> {
 }
 
 impl Polygon {
+    /// Inverts the polygon across the x-axis.
+    pub fn flip_x(&mut self) {
+        self.pts.iter_mut().for_each(|p| p.x.0 *= -1.0);
+    }
+    /// Inverts the polygon across the y-axis.
+    pub fn flip_y(&mut self) {
+        self.pts.iter_mut().for_each(|p| p.y.0 *= -1.0);
+    }
     /// Returns the segments of a polygon, one at a time.
     ///
     /// If this is an open polygon, we return only the line segments without the

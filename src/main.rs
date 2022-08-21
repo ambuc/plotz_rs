@@ -50,10 +50,11 @@ mod test_super {
     use super::*;
     use tempdir::TempDir;
 
-    fn write_svg_to_pixmap((width, height): (u32, u32), svg: &str) -> tiny_skia::Pixmap {
+    fn write_svg_to_pixmap(size: Size, svg: &str) -> tiny_skia::Pixmap {
         let usvg_options = usvg::Options::default();
         let svg_tree = usvg::Tree::from_str(&svg, &usvg_options.to_ref()).expect("invalid svg");
-        let mut actual_png = tiny_skia::Pixmap::new(width, height).expect("make pixmap");
+        let mut actual_png =
+            tiny_skia::Pixmap::new(size.width as u32, size.height as u32).expect("make pixmap");
         assert!(resvg::render(
             &svg_tree,
             usvg::FitTo::Original,
@@ -61,29 +62,30 @@ mod test_super {
             actual_png.as_mut()
         )
         .is_some());
-        assert!(actual_png
-            .save_png("/Users/jamesbuckland/Desktop/output.png")
-            .is_ok());
         actual_png
     }
 
     #[test]
     fn test_main_inner() {
         let tmp_dir = TempDir::new("tmp").unwrap();
+        let size = Size {
+            width: 1024,
+            height: 1024,
+        };
 
         let args = Args {
             input_glob: "testdata/wuppertal*.geojson".to_string(),
             output_directory: tmp_dir.path().to_path_buf(),
-            width: 1024,
-            height: 1024,
+            width: size.width,
+            height: size.height,
         };
 
         main_inner(args);
 
         let output_svg = std::fs::read_to_string(tmp_dir.path().join("0.svg")).expect("foo");
-        println!("{}", output_svg);
 
-        // TODO(ambuc): make w/h adjustable.
-        let png = write_svg_to_pixmap((1024, 1024), &output_svg);
+        assert!(write_svg_to_pixmap(size, &output_svg)
+            .save_png("/Users/jamesbuckland/Desktop/output.png")
+            .is_ok());
     }
 }
