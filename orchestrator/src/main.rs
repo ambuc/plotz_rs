@@ -16,15 +16,15 @@ struct Args {
     frame: String,
 }
 
-fn print_ok(s: String) {
+fn print_ok(s: &str) {
     println!("{} {}", style("OK").green(), s);
 }
 
-fn print_err(s: String) {
+fn print_err(s: &str) {
     println!("{} {}", style("ERR").red(), s);
 }
 
-fn hits_yes(s: String) -> bool {
+fn hits_yes(s: &str) -> bool {
     Confirm::new()
         .with_prompt(format!("{} {}", style("ACTION").magenta(), s))
         .interact()
@@ -33,27 +33,26 @@ fn hits_yes(s: String) -> bool {
 
 fn is_command_ok(c: &mut Command) -> Option<std::process::Output> {
     match c.output() {
-        Ok(output) => match output.status.success() {
-            true => {
+        Ok(output) => {
+            if output.status.success() {
                 if let Ok(stdout) = std::str::from_utf8(&output.stdout) {
                     if !stdout.is_empty() {
-                        print_ok(format!("{} {}", style("stdout").green(), stdout));
+                        print_ok(&format!("{} {}", style("stdout").green(), stdout));
                     }
                 }
                 if let Ok(stderr) = std::str::from_utf8(&output.stderr) {
                     if !stderr.is_empty() {
-                        print_ok(format!("{} {}", style("stderr").yellow(), stderr));
+                        print_ok(&format!("{} {}", style("stderr").yellow(), stderr));
                     }
                 }
                 Some(output)
-            }
-            false => {
-                print_err(std::str::from_utf8(&output.stderr).unwrap().to_string());
+            } else {
+                print_err(&std::str::from_utf8(&output.stderr).unwrap().to_string());
                 None
             }
-        },
+        }
         Err(e) => {
-            print_err(format!("{:?}", e));
+            print_err(&format!("{:?}", e));
             None
         }
     }
@@ -129,18 +128,14 @@ fn do_layer(s: &str, special_name: Option<&str>) {
     println!();
     let path: String = canonicalize(&s).unwrap().to_str().unwrap().to_string();
 
-    let predicted_duration: Option<Duration> = match hits_yes(format!(
+    let predicted_duration: Option<Duration> = if hits_yes(&format!(
         "Preview {}{}",
         style(&s).blue(),
         special_name
             .map(|s| format!(" ({})", s))
             .unwrap_or_default()
     )) {
-        false => {
-            println!("{} Not previewing...", style("STOPPED").magenta(),);
-            None
-        }
-        true => match is_command_ok(
+        match is_command_ok(
             Command::new("axicli")
                 .arg(&path)
                 .arg("--preview")
@@ -149,13 +144,16 @@ fn do_layer(s: &str, special_name: Option<&str>) {
         ) {
             Some(output) => parse_prediction(std::str::from_utf8(&output.stderr).unwrap()),
             _ => None,
-        },
+        }
+    } else {
+        println!("{} Not previewing...", style("STOPPED").magenta(),);
+        None
     };
 
     // done preview. quick toggle check.
 
     let mut n_toggles = 0;
-    while hits_yes(format!(
+    while hits_yes(&format!(
         "Toggle?{}",
         match n_toggles {
             0 => "".to_string(),
@@ -167,15 +165,16 @@ fn do_layer(s: &str, special_name: Option<&str>) {
     }
 
     let mut n_runs = 0;
-    while hits_yes(format!(
+    while hits_yes(&format!(
         "Print {}{}?{}{}",
         style(&s).blue(),
         special_name
             .map(|s| format!(" ({})", s))
             .unwrap_or_default(),
-        predicted_duration
-            .map(|s| format!("{}", style(format!(" Est. {:?}", s)).yellow()))
-            .unwrap_or_else(|| "".to_string()),
+        predicted_duration.map_or_else(
+            || "".to_string(),
+            |s| format!("{}", style(format!(" Est. {:?}", s)).yellow())
+        ),
         match n_runs {
             0 => "".to_string(),
             _n => format!(" {}", style("(again)").red()),
@@ -214,7 +213,7 @@ fn do_layer(s: &str, special_name: Option<&str>) {
 
         let p2 = path.clone();
         let command_task = std::thread::spawn(move || {
-            let _ = is_command_ok(
+            let _cmd = is_command_ok(
                 Command::new("axicli")
                     .arg(&p2)
                     .args(make_default_axicli_args()),
@@ -245,21 +244,22 @@ fn main() {
     // other files
     let files: Vec<PathBuf> = glob(&args.glob)
         .expect("Failed to read glob pattern")
-        .filter(|x| x.is_ok())
-        .map(|x| x.unwrap())
+        .filter(std::result::Result::is_ok)
+        .map(std::result::Result::unwrap)
         .collect::<Vec<_>>();
 
     if files.is_empty() {
         panic!("{}: no matches for glob.", style("ERROR").red().bright());
     }
 
-    let mut uniq = std::collections::HashSet::<String>::from_iter(
-        files.iter().map(|f| f.display().to_string()),
-    );
+    let mut uniq = files
+        .iter()
+        .map(|f| f.display().to_string())
+        .collect::<std::collections::HashSet<String>>();
     uniq.remove(frame.to_str().unwrap());
 
     println!();
-    print_ok(format!(
+    print_ok(&format!(
         "Found files: {:?}\n\t...will plot frame{:?}\n\t...and then other layers {:?}",
         style(files).blue(),
         style(&args.frame).blue().bright(),
@@ -281,6 +281,6 @@ fn main() {
     );
 
     for layer in pb.wrap_iter(layers_to_print.iter()) {
-        do_layer(&layer, None);
+        do_layer(layer, None);
     }
 }

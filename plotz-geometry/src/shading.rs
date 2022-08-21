@@ -31,7 +31,7 @@ fn _shade_polygon(
         return Err(ShadePolygonError::PolygonIsOpen);
     }
 
-    let epsilon = Pt(0.000001_f64, 0.000001_f64);
+    let epsilon = Pt(0.000_001_f64, 0.000_001_f64);
     let bbox = polygon.bbox()?;
     let mut segments: Vec<Segment> = vec![];
 
@@ -65,7 +65,7 @@ mod tests {
         approx_eq_pt(a.f, b.f);
     }
 
-    fn approx_eq_segments<'a>(a: Vec<Segment>, b: Vec<Segment>) {
+    fn approx_eq_segments(a: Vec<Segment>, b: Vec<Segment>) {
         assert_eq!(a.len(), b.len(), "a {:?} b {:?}", a, b);
         for (i, j) in a.iter().zip(b.iter()) {
             approx_eq_segment(i, j);

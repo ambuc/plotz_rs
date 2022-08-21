@@ -54,7 +54,7 @@ mod test_super {
 
     fn write_svg_to_pixmap(size: Size, svg: &str) -> tiny_skia::Pixmap {
         let usvg_options = usvg::Options::default();
-        let svg_tree = usvg::Tree::from_str(&svg, &usvg_options.to_ref()).expect("invalid svg");
+        let svg_tree = usvg::Tree::from_str(svg, &usvg_options.to_ref()).expect("invalid svg");
         let mut actual_png =
             tiny_skia::Pixmap::new(size.width as u32, size.height as u32).expect("make pixmap");
         assert!(resvg::render(

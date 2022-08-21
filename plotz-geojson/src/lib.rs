@@ -4,7 +4,6 @@
 //! structs.
 
 use {
-    lazy_static,
     log::info,
     plotz_geometry::{
         point::Pt,
@@ -142,7 +141,7 @@ pub fn parse_geojson(
             "Polygon" => parse_to_polygon(coords)?,
             "MultiPolygon" => parse_to_multipolygon(coords)?,
             "Point" => vec![],
-            other @ _ => {
+            other => {
                 unimplemented!("other: {:?}", other);
             }
         } {
@@ -153,7 +152,7 @@ pub fn parse_geojson(
     Ok(lines)
 }
 
-fn parse_to_linestring<'a>(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConversionError> {
+fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConversionError> {
     Ok(vec![Multiline(
         coordinates.as_array().expect("not array").iter().map(|p| {
             Pt(
@@ -164,9 +163,7 @@ fn parse_to_linestring<'a>(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonC
     )?])
 }
 
-fn parse_to_multilinestring<'a>(
-    coordinates: &Value,
-) -> Result<Vec<Polygon>, GeoJsonConversionError> {
+fn parse_to_multilinestring(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConversionError> {
     let mut lines: Vec<Polygon> = vec![];
     for linestring in coordinates.as_array().expect("not array").iter() {
         lines.append(&mut parse_to_linestring(linestring)?);
@@ -174,7 +171,7 @@ fn parse_to_multilinestring<'a>(
     Ok(lines)
 }
 
-fn parse_to_multipolygon<'a>(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConversionError> {
+fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConversionError> {
     let mut lines: Vec<_> = vec![];
     for coordinates in coordinates.as_array().expect("not array") {
         lines.extend(parse_to_polygon(coordinates)?);
@@ -182,7 +179,7 @@ fn parse_to_multipolygon<'a>(coordinates: &Value) -> Result<Vec<Polygon>, GeoJso
     Ok(lines)
 }
 
-fn parse_to_polygon<'a>(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConversionError> {
+fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConversionError> {
     Ok(coordinates
         .as_array()
         .expect("not array")
@@ -208,7 +205,7 @@ mod tests {
         assert_eq!(i.resolve(s).unwrap(), expected);
     }
 
-    fn assert_symbol_tuple<'a>(
+    fn assert_symbol_tuple(
         i: &StringInterner,
         (s1, s2): (SymbolU32, SymbolU32),
         (e1, e2): (&str, &str),
@@ -231,20 +228,20 @@ mod tests {
     #[test]
     fn test_parse_to_polygon() {
         let geojson = json!([[
-            [-74.0156511, 40.7215446],
-            [-74.0154939, 40.7215262],
-            [-74.0142809, 40.7213844],
-            [-74.0142481, 40.7213806],
-            [-74.0132831, 40.7212678],
+            [-74.015_651_1, 40.721_544_6],
+            [-74.015_493_9, 40.721_526_2],
+            [-74.014_280_9, 40.721_384_4],
+            [-74.014_248_1, 40.721_380_6],
+            [-74.013_283_1, 40.721_267_8],
         ]]);
         assert_eq!(
             parse_to_polygon(&geojson).unwrap(),
             vec![Polygon([
-                Pt(-74.0156511, 40.7215446),
-                Pt(-74.0154939, 40.7215262),
-                Pt(-74.0142809, 40.7213844),
-                Pt(-74.0142481, 40.7213806),
-                Pt(-74.0132831, 40.7212678),
+                Pt(-74.015_651_1, 40.721_544_6),
+                Pt(-74.015_493_9, 40.721_526_2),
+                Pt(-74.014_280_9, 40.721_384_4),
+                Pt(-74.014_248_1, 40.721_380_6),
+                Pt(-74.013_283_1, 40.721_267_8),
             ])
             .unwrap()]
         );
@@ -253,20 +250,20 @@ mod tests {
     #[test]
     fn test_parse_to_linestring() {
         let geojson = json!([
-            [-74.0156511, 40.7215446],
-            [-74.0154939, 40.7215262],
-            [-74.0142809, 40.7213844],
-            [-74.0142481, 40.7213806],
-            [-74.0132831, 40.7212678],
+            [-74.015_651_1, 40.721_544_6],
+            [-74.015_493_9, 40.721_526_2],
+            [-74.014_280_9, 40.721_384_4],
+            [-74.014_248_1, 40.721_380_6],
+            [-74.013_283_1, 40.721_267_8],
         ]);
         assert_eq!(
             parse_to_linestring(&geojson).unwrap(),
             vec![Multiline([
-                Pt(-74.0156511, 40.7215446),
-                Pt(-74.0154939, 40.7215262),
-                Pt(-74.0142809, 40.7213844),
-                Pt(-74.0142481, 40.7213806),
-                Pt(-74.0132831, 40.7212678),
+                Pt(-74.015_651_1, 40.721_544_6),
+                Pt(-74.015_493_9, 40.721_526_2),
+                Pt(-74.014_280_9, 40.721_384_4),
+                Pt(-74.014_248_1, 40.721_380_6),
+                Pt(-74.013_283_1, 40.721_267_8),
             ])
             .unwrap()]
         );
@@ -288,7 +285,7 @@ mod tests {
         );
 
         assert_symbol_tuple_list(
-            &mut interner,
+            &interner,
             polygons[0].1.clone(),
             [
                 ("natural", "water"),
@@ -302,7 +299,7 @@ mod tests {
             Multiline([Pt(1, 1), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap()
         );
         assert_symbol_tuple_list(
-            &mut interner,
+            &interner,
             polygons[1].1.clone(),
             [
                 ("highway", "residential"),

@@ -36,7 +36,7 @@ fn write_polygon_to_context(
     p: &ColoredPolygon,
     context: &mut cairo::Context,
 ) -> Result<(), SvgWriteError> {
-    if p.polygon.pts.len() == 0 {
+    if p.polygon.pts.is_empty() {
         return Ok(());
     }
 

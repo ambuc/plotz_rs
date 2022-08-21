@@ -54,24 +54,25 @@ fn main() {
     main_inner(args).expect("ok");
 }
 
-fn consume_lines(
-    output_prefix: &str,
-    xml_header: &str,
-    svg_header: &str,
-    name: &str,
-    group_open: &str,
-    group_close: &str,
-    group_subopen: &str,
-    group_subclose: &str,
-    lines: &mut Lines<BufReader<File>>,
-    split: &Option<u64>,
-    index: Option<u64>,
-) -> Result<bool> {
+struct ConsumeLinesArguments<'a> {
+    output_prefix: &'a str,
+    xml_header: &'a str,
+    svg_header: &'a str,
+    name: &'a str,
+    group_open: &'a str,
+    group_close: &'a str,
+    group_subopen: &'a str,
+    group_subclose: &'a str,
+    lines: &'a mut Lines<BufReader<File>>,
+    split: &'a Option<u64>,
+}
+
+fn consume_lines(args: &mut ConsumeLinesArguments, index: Option<u64>) -> Result<bool> {
     let f = File::create(
         [
-            output_prefix.to_string(),
+            args.output_prefix.to_string(),
             "_".to_string(),
-            name.to_string(),
+            args.name.to_string(),
             "_".to_string(),
             index.unwrap_or(0).to_string(),
             ".svg".to_string(),
@@ -79,60 +80,48 @@ fn consume_lines(
         .concat(),
     )?;
     let mut f = BufWriter::new(f);
-    f.write_all(xml_header.as_bytes())?;
+    f.write_all(args.xml_header.as_bytes())?;
     f.write_all("\n".as_bytes())?;
 
-    f.write_all(svg_header.as_bytes())?;
+    f.write_all(args.svg_header.as_bytes())?;
     f.write_all("\n".as_bytes())?;
 
-    f.write_all(group_open.as_bytes())?;
+    f.write_all(args.group_open.as_bytes())?;
     f.write_all("\n".as_bytes())?;
 
-    f.write_all(group_subopen.as_bytes())?;
+    f.write_all(args.group_subopen.as_bytes())?;
     f.write_all("\n".as_bytes())?;
 
     let mut num_written = 0;
 
     loop {
-        let line = lines.next().expect("a").expect("b");
-        if line == group_subclose {
+        let line = args.lines.next().expect("a").expect("b");
+        if line == args.group_subclose {
             // skip group_close matching line too.
-            lines.next().expect("a").expect("b");
+            args.lines.next().expect("a").expect("b");
             break;
         }
         f.write_all(line.as_bytes())?;
         f.write_all("\n".as_bytes())?;
         num_written += 1;
 
-        if let Some(sa) = split {
+        if let Some(sa) = args.split {
             if num_written > *sa {
-                consume_lines(
-                    output_prefix,
-                    xml_header,
-                    svg_header,
-                    name,
-                    group_open,
-                    group_close,
-                    group_subopen,
-                    group_subclose,
-                    lines,
-                    split,
-                    index.map(|x| x + 1),
-                )?;
+                consume_lines(args, index.map(|x| x + 1))?;
                 break;
             }
         }
     }
-    f.write_all(group_subclose.as_bytes())?;
+    f.write_all(args.group_subclose.as_bytes())?;
     f.write_all("\n".as_bytes())?;
 
-    f.write_all(group_close.as_bytes())?;
+    f.write_all(args.group_close.as_bytes())?;
     f.write_all("\n".as_bytes())?;
 
     f.write_all("</svg>".to_string().as_bytes())?;
     f.write_all("\n".as_bytes())?;
     f.flush()?;
-    return Ok(true);
+    Ok(true)
 }
 
 // returns true if successful match; false if otherwise (file is done)
@@ -172,16 +161,18 @@ fn consume_group(
     let group_subclose: String = [subindent.as_str(), "</g>"].concat();
 
     consume_lines(
-        output_prefix,
-        xml_header,
-        svg_header,
-        name.as_str(),
-        group_open.as_str(),
-        group_close.as_str(),
-        group_subopen.as_str(),
-        group_subclose.as_str(),
-        lines,
-        split,
+        &mut ConsumeLinesArguments {
+            output_prefix,
+            xml_header,
+            svg_header,
+            name: name.as_str(),
+            group_open: group_open.as_str(),
+            group_close: group_close.as_str(),
+            group_subopen: group_subopen.as_str(),
+            group_subclose: group_subclose.as_str(),
+            lines,
+            split,
+        },
         index,
     )?;
 
@@ -218,7 +209,7 @@ mod tests {
                 "testdata/expected_out_roads.svg",
             ),
             (
-                [tmp_dir_str.clone(), "_green_0.svg".to_string()].concat(),
+                [tmp_dir_str, "_green_0.svg".to_string()].concat(),
                 "testdata/expected_out_green.svg",
             ),
         ] {
