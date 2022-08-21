@@ -4,7 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+log = "*"
 plotz-geometry = { path = "../plotz-geometry" }
 serde_json = "*"
 string-interner = "*"
 thiserror = "*"
+lazy_static = "*"

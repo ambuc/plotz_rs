@@ -4,12 +4,14 @@
 //! structs.
 
 use {
+    lazy_static,
+    log::info,
     plotz_geometry::{
         point::Pt,
         polygon::{Multiline, MultilineConstructorError, Polygon, PolygonConstructorError},
     },
     serde_json::Value,
-    std::collections::HashMap,
+    std::collections::{HashMap, HashSet},
     string_interner::{symbol::SymbolU32, StringInterner},
     thiserror::Error,
 };
@@ -33,6 +35,58 @@ pub enum GeoJsonConversionError {
     CoordinatesNotArray,
 }
 
+lazy_static::lazy_static! {
+    /// A set of known interesting keys.
+    pub static ref INTERESTING_PROPERTIES: HashSet<&'static str> = {
+        HashSet::from_iter([
+           "administrative",
+           "amenity",
+           "bare_rock",
+           "bay",
+           "beach",
+           "boundary",
+           "box",
+           "brownfield",
+           "cemetery",
+           "coastline",
+           "commercial",
+           "construction",
+           "cycleway",
+           "fitness_station",
+           "footway",
+           "garden",
+           "grass",
+           "greenfield",
+           "highway",
+           "industrial",
+           "landuse",
+           "leisure",
+           "meadow",
+           "natural",
+           "park",
+           "pedestrian",
+           "pitch",
+           "playground",
+           "primary",
+           "primary_link",
+           "rail",
+           "railway",
+           "residential",
+           "sand",
+           "school",
+           "scrub",
+           "secondary",
+           "secondary_link",
+           "service",
+           "steps",
+           "swimming_pool",
+           "tertiary",
+           "tree",
+           "water",
+        ])
+    };
+}
+
 /// Parses a GeoJSON file and returns a list of tagged polygons.
 pub fn parse_geojson(
     interner: &mut StringInterner,
@@ -40,15 +94,35 @@ pub fn parse_geojson(
 ) -> Result<Vec<(Polygon, TagsList)>, GeoJsonConversionError> {
     let mut lines: Vec<(Polygon, TagsList)> = vec![];
 
-    for feature in geo_json["features"].as_array().expect("features not array") {
+    for (idx, feature) in geo_json["features"]
+        .as_array()
+        .expect("features not array")
+        .iter()
+        .enumerate()
+    {
         let mut tags = TagsMap::new();
 
         for (k, v) in feature["properties"].as_object().expect("not obj") {
+            if !INTERESTING_PROPERTIES.contains(k.as_str()) {
+                continue;
+            }
             if let Some(val_str) = v.as_str() {
+                if !INTERESTING_PROPERTIES.contains(val_str) {
+                    continue;
+                }
                 tags.insert(interner.get_or_intern(k), interner.get_or_intern(val_str));
             }
         }
         let tags_list: TagsList = tags.iter().map(|(k, v)| (*k, *v)).collect();
+
+        info!(
+            "parsing feature {:?} with tags {:?}",
+            idx,
+            tags_list
+                .iter()
+                .map(|(k, v)| (interner.resolve(*k).unwrap(), interner.resolve(*v).unwrap()))
+                .collect::<Vec<_>>()
+        );
 
         let geom_type: &str = feature["geometry"]["type"]
             .as_str()

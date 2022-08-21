@@ -88,7 +88,7 @@ lazy_static! {
         // water
         (("natural", "coastline"), Bucket::Area(Area::Water)),
         (("natural", "bay"), Bucket::Area(Area::Water)),
-        (("natural", "Area(Area::Water)"), Bucket::Area(Area::Water)),
+        (("natural", "water"), Bucket::Area(Area::Water)),
         // tree
         (("natural", "tree"), Bucket::Area(Area::Tree)),
         // beach
@@ -102,6 +102,15 @@ lazy_static! {
 #[cfg(test)]
 mod test_super {
     use super::*;
+    use plotz_geojson::INTERESTING_PROPERTIES;
+
+    #[test]
+    fn test_tags_marked_interesting() {
+        for ((k, v), _) in TAGS.iter() {
+            assert!(INTERESTING_PROPERTIES.contains(k), "{}", k);
+            assert!(INTERESTING_PROPERTIES.contains(v), "{}", v);
+        }
+    }
 
     #[test]
     fn test_bucket() {

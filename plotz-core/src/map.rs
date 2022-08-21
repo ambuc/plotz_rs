@@ -177,7 +177,7 @@ impl MapConfig {
         let colorer: DefaultColorer = DefaultColorerBuilder::default();
 
         let mut buckets_histogram = std::collections::HashMap::<Bucket, usize>::new();
-        let mut colors_histogram = std::collections::HashMap::<ColorRGB, usize>::new();
+        let mut _colors_histogram = std::collections::HashMap::<ColorRGB, usize>::new();
 
         let layers: Vec<Vec<AnnotatedPolygon>> = self
             .input_files
@@ -197,7 +197,7 @@ impl MapConfig {
                     *buckets_histogram.entry(bucket).or_default() += 1;
 
                     let color = colorer.color(bucket).ok()?;
-                    *colors_histogram.entry(color).or_default() += 1;
+                    *_colors_histogram.entry(color).or_default() += 1;
 
                     Some(AnnotatedPolygon {
                         polygon: polygon.clone(),
@@ -209,6 +209,7 @@ impl MapConfig {
                 .collect::<Vec<_>>())
             })
             .collect::<Result<_, MapError>>()?;
+
         info!("Got buckets {:?}", buckets_histogram);
 
         Ok(Map {
