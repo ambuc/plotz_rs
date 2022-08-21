@@ -39,12 +39,14 @@ lazy_static::lazy_static! {
         HashSet::from_iter([
            "administrative",
            "amenity",
+           "apartments",
            "bare_rock",
            "bay",
            "beach",
            "boundary",
            "box",
            "brownfield",
+           "building",
            "cemetery",
            "coastline",
            "commercial",
@@ -52,6 +54,7 @@ lazy_static::lazy_static! {
            "cycleway",
            "fitness_station",
            "footway",
+           "garages",
            "garden",
            "grass",
            "greenfield",
@@ -81,6 +84,7 @@ lazy_static::lazy_static! {
            "tertiary",
            "tree",
            "water",
+           "yes",
         ])
     };
 }
@@ -123,30 +127,31 @@ pub fn parse_geojson(
 
         let coords = &feature["geometry"]["coordinates"];
 
-        info!(
-            "parsing feature {:?} \n\tgeom: {}\n\ttags {:?}",
-            idx,
-            geom_type,
-            tags.iter()
-                .map(|(k, v)| (interner.resolve(*k).unwrap(), interner.resolve(*v).unwrap()))
-                .collect::<Vec<_>>(),
-        );
-
-        for polygon in match geom_type {
-            "LineString" => parse_to_linestring(coords)?,
-
-            //
-            "MultiLineString" => parse_to_multilinestring(coords)?,
-            //
-            "Polygon" => parse_to_polygon(coords)?,
-            "MultiPolygon" => parse_to_multipolygon(coords)?,
-            "Point" => vec![],
+        if let Ok(polygons) = match geom_type {
+            "LineString" => parse_to_linestring(coords),
+            "MultiLineString" => parse_to_multilinestring(coords),
+            "Polygon" => parse_to_polygon(coords),
+            "MultiPolygon" => parse_to_multipolygon(coords),
+            "Point" => Ok(vec![]),
             other => {
                 unimplemented!("other: {:?}", other);
             }
         } {
-            info!("found polygon: {:?}", polygon);
-            lines.push((polygon, tags.clone()));
+            for polygon in polygons {
+                info!(
+                    "#{:?} ({:10}, {:2}pts) w/ {:?}",
+                    idx,
+                    geom_type,
+                    polygon.pts.len(),
+                    tags.iter()
+                        .map(|(k, v)| (
+                            interner.resolve(*k).unwrap(),
+                            interner.resolve(*v).unwrap()
+                        ))
+                        .collect::<Vec<_>>(),
+                );
+                lines.push((polygon, tags.clone()));
+            }
         }
     }
     Ok(lines)
