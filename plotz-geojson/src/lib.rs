@@ -135,7 +135,10 @@ pub fn parse_geojson(
 
         for polygon in match geom_type {
             "LineString" => parse_to_linestring(coords)?,
+
+            //
             "MultiLineString" => parse_to_multilinestring(coords)?,
+            //
             "Polygon" => parse_to_polygon(coords)?,
             "MultiPolygon" => parse_to_multipolygon(coords)?,
             "Point" => vec![],
@@ -143,6 +146,7 @@ pub fn parse_geojson(
                 unimplemented!("other: {:?}", other);
             }
         } {
+            info!("found polygon: {:?}", polygon);
             lines.push((polygon, tags.clone()));
         }
     }
@@ -150,83 +154,48 @@ pub fn parse_geojson(
 }
 
 fn parse_to_linestring<'a>(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConversionError> {
-    let mut lines: Vec<_> = vec![];
-    match coordinates {
-        Value::Array(pts) => {
-            if let Ok(ml) = Multiline(pts.iter().map(|p| {
-                Pt(
-                    p[0].as_f64().expect("value not f64"),
-                    p[1].as_f64().expect("value not f64"),
-                )
-            })) {
-                lines.push(ml);
-            }
-        }
-        _ => {
-            unimplemented!("?");
-        }
-    }
-    Ok(lines)
+    Ok(vec![Multiline(
+        coordinates.as_array().expect("not array").iter().map(|p| {
+            Pt(
+                p[0].as_f64().expect("value not f64"),
+                p[1].as_f64().expect("value not f64"),
+            )
+        }),
+    )?])
 }
 
 fn parse_to_multilinestring<'a>(
     coordinates: &Value,
 ) -> Result<Vec<Polygon>, GeoJsonConversionError> {
     let mut lines: Vec<Polygon> = vec![];
-    match coordinates {
-        Value::Array(linestrings) => {
-            for linestring in linestrings.iter() {
-                lines.append(&mut parse_to_linestring(linestring)?);
-            }
-        }
-        _ => unimplemented!("?"),
+    for linestring in coordinates.as_array().expect("not array").iter() {
+        lines.append(&mut parse_to_linestring(linestring)?);
     }
     Ok(lines)
 }
 
 fn parse_to_multipolygon<'a>(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConversionError> {
     let mut lines: Vec<_> = vec![];
-    match coordinates {
-        Value::Array(coordinates_list) => {
-            for coordinates in coordinates_list {
-                lines.extend(parse_to_polygon(coordinates)?);
-            }
-        }
-        _ => {
-            unimplemented!("?");
-        }
+    for coordinates in coordinates.as_array().expect("not array") {
+        lines.extend(parse_to_polygon(coordinates)?);
     }
     Ok(lines)
 }
 
 fn parse_to_polygon<'a>(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConversionError> {
-    let mut lines: Vec<_> = vec![];
-    match coordinates {
-        Value::Array(points_lists) => {
-            for points_list in points_lists {
-                match points_list {
-                    Value::Array(pts) => {
-                        if let Ok(p) = Polygon(pts.iter().map(|p| {
-                            Pt(
-                                p[0].as_f64().expect("value not f64"),
-                                p[1].as_f64().expect("value not f64"),
-                            )
-                        })) {
-                            lines.push(p);
-                        }
-                    }
-                    _ => {
-                        unimplemented!("?");
-                    }
-                }
-            }
-        }
-        _ => {
-            unimplemented!("?");
-        }
-    }
-
-    Ok(lines)
+    Ok(coordinates
+        .as_array()
+        .expect("not array")
+        .iter()
+        .map(|points_list| {
+            Polygon(points_list.as_array().expect("not array").iter().map(|p| {
+                Pt(
+                    p[0].as_f64().expect("value not f64"),
+                    p[1].as_f64().expect("value not f64"),
+                )
+            }))
+        })
+        .collect::<Result<_, _>>()?)
 }
 
 #[cfg(test)]
@@ -322,7 +291,6 @@ mod tests {
             &mut interner,
             polygons[0].1.clone(),
             [
-                ("@id", "relation/2389611"),
                 ("natural", "water"),
                 ("water", "river"),
                 ("type", "multipolygon"),
@@ -337,8 +305,6 @@ mod tests {
             &mut interner,
             polygons[1].1.clone(),
             [
-                ("@id", "way/5668999"),
-                ("cycleway", "shared_lane"),
                 ("highway", "residential"),
                 ("lanes", "1"),
                 ("maxspeed", "25 mph"),
