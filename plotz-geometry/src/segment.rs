@@ -55,7 +55,7 @@ impl Intersection {
 }
 
 /// An enum representing whether an intersection occurred and where.
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub enum IntersectionOutcome {
     /// Two line segments intersect because they are the same.
     LineSegmentsAreTheSame,

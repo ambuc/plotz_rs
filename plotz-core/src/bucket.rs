@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub enum Area {
     Beach,
     Building,
@@ -11,7 +11,7 @@ pub enum Area {
     Water,
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub enum Path {
     Highway1,
     Highway2,
@@ -23,7 +23,7 @@ pub enum Path {
     Boundary,
 }
 
-#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub enum Bucket {
     Area(Area),
     Path(Path),

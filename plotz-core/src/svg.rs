@@ -1,8 +1,10 @@
 //! SVG plotting utilities.
 //!
 use crate::colored_polygon::ColoredPolygon;
+use log::info;
 use plotz_color::BLACK;
 use plotz_geometry::polygon::PolygonKind;
+use std::fmt::Debug;
 use thiserror::Error;
 
 /// The size of a canvas.
@@ -53,23 +55,27 @@ fn write_polygon_to_context(
 }
 
 /// Writes a single iterator of polygons to an SVG of some size at some path.
-pub fn write_layer_to_svg<P: AsRef<std::path::Path>>(
+pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     path: P,
-    polygons: impl IntoIterator<Item = ColoredPolygon>,
+    polygons: impl IntoIterator<Item = &'a ColoredPolygon>,
 ) -> Result<(), SvgWriteError> {
+    let debug_path = format!("{:?}", &path);
     let svg_surface = cairo::SvgSurface::new(size.width as f64, size.height as f64, Some(path))?;
     let mut ctx = cairo::Context::new(&svg_surface)?;
+    let mut c = 0_usize;
     for p in polygons {
-        write_polygon_to_context(&p, &mut ctx)?;
+        write_polygon_to_context(p, &mut ctx)?;
+        c += 1;
     }
+    info!("Wrote {:?} polygons to {:?}", c, debug_path);
     Ok(())
 }
 
-fn _write_layers_to_svgs<P: AsRef<std::path::Path>>(
+fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     paths: impl IntoIterator<Item = P>,
-    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = ColoredPolygon>>,
+    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a ColoredPolygon>>,
 ) -> Result<(), SvgWriteError> {
     for (path, polygons) in paths.into_iter().zip(polygon_layers.into_iter()) {
         write_layer_to_svg(size, path, polygons)?;
@@ -117,7 +123,7 @@ mod test_super {
                 height: 1024,
             },
             path.to_str().unwrap(),
-            vec![ColoredPolygon {
+            vec![&ColoredPolygon {
                 color: BLACK,
                 polygon: Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap(),
             }],
@@ -143,11 +149,11 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![
-                ColoredPolygon {
+                &ColoredPolygon {
                     color: BLACK,
                     polygon: Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap(),
                 },
-                ColoredPolygon {
+                &ColoredPolygon {
                     color: BLACK,
                     polygon: Polygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)]).unwrap(),
                 },

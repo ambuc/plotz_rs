@@ -51,7 +51,7 @@ pub enum MapError {
 /// A polygon with some annotations (bucket, color, tags, etc.).
 pub struct AnnotatedPolygon {
     polygon: Polygon,
-    _bucket: Bucket,
+    bucket: Bucket,
     color: ColorRGB,
     _tags: Vec<(SymbolU32, SymbolU32)>,
 }
@@ -73,23 +73,24 @@ fn latitude_to_y(latitude: f64) -> f64 {
 /// An unadjusted set of annotated polygons, ready to be printed to SVG.
 pub struct Map {
     config: MapConfig,
-    layers: Vec<Vec<AnnotatedPolygon>>,
+    layers: Vec<(Bucket, Vec<ColoredPolygon>)>,
 }
 impl Map {
     fn get_bbox(&self) -> Result<Polygon, MapError> {
         Ok(streaming_bbox(
             self.layers
                 .iter()
-                .flatten()
-                .map(|AnnotatedPolygon { polygon, .. }| polygon),
+                .flat_map(|(_, vec)| vec)
+                .map(|ColoredPolygon { polygon, .. }| polygon),
         )?)
     }
 
     fn apply(&mut self, f: &dyn Fn(&mut Polygon)) {
-        self.layers
-            .iter_mut()
-            .flatten()
-            .for_each(|ap| f(&mut ap.polygon));
+        for (_, vec) in self.layers.iter_mut() {
+            for p in vec.iter_mut() {
+                f(&mut p.polygon);
+            }
+        }
     }
 
     /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
@@ -115,18 +116,26 @@ impl Map {
             * 0.73; // why 0.73?
         self.apply(&|p| *p *= scaling_factor);
 
-        for (idx, layer) in self.layers.into_iter().enumerate() {
-            let path = self.config.output_directory.join(format!("{}.svg", idx));
-            info!(
-                "Writing layer #{:?} ({:?} polygons) to {:?}",
-                idx,
-                layer.len(),
-                path
-            );
+        // write layer 0 with all.
+        let path_0 = self.config.output_directory.join("0.svg");
+        write_layer_to_svg(
+            /*width,height=*/ self.config.size,
+            /*path=*/ path_0,
+            /*polygons=*/
+            self.layers.iter().flat_map(|(_bucket, vec)| vec),
+        )?;
+
+        // write each layer individually.
+        for (idx, (bucket, polygons)) in self.layers.into_iter().enumerate() {
+            info!("Writing {:?}", bucket);
+            let path = self
+                .config
+                .output_directory
+                .join(format!("{}.svg", idx + 1));
             write_layer_to_svg(
                 /*width,height=*/ self.config.size,
                 /*path=*/ path,
-                /*polygons=*/ layer.into_iter().map(|ap| ap.to_colored_polygon()),
+                /*polygons=*/ &polygons,
             )?;
         }
 
@@ -178,10 +187,7 @@ impl MapConfig {
         let bucketer = DefaultBucketer::new(&mut interner);
         let colorer: DefaultColorer = DefaultColorerBuilder::default();
 
-        let mut buckets_histogram = std::collections::HashMap::<Bucket, usize>::new();
-        let mut _colors_histogram = std::collections::HashMap::<ColorRGB, usize>::new();
-
-        let layer: Vec<AnnotatedPolygon> = self
+        let layers = self
             .input_files
             .iter()
             .flat_map(|file| {
@@ -195,39 +201,26 @@ impl MapConfig {
                     let bucket = tags
                         .iter()
                         .map(|t| bucketer.bucket(*t))
-                        .filter_map(|r| r.ok())
-                        .next()?;
-                    *buckets_histogram.entry(bucket).or_default() += 1;
-
-                    let color = colorer.color(bucket).expect("could not color");
-                    *_colors_histogram.entry(color).or_default() += 1;
+                        .find_map(|r| r.ok())?;
 
                     Some(AnnotatedPolygon {
                         polygon: polygon.clone(),
-                        _bucket: bucket,
-                        color,
+                        bucket,
+                        color: colorer.color(bucket).expect("could not color"),
                         _tags: tags.clone(),
                     })
                 })
                 .collect::<Vec<_>>()
             })
-            .collect();
-
-        let buckets: Vec<(Bucket, Vec<AnnotatedPolygon>)> = layer
+            .sorted_by(|ap_1, ap_2| std::cmp::Ord::cmp(&ap_1.bucket, &ap_2.bucket))
+            .group_by(|ap| ap.bucket)
             .into_iter()
-            .group_by(|ap| ap._bucket)
-            .into_iter()
-            .map(|(k, v)| (k, v.collect()))
-            .collect();
-
-        info!("Got buckets {:?}", buckets_histogram);
+            .map(|(k, v)| (k, v.map(|ap| ap.to_colored_polygon()).collect()))
+            .collect::<Vec<(Bucket, Vec<ColoredPolygon>)>>();
 
         Ok(Map {
             config: self,
-            layers: buckets
-                .into_iter()
-                .map(|(_k, v)| v)
-                .collect::<Vec<Vec<AnnotatedPolygon>>>(),
+            layers,
         })
     }
 }
