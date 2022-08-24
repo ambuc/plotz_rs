@@ -62,7 +62,7 @@ pub fn interpolate_2d_checked(a: Pt, b: Pt, i: Pt) -> Result<f64, Interpolation2
         (false, false) => {
             let v_x = interpolate_checked(a.x.0, b.x.0, i.x.0)?;
             let v_y = interpolate_checked(a.y.0, b.y.0, i.y.0)?;
-            match approx_eq!(f64, v_x, v_y) {
+            match approx_eq!(f64, v_x, v_y, epsilon = 0.0003) {
                 true => Ok(v_x),
                 false => Err(Interpolation2dError::PointNotOnLine),
             }

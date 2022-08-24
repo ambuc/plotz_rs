@@ -427,7 +427,13 @@ impl Polygon {
             isxns.sort_by(|i, j| i.percent_along_inner.cmp(&j.percent_along_inner));
             let (_, vs) = isxns.into_iter().partition(|i| {
                 i.percent_along_inner.0
-                    <= interpolate::interpolate_2d_checked(inner.i, inner.f, curr_pt).unwrap()
+                    <= interpolate::interpolate_2d_checked(inner.i, inner.f, curr_pt)
+                        .unwrap_or_else(|_| {
+                            panic!(
+                                "interpolate failed: a: {:?}, b: {:?}, i: {:?}",
+                                inner.i, inner.f, curr_pt,
+                            )
+                        })
             });
             isxns = vs;
 

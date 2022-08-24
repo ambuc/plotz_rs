@@ -78,15 +78,15 @@ lazy_static! {
         (
             Bucket::Area(Area::Park),
             ShadeConfig {
-                gap: 1.0,
-                slope: 1.0
+                gap: 5.0,
+                slope: 10.0
             }
         ),
         (
             Bucket::Area(Area::Water),
             ShadeConfig {
-                gap: 1.0,
-                slope: -1.0
+                gap: 5.0,
+                slope: -10.0
             }
         ),
     ].into();
@@ -118,26 +118,31 @@ impl Map {
         }
     }
 
-    // fn apply_shading(&mut self) {
-    //     for (bucket, layers) in self.layers.iter_mut() {
-    //         //
-    //         if let Some(shade_config) = SHADINGS.get(&bucket) {
-    //             //
-    //             *layers = layers
-    //                 .iter()
-    //                 .flat_map(|colored_polygon| {
-    //                     shade_polygon(shade_config, &colored_polygon.polygon)
-    //                         .expect("bad shade")
-    //                         .into_iter()
-    //                         .map(|p| ColoredPolygon {
-    //                             polygon: p,
-    //                             color: colored_polygon.color,
-    //                         })
-    //                 })
-    //                 .collect();
-    //         }
-    //     }
-    // }
+    fn apply_shading(&mut self) {
+        for (bucket, layers) in self.layers.iter_mut() {
+            if let Some(shade_config) = SHADINGS.get(bucket) {
+                // keep the frame, add the crosshatchings.
+                let crosshatchings: Vec<ColoredObj> = layers
+                    .iter()
+                    .filter_map(|co| match &co.obj {
+                        Obj::Polygon(p) => Some(
+                            shade_polygon(shade_config, p)
+                                .expect("bad shade")
+                                .into_iter()
+                                .map(|s| ColoredObj {
+                                    obj: Obj::Segment(s),
+                                    color: co.color,
+                                })
+                                .collect::<Vec<_>>(),
+                        ),
+                        _ => None,
+                    })
+                    .flatten()
+                    .collect();
+                layers.extend(crosshatchings);
+            }
+        }
+    }
 
     /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
     /// file(s).
@@ -161,6 +166,8 @@ impl Map {
             * self.config.size.max() as f64
             * 0.73; // why 0.73?
         self.apply_polygons(&|p| *p *= scaling_factor);
+
+        self.apply_shading();
 
         // write layer 0 with all.
         info!("Writing all.");
