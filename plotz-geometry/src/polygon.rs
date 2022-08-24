@@ -1,4 +1,4 @@
-//! A 2D polygon (or multiline).
+//! A 2D polygon (or multi&line).
 
 use {
     crate::{
@@ -374,7 +374,7 @@ impl Polygon {
             theta += _abp(other, i, j)
         }
 
-        Ok(match approx_eq!(f64, theta, 0_f64) {
+        Ok(match approx_eq!(f64, theta, 0_f64, epsilon = 0.00001) {
             true => PointLoc::Outside,
             false => PointLoc::Inside,
         })
@@ -945,6 +945,38 @@ mod tests {
         for p in [a, c, g, i] {
             assert_eq!(frame3.contains_pt(&p).unwrap(), PointLoc::Outside);
         }
+    }
+
+    #[test]
+    fn test_contains_pt_regression() {
+        let frame = Polygon([
+            Pt(228.17, 202.35),
+            Pt(231.21, 212.64),
+            Pt(232.45, 228.76),
+            Pt(231.67, 257.09),
+            Pt(230.63, 265.17),
+            Pt(263.66, 335.37),
+            Pt(261.85, 336.27),
+            Pt(295.65, 404.87),
+            Pt(298.24, 409.14),
+            Pt(302.39, 413.67),
+            Pt(305.92, 412.20),
+            Pt(309.33, 417.90),
+            Pt(311.03, 417.06),
+            Pt(312.99, 420.06),
+            Pt(318.55, 420.99),
+            Pt(322.66, 420.45),
+            Pt(325.57, 419.13),
+            Pt(343.70, 406.83),
+            Pt(336.17, 404.87),
+            Pt(230.61, 185.93),
+            Pt(228.83, 189.47),
+            Pt(227.19, 195.84),
+            Pt(228.17, 202.35),
+        ])
+        .unwrap();
+        let suspicious_pt = Pt(228, 400);
+        assert_eq!(frame.contains_pt(&suspicious_pt), Ok(PointLoc::Outside));
     }
 
     #[test]
