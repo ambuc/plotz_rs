@@ -20,10 +20,10 @@ members = [
 
 [dependencies]
 argh = "*"
-plotz-core = { path = "plotz-core" }
 glob = "*"
-thiserror = "*"
+plotz-core = { path = "plotz-core" }
 pretty_env_logger = "*"
+thiserror = "*"
 
 [dev-dependencies]
 tempdir = "*"

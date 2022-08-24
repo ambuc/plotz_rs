@@ -172,6 +172,8 @@ impl MapConfig {
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
     /// unadjusted Map instance.
     pub fn make_map(self) -> Result<Map, MapError> {
+        use itertools::Itertools;
+
         let mut interner = StringInterner::new();
         let bucketer = DefaultBucketer::new(&mut interner);
         let colorer: DefaultColorer = DefaultColorerBuilder::default();
@@ -179,14 +181,15 @@ impl MapConfig {
         let mut buckets_histogram = std::collections::HashMap::<Bucket, usize>::new();
         let mut _colors_histogram = std::collections::HashMap::<ColorRGB, usize>::new();
 
-        let layers: Vec<Vec<AnnotatedPolygon>> = self
+        let layer: Vec<AnnotatedPolygon> = self
             .input_files
             .iter()
-            .map(|file| {
-                Ok(plotz_geojson::parse_geojson(
+            .flat_map(|file| {
+                plotz_geojson::parse_geojson(
                     &mut interner,
-                    serde_json::from_reader(BufReader::new(file))?,
-                )?
+                    serde_json::from_reader(BufReader::new(file)).expect("read"),
+                )
+                .expect("parse")
                 .iter()
                 .filter_map(|(polygon, tags)| {
                     let bucket = tags
@@ -196,7 +199,7 @@ impl MapConfig {
                         .next()?;
                     *buckets_histogram.entry(bucket).or_default() += 1;
 
-                    let color = colorer.color(bucket).ok()?;
+                    let color = colorer.color(bucket).expect("could not color");
                     *_colors_histogram.entry(color).or_default() += 1;
 
                     Some(AnnotatedPolygon {
@@ -206,15 +209,25 @@ impl MapConfig {
                         _tags: tags.clone(),
                     })
                 })
-                .collect::<Vec<_>>())
+                .collect::<Vec<_>>()
             })
-            .collect::<Result<_, MapError>>()?;
+            .collect();
+
+        let buckets: Vec<(Bucket, Vec<AnnotatedPolygon>)> = layer
+            .into_iter()
+            .group_by(|ap| ap._bucket)
+            .into_iter()
+            .map(|(k, v)| (k, v.collect()))
+            .collect();
 
         info!("Got buckets {:?}", buckets_histogram);
 
         Ok(Map {
             config: self,
-            layers,
+            layers: buckets
+                .into_iter()
+                .map(|(_k, v)| v)
+                .collect::<Vec<Vec<AnnotatedPolygon>>>(),
         })
     }
 }

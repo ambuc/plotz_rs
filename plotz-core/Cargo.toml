@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 cairo-rs = { version = "0.14.9", features = ["png", "svg"] }
 float-ord = "*"
+itertools = "*"
 lazy_static = "*"
 log = "*"
 plotz-color = { path = "../plotz-color" }
