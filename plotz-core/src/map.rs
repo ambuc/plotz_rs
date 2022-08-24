@@ -1,20 +1,22 @@
 //! The core logic of plotz-core, including Map and MapConfig.
 
 use crate::{
-    bucket::Bucket,
+    bucket::{Area, Bucket},
     bucketer::{Bucketer, DefaultBucketer},
-    colored_polygon::ColoredPolygon,
+    colored_polygon::{self, ColoredPolygon},
     colorer::{Colorer, DefaultColorer},
     colorer_builder::DefaultColorerBuilder,
     svg::{write_layer_to_svg, Size, SvgWriteError},
 };
 use float_ord::FloatOrd;
+use lazy_static::lazy_static;
 use log::info;
 use plotz_color::ColorRGB;
 use plotz_geojson::GeoJsonConversionError;
 use plotz_geometry::{
     bounded::{streaming_bbox, Bounded, BoundingBoxError},
     polygon::Polygon,
+    shading::{shade_polygon, ShadeConfig},
 };
 use std::{
     fs::File,
@@ -70,6 +72,26 @@ fn latitude_to_y(latitude: f64) -> f64 {
     (((latitude + 90.0) / 360.0 * PI).tan()).ln() / PI * 180.0
 }
 
+lazy_static! {
+    /// Which areas get shaded, and how much.
+    pub static ref SHADINGS: std::collections::HashMap<Bucket, ShadeConfig> = [
+        (
+            Bucket::Area(Area::Park),
+            ShadeConfig {
+                gap: 1.0,
+                slope: 1.0
+            }
+        ),
+        (
+            Bucket::Area(Area::Water),
+            ShadeConfig {
+                gap: 1.0,
+                slope: -1.0
+            }
+        ),
+    ].into();
+}
+
 /// An unadjusted set of annotated polygons, ready to be printed to SVG.
 pub struct Map {
     config: MapConfig,
@@ -92,6 +114,27 @@ impl Map {
             }
         }
     }
+
+    // fn apply_shading(&mut self) {
+    //     for (bucket, layers) in self.layers.iter_mut() {
+    //         //
+    //         if let Some(shade_config) = SHADINGS.get(&bucket) {
+    //             //
+    //             *layers = layers
+    //                 .iter()
+    //                 .flat_map(|colored_polygon| {
+    //                     shade_polygon(shade_config, &colored_polygon.polygon)
+    //                         .expect("bad shade")
+    //                         .into_iter()
+    //                         .map(|p| ColoredPolygon {
+    //                             polygon: p,
+    //                             color: colored_polygon.color,
+    //                         })
+    //                 })
+    //                 .collect();
+    //         }
+    //     }
+    // }
 
     /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
     /// file(s).
@@ -117,25 +160,22 @@ impl Map {
         self.apply(&|p| *p *= scaling_factor);
 
         // write layer 0 with all.
-        let path_0 = self.config.output_directory.join("0.svg");
+        info!("Writing all.");
         write_layer_to_svg(
-            /*width,height=*/ self.config.size,
-            /*path=*/ path_0,
-            /*polygons=*/
+            self.config.size,
+            self.config.output_directory.join("0.svg"),
             self.layers.iter().flat_map(|(_bucket, vec)| vec),
         )?;
 
         // write each layer individually.
         for (idx, (bucket, polygons)) in self.layers.into_iter().enumerate() {
             info!("Writing {:?}", bucket);
-            let path = self
-                .config
-                .output_directory
-                .join(format!("{}.svg", idx + 1));
             write_layer_to_svg(
-                /*width,height=*/ self.config.size,
-                /*path=*/ path,
-                /*polygons=*/ &polygons,
+                self.config.size,
+                self.config
+                    .output_directory
+                    .join(format!("{}.svg", idx + 1)),
+                &polygons,
             )?;
         }
 

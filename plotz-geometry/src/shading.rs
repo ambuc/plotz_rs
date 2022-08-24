@@ -20,11 +20,18 @@ pub enum ShadePolygonError {
     CropError(#[from] CropToPolygonError),
 }
 
-// Gap controls how far to step between crosshatched lines
-// Slope controls the angle of the lines.
-fn _shade_polygon(
-    gap: f64,
-    slope: f64,
+/// Config for controlling crosshatching.
+pub struct ShadeConfig {
+    /// The gap between lines
+    pub gap: f64,
+    /// The slope of a line
+    pub slope: f64,
+}
+
+/// Gap controls how far to step between crosshatched lines
+/// Slope controls the angle of the lines.
+pub fn shade_polygon(
+    config: &ShadeConfig,
     polygon: &Polygon,
 ) -> Result<Vec<Segment>, ShadePolygonError> {
     if polygon.kind == PolygonKind::Open {
@@ -35,7 +42,7 @@ fn _shade_polygon(
     let bbox = polygon.bbox()?;
     let mut segments: Vec<Segment> = vec![];
 
-    let slope_height = bbox.width() / slope;
+    let slope_height = bbox.width() / config.slope;
     let mut i: Pt = bbox.bl_bound() - Pt(0.0, slope_height) - epsilon;
     let mut f: Pt = bbox.br_bound();
 
@@ -43,8 +50,8 @@ fn _shade_polygon(
         let full_stroke = Segment(i, f);
         let cropped_strokes = polygon.as_frame_to_segment(&full_stroke)?;
         segments.extend(cropped_strokes.iter());
-        i.y.0 += gap;
-        f.y.0 += gap;
+        i.y.0 += config.gap;
+        f.y.0 += config.gap;
     }
     Ok(segments)
 }
@@ -84,7 +91,14 @@ mod tests {
         // | /   | .   |
         // /-----+-----+
         approx_eq_segments(
-            _shade_polygon(/*gap */ 1.0, /*slope=*/ 1.0, &frame).unwrap(),
+            shade_polygon(
+                &ShadeConfig {
+                    gap: 1.0,
+                    slope: 1.0,
+                },
+                &frame,
+            )
+            .unwrap(),
             vec![Segment(Pt(0, 0), Pt(1, 1))],
         );
     }
@@ -101,7 +115,14 @@ mod tests {
         // | /   | /   |
         // /-----/-----+
         approx_eq_segments(
-            _shade_polygon(/*gap */ 0.5, /*slope=*/ 1.0, &frame).unwrap(),
+            shade_polygon(
+                &ShadeConfig {
+                    gap: 0.5,
+                    slope: 1.0,
+                },
+                &frame,
+            )
+            .unwrap(),
             vec![
                 Segment(Pt(0.5, 0.0), Pt(1.0, 0.5)),
                 Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)),
@@ -128,7 +149,14 @@ mod tests {
         // | /   | /   |
         // /-----/-----+
         approx_eq_segments(
-            _shade_polygon(/*gap */ 0.5, /*slope=*/ 0.5, &frame).unwrap(),
+            shade_polygon(
+                &ShadeConfig {
+                    gap: 0.5,
+                    slope: 0.5,
+                },
+                &frame,
+            )
+            .unwrap(),
             vec![
                 Segment(Pt(0.5, 0.0), Pt(1.0, 0.25)),
                 Segment(Pt(0.0, 0.0), Pt(1.0, 0.5)),
