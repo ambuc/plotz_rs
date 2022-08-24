@@ -1,6 +1,6 @@
 //! SVG plotting utilities.
 //!
-use crate::colored_polygon::ColoredPolygon;
+use crate::colored_obj::{ColoredObj, Obj};
 use log::info;
 use plotz_color::BLACK;
 use plotz_geometry::polygon::PolygonKind;
@@ -34,21 +34,31 @@ pub enum SvgWriteError {
     CairoError(#[from] cairo::Error),
 }
 
-fn write_polygon_to_context(
-    p: &ColoredPolygon,
+fn write_obj_to_context(
+    co: &ColoredObj,
     context: &mut cairo::Context,
 ) -> Result<(), SvgWriteError> {
-    if p.polygon.pts.is_empty() {
+    if co.obj.is_empty() {
         return Ok(());
     }
 
-    for p in &p.polygon.pts {
-        context.line_to(p.x.0, p.y.0);
+    match &co.obj {
+        Obj::Polygon(polygon) => {
+            //
+            for p in &polygon.pts {
+                context.line_to(p.x.0, p.y.0);
+            }
+            if polygon.kind == PolygonKind::Closed {
+                context.line_to(polygon.pts[0].x.0, polygon.pts[0].y.0);
+            }
+        }
+        Obj::Segment(segment) => {
+            context.line_to(segment.i.x.0, segment.i.y.0);
+            context.line_to(segment.f.x.0, segment.f.y.0);
+        }
     }
-    if p.polygon.kind == PolygonKind::Closed {
-        context.line_to(p.polygon.pts[0].x.0, p.polygon.pts[0].y.0);
-    }
-    context.set_source_rgb(p.color.r, p.color.g, p.color.b);
+
+    context.set_source_rgb(co.color.r, co.color.g, co.color.b);
     context.stroke()?;
     context.set_source_rgb(BLACK.r, BLACK.g, BLACK.b);
     Ok(())
@@ -58,14 +68,14 @@ fn write_polygon_to_context(
 pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     path: P,
-    polygons: impl IntoIterator<Item = &'a ColoredPolygon>,
+    polygons: impl IntoIterator<Item = &'a ColoredObj>,
 ) -> Result<(), SvgWriteError> {
     let debug_path = format!("{:?}", &path);
     let svg_surface = cairo::SvgSurface::new(size.width as f64, size.height as f64, Some(path))?;
     let mut ctx = cairo::Context::new(&svg_surface)?;
     let mut c = 0_usize;
     for p in polygons {
-        write_polygon_to_context(p, &mut ctx)?;
+        write_obj_to_context(p, &mut ctx)?;
         c += 1;
     }
     info!("Wrote {:?} polygons to {:?}", c, debug_path);
@@ -75,7 +85,7 @@ pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
 fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     paths: impl IntoIterator<Item = P>,
-    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a ColoredPolygon>>,
+    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a ColoredObj>>,
 ) -> Result<(), SvgWriteError> {
     for (path, polygons) in paths.into_iter().zip(polygon_layers.into_iter()) {
         write_layer_to_svg(size, path, polygons)?;
@@ -86,7 +96,7 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use crate::colored_polygon::ColoredPolygon;
+    use crate::colored_obj::ColoredObj;
     use plotz_geometry::{point::Pt, polygon::Polygon};
     use tempdir::TempDir;
 
@@ -123,9 +133,9 @@ mod test_super {
                 height: 1024,
             },
             path.to_str().unwrap(),
-            vec![&ColoredPolygon {
+            vec![&ColoredObj {
                 color: BLACK,
-                polygon: Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap(),
+                obj: Obj::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
             }],
         )
         .unwrap();
@@ -149,13 +159,13 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![
-                &ColoredPolygon {
+                &ColoredObj {
                     color: BLACK,
-                    polygon: Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap(),
+                    obj: Obj::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
                 },
-                &ColoredPolygon {
+                &ColoredObj {
                     color: BLACK,
-                    polygon: Polygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)]).unwrap(),
+                    obj: Obj::Polygon(Polygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)]).unwrap()),
                 },
             ],
         )

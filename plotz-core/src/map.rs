@@ -3,7 +3,7 @@
 use crate::{
     bucket::{Area, Bucket},
     bucketer::{Bucketer, DefaultBucketer},
-    colored_polygon::{self, ColoredPolygon},
+    colored_obj::{ColoredObj, Obj},
     colorer::{Colorer, DefaultColorer},
     colorer_builder::DefaultColorerBuilder,
     svg::{write_layer_to_svg, Size, SvgWriteError},
@@ -59,9 +59,9 @@ pub struct AnnotatedPolygon {
 }
 impl AnnotatedPolygon {
     /// Consumes an AnnotatedPolygon and casts down to a ColoredPolygon.
-    pub fn to_colored_polygon(self) -> ColoredPolygon {
-        ColoredPolygon {
-            polygon: self.polygon,
+    pub fn to_colored_polygon(self) -> ColoredObj {
+        ColoredObj {
+            obj: Obj::Polygon(self.polygon),
             color: self.color,
         }
     }
@@ -95,7 +95,7 @@ lazy_static! {
 /// An unadjusted set of annotated polygons, ready to be printed to SVG.
 pub struct Map {
     config: MapConfig,
-    layers: Vec<(Bucket, Vec<ColoredPolygon>)>,
+    layers: Vec<(Bucket, Vec<ColoredObj>)>,
 }
 impl Map {
     fn get_bbox(&self) -> Result<Polygon, MapError> {
@@ -103,14 +103,17 @@ impl Map {
             self.layers
                 .iter()
                 .flat_map(|(_, vec)| vec)
-                .map(|ColoredPolygon { polygon, .. }| polygon),
+                .map(|ColoredObj { obj, .. }| obj),
         )?)
     }
 
-    fn apply(&mut self, f: &dyn Fn(&mut Polygon)) {
+    // NB: only applies transformation to polygons.
+    fn apply_polygons(&mut self, f: &dyn Fn(&mut Polygon)) {
         for (_, vec) in self.layers.iter_mut() {
             for p in vec.iter_mut() {
-                f(&mut p.polygon);
+                if let Obj::Polygon(polygon) = &mut p.obj {
+                    f(polygon);
+                }
             }
         }
     }
@@ -142,22 +145,22 @@ impl Map {
         info!("Rendering map.");
         // first compute current bbox and shift everything positive.
 
-        self.apply(&|p| p.flip_y());
-        self.apply(&|p| {
+        self.apply_polygons(&|p| p.flip_y());
+        self.apply_polygons(&|p| {
             p.pts
                 .iter_mut()
                 .for_each(|pt| pt.y.0 = latitude_to_y(pt.y.0))
         });
 
         let shift = self.get_bbox()?.bl_bound();
-        self.apply(&|p| *p -= shift);
+        self.apply_polygons(&|p| *p -= shift);
 
         let bbox = self.get_bbox()?;
         let scaling_factor = 1.0
             / std::cmp::max(FloatOrd(bbox.width().abs()), FloatOrd(bbox.height().abs())).0
             * self.config.size.max() as f64
             * 0.73; // why 0.73?
-        self.apply(&|p| *p *= scaling_factor);
+        self.apply_polygons(&|p| *p *= scaling_factor);
 
         // write layer 0 with all.
         info!("Writing all.");
@@ -256,7 +259,7 @@ impl MapConfig {
             .group_by(|ap| ap.bucket)
             .into_iter()
             .map(|(k, v)| (k, v.map(|ap| ap.to_colored_polygon()).collect()))
-            .collect::<Vec<(Bucket, Vec<ColoredPolygon>)>>();
+            .collect::<Vec<(Bucket, Vec<ColoredObj>)>>();
 
         Ok(Map {
             config: self,
