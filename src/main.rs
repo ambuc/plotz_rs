@@ -17,6 +17,8 @@ struct Args {
     width: usize,
     #[argh(option, description = "height")]
     height: usize,
+    #[argh(switch, description = "draw frame")]
+    draw_frame: bool,
 }
 
 fn main() {
@@ -39,6 +41,7 @@ fn main_inner(args: Args) {
             width: args.width,
             height: args.height,
         },
+        /*draw_frame=*/ args.draw_frame,
     )
     .expect("failed to produce MapConfig")
     .make_map()
@@ -80,6 +83,7 @@ mod test_super {
             output_directory: tmp_dir.path().to_path_buf(),
             width: size.width,
             height: size.height,
+            draw_frame: true,
         };
 
         main_inner(args);
@@ -87,7 +91,7 @@ mod test_super {
         let output_svg = std::fs::read_to_string(tmp_dir.path().join("0.svg")).expect("foo");
 
         assert!(write_svg_to_pixmap(size, &output_svg)
-            .save_png("/Users/jamesbuckland/Desktop/output.png")
+            .save_png("/tmp/output.png")
             .is_ok());
     }
 }

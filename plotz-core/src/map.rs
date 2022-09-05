@@ -15,6 +15,7 @@ use plotz_color::ColorRGB;
 use plotz_geojson::GeoJsonConversionError;
 use plotz_geometry::{
     bounded::{streaming_bbox, Bounded, BoundingBoxError},
+    point::Pt,
     polygon::Polygon,
     shading::{shade_polygon, ShadeConfig},
 };
@@ -169,6 +170,23 @@ impl Map {
 
         self.apply_shading();
 
+        if self.config.draw_frame {
+            info!("Adding frame.");
+            let (w, h) = (
+                self.config.size.width as f64,
+                self.config.size.height as f64,
+            );
+            self.layers.push((
+                Bucket::Frame,
+                vec![ColoredObj {
+                    obj: Obj::Polygon(
+                        Polygon([Pt(0.0, 0.0), Pt(0.0, w), Pt(h, w), Pt(h, 0.0)]).unwrap(),
+                    ),
+                    color: plotz_color::BLACK,
+                }],
+            ));
+        }
+
         // write layer 0 with all.
         info!("Writing 'all'.");
         write_layer_to_svg(
@@ -186,6 +204,7 @@ impl Map {
             let num = write_layer_to_svg(self.config.size, &path, &polygons)?;
             info!("Wrote {:>4?} polygons to {:?} for {:?}", num, path, bucket);
         }
+
         info!("Rendering map...done.");
 
         Ok(())
@@ -198,6 +217,7 @@ pub struct MapConfig {
     input_files: Vec<File>,
     output_directory: PathBuf,
     size: Size,
+    draw_frame: bool,
 }
 
 impl MapConfig {
@@ -206,6 +226,7 @@ impl MapConfig {
         file_paths: impl IntoIterator<Item = impl AsRef<Path>>,
         output_directory: PathBuf,
         size: Size,
+        draw_frame: bool,
     ) -> Result<MapConfig, MapError> {
         let mut files = vec![];
         for fp in file_paths {
@@ -215,6 +236,7 @@ impl MapConfig {
             input_files: files,
             output_directory,
             size,
+            draw_frame,
         })
     }
 
@@ -223,8 +245,14 @@ impl MapConfig {
         file_path: &str,
         output_directory: PathBuf,
         size: Size,
+        draw_frame: bool,
     ) -> Result<MapConfig, MapError> {
-        Self::new_from_files(std::iter::once(file_path), output_directory, size)
+        Self::new_from_files(
+            std::iter::once(file_path),
+            output_directory,
+            size,
+            draw_frame,
+        )
     }
 
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
@@ -291,6 +319,7 @@ mod tests {
                 width: 1024,
                 height: 1024,
             },
+            /*draw_frame */ false,
         )
         .unwrap()
         .make_map()

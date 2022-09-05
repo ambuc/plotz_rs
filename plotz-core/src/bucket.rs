@@ -25,6 +25,7 @@ pub enum Path {
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub enum Bucket {
+    Frame,
     Area(Area),
     Path(Path),
 }
