@@ -170,7 +170,7 @@ impl Map {
         self.apply_shading();
 
         // write layer 0 with all.
-        info!("Writing all.");
+        info!("Writing 'all'.");
         write_layer_to_svg(
             self.config.size,
             self.config.output_directory.join("0.svg"),
@@ -179,15 +179,14 @@ impl Map {
 
         // write each layer individually.
         for (idx, (bucket, polygons)) in self.layers.into_iter().enumerate() {
-            info!("Writing {:?}", bucket);
-            write_layer_to_svg(
-                self.config.size,
-                self.config
-                    .output_directory
-                    .join(format!("{}.svg", idx + 1)),
-                &polygons,
-            )?;
+            let path = self
+                .config
+                .output_directory
+                .join(format!("{}.svg", idx + 1));
+            let num = write_layer_to_svg(self.config.size, &path, &polygons)?;
+            info!("Wrote {:>4?} polygons to {:?} for {:?}", num, path, bucket);
         }
+        info!("Rendering map...done.");
 
         Ok(())
     }

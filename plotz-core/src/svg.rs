@@ -1,7 +1,6 @@
 //! SVG plotting utilities.
 //!
 use crate::colored_obj::{ColoredObj, Obj};
-use log::info;
 use plotz_color::BLACK;
 use plotz_geometry::polygon::PolygonKind;
 use std::fmt::Debug;
@@ -69,8 +68,7 @@ pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     path: P,
     polygons: impl IntoIterator<Item = &'a ColoredObj>,
-) -> Result<(), SvgWriteError> {
-    let debug_path = format!("{:?}", &path);
+) -> Result<usize, SvgWriteError> {
     let svg_surface = cairo::SvgSurface::new(size.width as f64, size.height as f64, Some(path))?;
     let mut ctx = cairo::Context::new(&svg_surface)?;
     let mut c = 0_usize;
@@ -78,8 +76,7 @@ pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
         write_obj_to_context(p, &mut ctx)?;
         c += 1;
     }
-    info!("Wrote {:?} polygons to {:?}", c, debug_path);
-    Ok(())
+    Ok(c)
 }
 
 fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(

@@ -4,7 +4,7 @@
 //! structs.
 
 use {
-    log::info,
+    log::{debug, info},
     plotz_geometry::{
         point::Pt,
         polygon::{Multiline, MultilineConstructorError, Polygon, PolygonConstructorError},
@@ -94,6 +94,7 @@ pub fn parse_geojson(
     interner: &mut StringInterner,
     geo_json: Value,
 ) -> Result<Vec<(Polygon, TagsList)>, GeoJsonConversionError> {
+    info!("Parsing geojson file.");
     let mut lines: Vec<(Polygon, TagsList)> = vec![];
 
     for (idx, feature) in geo_json["features"]
@@ -138,7 +139,7 @@ pub fn parse_geojson(
             }
         } {
             for polygon in polygons {
-                info!(
+                debug!(
                     "#{:?} ({:10}, {:2}pts) w/ {:?}",
                     idx,
                     geom_type,
@@ -154,6 +155,7 @@ pub fn parse_geojson(
             }
         }
     }
+    info!("Parsing geojson file...done.");
     Ok(lines)
 }
 
