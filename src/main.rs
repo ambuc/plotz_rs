@@ -5,8 +5,10 @@
 use argh::FromArgs;
 use glob::glob;
 use plotz_core::{map::MapConfig, svg::Size};
+use tracing::*;
+use tracing_subscriber::FmtSubscriber;
 
-#[derive(FromArgs)]
+#[derive(FromArgs, Debug)]
 #[argh(description = "...")]
 struct Args {
     #[argh(option, description = "all geojson")]
@@ -22,7 +24,13 @@ struct Args {
 }
 
 fn main() {
-    pretty_env_logger::init();
+    // pretty_env_logger::init();
+    let subscriber = FmtSubscriber::builder()
+        .compact()
+        .with_max_level(Level::TRACE)
+        .without_time()
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     let args: Args = argh::from_env();
     main_inner(args);

@@ -8,7 +8,8 @@ cairo-rs = { version = "0.14.9", features = ["png", "svg"] }
 float-ord = "*"
 itertools = "*"
 lazy_static = "*"
-log = "*"
+tracing = "*"
+tracing-subscriber = "*"
 plotz-color = { path = "../plotz-color" }
 plotz-geojson = { path = "../plotz-geojson" }
 plotz-geometry = { path = "../plotz-geometry" }

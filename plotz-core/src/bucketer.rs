@@ -2,6 +2,7 @@ use crate::bucket::{Area, Bucket, Path};
 use lazy_static::lazy_static;
 use string_interner::{symbol::SymbolU32, StringInterner};
 use thiserror::Error;
+use tracing::*;
 
 pub trait Bucketer {
     type Tag;

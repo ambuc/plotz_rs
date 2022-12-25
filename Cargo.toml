@@ -24,6 +24,8 @@ glob = "*"
 plotz-core = { path = "plotz-core" }
 pretty_env_logger = "*"
 thiserror = "*"
+tracing = "*"
+tracing-subscriber = "*"
 
 [dev-dependencies]
 tempdir = "*"

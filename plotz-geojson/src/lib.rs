@@ -4,7 +4,6 @@
 //! structs.
 
 use {
-    log::{debug, info},
     plotz_geometry::{
         point::Pt,
         polygon::{Multiline, MultilineConstructorError, Polygon, PolygonConstructorError},
@@ -13,6 +12,7 @@ use {
     std::collections::HashSet,
     string_interner::{symbol::SymbolU32, StringInterner},
     thiserror::Error,
+    tracing::*,
 };
 
 type KeySymbol = SymbolU32;
@@ -94,15 +94,12 @@ pub fn parse_geojson(
     interner: &mut StringInterner,
     geo_json: Value,
 ) -> Result<Vec<(Polygon, TagsList)>, GeoJsonConversionError> {
-    info!("Parsing geojson file.");
+    let features = geo_json["features"].as_array().expect("features not array");
+
+    info!("Parsing geojson file with {:?} features.", features.len());
     let mut lines: Vec<(Polygon, TagsList)> = vec![];
 
-    for (idx, feature) in geo_json["features"]
-        .as_array()
-        .expect("features not array")
-        .iter()
-        .enumerate()
-    {
+    for (idx, feature) in features.iter().enumerate() {
         let tags = feature["properties"]
             .as_object()
             .expect("not object")
@@ -139,7 +136,7 @@ pub fn parse_geojson(
             }
         } {
             for polygon in polygons {
-                debug!(
+                trace!(
                     "#{:?} ({:10}, {:2}pts) w/ {:?}",
                     idx,
                     geom_type,
@@ -155,7 +152,6 @@ pub fn parse_geojson(
             }
         }
     }
-    info!("Parsing geojson file...done.");
     Ok(lines)
 }
 

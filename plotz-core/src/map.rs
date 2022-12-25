@@ -8,9 +8,11 @@ use crate::{
     colorer_builder::DefaultColorerBuilder,
     svg::{write_layer_to_svg, Size, SvgWriteError},
 };
+use itertools::Itertools;
+use tracing::*;
+
 use float_ord::FloatOrd;
 use lazy_static::lazy_static;
-use log::info;
 use plotz_color::ColorRGB;
 use plotz_geojson::GeoJsonConversionError;
 use plotz_geometry::{
@@ -148,7 +150,6 @@ impl Map {
     /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
     /// file(s).
     pub fn render(mut self) -> Result<(), MapError> {
-        info!("Rendering map.");
         // first compute current bbox and shift everything positive.
 
         self.apply_polygons(&|p| p.flip_y());
@@ -188,7 +189,6 @@ impl Map {
         }
 
         // write layer 0 with all.
-        info!("Writing 'all'.");
         write_layer_to_svg(
             self.config.size,
             self.config.output_directory.join("0.svg"),
@@ -202,10 +202,8 @@ impl Map {
                 .output_directory
                 .join(format!("{}.svg", idx + 1));
             let num = write_layer_to_svg(self.config.size, &path, &polygons)?;
-            info!("Wrote {:>4?} polygons to {:?} for {:?}", num, path, bucket);
+            trace!("Wrote {:>4?} polygons to {:?} for {:?}", num, path, bucket);
         }
-
-        info!("Rendering map...done.");
 
         Ok(())
     }
@@ -213,6 +211,7 @@ impl Map {
 
 /// A set of config arguments for reading geometry from a geojson file and
 /// writing SVG(s) to output file(s).
+#[derive(Debug)]
 pub struct MapConfig {
     input_files: Vec<File>,
     output_directory: PathBuf,
@@ -223,11 +222,12 @@ pub struct MapConfig {
 impl MapConfig {
     /// Instantiates a new MapConfig from many file paths.
     pub fn new_from_files(
-        file_paths: impl IntoIterator<Item = impl AsRef<Path>>,
+        file_paths: impl IntoIterator<Item = impl AsRef<Path>> + std::fmt::Debug,
         output_directory: PathBuf,
         size: Size,
         draw_frame: bool,
     ) -> Result<MapConfig, MapError> {
+        info!("Loading MapConfig from files: {:?}", file_paths);
         let mut files = vec![];
         for fp in file_paths {
             files.push(File::open(fp)?);
@@ -247,6 +247,7 @@ impl MapConfig {
         size: Size,
         draw_frame: bool,
     ) -> Result<MapConfig, MapError> {
+        trace!("MapConfig::new_from_file");
         Self::new_from_files(
             std::iter::once(file_path),
             output_directory,
@@ -258,8 +259,6 @@ impl MapConfig {
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
     /// unadjusted Map instance.
     pub fn make_map(self) -> Result<Map, MapError> {
-        use itertools::Itertools;
-
         let mut interner = StringInterner::new();
         let bucketer = DefaultBucketer::new(&mut interner);
         let colorer: DefaultColorer = DefaultColorerBuilder::default();
