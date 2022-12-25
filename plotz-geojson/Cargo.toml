@@ -10,3 +10,8 @@ serde_json = "*"
 string-interner = "*"
 thiserror = "*"
 lazy_static = "*"
+
+
+[dev-dependencies]
+assert_matches = "*"
+itertools = "*"

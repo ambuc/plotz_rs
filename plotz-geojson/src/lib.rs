@@ -205,30 +205,23 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Polygon>, GeoJsonConversi
 #[cfg(test)]
 mod tests {
     use super::*;
+    use assert_matches::assert_matches;
+    use itertools::Itertools;
     use serde_json::json;
     use string_interner::symbol::SymbolU32;
 
-    fn assert_symbol(i: &StringInterner, s: SymbolU32, expected: &str) {
-        assert_eq!(i.resolve(s).unwrap(), expected);
-    }
-
-    fn assert_symbol_tuple(
-        i: &StringInterner,
-        (s1, s2): (SymbolU32, SymbolU32),
-        (e1, e2): (&str, &str),
-    ) {
-        assert_symbol(i, s1, e1);
-        assert_symbol(i, s2, e2);
-    }
-
     fn assert_symbol_tuple_list<'a>(
         i: &StringInterner,
-        mut symbol_tuple_list: Vec<(SymbolU32, SymbolU32)>,
+        symbol_tuple_list: Vec<(SymbolU32, SymbolU32)>,
         expected_list: impl IntoIterator<Item = (&'a str, &'a str)>,
     ) {
-        symbol_tuple_list.sort();
-        for (ss, es) in symbol_tuple_list.into_iter().zip(expected_list.into_iter()) {
-            assert_symbol_tuple(i, ss, es);
+        for ((s1, s2), (e1, e2)) in symbol_tuple_list
+            .into_iter()
+            .sorted()
+            .zip(expected_list.into_iter())
+        {
+            assert_eq!(assert_matches!(i.resolve(s1), Some(a) => a), e1);
+            assert_eq!(assert_matches!(i.resolve(s2), Some(a) => a), e2);
         }
     }
 
