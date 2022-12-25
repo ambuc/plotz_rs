@@ -5,7 +5,7 @@ Orchestrator is a tool for managing long-running prints via
 through them and offer to preview (estimate print time) and toggle the pen
 before each layer.
 
-## Usage:
+## Usage
 
 ```bash
 $ cargo run  -p orchestrator -- --glob "/path/to/*.svg" --frame "/path/to/specific.svg"

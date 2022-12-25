@@ -1,8 +1,8 @@
 # `svg-splitter`
 
-SvgSplitter is a tool for splitting very large SVG files which already have inherent groupings. 
+SvgSplitter is a tool for splitting very large SVG files which already have inherent groupings.
 
-## Usage:
+## Usage
 
 Imagine a very large SVG file with some linesets, which might be the output of a tool like Blender or Inkscape:
 
@@ -31,7 +31,7 @@ Imagine a very large SVG file with some linesets, which might be the output of a
 Run SvgSplitter with the input file and an output prefix:
 
 ```bash
-$ cargo run -p svg_splitter -- --input "/path/to/in.svg" --output "/path/to/out"
+cargo run -p svg_splitter -- --input "/path/to/in.svg" --output "/path/to/out"
 ```
 
 And it will generate output SVGs named `out_group1.svg`, `out_group2.svg`, ... like:
