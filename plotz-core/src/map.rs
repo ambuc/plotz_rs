@@ -101,24 +101,33 @@ pub struct Map {
     layers: Vec<(Bucket, Vec<ColoredObj>)>,
 }
 impl Map {
-    fn get_bbox(&self) -> Result<Polygon, MapError> {
-        Ok(streaming_bbox(
-            self.layers
-                .iter()
-                .flat_map(|(_, vec)| vec)
-                .map(|ColoredObj { obj, .. }| obj),
-        )?)
+    fn objs_iter(&self) -> impl Iterator<Item = &Obj> {
+        self.layers
+            .iter()
+            .flat_map(|(_b, vec)| vec)
+            .map(|co| &co.obj)
+    }
+    fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut Obj> {
+        self.layers
+            .iter_mut()
+            .flat_map(|(_b, vec)| vec)
+            .map(|co| &mut co.obj)
+    }
+    fn polygons_iter(&self) -> impl Iterator<Item = &Polygon> {
+        self.objs_iter().filter_map(|o| match o {
+            Obj::Polygon(p) => Some(p),
+            _ => None,
+        })
+    }
+    fn polygons_iter_mut(&mut self) -> impl Iterator<Item = &mut Polygon> {
+        self.objs_iter_mut().filter_map(|o| match o {
+            Obj::Polygon(p) => Some(p),
+            _ => None,
+        })
     }
 
-    // NB: only applies transformation to polygons.
-    fn apply_polygons(&mut self, f: &dyn Fn(&mut Polygon)) {
-        for (_, vec) in self.layers.iter_mut() {
-            for p in vec.iter_mut() {
-                if let Obj::Polygon(polygon) = &mut p.obj {
-                    f(polygon);
-                }
-            }
-        }
+    fn get_bbox(&self) -> Result<Polygon, MapError> {
+        Ok(streaming_bbox(self.polygons_iter())?)
     }
 
     fn apply_shading(&mut self) {
@@ -150,8 +159,8 @@ impl Map {
     /// Adjusts the map for scale/transform issues.
     pub fn adjust(&mut self) -> Result<(), MapError> {
         // first compute current bbox and shift everything positive.
-        self.apply_polygons(&|p| p.flip_y());
-        self.apply_polygons(&|p| {
+        self.polygons_iter_mut().for_each(|p| {
+            p.flip_y();
             p.pts
                 .iter_mut()
                 .for_each(|pt| pt.y.0 = latitude_to_y(pt.y.0))
@@ -159,7 +168,9 @@ impl Map {
 
         {
             let curr_bbox = self.get_bbox()?;
-            self.apply_polygons(&|p| *p -= curr_bbox.bl_bound());
+            self.polygons_iter_mut().for_each(|p| {
+                *p -= curr_bbox.bl_bound();
+            });
         }
 
         self.apply_shading();
@@ -171,7 +182,7 @@ impl Map {
                 FloatOrd(self.config.size.width as f64 / curr_bbox.width().abs()),
             )
             .0 * 0.9;
-            self.apply_polygons(&|p| *p *= scaling_factor);
+            self.polygons_iter_mut().for_each(|p| *p *= scaling_factor);
         }
         Ok(())
     }
