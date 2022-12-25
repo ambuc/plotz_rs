@@ -74,7 +74,9 @@ pub trait Bounded {
     }
 }
 
-struct BoundsCollector {
+/// A handy struct for collecting the outer bounds of a streaming iterator of
+/// polygons.
+pub struct BoundsCollector {
     bound_t: Option<FloatOrd<f64>>,
     bound_b: Option<FloatOrd<f64>>,
     bound_l: Option<FloatOrd<f64>>,
@@ -83,6 +85,7 @@ struct BoundsCollector {
 }
 
 impl BoundsCollector {
+    /// A new bounds collector.
     pub fn new() -> BoundsCollector {
         BoundsCollector {
             bound_t: None,
@@ -92,6 +95,13 @@ impl BoundsCollector {
             items_seen: 0_usize,
         }
     }
+
+    /// How many items has this seen?
+    pub fn items_seen(&self) -> usize {
+        self.items_seen
+    }
+
+    /// Incorporate a new polygon to this bounds collector.
     pub fn incorporate(&mut self, b: &impl Bounded) {
         // top
         self.bound_t = Some(match self.bound_t {

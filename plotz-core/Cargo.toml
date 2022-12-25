@@ -19,3 +19,4 @@ thiserror = "*"
 
 [dev-dependencies]
 tempdir = "*"
+float_eq = "*"

@@ -147,11 +147,9 @@ impl Map {
         }
     }
 
-    /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
-    /// file(s).
-    pub fn render(mut self) -> Result<(), MapError> {
+    /// Adjusts the map for scale/transform issues.
+    pub fn adjust(&mut self) -> Result<(), MapError> {
         // first compute current bbox and shift everything positive.
-
         self.apply_polygons(&|p| p.flip_y());
         self.apply_polygons(&|p| {
             p.pts
@@ -159,17 +157,29 @@ impl Map {
                 .for_each(|pt| pt.y.0 = latitude_to_y(pt.y.0))
         });
 
-        let shift = self.get_bbox()?.bl_bound();
-        self.apply_polygons(&|p| *p -= shift);
-
-        let bbox = self.get_bbox()?;
-        let scaling_factor = 1.0
-            / std::cmp::max(FloatOrd(bbox.width().abs()), FloatOrd(bbox.height().abs())).0
-            * self.config.size.max() as f64
-            * 0.73; // why 0.73?
-        self.apply_polygons(&|p| *p *= scaling_factor);
+        {
+            let curr_bbox = self.get_bbox()?;
+            self.apply_polygons(&|p| *p -= curr_bbox.bl_bound());
+        }
 
         self.apply_shading();
+
+        {
+            let curr_bbox = self.get_bbox()?;
+            let scaling_factor = std::cmp::max(
+                FloatOrd(self.config.size.height as f64 / curr_bbox.height().abs()),
+                FloatOrd(self.config.size.width as f64 / curr_bbox.width().abs()),
+            )
+            .0 * 0.9;
+            self.apply_polygons(&|p| *p *= scaling_factor);
+        }
+        Ok(())
+    }
+
+    /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
+    /// file(s).
+    pub fn render(mut self) -> Result<(), MapError> {
+        info!(config = ?self.config);
 
         if self.config.draw_frame {
             info!("Adding frame.");
@@ -304,13 +314,15 @@ impl MapConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use float_eq::assert_float_eq;
+    use plotz_geometry::bounded::BoundsCollector;
     use tempdir::TempDir;
 
     #[test]
     fn test_render() {
         let tmp_dir = TempDir::new("example").unwrap();
 
-        MapConfig::new_from_file(
+        let mut map: Map = MapConfig::new_from_file(
             /*file_path=*/ "../testdata/example.geojson",
             /*output_file_prefix=*/ tmp_dir.path().to_path_buf(),
             /*size= */
@@ -323,5 +335,43 @@ mod tests {
         .unwrap()
         .make_map()
         .unwrap();
+
+        {
+            let mut rolling_bbox = BoundsCollector::new();
+            map.layers.iter().for_each(|(_, objs)| {
+                objs.iter().for_each(|colored_obj| {
+                    rolling_bbox.incorporate(&colored_obj.obj);
+                })
+            });
+            assert_eq!(rolling_bbox.items_seen(), 4);
+
+            // ^
+            // 5---+
+            // |   |
+            // +---3>
+            assert_eq!(rolling_bbox.left_bound(), 0.0);
+            assert_eq!(rolling_bbox.bottom_bound(), 0.0);
+            assert_eq!(rolling_bbox.top_bound(), 5.0);
+            assert_eq!(rolling_bbox.right_bound(), 3.0);
+        }
+
+        let () = map.adjust().unwrap();
+
+        {
+            let mut rolling_bbox = BoundsCollector::new();
+            map.layers.iter().for_each(|(_, objs)| {
+                objs.iter().for_each(|colored_obj| {
+                    rolling_bbox.incorporate(&colored_obj.obj);
+                })
+            });
+            assert_eq!(rolling_bbox.items_seen(), 6);
+
+            assert_float_eq!(rolling_bbox.left_bound(), 0.0, abs <= 0.000_01);
+            assert_float_eq!(rolling_bbox.bottom_bound(), 0.0, abs <= 0.000_01);
+            assert_float_eq!(rolling_bbox.top_bound(), 1537.95327, abs <= 0.000_01);
+            assert_float_eq!(rolling_bbox.right_bound(), 921.59999, abs <= 0.000_01);
+        }
+
+        let () = map.render().unwrap();
     }
 }
