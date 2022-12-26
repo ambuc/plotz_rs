@@ -49,7 +49,7 @@ mod test_super {
     #[test]
     fn test_default_colorer_builder() {
         let c = DefaultColorerBuilder::default();
-        assert_eq!(c.color(Bucket::Path(Path::Boundary)), Ok(LIGHTGRAY));
+        assert_eq!(c.color(Bucket::Path(Path::Boundary)), Ok(DARKGREY));
     }
 
     #[test]

@@ -26,20 +26,20 @@ impl DefaultColorerBuilder {
         self.add_path(Path::Highway1, BLACK);
         self.add_path(Path::Highway2, DARKGRAY);
         self.add_path(Path::Highway3, GRAY);
-        self.add_path(Path::Highway4, LIGHTGRAY);
+        self.add_path(Path::Highway4, DARKGREY);
         self
     }
     fn add_path_non_highway(&mut self) -> &mut Self {
-        self.add_path(Path::Cycleway, LIGHTGRAY);
-        self.add_path(Path::Pedestrian, LIGHTGRAY);
-        self.add_path(Path::Rail, LIGHTGRAY);
-        self.add_path(Path::Boundary, LIGHTGRAY);
+        self.add_path(Path::Cycleway, DARKGREY);
+        self.add_path(Path::Pedestrian, DARKGREY);
+        self.add_path(Path::Rail, DARKGREY);
+        self.add_path(Path::Boundary, DARKGREY);
         self
     }
     fn add_areas(&mut self) -> &mut Self {
         self.add_area(Area::Beach, TAN);
-        self.add_area(Area::Building, LIGHTGRAY);
-        self.add_area(Area::Business, LIGHTGRAY);
+        self.add_area(Area::Building, DARKGREY);
+        self.add_area(Area::Business, DARKGREY);
         self.add_area(Area::Fun, DARKGREEN);
         self.add_area(Area::NaturalRock, DARKGRAY);
         self.add_area(Area::Park, GREEN);

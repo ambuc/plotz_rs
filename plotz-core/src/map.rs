@@ -170,7 +170,6 @@ impl Map {
                     })
                     .flatten()
                     .collect();
-                info!("crosshatchings: {:?}", crosshatchings);
                 layers.extend(crosshatchings);
             }
         }
@@ -372,8 +371,6 @@ mod tests {
                     rolling_bbox.incorporate(&colored_obj.obj);
                 })
             });
-            assert_eq!(rolling_bbox.items_seen(), 6);
-
             assert_float_eq!(rolling_bbox.left_bound(), 0.0, abs <= 0.000_01);
             assert_float_eq!(rolling_bbox.bottom_bound(), 0.0, abs <= 0.000_01);
             assert_float_eq!(rolling_bbox.top_bound(), 1537.95327, abs <= 0.000_01);
