@@ -192,6 +192,8 @@ impl Map {
     pub fn render(mut self, config: &MapConfig) -> Result<(), MapError> {
         info!(config = ?config);
 
+        let () = self.adjust(&config.size)?;
+
         if config.draw_frame {
             info!("Adding frame.");
             let (w, h) = (config.size.width as f64, config.size.height as f64);
