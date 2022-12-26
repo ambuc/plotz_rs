@@ -104,6 +104,47 @@ pub struct Map {
     layers: Vec<(Bucket, Vec<ColoredObj>)>,
 }
 impl Map {
+    /// Consumes MapConfig, performs bucketing and coloring, and returns an
+    /// unadjusted Map instance.
+    pub fn new(map_config: &MapConfig) -> Result<Map, MapError> {
+        let mut interner = StringInterner::new();
+        let bucketer = DefaultBucketer::new(&mut interner);
+        let colorer: DefaultColorer = DefaultColorerBuilder::default();
+
+        let layers = map_config
+            .input_files
+            .iter()
+            .flat_map(|file| {
+                plotz_geojson::parse_geojson(
+                    &mut interner,
+                    serde_json::from_reader(BufReader::new(file)).expect("read"),
+                )
+                .expect("parse")
+                .iter()
+                .filter_map(|(polygon, tags)| {
+                    let bucket = tags
+                        .iter()
+                        .map(|t| bucketer.bucket(*t))
+                        .find_map(|r| r.ok())?;
+
+                    Some(AnnotatedPolygon {
+                        polygon: polygon.clone(),
+                        bucket,
+                        color: colorer.color(bucket).expect("could not color"),
+                        _tags: tags.clone(),
+                    })
+                })
+                .collect::<Vec<_>>()
+            })
+            .sorted_by(|ap_1, ap_2| std::cmp::Ord::cmp(&ap_1.bucket, &ap_2.bucket))
+            .group_by(|ap| ap.bucket)
+            .into_iter()
+            .map(|(k, v)| (k, v.map(|ap| ap.to_colored_polygon()).collect()))
+            .collect::<Vec<(Bucket, Vec<ColoredObj>)>>();
+
+        Ok(Map { layers })
+    }
+
     fn objs_iter(&self) -> impl Iterator<Item = &Obj> {
         self.layers
             .iter()
@@ -282,49 +323,6 @@ fn paths_to_files(
         .collect::<Vec<_>>()
 }
 
-impl MapConfig {
-    /// Consumes MapConfig, performs bucketing and coloring, and returns an
-    /// unadjusted Map instance.
-    pub fn make_map(&self) -> Result<Map, MapError> {
-        let mut interner = StringInterner::new();
-        let bucketer = DefaultBucketer::new(&mut interner);
-        let colorer: DefaultColorer = DefaultColorerBuilder::default();
-
-        let layers = self
-            .input_files
-            .iter()
-            .flat_map(|file| {
-                plotz_geojson::parse_geojson(
-                    &mut interner,
-                    serde_json::from_reader(BufReader::new(file)).expect("read"),
-                )
-                .expect("parse")
-                .iter()
-                .filter_map(|(polygon, tags)| {
-                    let bucket = tags
-                        .iter()
-                        .map(|t| bucketer.bucket(*t))
-                        .find_map(|r| r.ok())?;
-
-                    Some(AnnotatedPolygon {
-                        polygon: polygon.clone(),
-                        bucket,
-                        color: colorer.color(bucket).expect("could not color"),
-                        _tags: tags.clone(),
-                    })
-                })
-                .collect::<Vec<_>>()
-            })
-            .sorted_by(|ap_1, ap_2| std::cmp::Ord::cmp(&ap_1.bucket, &ap_2.bucket))
-            .group_by(|ap| ap.bucket)
-            .into_iter()
-            .map(|(k, v)| (k, v.map(|ap| ap.to_colored_polygon()).collect()))
-            .collect::<Vec<(Bucket, Vec<ColoredObj>)>>();
-
-        Ok(Map { layers })
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -349,7 +347,7 @@ mod tests {
             .shift_y(0.0)
             .build();
 
-        let mut map: Map = map_config.make_map().unwrap();
+        let mut map = Map::new(&map_config).unwrap();
 
         {
             let mut rolling_bbox = BoundsCollector::new();

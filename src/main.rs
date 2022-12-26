@@ -4,7 +4,10 @@
 
 use argh::FromArgs;
 use glob::glob;
-use plotz_core::{map::MapConfig, svg::Size};
+use plotz_core::{
+    map::{Map, MapConfig},
+    svg::Size,
+};
 use tracing::*;
 use tracing_subscriber::FmtSubscriber;
 
@@ -61,7 +64,7 @@ fn main_inner(args: Args) {
         .shift_y(args.shift_y)
         .build();
 
-    let map = map_config.make_map().expect("failed to create map");
+    let map = Map::new(&map_config).expect("failed to create map");
 
     let () = map.render(&map_config).expect("failed to render map");
 }
