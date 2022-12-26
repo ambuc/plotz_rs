@@ -138,6 +138,17 @@ impl Map {
         Ok(())
     }
 
+    fn apply_scaling(&mut self, dest_size: &Size) -> Result<(), MapError> {
+        let curr_bbox = self.get_bbox()?;
+        let scaling_factor = std::cmp::max(
+            FloatOrd(dest_size.height as f64 / curr_bbox.height().abs()),
+            FloatOrd(dest_size.width as f64 / curr_bbox.width().abs()),
+        )
+        .0 * 0.9;
+        self.polygons_iter_mut().for_each(|p| *p *= scaling_factor);
+        Ok(())
+    }
+
     fn apply_shading(&mut self) {
         for (bucket, layers) in self.layers.iter_mut() {
             if let Some(shade_config) = SHADINGS.get(bucket) {
@@ -159,6 +170,7 @@ impl Map {
                     })
                     .flatten()
                     .collect();
+                info!("crosshatchings: {:?}", crosshatchings);
                 layers.extend(crosshatchings);
             }
         }
@@ -173,20 +185,8 @@ impl Map {
                 .iter_mut()
                 .for_each(|pt| pt.y.0 = latitude_to_y(pt.y.0))
         });
-
         self.apply_bl_shift()?;
-
-        self.apply_shading();
-
-        {
-            let curr_bbox = self.get_bbox()?;
-            let scaling_factor = std::cmp::max(
-                FloatOrd(dest_size.height as f64 / curr_bbox.height().abs()),
-                FloatOrd(dest_size.width as f64 / curr_bbox.width().abs()),
-            )
-            .0 * 0.9;
-            self.polygons_iter_mut().for_each(|p| *p *= scaling_factor);
-        }
+        self.apply_scaling(dest_size)?;
         Ok(())
     }
 
@@ -196,6 +196,7 @@ impl Map {
         info!(config = ?config);
 
         let () = self.adjust(&config.size)?;
+        self.apply_shading();
 
         if config.draw_frame {
             info!("Adding frame.");
@@ -414,6 +415,49 @@ mod tests {
                 )],
             };
             map.apply_bl_shift().unwrap();
+
+            assert_eq!(
+                map.layers[0].1[0].obj,
+                Obj::Polygon(Polygon(expected).unwrap())
+            );
+        }
+    }
+
+    #[test]
+    fn test_apply_scaling() {
+        use plotz_color::*;
+
+        for (size, initial, expected) in [
+            // rescale: 1024 * 0.9 = 921.6
+            (
+                Size {
+                    width: 1024,
+                    height: 1024,
+                },
+                [Pt(0.0, 0.0), Pt(0.0, 1.0), Pt(1.0, 0.0)],
+                [Pt(0.0, 0.0), Pt(0.0, 921.60), Pt(921.60, 0.0)],
+            ),
+            // rescale: 100 * 0.9 = 90
+            (
+                Size {
+                    width: 1000,
+                    height: 1000,
+                },
+                [Pt(0.0, 0.0), Pt(0.0, 1.0), Pt(1.0, 0.0)],
+                [Pt(0.0, 0.0), Pt(0.0, 900.0), Pt(900.0, 0.0)],
+            ),
+        ] {
+            let obj = Obj::Polygon(Polygon(initial).unwrap());
+            let mut map = Map {
+                layers: vec![(
+                    Bucket::Area(Area::Beach),
+                    vec![ColoredObj {
+                        obj: obj,
+                        color: ALICEBLUE,
+                    }],
+                )],
+            };
+            map.apply_scaling(&size).unwrap();
 
             assert_eq!(
                 map.layers[0].1[0].obj,
