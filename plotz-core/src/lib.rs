@@ -8,5 +8,3 @@ pub mod svg;
 mod bucket;
 mod bucketer;
 mod colored_obj;
-mod colorer;
-mod colorer_builder;

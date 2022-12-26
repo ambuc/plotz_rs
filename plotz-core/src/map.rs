@@ -1,17 +1,15 @@
 //! The core logic of plotz-core, including Map and MapConfig.
 
 use crate::{
-    bucket::{Area, Bucket},
+    bucket::{Area, Bucket, Path as BucketPath},
     bucketer::{Bucketer, DefaultBucketer},
     colored_obj::{ColoredObj, Obj},
-    colorer::{Colorer, DefaultColorer},
-    colorer_builder::DefaultColorerBuilder,
     svg::{write_layer_to_svg, Size, SvgWriteError},
 };
 use float_ord::FloatOrd;
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use plotz_color::ColorRGB;
+use plotz_color::*;
 use plotz_geojson::GeoJsonConversionError;
 use plotz_geometry::{
     bounded::{streaming_bbox, Bounded, BoundingBoxError},
@@ -20,6 +18,7 @@ use plotz_geometry::{
     shading::{shade_polygon, ShadeConfig},
 };
 use std::{
+    collections::HashMap,
     fs::File,
     io::BufReader,
     path::{Path, PathBuf},
@@ -79,6 +78,28 @@ fn latitude_to_y(latitude: f64) -> f64 {
 
 lazy_static! {
     /// Which areas get shaded, and how much.
+    pub static ref DEFAULT_COLORING: std::collections::HashMap<Bucket, ColorRGB> =
+            HashMap::from([
+                (Bucket::Path(BucketPath::Highway1), BLACK),
+                (Bucket::Path(BucketPath::Highway2), DARKGRAY),
+                (Bucket::Path(BucketPath::Highway3), GRAY),
+                (Bucket::Path(BucketPath::Highway4), LIGHTGRAY),
+                (Bucket::Path(BucketPath::Cycleway), DARKGRAY),
+                (Bucket::Path(BucketPath::Pedestrian), DARKGRAY),
+                (Bucket::Path(BucketPath::Rail), DARKGRAY),
+                (Bucket::Path(BucketPath::Boundary), DARKGRAY),
+                (Bucket::Area(Area::Beach), TAN),
+                (Bucket::Area(Area::Building), DARKGREY),
+                (Bucket::Area(Area::Business), DARKGREY),
+                (Bucket::Area(Area::Fun), DARKGREEN),
+                (Bucket::Area(Area::NaturalRock), DARKGRAY),
+                (Bucket::Area(Area::Park), GREEN),
+                (Bucket::Area(Area::Rail), ORANGE),
+                (Bucket::Area(Area::Tree), BROWN),
+                (Bucket::Area(Area::Water), LIGHTBLUE),
+            ]);
+
+    /// Which areas get shaded, and how much.
     pub static ref SHADINGS: std::collections::HashMap<Bucket, ShadeConfig> = [
         // TODO(jbuckland): Some of these scale poorly or fail to render. Can I
         // somehow autoderive this density?
@@ -117,7 +138,6 @@ impl Map {
     pub fn new(map_config: &MapConfig) -> Result<Map, MapError> {
         let mut interner = StringInterner::new();
         let bucketer = DefaultBucketer::new(&mut interner);
-        let colorer: DefaultColorer = DefaultColorerBuilder::default();
 
         let layers = map_config
             .input_files
@@ -138,7 +158,7 @@ impl Map {
                     Some(AnnotatedPolygon {
                         polygon: polygon.clone(),
                         bucket,
-                        color: colorer.color(bucket).expect("could not color"),
+                        color: DEFAULT_COLORING[&bucket],
                         thickness: *DEFAULT_THICKNESS,
                         _tags: tags.clone(),
                     })
