@@ -96,8 +96,8 @@ lazy_static! {
 }
 
 /// An unadjusted set of annotated polygons, ready to be printed to SVG.
+#[derive(Debug, PartialEq)]
 pub struct Map {
-    //config: MapConfig,
     layers: Vec<(Bucket, Vec<ColoredObj>)>,
 }
 impl Map {
@@ -128,6 +128,14 @@ impl Map {
 
     fn get_bbox(&self) -> Result<Polygon, MapError> {
         Ok(streaming_bbox(self.polygons_iter())?)
+    }
+
+    fn apply_bl_shift(&mut self) -> Result<(), MapError> {
+        let curr_bbox = self.get_bbox()?;
+        self.polygons_iter_mut().for_each(|p| {
+            *p -= curr_bbox.bl_bound();
+        });
+        Ok(())
     }
 
     fn apply_shading(&mut self) {
@@ -166,12 +174,7 @@ impl Map {
                 .for_each(|pt| pt.y.0 = latitude_to_y(pt.y.0))
         });
 
-        {
-            let curr_bbox = self.get_bbox()?;
-            self.polygons_iter_mut().for_each(|p| {
-                *p -= curr_bbox.bl_bound();
-            });
-        }
+        self.apply_bl_shift()?;
 
         self.apply_shading();
 
@@ -377,5 +380,45 @@ mod tests {
         }
 
         let () = map.render(&map_config).unwrap();
+    }
+
+    #[test]
+    fn test_bl_shift() {
+        use plotz_color::*;
+
+        for (initial, expected) in [
+            // no shift
+            (
+                [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
+                [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
+            ),
+            // shift positive
+            (
+                [Pt(-1, -1), Pt(-1, 0), Pt(0, -1)],
+                [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
+            ),
+            // shift negative
+            (
+                [Pt(1, 1), Pt(1, 2), Pt(2, 1)],
+                [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
+            ),
+        ] {
+            let obj = Obj::Polygon(Polygon(initial).unwrap());
+            let mut map = Map {
+                layers: vec![(
+                    Bucket::Area(Area::Beach),
+                    vec![ColoredObj {
+                        obj: obj,
+                        color: ALICEBLUE,
+                    }],
+                )],
+            };
+            map.apply_bl_shift().unwrap();
+
+            assert_eq!(
+                map.layers[0].1[0].obj,
+                Obj::Polygon(Polygon(expected).unwrap())
+            );
+        }
     }
 }

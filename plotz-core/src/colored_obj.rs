@@ -3,7 +3,7 @@ use plotz_geometry::bounded::Bounded;
 use plotz_geometry::polygon::Polygon;
 use plotz_geometry::segment::Segment;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Obj {
     Polygon(Polygon),
     Segment(Segment),
@@ -46,7 +46,7 @@ impl Bounded for Obj {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ColoredObj {
     pub obj: Obj,
     pub color: ColorRGB,

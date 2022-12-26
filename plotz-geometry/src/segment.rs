@@ -69,7 +69,7 @@ pub enum IntersectionOutcome {
 }
 
 /// A segment in 2D space, with initial and final points.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Eq)]
 pub struct Segment {
     /// The initial point of the segment.
     pub i: Pt,
