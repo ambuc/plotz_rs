@@ -99,7 +99,7 @@ pub fn parse_geojson(
     info!("Parsing geojson file with {:?} features.", features.len());
     let mut lines: Vec<(Polygon, TagsList)> = vec![];
 
-    for (idx, feature) in features.iter().enumerate() {
+    for (_idx, feature) in features.iter().enumerate() {
         let tags = feature["properties"]
             .as_object()
             .expect("not object")
@@ -136,18 +136,18 @@ pub fn parse_geojson(
             }
         } {
             for polygon in polygons {
-                trace!(
-                    "#{:?} ({:10}, {:2}pts) w/ {:?}",
-                    idx,
-                    geom_type,
-                    polygon.pts.len(),
-                    tags.iter()
-                        .map(|(k, v)| (
-                            interner.resolve(*k).unwrap(),
-                            interner.resolve(*v).unwrap()
-                        ))
-                        .collect::<Vec<_>>(),
-                );
+                // trace!(
+                //     "#{:?} ({:10}, {:2}pts) w/ {:?}",
+                //     idx,
+                //     geom_type,
+                //     polygon.pts.len(),
+                //     tags.iter()
+                //         .map(|(k, v)| (
+                //             interner.resolve(*k).unwrap(),
+                //             interner.resolve(*v).unwrap()
+                //         ))
+                //         .collect::<Vec<_>>(),
+                // );
                 lines.push((polygon, tags.clone()));
             }
         }

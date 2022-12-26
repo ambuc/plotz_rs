@@ -287,7 +287,7 @@ impl Map {
     /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
     /// file(s).
     pub fn render(mut self, config: &MapConfig) -> Result<(), MapError> {
-        info!(config = ?config);
+        trace!(config = ?config.input_files);
 
         let () = self.adjust(config.scale_factor, &config.size)?;
         let () = self.shift(config.shift_x, config.shift_y)?;
@@ -323,7 +323,7 @@ impl Map {
         for (idx, (bucket, polygons)) in self.layers.into_iter().enumerate() {
             let path = config.output_directory.join(format!("{}.svg", idx + 1));
             let num = write_layer_to_svg(config.size, &path, &polygons)?;
-            trace!("Wrote {:>4?} polygons to {:?} for {:?}", num, path, bucket);
+            info!("Wrote {:>4?} polygons to {:?} for {:?}", num, path, bucket);
         }
 
         Ok(())
