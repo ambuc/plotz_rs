@@ -192,12 +192,22 @@ impl Map {
         Ok(())
     }
 
+    /// Adjusts the map for manual transform correction issues.
+    pub fn shift(&mut self, shift_x: f64, shift_y: f64) -> Result<(), MapError> {
+        //
+        self.polygons_iter_mut().for_each(|p| {
+            *p += (shift_x, shift_y).into();
+        });
+        Ok(())
+    }
+
     /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
     /// file(s).
     pub fn render(mut self, config: &MapConfig) -> Result<(), MapError> {
         info!(config = ?config);
 
         let () = self.adjust(config.scale_factor, &config.size)?;
+        let () = self.shift(config.shift_x, config.shift_y)?;
         self.apply_shading();
 
         if config.draw_frame {
@@ -241,6 +251,8 @@ pub struct MapConfig {
     size: Size,
     draw_frame: bool,
     scale_factor: f64,
+    shift_x: f64,
+    shift_y: f64,
 }
 
 impl MapConfig {
@@ -251,6 +263,8 @@ impl MapConfig {
         size: Size,
         draw_frame: bool,
         scale_factor: f64,
+        shift_x: f64,
+        shift_y: f64,
     ) -> Result<MapConfig, MapError> {
         info!("Loading MapConfig from files: {:?}", file_paths);
         let mut files = vec![];
@@ -263,6 +277,8 @@ impl MapConfig {
             size,
             draw_frame,
             scale_factor,
+            shift_x,
+            shift_y,
         })
     }
 
@@ -273,6 +289,8 @@ impl MapConfig {
         size: Size,
         draw_frame: bool,
         scale_factor: f64,
+        shift_x: f64,
+        shift_y: f64,
     ) -> Result<MapConfig, MapError> {
         trace!("MapConfig::new_from_file");
         Self::new_from_files(
@@ -281,6 +299,8 @@ impl MapConfig {
             size,
             draw_frame,
             scale_factor,
+            shift_x,
+            shift_y,
         )
     }
 
@@ -347,6 +367,8 @@ mod tests {
             },
             /*draw_frame */ false,
             /*scale_factor */ 0.9,
+            /*shift_x */ 0.0,
+            /*shift_y */ 0.0,
         )
         .unwrap();
 

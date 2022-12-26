@@ -23,10 +23,13 @@ struct Args {
     draw_frame: bool,
     #[argh(option, description = "scale factor", default = "0.9")]
     scale_factor: f64,
+    #[argh(option, description = "shift x", default = "0.0")]
+    shift_x: f64,
+    #[argh(option, description = "shift y", default = "0.0")]
+    shift_y: f64,
 }
 
 fn main() {
-    // pretty_env_logger::init();
     let subscriber = FmtSubscriber::builder()
         .compact()
         .with_max_level(Level::TRACE)
@@ -53,6 +56,8 @@ fn main_inner(args: Args) {
         },
         /*draw_frame=*/ args.draw_frame,
         /*scale_factor=*/ args.scale_factor,
+        /*shift_x=*/ args.shift_x,
+        /*shift_y=*/ args.shift_y,
     )
     .expect("failed to produce MapConfig");
 
