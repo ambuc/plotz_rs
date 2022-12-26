@@ -141,6 +141,17 @@ impl Map {
         Ok(())
     }
 
+    fn apply_centering(&mut self, dest_size: &Size) -> Result<(), MapError> {
+        let curr_bbox = self.get_bbox()?;
+        self.polygons_iter_mut().for_each(|p| {
+            *p += Pt(
+                (dest_size.width as f64 - curr_bbox.right_bound()) / 2.0,
+                (dest_size.height as f64 - curr_bbox.top_bound()) / 2.0,
+            );
+        });
+        Ok(())
+    }
+
     fn apply_scaling(&mut self, scale_factor: f64, dest_size: &Size) -> Result<(), MapError> {
         let curr_bbox = self.get_bbox()?;
         let scaling_factor = std::cmp::max(
@@ -189,6 +200,7 @@ impl Map {
         });
         self.apply_bl_shift()?;
         self.apply_scaling(scale_factor, dest_size)?;
+        self.apply_centering(dest_size)?;
         Ok(())
     }
 
@@ -225,11 +237,15 @@ impl Map {
         }
 
         // write layer 0 with all.
-        write_layer_to_svg(
-            config.size,
-            config.output_directory.join("0.svg"),
-            self.layers.iter().flat_map(|(_bucket, vec)| vec),
-        )?;
+        {
+            let path_0 = config.output_directory.join("0.svg");
+            let num = write_layer_to_svg(
+                config.size,
+                &path_0,
+                self.layers.iter().flat_map(|(_bucket, vec)| vec),
+            )?;
+            trace!("Wrote {:>4?} polygons to {:?} for _all_", num, path_0);
+        }
 
         // write each layer individually.
         for (idx, (bucket, polygons)) in self.layers.into_iter().enumerate() {
