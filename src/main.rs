@@ -21,6 +21,8 @@ struct Args {
     height: usize,
     #[argh(switch, description = "draw frame")]
     draw_frame: bool,
+    #[argh(option, description = "scale factor", default = "0.9")]
+    scale_factor: f64,
 }
 
 fn main() {
@@ -50,6 +52,7 @@ fn main_inner(args: Args) {
             height: args.height,
         },
         /*draw_frame=*/ args.draw_frame,
+        /*scale_factor=*/ args.scale_factor,
     )
     .expect("failed to produce MapConfig");
 
@@ -92,6 +95,7 @@ mod test_super {
             width: size.width,
             height: size.height,
             draw_frame: true,
+            scale_factor: 0.9,
         };
 
         main_inner(args);

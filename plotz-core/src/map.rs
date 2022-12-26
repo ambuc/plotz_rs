@@ -138,13 +138,13 @@ impl Map {
         Ok(())
     }
 
-    fn apply_scaling(&mut self, dest_size: &Size) -> Result<(), MapError> {
+    fn apply_scaling(&mut self, scale_factor: f64, dest_size: &Size) -> Result<(), MapError> {
         let curr_bbox = self.get_bbox()?;
         let scaling_factor = std::cmp::max(
             FloatOrd(dest_size.height as f64 / curr_bbox.height().abs()),
             FloatOrd(dest_size.width as f64 / curr_bbox.width().abs()),
         )
-        .0 * 0.9;
+        .0 * scale_factor;
         self.polygons_iter_mut().for_each(|p| *p *= scaling_factor);
         Ok(())
     }
@@ -176,7 +176,7 @@ impl Map {
     }
 
     /// Adjusts the map for scale/transform issues.
-    pub fn adjust(&mut self, dest_size: &Size) -> Result<(), MapError> {
+    pub fn adjust(&mut self, scale_factor: f64, dest_size: &Size) -> Result<(), MapError> {
         // first compute current bbox and shift everything positive.
         self.polygons_iter_mut().for_each(|p| {
             p.flip_y();
@@ -185,7 +185,7 @@ impl Map {
                 .for_each(|pt| pt.y.0 = latitude_to_y(pt.y.0))
         });
         self.apply_bl_shift()?;
-        self.apply_scaling(dest_size)?;
+        self.apply_scaling(scale_factor, dest_size)?;
         Ok(())
     }
 
@@ -194,7 +194,7 @@ impl Map {
     pub fn render(mut self, config: &MapConfig) -> Result<(), MapError> {
         info!(config = ?config);
 
-        let () = self.adjust(&config.size)?;
+        let () = self.adjust(config.scale_factor, &config.size)?;
         self.apply_shading();
 
         if config.draw_frame {
@@ -237,6 +237,7 @@ pub struct MapConfig {
     output_directory: PathBuf,
     size: Size,
     draw_frame: bool,
+    scale_factor: f64,
 }
 
 impl MapConfig {
@@ -246,6 +247,7 @@ impl MapConfig {
         output_directory: PathBuf,
         size: Size,
         draw_frame: bool,
+        scale_factor: f64,
     ) -> Result<MapConfig, MapError> {
         info!("Loading MapConfig from files: {:?}", file_paths);
         let mut files = vec![];
@@ -257,6 +259,7 @@ impl MapConfig {
             output_directory,
             size,
             draw_frame,
+            scale_factor,
         })
     }
 
@@ -266,6 +269,7 @@ impl MapConfig {
         output_directory: PathBuf,
         size: Size,
         draw_frame: bool,
+        scale_factor: f64,
     ) -> Result<MapConfig, MapError> {
         trace!("MapConfig::new_from_file");
         Self::new_from_files(
@@ -273,6 +277,7 @@ impl MapConfig {
             output_directory,
             size,
             draw_frame,
+            scale_factor,
         )
     }
 
@@ -338,6 +343,7 @@ mod tests {
                 height: 1024,
             },
             /*draw_frame */ false,
+            /*scale_factor */ 0.9,
         )
         .unwrap();
 
@@ -362,7 +368,7 @@ mod tests {
             assert_eq!(rolling_bbox.right_bound(), 3.0);
         }
 
-        let () = map.adjust(&map_config.size).unwrap();
+        let () = map.adjust(0.9, &map_config.size).unwrap();
 
         {
             let mut rolling_bbox = BoundsCollector::new();
@@ -424,13 +430,14 @@ mod tests {
     fn test_apply_scaling() {
         use plotz_color::*;
 
-        for (size, initial, expected) in [
+        for (size, scale_factor, initial, expected) in [
             // rescale: 1024 * 0.9 = 921.6
             (
                 Size {
                     width: 1024,
                     height: 1024,
                 },
+                0.9,
                 [Pt(0.0, 0.0), Pt(0.0, 1.0), Pt(1.0, 0.0)],
                 [Pt(0.0, 0.0), Pt(0.0, 921.60), Pt(921.60, 0.0)],
             ),
@@ -440,6 +447,7 @@ mod tests {
                     width: 1000,
                     height: 1000,
                 },
+                0.9,
                 [Pt(0.0, 0.0), Pt(0.0, 1.0), Pt(1.0, 0.0)],
                 [Pt(0.0, 0.0), Pt(0.0, 900.0), Pt(900.0, 0.0)],
             ),
@@ -454,7 +462,7 @@ mod tests {
                     }],
                 )],
             };
-            map.apply_scaling(&size).unwrap();
+            map.apply_scaling(scale_factor, &size).unwrap();
 
             assert_eq!(
                 map.layers[0].1[0].obj,
