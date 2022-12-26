@@ -37,7 +37,7 @@ fn main() {
 }
 
 fn main_inner(args: Args) {
-    MapConfig::new_from_files(
+    let map_config = MapConfig::new_from_files(
         /*files=*/
         glob(&args.input_glob)
             .expect("failed to read glob pattern")
@@ -51,11 +51,11 @@ fn main_inner(args: Args) {
         },
         /*draw_frame=*/ args.draw_frame,
     )
-    .expect("failed to produce MapConfig")
-    .make_map()
-    .expect("failed to create map")
-    .render()
-    .expect("failed to render map");
+    .expect("failed to produce MapConfig");
+
+    let map = map_config.make_map().expect("failed to create map");
+
+    let () = map.render(&map_config).expect("failed to render map");
 }
 
 #[cfg(test)]

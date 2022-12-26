@@ -97,7 +97,7 @@ lazy_static! {
 
 /// An unadjusted set of annotated polygons, ready to be printed to SVG.
 pub struct Map {
-    config: MapConfig,
+    //config: MapConfig,
     layers: Vec<(Bucket, Vec<ColoredObj>)>,
 }
 impl Map {
@@ -157,7 +157,7 @@ impl Map {
     }
 
     /// Adjusts the map for scale/transform issues.
-    pub fn adjust(&mut self) -> Result<(), MapError> {
+    pub fn adjust(&mut self, dest_size: &Size) -> Result<(), MapError> {
         // first compute current bbox and shift everything positive.
         self.polygons_iter_mut().for_each(|p| {
             p.flip_y();
@@ -178,8 +178,8 @@ impl Map {
         {
             let curr_bbox = self.get_bbox()?;
             let scaling_factor = std::cmp::max(
-                FloatOrd(self.config.size.height as f64 / curr_bbox.height().abs()),
-                FloatOrd(self.config.size.width as f64 / curr_bbox.width().abs()),
+                FloatOrd(dest_size.height as f64 / curr_bbox.height().abs()),
+                FloatOrd(dest_size.width as f64 / curr_bbox.width().abs()),
             )
             .0 * 0.9;
             self.polygons_iter_mut().for_each(|p| *p *= scaling_factor);
@@ -189,15 +189,12 @@ impl Map {
 
     /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
     /// file(s).
-    pub fn render(mut self) -> Result<(), MapError> {
-        info!(config = ?self.config);
+    pub fn render(mut self, config: &MapConfig) -> Result<(), MapError> {
+        info!(config = ?config);
 
-        if self.config.draw_frame {
+        if config.draw_frame {
             info!("Adding frame.");
-            let (w, h) = (
-                self.config.size.width as f64,
-                self.config.size.height as f64,
-            );
+            let (w, h) = (config.size.width as f64, config.size.height as f64);
             self.layers.push((
                 Bucket::Frame,
                 vec![ColoredObj {
@@ -211,18 +208,15 @@ impl Map {
 
         // write layer 0 with all.
         write_layer_to_svg(
-            self.config.size,
-            self.config.output_directory.join("0.svg"),
+            config.size,
+            config.output_directory.join("0.svg"),
             self.layers.iter().flat_map(|(_bucket, vec)| vec),
         )?;
 
         // write each layer individually.
         for (idx, (bucket, polygons)) in self.layers.into_iter().enumerate() {
-            let path = self
-                .config
-                .output_directory
-                .join(format!("{}.svg", idx + 1));
-            let num = write_layer_to_svg(self.config.size, &path, &polygons)?;
+            let path = config.output_directory.join(format!("{}.svg", idx + 1));
+            let num = write_layer_to_svg(config.size, &path, &polygons)?;
             trace!("Wrote {:>4?} polygons to {:?} for {:?}", num, path, bucket);
         }
 
@@ -279,7 +273,7 @@ impl MapConfig {
 
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
     /// unadjusted Map instance.
-    pub fn make_map(self) -> Result<Map, MapError> {
+    pub fn make_map(&self) -> Result<Map, MapError> {
         let mut interner = StringInterner::new();
         let bucketer = DefaultBucketer::new(&mut interner);
         let colorer: DefaultColorer = DefaultColorerBuilder::default();
@@ -315,10 +309,7 @@ impl MapConfig {
             .map(|(k, v)| (k, v.map(|ap| ap.to_colored_polygon()).collect()))
             .collect::<Vec<(Bucket, Vec<ColoredObj>)>>();
 
-        Ok(Map {
-            config: self,
-            layers,
-        })
+        Ok(Map { layers })
     }
 }
 
@@ -333,7 +324,7 @@ mod tests {
     fn test_render() {
         let tmp_dir = TempDir::new("example").unwrap();
 
-        let mut map: Map = MapConfig::new_from_file(
+        let map_config = MapConfig::new_from_file(
             /*file_path=*/ "../testdata/example.geojson",
             /*output_file_prefix=*/ tmp_dir.path().to_path_buf(),
             /*size= */
@@ -343,9 +334,9 @@ mod tests {
             },
             /*draw_frame */ false,
         )
-        .unwrap()
-        .make_map()
         .unwrap();
+
+        let mut map: Map = map_config.make_map().unwrap();
 
         {
             let mut rolling_bbox = BoundsCollector::new();
@@ -366,7 +357,7 @@ mod tests {
             assert_eq!(rolling_bbox.right_bound(), 3.0);
         }
 
-        let () = map.adjust().unwrap();
+        let () = map.adjust(&map_config.size).unwrap();
 
         {
             let mut rolling_bbox = BoundsCollector::new();
@@ -383,6 +374,6 @@ mod tests {
             assert_float_eq!(rolling_bbox.right_bound(), 921.59999, abs <= 0.000_01);
         }
 
-        let () = map.render().unwrap();
+        let () = map.render(&map_config).unwrap();
     }
 }
