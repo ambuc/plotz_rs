@@ -50,4 +50,5 @@ impl Bounded for Obj {
 pub struct ColoredObj {
     pub obj: Obj,
     pub color: ColorRGB,
+    pub thickness: f64,
 }

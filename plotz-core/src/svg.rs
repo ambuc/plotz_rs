@@ -58,7 +58,7 @@ fn write_obj_to_context(
     }
 
     context.set_source_rgb(co.color.r, co.color.g, co.color.b);
-    context.set_line_width(10.0);
+    context.set_line_width(co.thickness);
     context.stroke()?;
     context.set_source_rgb(BLACK.r, BLACK.g, BLACK.b);
     Ok(())
@@ -134,6 +134,7 @@ mod test_super {
             vec![&ColoredObj {
                 color: BLACK,
                 obj: Obj::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
+                thickness: 1.0,
             }],
         )
         .unwrap();
@@ -142,7 +143,7 @@ mod test_super {
         assert!(actual.contains("width=\"1024pt\""));
         assert!(actual.contains("height=\"1024pt\""));
         assert!(actual.contains("<g id=\""));
-        assert!(actual.contains("<path style=\"fill:none;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;\" d=\"M 0 0 L 0 1 L 1 0 L 0 0 \"/>"));
+        assert!(actual.contains("<path style=\"fill:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;\" d=\"M 0 0 L 0 1 L 1 0 L 0 0 \"/>"));
     }
 
     #[test]
@@ -160,10 +161,12 @@ mod test_super {
                 &ColoredObj {
                     color: BLACK,
                     obj: Obj::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
+                    thickness: 1.0,
                 },
                 &ColoredObj {
                     color: BLACK,
                     obj: Obj::Polygon(Polygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)]).unwrap()),
+                    thickness: 1.0,
                 },
             ],
         )
@@ -173,7 +176,7 @@ mod test_super {
         assert!(actual.contains("width=\"1024pt\""));
         assert!(actual.contains("height=\"1024pt\""));
         assert!(actual.contains("<g id=\""));
-        assert!(actual.contains("<path style=\"fill:none;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;\" d=\"M 0 0 L 0 1 L 1 0 L 0 0 \"/>"));
-        assert!(actual.contains("<path style=\"fill:none;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;\" d=\"M 5 5 L 5 6 L 6 5 L 5 5 \"/>"));
+        assert!(actual.contains("<path style=\"fill:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;\" d=\"M 0 0 L 0 1 L 1 0 L 0 0 \"/>"));
+        assert!(actual.contains("<path style=\"fill:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;\" d=\"M 5 5 L 5 6 L 6 5 L 5 5 \"/>"));
     }
 }

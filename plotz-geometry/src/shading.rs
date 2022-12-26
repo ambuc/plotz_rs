@@ -26,6 +26,8 @@ pub struct ShadeConfig {
     pub gap: f64,
     /// The slope of a line
     pub slope: f64,
+    /// The thickness of a line (SVG only.)
+    pub thickness: f64,
 }
 
 /// Gap controls how far to step between crosshatched lines
@@ -96,6 +98,7 @@ mod tests {
                 &ShadeConfig {
                     gap: 1.0,
                     slope: 1.0,
+                    thickness: 1.0,
                 },
                 &frame,
             )
@@ -120,6 +123,7 @@ mod tests {
                 &ShadeConfig {
                     gap: 0.5,
                     slope: 1.0,
+                    thickness: 1.0,
                 },
                 &frame,
             )
@@ -154,6 +158,7 @@ mod tests {
                 &ShadeConfig {
                     gap: 0.5,
                     slope: 0.5,
+                    thickness: 1.0,
                 },
                 &frame,
             )
@@ -241,6 +246,7 @@ mod tests {
                 &ShadeConfig {
                     gap: 5.0,
                     slope: 10.0,
+                    thickness: 1.0,
                 },
                 &area,
             )

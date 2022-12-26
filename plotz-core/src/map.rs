@@ -58,6 +58,7 @@ pub struct AnnotatedPolygon {
     polygon: Polygon,
     bucket: Bucket,
     color: ColorRGB,
+    thickness: f64,
     _tags: Vec<(SymbolU32, SymbolU32)>,
 }
 impl AnnotatedPolygon {
@@ -66,6 +67,7 @@ impl AnnotatedPolygon {
         ColoredObj {
             obj: Obj::Polygon(self.polygon),
             color: self.color,
+            thickness: self.thickness,
         }
     }
 }
@@ -80,22 +82,28 @@ lazy_static! {
     pub static ref SHADINGS: std::collections::HashMap<Bucket, ShadeConfig> = [
         // TODO(jbuckland): Some of these scale poorly or fail to render. Can I
         // somehow autoderive this density?
-        // TODO(jbuckland): Make the svg scale thickness much smaller for crosshatching.
         (
             Bucket::Area(Area::Park),
             ShadeConfig {
                 gap: 5.0,
-                slope: 10.0
+                slope: 10.0,
+                thickness: 2.0,
             }
         ),
         (
             Bucket::Area(Area::Water),
             ShadeConfig {
                 gap: 5.0,
-                slope: -10.0
+                slope: -10.0,
+                thickness: 2.0,
             }
         ),
     ].into();
+
+    /// How thick the frame is.
+    pub static ref FRAME_THICKNESS: f64 = 5.0;
+    /// How thick the default line is.
+    pub static ref DEFAULT_THICKNESS: f64 = 5.0;
 }
 
 /// An unadjusted set of annotated polygons, ready to be printed to SVG.
@@ -131,6 +139,7 @@ impl Map {
                         polygon: polygon.clone(),
                         bucket,
                         color: colorer.color(bucket).expect("could not color"),
+                        thickness: *DEFAULT_THICKNESS,
                         _tags: tags.clone(),
                     })
                 })
@@ -218,6 +227,7 @@ impl Map {
                                 .map(|s| ColoredObj {
                                     obj: Obj::Segment(s),
                                     color: co.color,
+                                    thickness: shade_config.thickness,
                                 })
                                 .collect::<Vec<_>>(),
                         ),
@@ -273,6 +283,7 @@ impl Map {
                         Polygon([Pt(0.0, 0.0), Pt(0.0, w), Pt(h, w), Pt(h, 0.0)]).unwrap(),
                     ),
                     color: plotz_color::BLACK,
+                    thickness: *FRAME_THICKNESS,
                 }],
             ));
         }
@@ -414,6 +425,7 @@ mod tests {
                     vec![ColoredObj {
                         obj: obj,
                         color: ALICEBLUE,
+                        thickness: 1.0,
                     }],
                 )],
             };
@@ -459,6 +471,7 @@ mod tests {
                     vec![ColoredObj {
                         obj: obj,
                         color: ALICEBLUE,
+                        thickness: 1.0,
                     }],
                 )],
             };
