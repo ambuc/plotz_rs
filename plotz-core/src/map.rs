@@ -78,6 +78,9 @@ fn latitude_to_y(latitude: f64) -> f64 {
 lazy_static! {
     /// Which areas get shaded, and how much.
     pub static ref SHADINGS: std::collections::HashMap<Bucket, ShadeConfig> = [
+        // TODO(jbuckland): Some of these scale poorly or fail to render. Can I
+        // somehow autoderive this density?
+        // TODO(jbuckland): Make the svg scale thickness much smaller for crosshatching.
         (
             Bucket::Area(Area::Park),
             ShadeConfig {
