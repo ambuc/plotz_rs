@@ -64,6 +64,8 @@ fn main_inner(args: Args) {
 #[cfg(test)]
 mod test_super {
     use super::*;
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
     use tempdir::TempDir;
 
     fn write_svg_to_pixmap(size: Size, svg: &str) -> tiny_skia::Pixmap {
@@ -89,18 +91,25 @@ mod test_super {
             height: 1024,
         };
 
-        let args = Args {
+        main_inner(Args {
             input_glob: "testdata/wuppertal*.geojson".to_string(),
             output_directory: tmp_dir.path().to_path_buf(),
             width: size.width,
             height: size.height,
             draw_frame: true,
             scale_factor: 0.9,
-        };
-
-        main_inner(args);
+        });
 
         let output_svg = std::fs::read_to_string(tmp_dir.path().join("0.svg")).expect("foo");
+
+        assert_eq!(
+            {
+                let mut s = DefaultHasher::new();
+                output_svg.hash(&mut s);
+                s.finish()
+            },
+            4151782797705356813
+        );
 
         assert!(write_svg_to_pixmap(size, &output_svg)
             .save_png("/tmp/output.png")
