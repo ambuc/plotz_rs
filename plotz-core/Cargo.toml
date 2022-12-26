@@ -16,6 +16,7 @@ plotz-geometry = { path = "../plotz-geometry" }
 serde_json = "*"
 string-interner = "*"
 thiserror = "*"
+typed-builder = "*"
 
 [dev-dependencies]
 tempdir = "*"

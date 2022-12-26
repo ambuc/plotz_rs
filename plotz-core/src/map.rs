@@ -8,10 +8,8 @@ use crate::{
     colorer_builder::DefaultColorerBuilder,
     svg::{write_layer_to_svg, Size, SvgWriteError},
 };
-use itertools::Itertools;
-use tracing::*;
-
 use float_ord::FloatOrd;
+use itertools::Itertools;
 use lazy_static::lazy_static;
 use plotz_color::ColorRGB;
 use plotz_geojson::GeoJsonConversionError;
@@ -28,6 +26,8 @@ use std::{
 };
 use string_interner::{symbol::SymbolU32, StringInterner};
 use thiserror::Error;
+use tracing::*;
+use typed_builder::TypedBuilder;
 
 #[derive(Debug, Error)]
 /// A general error you might encounter when rendering a Map.
@@ -260,8 +260,9 @@ impl Map {
 
 /// A set of config arguments for reading geometry from a geojson file and
 /// writing SVG(s) to output file(s).
-#[derive(Debug)]
+#[derive(Debug, TypedBuilder)]
 pub struct MapConfig {
+    #[builder(setter(transform = |x: impl IntoIterator<Item = impl AsRef<Path>> + std::fmt::Debug| paths_to_files(x)))]
     input_files: Vec<File>,
     output_directory: PathBuf,
     size: Size,
@@ -271,55 +272,17 @@ pub struct MapConfig {
     shift_y: f64,
 }
 
+/// Helper fn for transforming filepaths to files.
+fn paths_to_files(
+    file_paths: impl IntoIterator<Item = impl AsRef<Path>> + std::fmt::Debug,
+) -> Vec<File> {
+    file_paths
+        .into_iter()
+        .map(|fp| File::open(fp).expect("could not open file"))
+        .collect::<Vec<_>>()
+}
+
 impl MapConfig {
-    /// Instantiates a new MapConfig from many file paths.
-    pub fn new_from_files(
-        file_paths: impl IntoIterator<Item = impl AsRef<Path>> + std::fmt::Debug,
-        output_directory: PathBuf,
-        size: Size,
-        draw_frame: bool,
-        scale_factor: f64,
-        shift_x: f64,
-        shift_y: f64,
-    ) -> Result<MapConfig, MapError> {
-        info!("Loading MapConfig from files: {:?}", file_paths);
-        let mut files = vec![];
-        for fp in file_paths {
-            files.push(File::open(fp)?);
-        }
-        Ok(MapConfig {
-            input_files: files,
-            output_directory,
-            size,
-            draw_frame,
-            scale_factor,
-            shift_x,
-            shift_y,
-        })
-    }
-
-    /// Instantiates a new MapConfig from one file path.
-    pub fn new_from_file(
-        file_path: &str,
-        output_directory: PathBuf,
-        size: Size,
-        draw_frame: bool,
-        scale_factor: f64,
-        shift_x: f64,
-        shift_y: f64,
-    ) -> Result<MapConfig, MapError> {
-        trace!("MapConfig::new_from_file");
-        Self::new_from_files(
-            std::iter::once(file_path),
-            output_directory,
-            size,
-            draw_frame,
-            scale_factor,
-            shift_x,
-            shift_y,
-        )
-    }
-
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
     /// unadjusted Map instance.
     pub fn make_map(&self) -> Result<Map, MapError> {
@@ -373,20 +336,18 @@ mod tests {
     fn test_render() {
         let tmp_dir = TempDir::new("example").unwrap();
 
-        let map_config = MapConfig::new_from_file(
-            /*file_path=*/ "../testdata/example.geojson",
-            /*output_file_prefix=*/ tmp_dir.path().to_path_buf(),
-            /*size= */
-            Size {
+        let map_config = MapConfig::builder()
+            .input_files(vec!["../testdata/example.geojson"])
+            .output_directory(tmp_dir.path().to_path_buf())
+            .size(Size {
                 width: 1024,
                 height: 1024,
-            },
-            /*draw_frame */ false,
-            /*scale_factor */ 0.9,
-            /*shift_x */ 0.0,
-            /*shift_y */ 0.0,
-        )
-        .unwrap();
+            })
+            .draw_frame(false)
+            .scale_factor(0.9)
+            .shift_x(0.0)
+            .shift_y(0.0)
+            .build();
 
         let mut map: Map = map_config.make_map().unwrap();
 
@@ -418,10 +379,10 @@ mod tests {
                     rolling_bbox.incorporate(&colored_obj.obj);
                 })
             });
-            assert_float_eq!(rolling_bbox.left_bound(), 0.0, abs <= 0.000_01);
-            assert_float_eq!(rolling_bbox.bottom_bound(), 0.0, abs <= 0.000_01);
-            assert_float_eq!(rolling_bbox.top_bound(), 1537.95327, abs <= 0.000_01);
-            assert_float_eq!(rolling_bbox.right_bound(), 921.59999, abs <= 0.000_01);
+            assert_float_eq!(rolling_bbox.left_bound(), 51.200, abs <= 0.000_01);
+            assert_float_eq!(rolling_bbox.bottom_bound(), -256.976635, abs <= 0.000_01);
+            assert_float_eq!(rolling_bbox.top_bound(), 1280.976635, abs <= 0.000_01);
+            assert_float_eq!(rolling_bbox.right_bound(), 972.8, abs <= 0.000_01);
         }
 
         let () = map.render(&map_config).unwrap();

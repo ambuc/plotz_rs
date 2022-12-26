@@ -42,24 +42,24 @@ fn main() {
 }
 
 fn main_inner(args: Args) {
-    let map_config = MapConfig::new_from_files(
-        /*files=*/
-        glob(&args.input_glob)
-            .expect("failed to read glob pattern")
-            .into_iter()
-            .collect::<Result<Vec<_>, _>>()
-            .unwrap(),
-        args.output_directory,
-        Size {
+    let map_config = MapConfig::builder()
+        .input_files(
+            glob(&args.input_glob)
+                .expect("failed to read glob pattern")
+                .into_iter()
+                .collect::<Result<Vec<_>, _>>()
+                .unwrap(),
+        )
+        .output_directory(args.output_directory)
+        .size(Size {
             width: args.width,
             height: args.height,
-        },
-        /*draw_frame=*/ args.draw_frame,
-        /*scale_factor=*/ args.scale_factor,
-        /*shift_x=*/ args.shift_x,
-        /*shift_y=*/ args.shift_y,
-    )
-    .expect("failed to produce MapConfig");
+        })
+        .draw_frame(args.draw_frame)
+        .scale_factor(args.scale_factor)
+        .shift_x(args.shift_x)
+        .shift_y(args.shift_y)
+        .build();
 
     let map = map_config.make_map().expect("failed to create map");
 
@@ -103,6 +103,8 @@ mod test_super {
             height: size.height,
             draw_frame: true,
             scale_factor: 0.9,
+            shift_x: 0.0,
+            shift_y: 0.0,
         });
 
         let output_svg = std::fs::read_to_string(tmp_dir.path().join("0.svg")).expect("foo");
@@ -113,7 +115,7 @@ mod test_super {
                 output_svg.hash(&mut s);
                 s.finish()
             },
-            4151782797705356813
+            11932351637306413113
         );
 
         assert!(write_svg_to_pixmap(size, &output_svg)
