@@ -15,7 +15,7 @@ use {
         cmp::{Eq, PartialEq},
         collections::HashSet,
         fmt::Debug,
-        ops::{Add, AddAssign, MulAssign, Sub, SubAssign},
+        ops::{Mul, Add, AddAssign, MulAssign, Sub, SubAssign},
     },
     thiserror::Error,
 };
@@ -695,6 +695,12 @@ impl Sub<Pt> for &Polygon {
         Polygon(self.pts.iter().map(|p| *p - rhs)).unwrap()
     }
 }
+impl Sub<Pt> for Polygon {
+    type Output = Polygon;
+    fn sub(self, rhs: Pt) -> Self::Output {
+        Polygon(self.pts.iter().map(|p| *p - rhs)).unwrap()
+    }
+}
 impl SubAssign<Pt> for Polygon {
     fn sub_assign(&mut self, rhs: Pt) {
         self.pts.iter_mut().for_each(|p| *p -= rhs);
@@ -703,6 +709,16 @@ impl SubAssign<Pt> for Polygon {
 impl MulAssign<f64> for Polygon {
     fn mul_assign(&mut self, rhs: f64) {
         self.pts.iter_mut().for_each(|p| *p *= rhs);
+    }
+}
+
+impl Mul<f64> for Polygon {
+    type Output = Polygon;
+
+    fn mul(mut self, rhs: f64) -> Polygon {
+        self *= rhs;
+        self
+
     }
 }
 

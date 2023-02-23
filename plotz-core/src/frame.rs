@@ -13,6 +13,6 @@ pub fn make_frame((w, h): (f64, f64), offset: Pt) -> ColoredObj {
             Polygon([Pt(0.0, 0.0), Pt(0.0, w), Pt(h, w), Pt(h, 0.0)]).unwrap() + offset,
         ),
         color: BLACK,
-        thickness: 1.0,
+        thickness: 5.0,
     }
 }

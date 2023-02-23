@@ -6,7 +6,7 @@ use {
     itertools::Itertools,
     plotz_color::{ColorRGB, COLORS},
     plotz_core::{
-        colored_obj::{ColoredObj, Obj},
+        colored_obj::ColoredObj,
         svg::{write_layer_to_svg, Size},
     },
     plotz_geometry::{
@@ -60,8 +60,6 @@ impl Style {
 
 fn main() {
     let args: Args = argh::from_env();
-    //
-    println!("args");
 
     let mut rng = rand::thread_rng();
 
@@ -88,11 +86,10 @@ fn main() {
     let polygons: Vec<Polygon> = vornoi
         .iter_cells()
         .map(|cell| {
-            let mut p = Polygon(cell.iter_vertices().map(|vertex| Pt(vertex.x, vertex.y)))
-                .expect("valid polygon");
-            p *= DIM;
-            p += Pt(50.0, 50.0);
-            p
+            Polygon(cell.iter_vertices().map(|vertex| Pt(vertex.x, vertex.y)))
+                .expect("valid polygon")
+                * DIM
+                + Pt(50.0, 50.0)
         })
         .collect();
 
@@ -100,11 +97,7 @@ fn main() {
         .iter()
         .flat_map(|p| match Style::rand() {
             Style::Shade(shade_config, color, draw_border) => std::iter::once(if draw_border {
-                Some(ColoredObj {
-                    obj: Obj::Polygon(p.clone()),
-                    color,
-                    thickness: 1.0,
-                })
+                Some(ColoredObj::from_polygon(p.clone()).with_color(color))
             } else {
                 None
             })
@@ -113,26 +106,14 @@ fn main() {
                 shade_polygon(&shade_config, p)
                     .expect("failed to shade")
                     .iter()
-                    .map(|segment| ColoredObj {
-                        obj: Obj::Segment(*segment),
-                        color,
-                        thickness: 1.0,
-                    }),
+                    .map(|segment| ColoredObj::from_segment(*segment).with_color(color)),
             )
             .collect::<Vec<_>>(),
             Style::Nested(fs, color) => fs
-                .iter()
+                .into_iter()
                 .map(|f| {
-                    let mut p = p.clone();
                     let del = p.bbox_center();
-                    p -= del;
-                    p *= *f;
-                    p += del;
-                    ColoredObj {
-                        obj: Obj::Polygon(p.clone()),
-                        color,
-                        thickness: 1.0,
-                    }
+                    ColoredObj::from_polygon(((p.clone() - del) * f) + del).with_color(color)
                 })
                 .collect::<Vec<_>>(),
             Style::None => vec![],
