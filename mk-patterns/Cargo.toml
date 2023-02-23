@@ -1,0 +1,22 @@
+[package]
+name = "mk-patterns"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "*"
+argh = "*"
+clap = "*"
+console = "*"
+dialoguer = "*"
+exitcode = "*"
+glob = "*"
+indicatif = "*"
+lazy_static = "*"
+plotz-color = { path = "../plotz-color" }
+plotz-core = { path = "../plotz-core" }
+plotz-geometry = { path = "../plotz-geometry" }
+rand = "*"
+regex = "*"
+typed-builder = "*"
+voronoice = "*"

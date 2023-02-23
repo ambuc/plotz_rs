@@ -16,6 +16,7 @@ members = [
     "plotz-geometry",
     "plotz-shp",
     "svg-splitter",
+    "mk-patterns",
 ]
 
 

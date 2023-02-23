@@ -44,14 +44,20 @@ pub fn shade_polygon(
     let bbox = polygon.bbox()?;
     let mut segments: Vec<Segment> = vec![];
 
-    let slope_height = bbox.width() / config.slope;
-    let mut i: Pt = bbox.bl_bound() - Pt(0.0, slope_height) - epsilon;
-    let mut f: Pt = bbox.br_bound();
+    let mut slope_height = bbox.width() / config.slope;
+    println!("slope_height: {:?}, gap: {:?}", slope_height, config.gap);
+    if config.slope < 0.0 {
+        slope_height *= -1.0;
+    }
+
+    let mut i: Pt = bbox.bl_bound() - Pt(0.0, slope_height) - (epsilon * 5.0);
+    let mut f: Pt = bbox.br_bound() + (epsilon * 5.0);
 
     while [i, f].iter().any(|p| p.y.0 <= bbox.top_bound()) {
         let full_stroke = Segment(i, f);
         let cropped_strokes = polygon.as_frame_to_segment(&full_stroke)?;
         segments.extend(cropped_strokes.iter());
+        // segments.push(full_stroke);
         i.y.0 += config.gap;
         f.y.0 += config.gap;
     }

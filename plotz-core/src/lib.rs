@@ -2,9 +2,9 @@
 
 //! The core mapping logic of plotz, including coloring and bucketing.
 
+pub mod colored_obj;
 pub mod map;
 pub mod svg;
 
 mod bucket;
 mod bucketer;
-mod colored_obj;
