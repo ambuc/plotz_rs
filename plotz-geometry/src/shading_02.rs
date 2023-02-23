@@ -1,9 +1,9 @@
 //! Shading and crosshatching algorithms. Updated version.
 
 use crate::{
-    bounded::{Bounded, BoundingBoxError},
+    bounded::Bounded,
     point::Pt,
-    polygon::{CropToPolygonError, PointLoc, Polygon, PolygonKind},
+    polygon::{Polygon, PolygonKind},
     segment::Segment,
     shading::ShadePolygonError,
     //

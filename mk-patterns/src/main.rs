@@ -1,12 +1,17 @@
+use plotz_geometry::bounded::Bounded;
 
 use {
     argh::FromArgs,
-    plotz_color::BLACK,
+    plotz_color::{ColorRGB, COLORS},
     plotz_core::{
         colored_obj::{ColoredObj, Obj},
         svg::{write_layer_to_svg, Size},
     },
-    plotz_geometry::{point::Pt, polygon::Polygon, shading_02::{shade_polygon, ShadeConfig}},
+    plotz_geometry::{
+        point::Pt,
+        polygon::Polygon,
+        shading_02::{shade_polygon, ShadeConfig},
+    },
     rand::Rng,
 };
 
@@ -14,7 +19,35 @@ use {
 #[argh(description = "...")]
 struct Args {
     #[argh(option, description = "output path")]
-    output_path: String,
+    output_path_prefix: String,
+}
+
+enum Style {
+    Shade(ShadeConfig, ColorRGB, bool),
+    Nested(Vec<f64>, ColorRGB),
+    None,
+}
+
+impl Style {
+    fn rand() -> Style {
+        let mut rng = rand::thread_rng();
+        match rng.gen_range(0, 6) {
+            1 | 2 | 3 => Style::Shade(
+                ShadeConfig {
+                    gap: 4.0,
+                    slope: (rng.gen_range(0.0_f64, 360.0_f64)).tan(),
+                    thickness: 1.0,
+                },
+                *rng.choose(&COLORS).expect("color"),
+                rand::random(),
+            ),
+            4 | 5 => Style::Nested(
+                vec![rng.gen_range(0.3, 0.8)],
+                *rng.choose(&COLORS).expect("color"),
+            ),
+            _ => Style::None,
+        }
+    }
 }
 
 fn main() {
@@ -24,7 +57,7 @@ fn main() {
 
     let mut rng = rand::thread_rng();
 
-    let sites = (0..50)
+    let sites: Vec<voronoice::Point> = (1..200)
         .step_by(1)
         .map(|_| {
             let x: f64 = rng.gen();
@@ -40,53 +73,62 @@ fn main() {
             1.0,
             1.0,
         ))
-        .set_lloyd_relaxation_iterations(5)
+        .set_lloyd_relaxation_iterations(10)
         .build()
         .expect("build vornoi");
 
-    // inspect cells through iterators
-    let mut polygons: Vec<Polygon> = vornoi
+    let polygons: Vec<Polygon> = vornoi
         .iter_cells()
         .map(|cell| {
-            Polygon(cell.iter_vertices().map(|vertex| Pt(vertex.x, vertex.y)))
-                .expect("valid polygon")
+            let mut p = Polygon(cell.iter_vertices().map(|vertex| Pt(vertex.x, vertex.y)))
+                .expect("valid polygon");
+            p *= 400.0;
+            p += Pt(50.0, 50.0);
+            p
         })
         .collect();
 
-    polygons.iter_mut().for_each(|p| {
-        *p *= 400.0;
-        *p += Pt(50.0, 50.0);
-    });
-
     let colored_objs: Vec<ColoredObj> = polygons
-        .into_iter()
-        .map(|p| {
-            let shade_config = ShadeConfig {
-                gap: 10.0,
-                slope: rng.gen_range(-2.0, 2.0),
-                thickness: 1.0,
-            };
-
-            let segments = shade_polygon(&shade_config, &p).expect("failed to shade");
-
-            let mut colored_objects: Vec<ColoredObj> = segments
-                .into_iter()
-                .map(|segment| ColoredObj {
-                    obj: Obj::Segment(segment),
-                    color: BLACK,
+        .iter()
+        .flat_map(|p| match Style::rand() {
+            Style::Shade(shade_config, color, draw_border) => std::iter::once(if draw_border {
+                Some(ColoredObj {
+                    obj: Obj::Polygon(p.clone()),
+                    color,
                     thickness: 1.0,
                 })
-                .collect();
-
-            colored_objects.push(ColoredObj {
-                obj: Obj::Polygon(p),
-                color: BLACK,
-                thickness: 1.0,
-            });
-
-            colored_objects
+            } else {
+                None
+            })
+            .flatten()
+            .chain(
+                shade_polygon(&shade_config, p)
+                    .expect("failed to shade")
+                    .iter()
+                    .map(|segment| ColoredObj {
+                        obj: Obj::Segment(*segment),
+                        color,
+                        thickness: 1.0,
+                    }),
+            )
+            .collect::<Vec<_>>(),
+            Style::Nested(fs, color) => fs
+                .iter()
+                .map(|f| {
+                    let mut p = p.clone();
+                    let del = p.bbox_center();
+                    p -= del;
+                    p *= *f;
+                    p += del;
+                    ColoredObj {
+                        obj: Obj::Polygon(p.clone()),
+                        color,
+                        thickness: 1.0,
+                    }
+                })
+                .collect::<Vec<_>>(),
+            Style::None => vec![],
         })
-        .flatten()
         .collect();
 
     let num = write_layer_to_svg(
@@ -94,7 +136,7 @@ fn main() {
             width: 500,
             height: 500,
         },
-        &args.output_path,
+        args.output_path,
         &colored_objs,
     )
     .expect("failed to write");
