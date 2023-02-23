@@ -25,6 +25,19 @@ impl Hash for ColorRGB {
     }
 }
 
+impl PartialOrd for ColorRGB {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        // this is silly.
+        FloatOrd(self.r + self.g + self.b).partial_cmp(&FloatOrd(other.r + other.g + other.b))
+    }
+}
+
+impl Ord for ColorRGB {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(other).expect("color cmp")
+    }
+}
+
 pub const ALICEBLUE: ColorRGB = ColorRGB {
     r: 0.941_176_470_588_235,
     g: 0.972_549_019_607_843,

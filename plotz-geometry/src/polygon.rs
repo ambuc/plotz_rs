@@ -677,6 +677,13 @@ impl Add<Pt> for &Polygon {
         Polygon(self.pts.iter().map(|p| *p + rhs)).unwrap()
     }
 }
+impl Add<Pt> for Polygon {
+    type Output = Polygon;
+    fn add(self, rhs: Pt) -> Self::Output {
+        &self + rhs
+    }
+
+}
 impl AddAssign<Pt> for Polygon {
     fn add_assign(&mut self, rhs: Pt) {
         self.pts.iter_mut().for_each(|p| *p += rhs);
