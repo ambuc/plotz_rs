@@ -50,8 +50,8 @@ pub fn shade_polygon(
         slope_height *= -1.0;
     }
 
-    let mut i: Pt = bbox.bl_bound() - Pt(0.0, slope_height) - (epsilon * 5.0);
-    let mut f: Pt = bbox.br_bound() + (epsilon * 5.0);
+    let mut i: Pt = bbox.bl_bound() - Pt(0.0, slope_height) - epsilon;
+    let mut f: Pt = bbox.br_bound() + epsilon;
 
     while [i, f].iter().any(|p| p.y.0 <= bbox.top_bound()) {
         let full_stroke = Segment(i, f);
