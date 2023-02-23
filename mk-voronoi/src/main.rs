@@ -6,7 +6,7 @@ use {
     itertools::Itertools,
     plotz_color::{ColorRGB, COLORS},
     plotz_core::{
-        colored_obj::ColoredObj,
+        draw_obj::DrawObj,
         svg::{write_layer_to_svg, Size},
     },
     plotz_geometry::{
@@ -93,11 +93,11 @@ fn main() {
         })
         .collect();
 
-    let mut colored_objs: Vec<ColoredObj> = polygons
+    let mut colored_objs: Vec<DrawObj> = polygons
         .iter()
         .flat_map(|p| match Style::rand() {
             Style::Shade(shade_config, color, draw_border) => std::iter::once(if draw_border {
-                Some(ColoredObj::from_polygon(p.clone()).with_color(color))
+                Some(DrawObj::from_polygon(p.clone()).with_color(color))
             } else {
                 None
             })
@@ -106,14 +106,14 @@ fn main() {
                 shade_polygon(&shade_config, p)
                     .expect("failed to shade")
                     .iter()
-                    .map(|segment| ColoredObj::from_segment(*segment).with_color(color)),
+                    .map(|segment| DrawObj::from_segment(*segment).with_color(color)),
             )
             .collect::<Vec<_>>(),
             Style::Nested(fs, color) => fs
                 .into_iter()
                 .map(|f| {
                     let del = p.bbox_center();
-                    ColoredObj::from_polygon(((p.clone() - del) * f) + del).with_color(color)
+                    DrawObj::from_polygon(((p.clone() - del) * f) + del).with_color(color)
                 })
                 .collect::<Vec<_>>(),
             Style::None => vec![],
@@ -125,7 +125,7 @@ fn main() {
     let groups = colored_objs.into_iter().group_by(|a| a.color);
 
     for (i, (_color, group)) in groups.into_iter().enumerate() {
-        let colored_objs: Vec<ColoredObj> = group.into_iter().collect();
+        let colored_objs: Vec<DrawObj> = group.into_iter().collect();
         let num = write_layer_to_svg(
             SIZE,
             format!("{}_{}.svg", args.output_path_prefix, i),

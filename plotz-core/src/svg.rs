@@ -1,6 +1,6 @@
 //! SVG plotting utilities.
 //!
-use crate::colored_obj::{ColoredObj, Obj};
+use crate::draw_obj::{DrawObj, DrawObjInner};
 use plotz_color::BLACK;
 use plotz_geometry::polygon::PolygonKind;
 use std::fmt::Debug;
@@ -34,7 +34,7 @@ pub enum SvgWriteError {
 }
 
 fn write_obj_to_context(
-    co: &ColoredObj,
+    co: &DrawObj,
     context: &mut cairo::Context,
 ) -> Result<(), SvgWriteError> {
     if co.obj.is_empty() {
@@ -42,7 +42,7 @@ fn write_obj_to_context(
     }
 
     match &co.obj {
-        Obj::Polygon(polygon) => {
+        DrawObjInner::Polygon(polygon) => {
             //
             for p in &polygon.pts {
                 context.line_to(p.x.0, p.y.0);
@@ -51,7 +51,7 @@ fn write_obj_to_context(
                 context.line_to(polygon.pts[0].x.0, polygon.pts[0].y.0);
             }
         }
-        Obj::Segment(segment) => {
+        DrawObjInner::Segment(segment) => {
             context.line_to(segment.i.x.0, segment.i.y.0);
             context.line_to(segment.f.x.0, segment.f.y.0);
         }
@@ -68,7 +68,7 @@ fn write_obj_to_context(
 pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     path: P,
-    polygons: impl IntoIterator<Item = &'a ColoredObj>,
+    polygons: impl IntoIterator<Item = &'a DrawObj>,
 ) -> Result<usize, SvgWriteError> {
     let svg_surface = cairo::SvgSurface::new(size.width as f64, size.height as f64, Some(path))?;
     let mut ctx = cairo::Context::new(&svg_surface)?;
@@ -83,7 +83,7 @@ pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
 fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     paths: impl IntoIterator<Item = P>,
-    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a ColoredObj>>,
+    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a DrawObj>>,
 ) -> Result<(), SvgWriteError> {
     for (path, polygons) in paths.into_iter().zip(polygon_layers.into_iter()) {
         write_layer_to_svg(size, path, polygons)?;
@@ -94,7 +94,7 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use crate::colored_obj::ColoredObj;
+    use crate::draw_obj::DrawObj;
     use plotz_geometry::{point::Pt, polygon::Polygon};
     use tempdir::TempDir;
 
@@ -131,9 +131,9 @@ mod test_super {
                 height: 1024,
             },
             path.to_str().unwrap(),
-            vec![&ColoredObj {
+            vec![&DrawObj {
                 color: BLACK,
-                obj: Obj::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
+                obj: DrawObjInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
                 thickness: 1.0,
             }],
         )
@@ -158,14 +158,14 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![
-                &ColoredObj {
+                &DrawObj {
                     color: BLACK,
-                    obj: Obj::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
+                    obj: DrawObjInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
                     thickness: 1.0,
                 },
-                &ColoredObj {
+                &DrawObj {
                     color: BLACK,
-                    obj: Obj::Polygon(Polygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)]).unwrap()),
+                    obj: DrawObjInner::Polygon(Polygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)]).unwrap()),
                     thickness: 1.0,
                 },
             ],

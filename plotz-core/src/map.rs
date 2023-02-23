@@ -5,7 +5,7 @@
 use crate::{
     bucket::{Area, Bucket, Path as BucketPath},
     bucketer::{Bucketer, DefaultBucketer},
-    colored_obj::{ColoredObj, Obj},
+    draw_obj::{DrawObj, DrawObjInner},
     frame::make_frame,
     svg::{write_layer_to_svg, Size, SvgWriteError},
 };
@@ -65,9 +65,9 @@ pub struct AnnotatedPolygon {
 }
 impl AnnotatedPolygon {
     /// Consumes an AnnotatedPolygon and casts down to a ColoredPolygon.
-    pub fn to_colored_polygon(self) -> ColoredObj {
-        ColoredObj {
-            obj: Obj::Polygon(self.polygon),
+    pub fn to_colored_polygon(self) -> DrawObj {
+        DrawObj {
+            obj: DrawObjInner::Polygon(self.polygon),
             color: self.color,
             thickness: self.thickness,
         }
@@ -131,7 +131,7 @@ lazy_static! {
 /// An unadjusted set of annotated polygons, ready to be printed to SVG.
 #[derive(Debug, PartialEq)]
 pub struct Map {
-    layers: Vec<(Bucket, Vec<ColoredObj>)>,
+    layers: Vec<(Bucket, Vec<DrawObj>)>,
 }
 impl Map {
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
@@ -170,18 +170,18 @@ impl Map {
             .group_by(|ap| ap.bucket)
             .into_iter()
             .map(|(k, v)| (k, v.map(|ap| ap.to_colored_polygon()).collect()))
-            .collect::<Vec<(Bucket, Vec<ColoredObj>)>>();
+            .collect::<Vec<(Bucket, Vec<DrawObj>)>>();
 
         Ok(Map { layers })
     }
 
-    fn objs_iter(&self) -> impl Iterator<Item = &Obj> {
+    fn objs_iter(&self) -> impl Iterator<Item = &DrawObjInner> {
         self.layers
             .iter()
             .flat_map(|(_b, vec)| vec)
             .map(|co| &co.obj)
     }
-    fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut Obj> {
+    fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut DrawObjInner> {
         self.layers
             .iter_mut()
             .flat_map(|(_b, vec)| vec)
@@ -189,13 +189,13 @@ impl Map {
     }
     fn polygons_iter(&self) -> impl Iterator<Item = &Polygon> {
         self.objs_iter().filter_map(|o| match o {
-            Obj::Polygon(p) => Some(p),
+            DrawObjInner::Polygon(p) => Some(p),
             _ => None,
         })
     }
     fn polygons_iter_mut(&mut self) -> impl Iterator<Item = &mut Polygon> {
         self.objs_iter_mut().filter_map(|o| match o {
-            Obj::Polygon(p) => Some(p),
+            DrawObjInner::Polygon(p) => Some(p),
             _ => None,
         })
     }
@@ -238,15 +238,15 @@ impl Map {
         for (bucket, layers) in self.layers.iter_mut() {
             if let Some(shade_config) = SHADINGS.get(bucket) {
                 // keep the frame, add the crosshatchings.
-                let crosshatchings: Vec<ColoredObj> = layers
+                let crosshatchings: Vec<DrawObj> = layers
                     .iter()
                     .filter_map(|co| match &co.obj {
-                        Obj::Polygon(p) => Some(
+                        DrawObjInner::Polygon(p) => Some(
                             shade_polygon(shade_config, p)
                                 .expect("bad shade")
                                 .into_iter()
-                                .map(|s| ColoredObj {
-                                    obj: Obj::Segment(s),
+                                .map(|s| DrawObj {
+                                    obj: DrawObjInner::Segment(s),
                                     color: co.color,
                                     thickness: shade_config.thickness,
                                 })
@@ -435,11 +435,11 @@ mod tests {
                 [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
             ),
         ] {
-            let obj = Obj::Polygon(Polygon(initial).unwrap());
+            let obj = DrawObjInner::Polygon(Polygon(initial).unwrap());
             let mut map = Map {
                 layers: vec![(
                     Bucket::Area(Area::Beach),
-                    vec![ColoredObj {
+                    vec![DrawObj {
                         obj: obj,
                         color: ALICEBLUE,
                         thickness: 1.0,
@@ -450,7 +450,7 @@ mod tests {
 
             assert_eq!(
                 map.layers[0].1[0].obj,
-                Obj::Polygon(Polygon(expected).unwrap())
+                DrawObjInner::Polygon(Polygon(expected).unwrap())
             );
         }
     }
@@ -481,11 +481,11 @@ mod tests {
                 [Pt(0.0, 0.0), Pt(0.0, 900.0), Pt(900.0, 0.0)],
             ),
         ] {
-            let obj = Obj::Polygon(Polygon(initial).unwrap());
+            let obj = DrawObjInner::Polygon(Polygon(initial).unwrap());
             let mut map = Map {
                 layers: vec![(
                     Bucket::Area(Area::Beach),
-                    vec![ColoredObj {
+                    vec![DrawObj {
                         obj: obj,
                         color: ALICEBLUE,
                         thickness: 1.0,
@@ -496,7 +496,7 @@ mod tests {
 
             assert_eq!(
                 map.layers[0].1[0].obj,
-                Obj::Polygon(Polygon(expected).unwrap())
+                DrawObjInner::Polygon(Polygon(expected).unwrap())
             );
         }
     }
