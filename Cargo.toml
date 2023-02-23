@@ -14,6 +14,7 @@ members = [
     "plotz-color",
     "plotz-geojson",
     "plotz-geometry",
+    "plotz-shp",
     "svg-splitter",
 ]
 
