@@ -1,5 +1,7 @@
 //! The core logic of plotz-core, including Map and MapConfig.
 
+#![allow(clippy::let_unit_value)]
+
 use crate::{
     bucket::{Area, Bucket, Path as BucketPath},
     bucketer::{Bucketer, DefaultBucketer},
@@ -381,7 +383,7 @@ mod tests {
         let mut map = Map::new(&map_config).unwrap();
 
         {
-            let mut rolling_bbox = BoundsCollector::new();
+            let mut rolling_bbox = BoundsCollector::default();
             map.layers.iter().for_each(|(_, objs)| {
                 objs.iter().for_each(|colored_obj| {
                     rolling_bbox.incorporate(&colored_obj.obj);
@@ -402,7 +404,7 @@ mod tests {
         let () = map.adjust(0.9, &map_config.size).unwrap();
 
         {
-            let mut rolling_bbox = BoundsCollector::new();
+            let mut rolling_bbox = BoundsCollector::default();
             map.layers.iter().for_each(|(_, objs)| {
                 objs.iter().for_each(|colored_obj| {
                     rolling_bbox.incorporate(&colored_obj.obj);

@@ -84,9 +84,9 @@ pub struct BoundsCollector {
     items_seen: usize,
 }
 
-impl BoundsCollector {
+impl Default for BoundsCollector {
     /// A new bounds collector.
-    pub fn new() -> BoundsCollector {
+    fn default() -> Self {
         BoundsCollector {
             bound_t: None,
             bound_b: None,
@@ -95,7 +95,9 @@ impl BoundsCollector {
             items_seen: 0_usize,
         }
     }
+}
 
+impl BoundsCollector {
     /// How many items has this seen?
     pub fn items_seen(&self) -> usize {
         self.items_seen
@@ -147,7 +149,7 @@ impl Bounded for BoundsCollector {
 pub fn streaming_bbox<'a, T: 'a + Bounded>(
     it: impl IntoIterator<Item = &'a T>,
 ) -> Result<Polygon, BoundingBoxError> {
-    let mut bc = BoundsCollector::new();
+    let mut bc = BoundsCollector::default();
     for i in it {
         bc.incorporate(i);
     }

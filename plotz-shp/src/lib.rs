@@ -73,9 +73,6 @@ fn to_polygon(shape: &Shape) -> Result<Option<Polygon>, PolygonError> {
 
 #[cfg(test)]
 mod tests {
-    use shapefile::dbase::FieldValue;
-
-    use super::*;
 
     #[test]
     fn test_foo() {
