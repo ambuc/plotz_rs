@@ -6,6 +6,7 @@ use crate::{
     bucket::{Area, Bucket, Path as BucketPath},
     bucketer::{Bucketer, DefaultBucketer},
     colored_obj::{ColoredObj, Obj},
+    frame::make_frame,
     svg::{write_layer_to_svg, Size, SvgWriteError},
 };
 use float_ord::FloatOrd;
@@ -123,8 +124,6 @@ lazy_static! {
         ),
     ].into();
 
-    /// How thick the frame is.
-    pub static ref FRAME_THICKNESS: f64 = 5.0;
     /// How thick the default line is.
     pub static ref DEFAULT_THICKNESS: f64 = 5.0;
 }
@@ -297,16 +296,12 @@ impl Map {
 
         if config.draw_frame {
             info!("Adding frame.");
-            let (w, h) = (config.size.width as f64, config.size.height as f64);
             self.layers.push((
                 Bucket::Frame,
-                vec![ColoredObj {
-                    obj: Obj::Polygon(
-                        Polygon([Pt(0.0, 0.0), Pt(0.0, w), Pt(h, w), Pt(h, 0.0)]).unwrap(),
-                    ),
-                    color: plotz_color::BLACK,
-                    thickness: *FRAME_THICKNESS,
-                }],
+                vec![make_frame(
+                    (config.size.width as f64, config.size.height as f64),
+                    Pt(0.0, 0.0),
+                )],
             ));
         }
 

@@ -1,9 +1,10 @@
+use plotz_core::frame::make_frame;
 use plotz_geometry::bounded::Bounded;
 
 use {
     argh::FromArgs,
     itertools::Itertools,
-    plotz_color::{ColorRGB, BLACK, COLORS},
+    plotz_color::{ColorRGB, COLORS},
     plotz_core::{
         colored_obj::{ColoredObj, Obj},
         svg::{write_layer_to_svg, Size},
@@ -156,14 +157,7 @@ fn main() {
 
     // write frame
 
-    let frame = ColoredObj {
-        obj: Obj::Polygon(
-            Polygon([Pt(0.0, 0.0), Pt(0.0, DIM), Pt(DIM, DIM), Pt(DIM, 0.0)]).unwrap()
-                + Pt(50.0, 50.0),
-        ),
-        color: BLACK,
-        thickness: 1.0,
-    };
+    let frame = make_frame((DIM, DIM), Pt(50.0, 50.0));
 
     let _ = write_layer_to_svg(
         SIZE,
