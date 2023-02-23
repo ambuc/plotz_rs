@@ -1,4 +1,3 @@
-use plotz_geometry::shading::{shade_polygon, ShadeConfig};
 
 use {
     argh::FromArgs,
@@ -7,7 +6,7 @@ use {
         colored_obj::{ColoredObj, Obj},
         svg::{write_layer_to_svg, Size},
     },
-    plotz_geometry::{point::Pt, polygon::Polygon},
+    plotz_geometry::{point::Pt, polygon::Polygon, shading_02::{shade_polygon, ShadeConfig}},
     rand::Rng,
 };
 
@@ -25,7 +24,7 @@ fn main() {
 
     let mut rng = rand::thread_rng();
 
-    let sites = (0..20)
+    let sites = (0..50)
         .step_by(1)
         .map(|_| {
             let x: f64 = rng.gen();
@@ -64,7 +63,7 @@ fn main() {
         .map(|p| {
             let shade_config = ShadeConfig {
                 gap: 10.0,
-                slope: rng.gen_range(0.5, 10.0),
+                slope: rng.gen_range(-2.0, 2.0),
                 thickness: 1.0,
             };
 
