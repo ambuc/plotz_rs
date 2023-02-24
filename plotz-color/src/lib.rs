@@ -28,8 +28,8 @@ impl Hash for ColorRGB {
 
 impl PartialOrd for ColorRGB {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        // this is silly.
-        FloatOrd(self.r + self.g + self.b).partial_cmp(&FloatOrd(other.r + other.g + other.b))
+        FloatOrd(self.r * 100.0 + self.g * 10.0 + self.b * 1.0)
+            .partial_cmp(&FloatOrd(other.r * 100.0 + other.g * 10.0 + other.b * 1.0))
     }
 }
 

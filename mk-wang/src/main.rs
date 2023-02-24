@@ -1,6 +1,9 @@
 #![allow(unused)]
 
+use std::f64::consts::{FRAC_PI_2, FRAC_PI_8};
+
 use plotz_color::{BLUE, GREEN, RED, YELLOW};
+use plotz_core::draw_obj;
 
 use {
     argh::FromArgs,
@@ -13,7 +16,7 @@ use {
     plotz_geometry::{
         bounded::Bounded,
         point::Pt,
-        polygon::Polygon,
+        polygon::{Multiline, Polygon},
         shading_02::{shade_polygon, ShadeConfig},
     },
     rand::{prelude::SliceRandom, Rng},
@@ -51,16 +54,16 @@ impl Tile {
     pub fn id(&self) -> usize {
         self.0
     }
-    pub fn north(&self) -> Fill {
+    pub fn n(&self) -> Fill {
         self.1
     }
-    pub fn east(&self) -> Fill {
+    pub fn e(&self) -> Fill {
         self.2
     }
-    pub fn south(&self) -> Fill {
+    pub fn s(&self) -> Fill {
         self.3
     }
-    pub fn west(&self) -> Fill {
+    pub fn w(&self) -> Fill {
         self.4
     }
 }
@@ -89,13 +92,13 @@ fn try_step(
     assert!(grid[i][j].is_none());
 
     let constraint_west = if (i > 0 && (0..x).contains(&(i - 1))) {
-        Some(grid[i - 1][j].unwrap().east())
+        Some(grid[i - 1][j].unwrap().e())
     } else {
         None
     };
 
     let constraint_north = if (j > 0 && (0..y).contains(&(j - 1))) {
-        Some(grid[i][j - 1].unwrap().south())
+        Some(grid[i][j - 1].unwrap().s())
     } else {
         None
     };
@@ -104,17 +107,17 @@ fn try_step(
         (None, None) => TILES.to_vec(),
         (Some(west), None) => TILES
             .iter()
-            .filter(|t| t.west() == west)
+            .filter(|t| t.w() == west)
             .copied()
             .collect::<Vec<Tile>>(),
         (None, Some(north)) => TILES
             .iter()
-            .filter(|t| t.north() == north)
+            .filter(|t| t.n() == north)
             .copied()
             .collect::<Vec<Tile>>(),
         (Some(west), Some(north)) => TILES
             .iter()
-            .filter(|t| t.west() == west && t.north() == north)
+            .filter(|t| t.w() == west && t.n() == north)
             .copied()
             .collect::<Vec<Tile>>(),
     };
@@ -160,29 +163,49 @@ fn fill_grid(x: usize, y: usize) -> Vec<Vec<Tile>> {
 
 fn draw_tile(
     cell: Tile,
+    grid_cardinality: usize,
     (row_idx, col_idx): (usize, usize),
     palette: &[&'static ColorRGB],
 ) -> Vec<DrawObj> {
-    let diff = 0.05;
-    let zero = 0.0 + diff;
-    let one = 1;
-    let two = 2.0 - diff;
-    let p00 = Pt(zero, zero);
-    let p02 = Pt(zero, two);
-    let p11 = Pt(one, one);
-    let p20 = Pt(two, zero);
-    let p22 = Pt(two, two);
     [
-        (Polygon([p00, p20, p11]).unwrap(), cell.north().as_usize()),
-        (Polygon([p20, p11, p22]).unwrap(), cell.east().as_usize()),
-        (Polygon([p22, p11, p02]).unwrap(), cell.south().as_usize()),
-        (Polygon([p02, p11, p00]).unwrap(), cell.west().as_usize()),
+        (cell.n(), 0.0 * FRAC_PI_2),
+        (cell.w(), -1.0 * FRAC_PI_2),
+        (cell.s(), -2.0 * FRAC_PI_2),
+        (cell.e(), -3.0 * FRAC_PI_2),
     ]
-    .iter()
-    .flat_map(|(polygon, fill_index)| {
-        let p = polygon + Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
+    .into_iter()
+    .map(|(cell, rot)| {
+        let mut shape = match cell {
+            Fill::Blue => Multiline([Pt(0.25, 0.0), Pt(0.5, 0.25), Pt(0.75, 0.0)]).unwrap(),
+            Fill::Green => {
+                Multiline([Pt(0.25, 0.0), Pt(0.25, 0.25), Pt(0.75, 0.25), Pt(0.75, 0.0)]).unwrap()
+            }
+            Fill::Red => Multiline([
+                Pt(0.25, 0.0),
+                Pt(5.0 / 16.0, 3.0 / 16.0),
+                Pt(0.5, 0.25),
+                Pt(11.0 / 16.0, 3.0 / 16.0),
+                Pt(0.75, 0.0),
+            ])
+            .unwrap(),
+            Fill::White => Multiline([
+                Pt(0.25, 0.0),
+                Pt(7.0 / 16.0, 1.0 / 16.0),
+                Pt(0.5, 0.25),
+                Pt(9.0 / 16.0, 1.0 / 16.0),
+                Pt(0.75, 0.0),
+            ])
+            .unwrap(),
+        } * 2.0;
 
-        vec![DrawObj::from_polygon(p).with_color(palette[*fill_index])]
+        let dist: f64 = (((row_idx as f64) - (grid_cardinality as f64 / 2.0)).powi(2)
+            + ((col_idx as f64) - (grid_cardinality as f64 / 2.0)).powi(2))
+        .sqrt();
+
+        shape.rotate(&Pt(1.0, 1.0), rot + (FRAC_PI_8 / 20.0 * dist)); // do
+        shape += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
+
+        DrawObj::from_polygon(shape).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
     })
     .collect()
 }
@@ -191,10 +214,10 @@ fn main() {
     let args: Args = argh::from_env();
 
     let image_width: f64 = 600.0;
-    let grid_cardinality = 12.0;
+    let grid_cardinality = 10_usize;
     let margin = 50.0;
 
-    let grid: Vec<Vec<Tile>> = fill_grid(grid_cardinality as usize, grid_cardinality as usize);
+    let grid: Vec<Vec<Tile>> = fill_grid(grid_cardinality, grid_cardinality);
 
     let palette: Vec<&'static ColorRGB> = vec![&RED, &YELLOW, &GREEN, &BLUE];
 
@@ -202,14 +225,19 @@ fn main() {
 
     for (row_idx, row) in grid.iter().enumerate() {
         for (col_idx, cell) in row.iter().enumerate() {
-            draw_obj_vec.extend(draw_tile(*cell, (row_idx, col_idx), &palette));
+            draw_obj_vec.extend(draw_tile(
+                *cell,
+                grid_cardinality,
+                (row_idx, col_idx),
+                &palette,
+            ));
         }
     }
 
     let mut draw_objs = DrawObjs::from_objs(draw_obj_vec)
         .with_frame(make_frame((image_width, image_width), Pt(margin, margin)));
 
-    let scale = image_width / 2.0 / grid_cardinality;
+    let scale = image_width / 2.0 / (grid_cardinality as f64);
 
     draw_objs
         .draw_objs

@@ -15,7 +15,7 @@ use {
         cmp::{Eq, PartialEq},
         collections::HashSet,
         fmt::Debug,
-        ops::{Mul, Add, AddAssign, MulAssign, Sub, SubAssign},
+        ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign},
     },
     thiserror::Error,
 };
@@ -331,6 +331,13 @@ impl Polygon {
                 .collect(),
         }
     }
+
+    /// A rotation operation, for rotating one polygon about a point. Accepts a
+    /// |by| argument in radians.
+    pub fn rotate(&mut self, about: &Pt, by: f64) {
+        self.pts.iter_mut().for_each(|pt| pt.rotate(about, by))
+    }
+
     /// Returns true if any line segment from this polygon intersects any line
     /// segment from the other polygon.
     pub fn intersects(&self, other: &Polygon) -> bool {
@@ -682,7 +689,6 @@ impl Add<Pt> for Polygon {
     fn add(self, rhs: Pt) -> Self::Output {
         &self + rhs
     }
-
 }
 impl AddAssign<Pt> for Polygon {
     fn add_assign(&mut self, rhs: Pt) {
@@ -718,7 +724,6 @@ impl Mul<f64> for Polygon {
     fn mul(mut self, rhs: f64) -> Polygon {
         self *= rhs;
         self
-
     }
 }
 
