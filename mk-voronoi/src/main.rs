@@ -1,14 +1,13 @@
-use plotz_core::frame::make_frame;
-use plotz_geometry::bounded::Bounded;
-
 use {
     argh::FromArgs,
-    plotz_color::{ColorRGB, COLORS},
+    plotz_color::{take_random_colors, ColorRGB},
     plotz_core::{
         draw_obj::{DrawObj, DrawObjs},
+        frame::make_frame,
         svg::Size,
     },
     plotz_geometry::{
+        bounded::Bounded,
         point::Pt,
         polygon::Polygon,
         shading_02::{shade_polygon, ShadeConfig},
@@ -26,13 +25,13 @@ struct Args {
 }
 
 enum Style {
-    Shade(ShadeConfig, ColorRGB, bool),
-    Nested(Vec<f64>, ColorRGB),
+    Shade(ShadeConfig, &'static ColorRGB, bool),
+    Nested(Vec<f64>, &'static ColorRGB),
     None,
 }
 
 impl Style {
-    fn rand() -> Style {
+    fn rand(palette: &Vec<&'static ColorRGB>) -> Style {
         let mut rng = rand::thread_rng();
         match rng.gen_range(0, 6) {
             1 | 2 | 3 => Style::Shade(
@@ -41,12 +40,12 @@ impl Style {
                     slope: (rng.gen_range(0.0_f64, 360.0_f64)).tan(),
                     thickness: 1.0,
                 },
-                *rng.choose(&COLORS[0..20]).expect("color"),
+                rng.choose(palette).expect("color"),
                 rand::random(),
             ),
             4 | 5 => Style::Nested(
                 vec![rng.gen_range(0.3, 0.8)],
-                *rng.choose(&COLORS[0..20]).expect("color"),
+                *rng.choose(palette).expect("color"),
             ),
             _ => Style::None,
         }
@@ -57,6 +56,7 @@ fn main() {
     let args: Args = argh::from_env();
 
     let mut rng = rand::thread_rng();
+    let palette: Vec<&ColorRGB> = take_random_colors(20);
 
     let sites: Vec<voronoice::Point> = (1..200)
         .step_by(1)
@@ -89,9 +89,9 @@ fn main() {
         .collect();
 
     let draw_objs = DrawObjs::from_objs(polygons.iter().flat_map(|p| {
-        match Style::rand() {
+        match Style::rand(&palette) {
             Style::Shade(shade_config, color, draw_border) => std::iter::once(if draw_border {
-                Some(DrawObj::from_polygon(p.clone()).with_color(color))
+                Some(DrawObj::from_polygon(p.clone()).with_color(*color))
             } else {
                 None
             })
@@ -100,14 +100,14 @@ fn main() {
                 shade_polygon(&shade_config, p)
                     .expect("failed to shade")
                     .iter()
-                    .map(|segment| DrawObj::from_segment(*segment).with_color(color)),
+                    .map(|segment| DrawObj::from_segment(*segment).with_color(*color)),
             )
             .collect::<Vec<_>>(),
             Style::Nested(fs, color) => fs
                 .into_iter()
                 .map(|f| {
                     let del = p.bbox_center();
-                    DrawObj::from_polygon(((p.clone() - del) * f) + del).with_color(color)
+                    DrawObj::from_polygon(((p.clone() - del) * f) + del).with_color(*color)
                 })
                 .collect::<Vec<_>>(),
             Style::None => vec![],
