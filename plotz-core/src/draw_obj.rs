@@ -155,10 +155,10 @@ impl DrawObjs {
         // layers
         {
             for (i, (_color, draw_obj_vec)) in self.group_by_color().into_iter().enumerate() {
-                let num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), &draw_obj_vec)
+                let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), &draw_obj_vec)
                     .expect("failed to write");
 
-                println!("Wrote {:?} lines", num);
+                // println!("Wrote {:?} lines", num);
             }
         }
 

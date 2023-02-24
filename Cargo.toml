@@ -9,14 +9,15 @@ edition = "2021"
 
 [workspace]
 members = [
+    "mk-voronoi",
+    "mk-wang",
     "orchestrator",
-    "plotz-core",
     "plotz-color",
+    "plotz-core",
     "plotz-geojson",
     "plotz-geometry",
     "plotz-shp",
     "svg-splitter",
-    "mk-voronoi",
 ]
 
 

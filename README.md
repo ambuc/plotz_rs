@@ -7,6 +7,7 @@ A collection of pen plotter libraries, binaries, and utilities.
 * [`orchestrator`](orchestrator/README.md), a tool for managing long-running prints.
 * [`svg-splitter`](svg-splitter/README.md), a tool for splitting very large SVG files which already have inherent groupings.
 * [`mk-voronoi`](mk-voronoi/README.md), a tool for making voronoi patterns.
+* [`mk-wang`](mk-wang/README.md), a tool for making voronoi patterns.
 
 ## Libraries
 
