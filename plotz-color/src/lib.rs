@@ -745,7 +745,7 @@ pub const YELLOWGREEN: ColorRGB = ColorRGB {
     b: 0.196_078_431_372_549,
 };
 
-pub static COLORS: [&'static ColorRGB; 141] = [
+pub static COLORS: [&ColorRGB; 141] = [
     &ALICEBLUE,
     &ANTIQUEWHITE,
     &AQUAMARINE,
@@ -890,7 +890,7 @@ pub static COLORS: [&'static ColorRGB; 141] = [
 ];
 
 pub fn take_random_colors(limit: usize) -> Vec<&'static ColorRGB> {
-    let mut colors = COLORS.clone();
+    let mut colors = COLORS;
 
     let mut rng = rand::thread_rng();
     rng.shuffle(&mut colors);

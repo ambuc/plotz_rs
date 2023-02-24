@@ -91,7 +91,7 @@ fn main() {
     let draw_objs = DrawObjs::from_objs(polygons.iter().flat_map(|p| {
         match Style::rand(&palette) {
             Style::Shade(shade_config, color, draw_border) => std::iter::once(if draw_border {
-                Some(DrawObj::from_polygon(p.clone()).with_color(*color))
+                Some(DrawObj::from_polygon(p.clone()).with_color(color))
             } else {
                 None
             })
@@ -100,14 +100,14 @@ fn main() {
                 shade_polygon(&shade_config, p)
                     .expect("failed to shade")
                     .iter()
-                    .map(|segment| DrawObj::from_segment(*segment).with_color(*color)),
+                    .map(|segment| DrawObj::from_segment(*segment).with_color(color)),
             )
             .collect::<Vec<_>>(),
             Style::Nested(fs, color) => fs
                 .into_iter()
                 .map(|f| {
                     let del = p.bbox_center();
-                    DrawObj::from_polygon(((p.clone() - del) * f) + del).with_color(*color)
+                    DrawObj::from_polygon(((p.clone() - del) * f) + del).with_color(color)
                 })
                 .collect::<Vec<_>>(),
             Style::None => vec![],

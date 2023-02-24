@@ -61,7 +61,7 @@ pub struct DrawObj {
     /// The object.
     pub obj: DrawObjInner,
     /// The color.
-    pub color: ColorRGB,
+    pub color: &'static ColorRGB,
     /// The thickness.
     pub thickness: f64,
 }
@@ -71,7 +71,7 @@ impl DrawObj {
     pub fn from_obj(obj: DrawObjInner) -> DrawObj {
         DrawObj {
             obj,
-            color: BLACK,
+            color: &BLACK,
             thickness: 1.0,
         }
     }
@@ -87,7 +87,7 @@ impl DrawObj {
     }
 
     /// with a color.
-    pub fn with_color(self, color: ColorRGB) -> DrawObj {
+    pub fn with_color(self, color: &'static ColorRGB) -> DrawObj {
         DrawObj {
             obj: self.obj,
             color,
@@ -122,8 +122,8 @@ impl DrawObjs {
     }
 
     /// Sorts and groups the internal draw objects by color.
-    pub fn group_by_color(mut self) -> Vec<(ColorRGB, Vec<DrawObj>)> {
-        self.draw_objs.sort_by(|a, b| a.color.cmp(&b.color));
+    pub fn group_by_color(mut self) -> Vec<(&'static ColorRGB, Vec<DrawObj>)> {
+        self.draw_objs.sort_by(|a, b| a.color.cmp(b.color));
         self.draw_objs
             .into_iter()
             .group_by(|a| a.color)

@@ -59,7 +59,7 @@ pub enum MapError {
 pub struct AnnotatedPolygon {
     polygon: Polygon,
     bucket: Bucket,
-    color: ColorRGB,
+    color: &'static ColorRGB,
     thickness: f64,
     _tags: Vec<(SymbolU32, SymbolU32)>,
 }
@@ -159,7 +159,7 @@ impl Map {
                     Some(AnnotatedPolygon {
                         polygon: polygon.clone(),
                         bucket,
-                        color: DEFAULT_COLORING[&bucket],
+                        color: &DEFAULT_COLORING[&bucket],
                         thickness: *DEFAULT_THICKNESS,
                         _tags: tags.clone(),
                     })
@@ -441,7 +441,7 @@ mod tests {
                     Bucket::Area(Area::Beach),
                     vec![DrawObj {
                         obj: obj,
-                        color: ALICEBLUE,
+                        color: &ALICEBLUE,
                         thickness: 1.0,
                     }],
                 )],
@@ -487,7 +487,7 @@ mod tests {
                     Bucket::Area(Area::Beach),
                     vec![DrawObj {
                         obj: obj,
-                        color: ALICEBLUE,
+                        color: &ALICEBLUE,
                         thickness: 1.0,
                     }],
                 )],
