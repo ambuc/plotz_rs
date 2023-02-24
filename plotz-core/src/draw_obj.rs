@@ -134,15 +134,32 @@ impl DrawObjs {
 
     /// writes out to a set of SVGs at a prefix.
     pub fn write_to_svg(self, size: Size, prefix: &str) -> Result<(), Error> {
-        if let Some(frame) = self.frame.clone() {
-            let _ = write_layer_to_svg(size, format!("{}_{}.svg", prefix, "frame"), &[frame]);
+        // all
+        {
+            let name = format!("{}_all.svg", prefix);
+            let mut all = vec![];
+            if let Some(frame) = self.frame.clone() {
+                all.push(frame);
+            }
+            all.extend(self.draw_objs.clone());
+            write_layer_to_svg(size, name, &all)?;
         }
 
-        for (i, (_color, draw_obj_vec)) in self.group_by_color().into_iter().enumerate() {
-            let num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), &draw_obj_vec)
-                .expect("failed to write");
+        // frame
+        {
+            if let Some(frame) = self.frame.clone() {
+                let _ = write_layer_to_svg(size, format!("{}_{}.svg", prefix, "frame"), &[frame]);
+            }
+        }
 
-            println!("Wrote {:?} lines", num);
+        // layers
+        {
+            for (i, (_color, draw_obj_vec)) in self.group_by_color().into_iter().enumerate() {
+                let num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), &draw_obj_vec)
+                    .expect("failed to write");
+
+                println!("Wrote {:?} lines", num);
+            }
         }
 
         Ok(())
