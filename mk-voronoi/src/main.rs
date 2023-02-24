@@ -3,11 +3,10 @@ use plotz_geometry::bounded::Bounded;
 
 use {
     argh::FromArgs,
-    itertools::Itertools,
     plotz_color::{ColorRGB, COLORS},
     plotz_core::{
-        draw_obj::DrawObj,
-        svg::{write_layer_to_svg, Size},
+        draw_obj::{DrawObj, DrawObjs},
+        svg::Size,
     },
     plotz_geometry::{
         point::Pt,
@@ -18,10 +17,6 @@ use {
 };
 
 static DIM: f64 = 600.0;
-static SIZE: Size = Size {
-    width: 750,
-    height: 750,
-};
 
 #[derive(FromArgs)]
 #[argh(description = "...")]
@@ -93,9 +88,8 @@ fn main() {
         })
         .collect();
 
-    let mut colored_objs: Vec<DrawObj> = polygons
-        .iter()
-        .flat_map(|p| match Style::rand() {
+    let draw_objs = DrawObjs::from_objs(polygons.iter().flat_map(|p| {
+        match Style::rand() {
             Style::Shade(shade_config, color, draw_border) => std::iter::once(if draw_border {
                 Some(DrawObj::from_polygon(p.clone()).with_color(color))
             } else {
@@ -117,32 +111,17 @@ fn main() {
                 })
                 .collect::<Vec<_>>(),
             Style::None => vec![],
-        })
-        .collect();
+        }
+    }))
+    .with_frame(make_frame((DIM, DIM), Pt(50.0, 50.0)));
 
-    colored_objs.sort_by(|a, b| a.color.cmp(&b.color));
-
-    let groups = colored_objs.into_iter().group_by(|a| a.color);
-
-    for (i, (_color, group)) in groups.into_iter().enumerate() {
-        let colored_objs: Vec<DrawObj> = group.into_iter().collect();
-        let num = write_layer_to_svg(
-            SIZE,
-            format!("{}_{}.svg", args.output_path_prefix, i),
-            &colored_objs,
+    let () = draw_objs
+        .write_to_svg(
+            Size {
+                width: 750,
+                height: 750,
+            },
+            &args.output_path_prefix,
         )
-        .expect("failed to write");
-
-        println!("Wrote {:?} lines", num);
-    }
-
-    // write frame
-
-    let frame = make_frame((DIM, DIM), Pt(50.0, 50.0));
-
-    let _ = write_layer_to_svg(
-        SIZE,
-        format!("{}_{}.svg", args.output_path_prefix, "frame"),
-        &[frame],
-    );
+        .expect("write");
 }

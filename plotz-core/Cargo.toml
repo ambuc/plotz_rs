@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "*"
 cairo-rs = { version = "0.14.9", features = ["png", "svg"] }
 float-ord = "*"
 itertools = "*"
