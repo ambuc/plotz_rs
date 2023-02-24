@@ -17,7 +17,7 @@ lazy_static = "*"
 plotz-color = { path = "../plotz-color" }
 plotz-core = { path = "../plotz-core" }
 plotz-geometry = { path = "../plotz-geometry" }
-rand = "*"
+rand = { version = "0.8.5", features = ["alloc"] }
 regex = "*"
 typed-builder = "*"
 voronoice = "*"

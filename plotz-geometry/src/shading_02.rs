@@ -10,6 +10,7 @@ use crate::{
 };
 
 /// Config for controlling crosshatching.
+#[derive(Debug, Clone)]
 pub struct ShadeConfig {
     /// The gap between lines.
     pub gap: f64,

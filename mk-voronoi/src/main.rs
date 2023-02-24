@@ -12,7 +12,7 @@ use {
         polygon::Polygon,
         shading_02::{shade_polygon, ShadeConfig},
     },
-    rand::Rng,
+    rand::{prelude::SliceRandom, Rng},
 };
 
 static DIM: f64 = 600.0;
@@ -24,6 +24,7 @@ struct Args {
     output_path_prefix: String,
 }
 
+#[derive(Debug, Clone)]
 enum Style {
     Shade(ShadeConfig, &'static ColorRGB, bool),
     Nested(Vec<f64>, &'static ColorRGB),
@@ -33,22 +34,30 @@ enum Style {
 impl Style {
     fn rand(palette: &Vec<&'static ColorRGB>) -> Style {
         let mut rng = rand::thread_rng();
-        match rng.gen_range(0, 6) {
-            1 | 2 | 3 => Style::Shade(
-                ShadeConfig {
-                    gap: 4.0,
-                    slope: (rng.gen_range(0.0_f64, 360.0_f64)).tan(),
-                    thickness: 1.0,
-                },
-                rng.choose(palette).expect("color"),
-                rand::random(),
+
+        [
+            (
+                Style::Shade(
+                    ShadeConfig {
+                        gap: 4.0,
+                        slope: (rng.gen_range(0.0_f64..360.0_f64)).tan(),
+                        thickness: 1.0,
+                    },
+                    palette.choose(&mut rng).expect("color"),
+                    rand::random(),
+                ),
+                3,
             ),
-            4 | 5 => Style::Nested(
-                vec![rng.gen_range(0.3, 0.8)],
-                *rng.choose(palette).expect("color"),
+            (
+                Style::Nested(vec![0.9], *palette.choose(&mut rng).expect("color")),
+                1,
             ),
-            _ => Style::None,
-        }
+            (Style::None, 1),
+        ]
+        .choose_weighted(&mut rng, |item| item.1)
+        .unwrap()
+        .0
+        .clone()
     }
 }
 
@@ -61,9 +70,13 @@ fn main() {
     let sites: Vec<voronoice::Point> = (1..200)
         .step_by(1)
         .map(|_| {
-            let x: f64 = rng.gen();
-            let y: f64 = rng.gen();
-            voronoice::Point { x, y }
+            let r: f64 = rng.gen_range(0.0..0.5);
+            let theta: f64 = rng.gen_range(0.0..6.28318531);
+
+            voronoice::Point {
+                x: r * theta.cos() + 0.5,
+                y: r * theta.sin() + 0.5,
+            }
         })
         .collect();
 
