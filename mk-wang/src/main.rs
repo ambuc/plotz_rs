@@ -1,10 +1,8 @@
 #![allow(unused)]
 
-use std::f64::consts::{FRAC_PI_2, FRAC_PI_8};
-
-use plotz_color::{BLUE, GREEN, RED, YELLOW};
+use plotz_color::*;
 use plotz_core::draw_obj;
-
+use std::f64::consts::{FRAC_PI_2, FRAC_PI_8, PI};
 use {
     argh::FromArgs,
     plotz_color::{take_random_colors, ColorRGB},
@@ -168,44 +166,83 @@ fn draw_tile(
     palette: &[&'static ColorRGB],
 ) -> Vec<DrawObj> {
     [
-        (cell.n(), 0.0 * FRAC_PI_2),
-        (cell.w(), -1.0 * FRAC_PI_2),
-        (cell.s(), -2.0 * FRAC_PI_2),
-        (cell.e(), -3.0 * FRAC_PI_2),
+        (cell.id(), cell.n(), 0.0 * FRAC_PI_2),
+        (cell.id(), cell.w(), -1.0 * FRAC_PI_2),
+        (cell.id(), cell.s(), -2.0 * FRAC_PI_2),
+        (cell.id(), cell.e(), -3.0 * FRAC_PI_2),
     ]
     .into_iter()
-    .map(|(cell, rot)| {
-        let mut shape = match cell {
-            Fill::Blue => Multiline([Pt(0.25, 0.0), Pt(0.5, 0.25), Pt(0.75, 0.0)]).unwrap(),
-            Fill::Green => {
-                Multiline([Pt(0.25, 0.0), Pt(0.25, 0.25), Pt(0.75, 0.25), Pt(0.75, 0.0)]).unwrap()
+    .flat_map(|(cell_id, cell, rot)| {
+        let mut ret = vec![];
+        ret.push({
+            let mut shape = match cell {
+                Fill::Blue => Multiline([Pt(0.25, 0.0), Pt(0.5, 0.25), Pt(0.75, 0.0)]).unwrap(),
+                Fill::Green => {
+                    Multiline([Pt(0.25, 0.0), Pt(0.25, 0.25), Pt(0.75, 0.25), Pt(0.75, 0.0)])
+                        .unwrap()
+                }
+                Fill::Red => Multiline([
+                    Pt(0.25, 0.0),
+                    Pt(5.0 / 16.0, 3.0 / 16.0),
+                    Pt(0.5, 0.25),
+                    Pt(11.0 / 16.0, 3.0 / 16.0),
+                    Pt(0.75, 0.0),
+                ])
+                .unwrap(),
+                Fill::White => Multiline([
+                    Pt(0.25, 0.0),
+                    Pt(7.0 / 16.0, 1.0 / 16.0),
+                    Pt(0.5, 0.25),
+                    Pt(9.0 / 16.0, 1.0 / 16.0),
+                    Pt(0.75, 0.0),
+                ])
+                .unwrap(),
+            };
+            DrawObj::from_polygon(shape).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
+        });
+        ret.extend({
+            shade_polygon(
+                &(ShadeConfig {
+                    gap: 0.05,
+                    slope: 0.00,
+                    thickness: 1.0,
+                }),
+                &Polygon([Pt(0.1, 0.1), Pt(0.5, 0.5), Pt(0.9, 0.1)]).unwrap(),
+            )
+            .unwrap()
+            .iter()
+            .map(|sg| {
+                DrawObj::from_segment(*sg).with_color(
+                    [
+                        &ALICEBLUE,      // 1
+                        &BLUEVIOLET,     // 2
+                        &CORNFLOWERBLUE, // 3
+                        &DODGERBLUE,     // 4
+                        &FIREBRICK,      // 5
+                        &GOLD,           // 6
+                        &HOTPINK,        // 7
+                        &KHAKI,          // 8
+                        &LAVENDER,       // 9
+                        &MAGENTA,        // 10
+                        &NAVY,           // 11
+                    ][cell_id],
+                )
+            })
+            .collect::<Vec<_>>()
+        });
+        ret.iter_mut().for_each(|mut d_o| match &mut d_o.obj {
+            DrawObjInner::Polygon(pg) => {
+                *pg *= 2.0;
+                pg.rotate(&Pt(1.0, 1.0), rot);
+                *pg += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
             }
-            Fill::Red => Multiline([
-                Pt(0.25, 0.0),
-                Pt(5.0 / 16.0, 3.0 / 16.0),
-                Pt(0.5, 0.25),
-                Pt(11.0 / 16.0, 3.0 / 16.0),
-                Pt(0.75, 0.0),
-            ])
-            .unwrap(),
-            Fill::White => Multiline([
-                Pt(0.25, 0.0),
-                Pt(7.0 / 16.0, 1.0 / 16.0),
-                Pt(0.5, 0.25),
-                Pt(9.0 / 16.0, 1.0 / 16.0),
-                Pt(0.75, 0.0),
-            ])
-            .unwrap(),
-        } * 2.0;
-
-        let dist: f64 = (((row_idx as f64) - (grid_cardinality as f64 / 2.0)).powi(2)
-            + ((col_idx as f64) - (grid_cardinality as f64 / 2.0)).powi(2))
-        .sqrt();
-
-        shape.rotate(&Pt(1.0, 1.0), rot + (FRAC_PI_8 / 20.0 * dist)); // do
-        shape += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
-
-        DrawObj::from_polygon(shape).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
+            DrawObjInner::Segment(sg) => {
+                *sg *= 2.0;
+                sg.rotate(&Pt(1.0, 1.0), rot);
+                *sg += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
+            }
+        });
+        ret
     })
     .collect()
 }
@@ -214,7 +251,7 @@ fn main() {
     let args: Args = argh::from_env();
 
     let image_width: f64 = 600.0;
-    let grid_cardinality = 10_usize;
+    let grid_cardinality = 16_usize;
     let margin = 50.0;
 
     let grid: Vec<Vec<Tile>> = fill_grid(grid_cardinality, grid_cardinality);
