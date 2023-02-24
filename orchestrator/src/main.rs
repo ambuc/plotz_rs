@@ -14,6 +14,8 @@ struct Args {
     glob: String,
     #[argh(option, description = "frame svg")]
     frame: String,
+    #[argh(option, description = "all svg")]
+    all: String,
 }
 
 fn print_ok(s: &str) {
@@ -241,6 +243,12 @@ fn main() {
         .expect("no matches for frame")
         .unwrap();
 
+    let all: PathBuf = glob(&args.all)
+        .expect("Failed to read all pattern")
+        .next()
+        .expect("no matches for all")
+        .unwrap();
+
     // other files
     let files: Vec<PathBuf> = glob(&args.glob)
         .expect("Failed to read glob pattern")
@@ -257,6 +265,7 @@ fn main() {
         .map(|f| f.display().to_string())
         .collect::<std::collections::HashSet<String>>();
     uniq.remove(frame.to_str().unwrap());
+    uniq.remove(all.to_str().unwrap());
 
     println!();
     print_ok(&format!(
