@@ -1,6 +1,8 @@
 //! A 2D point.
 
 use std::fmt::Debug;
+
+use crate::segment::Segment;
 use {
     float_ord::FloatOrd,
     std::{
@@ -34,6 +36,20 @@ where
     Pt {
         x: FloatOrd(x.into()),
         y: FloatOrd(y.into()),
+    }
+}
+
+/// An alternate constructor for points which accepts an angle in radians.
+#[allow(non_snake_case)]
+pub fn PolarPt<T>(r: T, theta: T) -> Pt
+where
+    f64: From<T>,
+{
+    let theta: f64 = theta.into();
+    let r: f64 = r.into();
+    Pt {
+        x: FloatOrd(r * theta.cos()),
+        y: FloatOrd(r * theta.sin()),
     }
 }
 
@@ -106,6 +122,13 @@ impl Mul<f64> for Pt {
     }
 }
 
+impl Mul<Pt> for Pt {
+    type Output = Self;
+    fn mul(self, rhs: Pt) -> Self::Output {
+        Pt(self.x.0 * rhs.x.0, self.y.0 * rhs.y.0)
+    }
+}
+
 /// A sub-assign operator for points.
 impl MulAssign<f64> for Pt {
     fn mul_assign(&mut self, rhs: f64) {
@@ -134,9 +157,21 @@ impl Pt {
         *self += *about;
     }
 
+    /// Same as rotate(), but for chaining.
+    pub fn and_rotate(self, about: &Pt, by: f64) -> Pt {
+        let mut p = self;
+        p.rotate(about, by);
+        p
+    }
+
     /// Dot prouduct of (origin, self) • (origin, other)
     pub fn dot(&self, other: &Pt) -> f64 {
         (self.x.0 * other.x.0) + (self.y.0 * other.y.0)
+    }
+
+    /// Distance between two points.
+    pub fn dist(&self, other: &Pt) -> f64 {
+        Segment(*self, *other).abs()
     }
 }
 

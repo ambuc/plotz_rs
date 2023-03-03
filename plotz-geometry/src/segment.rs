@@ -194,6 +194,17 @@ impl Segment {
         let two = 2_f64;
         ((self.f.y.0 - self.i.y.0).powf(two) + (self.f.x.0 - self.i.x.0).powf(two)).sqrt()
     }
+
+    /// Takes a lossy cross product of this with another segment (oriented tail-to-tail).
+    pub fn cross_z(&self, other: &Segment) -> f64 {
+        let d1 = self.f - self.i;
+        let d2 = other.f - other.i;
+        let x1 = d1.x.0;
+        let x2 = d2.x.0;
+        let y1 = d1.y.0;
+        let y2 = d2.y.0;
+        (x1 * y2) - (x2 * y1)
+    }
 }
 
 /// An add operation between a segment and a point. This can be seen as

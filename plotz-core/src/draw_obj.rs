@@ -2,9 +2,11 @@
 
 use crate::svg::{write_layer_to_svg, Size};
 use anyhow::Error;
+use float_ord::FloatOrd;
 use itertools::Itertools;
 use plotz_color::{ColorRGB, BLACK};
 use plotz_geometry::bounded::Bounded;
+use plotz_geometry::point::Pt;
 use plotz_geometry::polygon::Polygon;
 use plotz_geometry::segment::Segment;
 
@@ -94,6 +96,22 @@ impl DrawObj {
             thickness: self.thickness,
         }
     }
+
+    /// width
+    pub fn width(&self) -> f64 {
+        match &self.obj {
+            DrawObjInner::Polygon(p) => p.width(),
+            DrawObjInner::Segment(s) => unimplemented!(),
+        }
+    }
+
+    /// height
+    pub fn height(&self) -> f64 {
+        match &self.obj {
+            DrawObjInner::Polygon(p) => p.height(),
+            DrawObjInner::Segment(s) => unimplemented!(),
+        }
+    }
 }
 
 /// Many draw objs.
@@ -161,5 +179,40 @@ impl DrawObjs {
         }
 
         Ok(())
+    }
+
+    /// The overall height of all objects.
+    pub fn height(&self) -> f64 {
+        self.draw_objs
+            .iter()
+            .map(|d_o| FloatOrd(d_o.height()))
+            .max()
+            .unwrap()
+            .0
+    }
+
+    /// The overall width of all objects.
+    pub fn width(&self) -> f64 {
+        self.draw_objs
+            .iter()
+            .map(|d_o| FloatOrd(d_o.width()))
+            .max()
+            .unwrap()
+            .0
+    }
+
+    /// apply a fn to each pt.
+    pub fn mutate(&mut self, f: impl Fn(&mut Pt)) {
+        self.draw_objs
+            .iter_mut()
+            .for_each(|d_o| match &mut d_o.obj {
+                DrawObjInner::Polygon(p) => {
+                    p.pts.iter_mut().for_each(|pt| f(pt));
+                }
+                DrawObjInner::Segment(s) => {
+                    f(&mut s.i);
+                    f(&mut s.f);
+                }
+            })
     }
 }
