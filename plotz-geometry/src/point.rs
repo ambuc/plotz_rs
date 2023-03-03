@@ -157,13 +157,6 @@ impl Pt {
         *self += *about;
     }
 
-    /// Same as rotate(), but for chaining.
-    pub fn and_rotate(self, about: &Pt, by: f64) -> Pt {
-        let mut p = self;
-        p.rotate(about, by);
-        p
-    }
-
     /// Dot prouduct of (origin, self) • (origin, other)
     pub fn dot(&self, other: &Pt) -> f64 {
         (self.x.0 * other.x.0) + (self.y.0 * other.y.0)

@@ -1,26 +1,17 @@
 // https://tilings.math.uni-bielefeld.de/substitution/danzers-7-fold-original/
 
-use plotz_core::draw_obj::DrawObjInner;
-use plotz_geometry::bounded::Bounded;
-
 use {
     argh::FromArgs,
-    float_cmp::approx_eq,
-    float_ord::FloatOrd,
     lazy_static::lazy_static,
-    plotz_color::{BLUE, RED, YELLOW},
+    plotz_color::*,
     plotz_core::{
         draw_obj::{DrawObj, DrawObjs},
         frame::make_frame,
         svg::Size,
     },
-    plotz_geometry::{point::PolarPt, segment::Segment},
-    plotz_geometry::{
-        point::Pt,
-        polygon::Polygon,
-        shading_02::{shade_polygon, ShadeConfig},
-    },
-    std::{cmp::min, f64::consts::PI},
+    plotz_geometry::point::PolarPt,
+    plotz_geometry::{point::Pt, polygon::Polygon},
+    std::f64::consts::PI,
 };
 
 static DIM: f64 = 600.0;
@@ -58,12 +49,6 @@ struct Args {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum Ori {
-    CW,
-    CCW,
-}
-
-#[derive(Debug, Clone, Copy)]
 enum Kind {
     T0,
     T1,
@@ -73,36 +58,15 @@ enum Kind {
 #[derive(Debug, Clone, Copy)]
 struct Tile {
     kind: Kind,
-    orientation: Ori,
     p1: Pt,
     p2: Pt,
     p3: Pt,
 }
 
 #[allow(non_snake_case)]
-// Accepts three points in no particular order or orientation.
-fn Tile(kind: Kind, orientation: Ori, p1: Pt, p2: Pt, p3: Pt) -> Tile {
-    // let l12 = p1.dist(&p2);
-    // let l23 = p2.dist(&p3);
-    // let l13 = p1.dist(&p3);
-
-    // assert that the points are given in a canonical order.
-    // assert!(l12 < l23 || approx_eq!(f64, l12, l23));
-    // assert!(l23 < l13 || approx_eq!(f64, l23, l13));
-
-    // if isosceles, assert ccw
-    // if (approx_eq!(f64, l12, l23) || approx_eq!(f64, l23, l13)) {
-    //     assert!(Segment(p1, p2).cross_z(&Segment(p2, p3)) > 0.0);
-    //     assert!(Segment(p2, p3).cross_z(&Segment(p3, p1)) > 0.0);
-    // }
-
-    Tile {
-        kind,
-        orientation,
-        p1,
-        p2,
-        p3,
-    }
+// Accepts three points in no particular order.
+fn Tile(kind: Kind, p1: Pt, p2: Pt, p3: Pt) -> Tile {
+    Tile { kind, p1, p2, p3 }
 }
 
 impl Tile {
@@ -125,40 +89,40 @@ impl Tile {
                 let f = self.p2;
                 let h = self.p1;
                 let b = a + (h - a) / (*S3 + *S2 + *S3) * (*S3);
-                let d = a + (h - a) / (*S3 + *S2 + *S3) * (*S3 + *S3);
+                let d = a + (h - a) / (*S3 + *S2 + *S3) * (*S3 + *S2);
                 let c = a + (f - a) / (*S1 + *S2 + *S3) * (*S3);
                 let e = a + (f - a) / (*S1 + *S2 + *S3) * (*S3 + *S2);
                 let g = f + (h - f) / (*S1 + *S2) * (*S2);
 
                 vec![
-                    Tile(Kind::T1, Ori::CCW, b, c, a),
-                    Tile(Kind::T0, Ori::CW, c, b, d),
-                    Tile(Kind::T2, Ori::CCW, d, e, c),
-                    Tile(Kind::T0, Ori::CW, f, e, d),
-                    Tile(Kind::T2, Ori::CCW, d, g, f),
-                    Tile(Kind::T0, Ori::CCW, h, g, d),
+                    Tile(Kind::T1, b, c, a),
+                    Tile(Kind::T0, c, b, d),
+                    Tile(Kind::T2, d, e, c),
+                    Tile(Kind::T0, f, e, d),
+                    Tile(Kind::T2, d, g, f),
+                    Tile(Kind::T0, h, g, d),
                 ]
             }
             Kind::T1 => {
                 let a = self.p1;
                 let h = self.p2;
                 let d = self.p3;
-                let b = a + (d - a) / (*S3 + *S2 + *S3) * *S3;
-                let f = a + (b - a).and_rotate(&Pt(0.0, 0.0), -1.0 * T1_VERTEX_ANGLE_RAD);
-                let g = a + (h - a) / (*S2 + *S1) * *S1;
+                let b = a + ((d - a) / (*S3 + *S2 + *S3) * *S3);
+                let c = a + ((d - a) / (*S3 + *S2 + *S3) * (*S3 + *S2));
+                let g = a + ((h - a) / (*S2 + *S1) * *S1);
                 let i = h + ((d - h) / (*S3 + *S2 + *S3) * (*S3));
                 let e = h + ((i - h) / (*S3) * (*S2 + *S3));
-                let c = a + (d - a) / (*S3 + *S2 + *S3) * (*S3 + *S2);
+                let f = g + (e - g) / (*S2 + *S3) * (*S2);
 
                 vec![
-                    Tile(Kind::T1, Ori::CW, f, b, a),
-                    Tile(Kind::T0, Ori::CW, a, g, f),
-                    Tile(Kind::T2, Ori::CCW, f, g, h),
-                    Tile(Kind::T1, Ori::CCW, i, f, h),
-                    Tile(Kind::T0, Ori::CW, f, i, e),
-                    Tile(Kind::T0, Ori::CCW, f, b, c),
-                    Tile(Kind::T1, Ori::CW, e, c, f),
-                    Tile(Kind::T1, Ori::CCW, c, e, d),
+                    Tile(Kind::T1, f, b, a),
+                    Tile(Kind::T0, a, g, f),
+                    Tile(Kind::T2, f, g, h),
+                    Tile(Kind::T1, i, f, h),
+                    Tile(Kind::T0, f, i, e),
+                    Tile(Kind::T0, f, b, c),
+                    Tile(Kind::T1, e, c, f),
+                    Tile(Kind::T1, c, e, d),
                 ]
             }
             Kind::T2 => {
@@ -166,27 +130,26 @@ impl Tile {
                 let k = self.p2;
                 let a = self.p3;
                 let i = e + (k - e) / (*S3 + *S2 + *S1) * (*S3);
-                let f = e + (i - e).and_rotate(&Pt(0.0, 0.0), T1_VERTEX_ANGLE_RAD);
-                let d = e + (i - e).and_rotate(&Pt(0.0, 0.0), 2.0 * T1_VERTEX_ANGLE_RAD);
-                let b = e + (d - e) / *S3 * (*S3 + *S2);
-                let g = e + (f - e) / *S3 * (*S3 + *S2);
-                let h = e + (f - e) / *S3 * (*S3 + *S2 + *S1);
                 let j = e + (k - e) / (*S3 + *S2 + *S1) * (*S3 + *S2);
-                let c =
-                    b + (a - b).and_rotate(&Pt(0.0, 0.0), -1.0 * T0_ANGLE_OPP_S1_RAD) / *S3 * *S2;
+                let c = k + (a - k) / (*S3 + *S2 + *S1) * (*S3 + *S2);
+                let h = k + (a - k) / (*S3 + *S3 + *S1) * (*S3);
+                let g = e + (h - e) / (*S3 + *S2 + *S1) * (*S3 + *S2);
+                let f = e + (h - e) / (*S3 + *S2 + *S1) * (*S3);
+                let b = e + (a - e) / (*S3 + *S2 + *S3) * (*S3 + *S2);
+                let d = e + (a - e) / (*S3 + *S2 + *S3) * (*S3);
 
                 vec![
-                    Tile(Kind::T1, Ori::CW, f, d, e),
-                    Tile(Kind::T0, Ori::CCW, f, d, b),
-                    Tile(Kind::T2, Ori::CW, f, g, b),
-                    Tile(Kind::T0, Ori::CCW, h, g, b),
-                    Tile(Kind::T2, Ori::CW, h, c, b),
-                    Tile(Kind::T0, Ori::CCW, a, c, b),
-                    Tile(Kind::T1, Ori::CW, i, f, e),
-                    Tile(Kind::T0, Ori::CCW, i, f, g),
-                    Tile(Kind::T2, Ori::CW, i, j, g),
-                    Tile(Kind::T0, Ori::CCW, k, j, g),
-                    Tile(Kind::T1, Ori::CW, h, g, k),
+                    Tile(Kind::T1, f, d, e),
+                    Tile(Kind::T0, f, d, b),
+                    Tile(Kind::T2, f, g, b),
+                    Tile(Kind::T0, h, g, b),
+                    Tile(Kind::T2, h, c, b),
+                    Tile(Kind::T0, a, c, b),
+                    Tile(Kind::T1, i, f, e),
+                    Tile(Kind::T0, i, f, g),
+                    Tile(Kind::T2, i, j, g),
+                    Tile(Kind::T0, k, j, g),
+                    Tile(Kind::T1, h, g, k),
                 ]
             }
         }
@@ -196,60 +159,58 @@ impl Tile {
 fn main() {
     let args: Args = argh::from_env();
 
-    let origin = Pt(0.0, 0.0);
+    let origin = Pt(0.1, 0.1);
 
     let t0a = origin;
     let t0b = t0a + PolarPt(*S1, PI - T0_ANGLE_OPP_S2_RAD);
     let t0c = t0a + Pt(-1.0 * *S3, 0.0);
-    let t0 = Tile(Kind::T0, Ori::CW, t0a, t0b, t0c);
+    let t0 = Tile(Kind::T0, t0a, t0b, t0c);
 
     let t1a = origin;
     let t1b = t1a + PolarPt(*S1, -1.0 * T1_BASE_ANGLE_RAD);
     let t1c = t1a + Pt(*S3, 0.0);
-    let t1 = Tile(Kind::T1, Ori::CW, t1a, t1b, t1c);
+    let t1 = Tile(Kind::T1, t1a, t1b, t1c);
 
     let t2a = origin;
     let t2b = t2a + PolarPt(*S2, -1.0 * T1_VERTEX_ANGLE_RAD);
     let t2c = t2a + PolarPt(*S3, T1_VERTEX_ANGLE_RAD);
-    let t2 = Tile(Kind::T2, Ori::CCW, t2a, t2b, t2c);
+    let t2 = Tile(Kind::T2, t2a, t2b, t2c);
 
-    let mut t_copy = t2;
-    t_copy.rotate(&Pt(0.0, 0.0), 0.0 * PI);
+    let mut t_copy = t0;
+    t_copy.rotate(&Pt(0.0, 0.0), 0.1 * PI);
 
     let mut tiles = vec![];
     tiles.push(t_copy.clone());
 
-    for _ in 0..2 {
-        tiles = tiles
-            .into_iter()
-            .map(|tile| tile.expand())
-            .flatten()
-            .collect();
+    for _ in 0..3 {
+        let next_layer = tiles
+            .iter()
+            .flat_map(|tile| tile.expand())
+            .collect::<Vec<_>>();
+        tiles.extend(next_layer);
     }
 
-    let mut dos: Vec<DrawObj> = tiles
+    let dos: Vec<DrawObj> = tiles
         .into_iter()
         .map(|tile| {
-            DrawObj::from_polygon(Polygon(tile.pts().into_iter()).unwrap()).with_color(
-                match tile.kind {
-                    Kind::T0 => &BLUE,
-                    Kind::T1 => &RED,
-                    Kind::T2 => &YELLOW,
-                },
-            )
+            let color = match tile.kind {
+                Kind::T0 => &BLUE,
+                Kind::T1 => &RED,
+                Kind::T2 => &YELLOWGREEN,
+            };
+            let p = Polygon(tile.pts().into_iter()).unwrap();
+
+            DrawObj::from_polygon(p.clone()).with_color(color)
         })
         .collect();
 
     let mut draw_objs = DrawObjs::from_objs(dos).with_frame(make_frame((DIM, DIM), Pt(50.0, 50.0)));
 
-    let width = draw_objs.width();
-    let height = draw_objs.height();
-
     // invert
     draw_objs.mutate(|pt| {
         *pt = *pt * Pt(1.0, -1.0);
         *pt *= 600.0;
-        *pt += Pt(100.0, 400.0);
+        *pt += Pt(600.0, 400.0);
     });
 
     // scale
