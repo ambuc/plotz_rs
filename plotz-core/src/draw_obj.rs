@@ -24,7 +24,7 @@ impl DrawObjInner {
     /// Returns true if the object is empty (i.e. zero points)
     pub fn is_empty(&self) -> bool {
         match self {
-            DrawObjInner::Point(p) => false,
+            DrawObjInner::Point(_) => false,
             DrawObjInner::Polygon(p) => p.pts.is_empty(),
             DrawObjInner::Segment(_) => false,
         }
@@ -197,10 +197,10 @@ impl DrawObjs {
             })
     }
 
-    /// joins
+    /// joins. not sure if this works.
     pub fn join_adjacent_segments(&mut self) {
         // seg
-        let mut colors_and_draw_objs: Vec<(&'static ColorRGB, Vec<DrawObj>)> =
+        let colors_and_draw_objs: Vec<(&'static ColorRGB, Vec<DrawObj>)> =
             self.clone().group_by_color();
 
         let new_paths: Vec<DrawObj> = colors_and_draw_objs

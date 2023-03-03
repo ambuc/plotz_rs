@@ -1,6 +1,5 @@
 use float_ord::FloatOrd;
 use rand::prelude::SliceRandom;
-use rand::Rng;
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Copy, Clone)]

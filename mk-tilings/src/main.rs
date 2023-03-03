@@ -11,10 +11,8 @@ use {
     },
     plotz_geometry::{
         point::{PolarPt, Pt},
-        polygon::{Multiline, Polygon},
-        segment::Segment,
+        polygon::Polygon,
     },
-    rand::{prelude::SliceRandom, Rng},
     std::f64::consts::PI,
 };
 
@@ -24,7 +22,6 @@ lazy_static! {
     static ref S1: f64 = (PI / 7.0).sin();
     static ref S2: f64 = (2.0 * PI / 7.0).sin();
     static ref S3: f64 = (3.0 * PI / 7.0).sin();
-    // static ref SF: f64 = 1.0 + ((2.0 * PI / 7.0).sin() / (PI / 7.0).sin());
 }
 
 // t0 is a scalene triangle with side lengths (s1, s2, s3) and three kinds of
@@ -170,7 +167,6 @@ impl Tile {
 fn main() {
     let args: Args = argh::from_env();
 
-    let mut rng = rand::thread_rng();
     let origin = Pt(0.1, 0.1);
 
     let t0a = origin;
@@ -194,7 +190,7 @@ fn main() {
     let mut tiles = vec![];
     tiles.push(t_copy.clone());
 
-    for _ in 0..5 {
+    for _ in 0..3 {
         let next_layer = tiles
             .iter()
             .flat_map(|tile| tile.expand())
@@ -213,8 +209,8 @@ fn main() {
             let p = Polygon(tile.pts().into_iter()).unwrap();
 
             vec![
-                // DrawObj::from_polygon(p.clone()).with_color(color),
-                DrawObj::from_segment(Segment(tile.p1, tile.p2)).with_color(color),
+                DrawObj::from_polygon(p.clone()).with_color(color),
+                // DrawObj::from_segment(Segment(tile.p1, tile.p2)).with_color(color),
                 // DrawObj::from_pt(tile.ctr()).with_color(color),
             ]
         })
@@ -228,8 +224,6 @@ fn main() {
         *pt *= 760.0;
         *pt += Pt(5.0, 660.0);
     });
-
-    // draw_objs.join_adjacent_segments();
 
     // scale
 
