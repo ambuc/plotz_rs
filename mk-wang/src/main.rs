@@ -251,7 +251,7 @@ fn main() {
     let args: Args = argh::from_env();
 
     let image_width: f64 = 600.0;
-    let grid_cardinality = 16;
+    let grid_cardinality = 16_usize;
     let margin = 50.0;
 
     let grid: Vec<Vec<Tile>> = fill_grid(grid_cardinality, grid_cardinality);
