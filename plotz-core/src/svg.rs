@@ -33,15 +33,16 @@ pub enum SvgWriteError {
     CairoError(#[from] cairo::Error),
 }
 
-fn write_obj_to_context(
-    co: &DrawObj,
-    context: &mut cairo::Context,
-) -> Result<(), SvgWriteError> {
+fn write_obj_to_context(co: &DrawObj, context: &mut cairo::Context) -> Result<(), SvgWriteError> {
     if co.obj.is_empty() {
         return Ok(());
     }
 
     match &co.obj {
+        DrawObjInner::Point(p) => {
+            context.line_to(p.x.0, p.y.0);
+            context.line_to(p.x.0 + 1.0, p.y.0 + 1.0);
+        }
         DrawObjInner::Polygon(polygon) => {
             //
             for p in &polygon.pts {

@@ -9,8 +9,12 @@ use {
         frame::make_frame,
         svg::Size,
     },
-    plotz_geometry::point::PolarPt,
-    plotz_geometry::{point::Pt, polygon::Polygon},
+    plotz_geometry::{
+        point::{PolarPt, Pt},
+        polygon::{Multiline, Polygon},
+        segment::Segment,
+    },
+    rand::{prelude::SliceRandom, Rng},
     std::f64::consts::PI,
 };
 
@@ -78,6 +82,13 @@ impl Tile {
         self.p1.rotate(about, by);
         self.p2.rotate(about, by);
         self.p3.rotate(about, by);
+    }
+
+    fn ctr(&self) -> Pt {
+        Pt(
+            (self.p1.x.0 + self.p2.x.0 + self.p3.x.0) / 3.0,
+            (self.p1.y.0 + self.p2.y.0 + self.p3.y.0) / 3.0,
+        )
     }
 }
 
@@ -159,6 +170,7 @@ impl Tile {
 fn main() {
     let args: Args = argh::from_env();
 
+    let mut rng = rand::thread_rng();
     let origin = Pt(0.1, 0.1);
 
     let t0a = origin;
@@ -176,23 +188,23 @@ fn main() {
     let t2c = t2a + PolarPt(*S3, T1_VERTEX_ANGLE_RAD);
     let t2 = Tile(Kind::T2, t2a, t2b, t2c);
 
-    let mut t_copy = t0;
+    let mut t_copy = t2;
     t_copy.rotate(&Pt(0.0, 0.0), 0.1 * PI);
 
     let mut tiles = vec![];
     tiles.push(t_copy.clone());
 
-    for _ in 0..3 {
+    for _ in 0..4 {
         let next_layer = tiles
             .iter()
             .flat_map(|tile| tile.expand())
             .collect::<Vec<_>>();
-        tiles.extend(next_layer);
+        tiles = next_layer;
     }
 
     let dos: Vec<DrawObj> = tiles
         .into_iter()
-        .map(|tile| {
+        .flat_map(|tile| {
             let color = match tile.kind {
                 Kind::T0 => &BLUE,
                 Kind::T1 => &RED,
@@ -200,7 +212,11 @@ fn main() {
             };
             let p = Polygon(tile.pts().into_iter()).unwrap();
 
-            DrawObj::from_polygon(p.clone()).with_color(color)
+            vec![
+                // DrawObj::from_polygon(p.clone()).with_color(color),
+                DrawObj::from_segment(Segment(tile.p1, tile.p2)).with_color(color),
+                // DrawObj::from_pt(tile.ctr()).with_color(color),
+            ]
         })
         .collect();
 
@@ -209,8 +225,8 @@ fn main() {
     // invert
     draw_objs.mutate(|pt| {
         *pt = *pt * Pt(1.0, -1.0);
-        *pt *= 600.0;
-        *pt += Pt(600.0, 400.0);
+        *pt *= 760.0;
+        *pt += Pt(5.0, 660.0);
     });
 
     // scale

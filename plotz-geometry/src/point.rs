@@ -2,7 +2,7 @@
 
 use std::fmt::Debug;
 
-use crate::segment::Segment;
+use crate::{bounded::Bounded, segment::Segment};
 use {
     float_ord::FloatOrd,
     std::{
@@ -249,5 +249,20 @@ mod tests {
     #[test]
     fn test_div() {
         assert_eq!(Pt(1.0, 2.0) / 2.0, Pt(0.5, 1.0)); // floats
+    }
+}
+
+impl Bounded for Pt {
+    fn top_bound(&self) -> f64 {
+        self.y.0
+    }
+    fn bottom_bound(&self) -> f64 {
+        self.y.0
+    }
+    fn left_bound(&self) -> f64 {
+        self.x.0
+    }
+    fn right_bound(&self) -> f64 {
+        self.x.0
     }
 }

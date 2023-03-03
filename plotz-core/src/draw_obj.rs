@@ -12,6 +12,8 @@ use plotz_geometry::segment::Segment;
 /// Either a polygon or a segment.
 #[derive(Debug, PartialEq, Clone)]
 pub enum DrawObjInner {
+    /// A point.
+    Point(Pt),
     /// A polygon.
     Polygon(Polygon),
     /// A segment.
@@ -21,6 +23,7 @@ impl DrawObjInner {
     /// Returns true if the object is empty (i.e. zero points)
     pub fn is_empty(&self) -> bool {
         match self {
+            DrawObjInner::Point(p) => false,
             DrawObjInner::Polygon(p) => p.pts.is_empty(),
             DrawObjInner::Segment(_) => false,
         }
@@ -29,6 +32,7 @@ impl DrawObjInner {
 impl Bounded for DrawObjInner {
     fn right_bound(&self) -> f64 {
         match self {
+            DrawObjInner::Point(p) => p.right_bound(),
             DrawObjInner::Polygon(p) => p.right_bound(),
             DrawObjInner::Segment(s) => s.right_bound(),
         }
@@ -36,6 +40,7 @@ impl Bounded for DrawObjInner {
 
     fn left_bound(&self) -> f64 {
         match self {
+            DrawObjInner::Point(p) => p.left_bound(),
             DrawObjInner::Polygon(p) => p.left_bound(),
             DrawObjInner::Segment(s) => s.left_bound(),
         }
@@ -43,6 +48,7 @@ impl Bounded for DrawObjInner {
 
     fn top_bound(&self) -> f64 {
         match self {
+            DrawObjInner::Point(p) => p.top_bound(),
             DrawObjInner::Polygon(p) => p.top_bound(),
             DrawObjInner::Segment(s) => s.top_bound(),
         }
@@ -50,6 +56,7 @@ impl Bounded for DrawObjInner {
 
     fn bottom_bound(&self) -> f64 {
         match self {
+            DrawObjInner::Point(p) => p.bottom_bound(),
             DrawObjInner::Polygon(p) => p.bottom_bound(),
             DrawObjInner::Segment(s) => s.bottom_bound(),
         }
@@ -75,6 +82,11 @@ impl DrawObj {
             color: BLACK,
             thickness: 1.0,
         }
+    }
+
+    /// from a pt
+    pub fn from_pt(p: Pt) -> DrawObj {
+        Self::from_obj(DrawObjInner::Point(p))
     }
 
     /// from a polygon.
@@ -169,6 +181,9 @@ impl DrawObjs {
         self.draw_objs
             .iter_mut()
             .for_each(|d_o| match &mut d_o.obj {
+                DrawObjInner::Point(p) => {
+                    f(p);
+                }
                 DrawObjInner::Polygon(p) => {
                     p.pts.iter_mut().for_each(|pt| f(pt));
                 }
