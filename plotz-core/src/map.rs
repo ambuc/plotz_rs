@@ -68,7 +68,7 @@ impl AnnotatedPolygon {
     pub fn to_colored_polygon(self) -> DrawObj {
         DrawObj {
             obj: DrawObjInner::Polygon(self.polygon),
-            color: *self.color,
+            color: &*self.color,
             thickness: self.thickness,
         }
     }

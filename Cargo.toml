@@ -25,6 +25,7 @@ members = [
 [dependencies]
 argh = "*"
 glob = "*"
+multimap = "0.8.3"
 plotz-core = { path = "plotz-core" }
 pretty_env_logger = "*"
 thiserror = "*"

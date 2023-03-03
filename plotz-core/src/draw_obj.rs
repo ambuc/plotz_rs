@@ -3,10 +3,11 @@
 use crate::svg::{write_layer_to_svg, Size};
 use anyhow::Error;
 use itertools::Itertools;
+use multimap::MultiMap;
 use plotz_color::{ColorRGB, BLACK};
 use plotz_geometry::bounded::Bounded;
 use plotz_geometry::point::Pt;
-use plotz_geometry::polygon::Polygon;
+use plotz_geometry::polygon::{Multiline, Polygon};
 use plotz_geometry::segment::Segment;
 
 /// Either a polygon or a segment.
@@ -69,7 +70,7 @@ pub struct DrawObj {
     /// The object.
     pub obj: DrawObjInner,
     /// The color.
-    pub color: ColorRGB,
+    pub color: &'static ColorRGB,
     /// The thickness.
     pub thickness: f64,
 }
@@ -79,7 +80,7 @@ impl DrawObj {
     pub fn from_obj(obj: DrawObjInner) -> DrawObj {
         DrawObj {
             obj,
-            color: BLACK,
+            color: &BLACK,
             thickness: 1.0,
         }
     }
@@ -103,13 +104,14 @@ impl DrawObj {
     pub fn with_color(self, color: &'static ColorRGB) -> DrawObj {
         DrawObj {
             obj: self.obj,
-            color: *color,
+            color: color,
             thickness: self.thickness,
         }
     }
 }
 
 /// Many draw objs.
+#[derive(Debug, Clone)]
 pub struct DrawObjs {
     /// the objs.
     pub draw_objs: Vec<DrawObj>,
@@ -135,7 +137,7 @@ impl DrawObjs {
     }
 
     /// Sorts and groups the internal draw objects by color.
-    pub fn group_by_color(mut self) -> Vec<(ColorRGB, Vec<DrawObj>)> {
+    pub fn group_by_color(mut self) -> Vec<(&'static ColorRGB, Vec<DrawObj>)> {
         self.draw_objs.sort_by_key(|d_o| d_o.color);
         self.draw_objs
             .into_iter()
@@ -168,6 +170,7 @@ impl DrawObjs {
         // layers
         {
             for (i, (_color, draw_obj_vec)) in self.group_by_color().into_iter().enumerate() {
+                // join adjacent segments here
                 let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), &draw_obj_vec)
                     .expect("failed to write");
             }
@@ -192,5 +195,59 @@ impl DrawObjs {
                     f(&mut s.f);
                 }
             })
+    }
+
+    /// joins
+    pub fn join_adjacent_segments(&mut self) {
+        // seg
+        let mut colors_and_draw_objs: Vec<(&'static ColorRGB, Vec<DrawObj>)> =
+            self.clone().group_by_color();
+
+        let new_paths: Vec<DrawObj> = colors_and_draw_objs
+            .into_iter()
+            .flat_map(|(color, draw_obj_vec)| {
+                //
+                let mut pts_to_pts: MultiMap<Pt, Pt> = MultiMap::new();
+
+                for draw_obj in draw_obj_vec.iter() {
+                    match draw_obj.obj {
+                        DrawObjInner::Segment(s) => {
+                            pts_to_pts.insert(s.i, s.f);
+                        }
+                        DrawObjInner::Point(_) | DrawObjInner::Polygon(_) => {
+                            // do nothing
+                        }
+                    }
+                }
+
+                let mut new_paths: Vec<DrawObj> = vec![];
+
+                while !pts_to_pts.is_empty() {
+                    let mut adjacent_pts: Vec<Pt> = vec![];
+
+                    let mut key: Pt = pts_to_pts.keys().next().unwrap().clone();
+                    adjacent_pts.push(key);
+
+                    while let Some(val) = pts_to_pts.get_vec_mut(&key).and_then(|v| v.pop()) {
+                        adjacent_pts.push(val);
+                        key = val;
+                    }
+                    pts_to_pts.remove(&key);
+
+                    if adjacent_pts.len() >= 2 {
+                        println!("pts: {:?}", adjacent_pts);
+                        new_paths.push(
+                            DrawObj::from_polygon(Multiline(adjacent_pts).unwrap())
+                                .with_color(color),
+                        );
+                    }
+                }
+
+                new_paths
+            })
+            .collect();
+
+        // rejoin
+        self.draw_objs = new_paths;
     }
 }

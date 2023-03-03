@@ -194,7 +194,7 @@ fn main() {
     let mut tiles = vec![];
     tiles.push(t_copy.clone());
 
-    for _ in 0..4 {
+    for _ in 0..5 {
         let next_layer = tiles
             .iter()
             .flat_map(|tile| tile.expand())
@@ -228,6 +228,8 @@ fn main() {
         *pt *= 760.0;
         *pt += Pt(5.0, 660.0);
     });
+
+    // draw_objs.join_adjacent_segments();
 
     // scale
 

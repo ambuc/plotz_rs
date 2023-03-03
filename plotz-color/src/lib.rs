@@ -1,4 +1,5 @@
 use float_ord::FloatOrd;
+use rand::prelude::SliceRandom;
 use rand::Rng;
 use std::hash::{Hash, Hasher};
 
@@ -893,7 +894,7 @@ pub fn take_random_colors(limit: usize) -> Vec<&'static ColorRGB> {
     let mut colors = COLORS;
 
     let mut rng = rand::thread_rng();
-    rng.shuffle(&mut colors);
+    colors.shuffle(&mut rng);
 
     colors.into_iter().take(limit).collect()
 }
