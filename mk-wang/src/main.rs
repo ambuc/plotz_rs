@@ -231,7 +231,6 @@ fn draw_tile(
             .collect::<Vec<_>>()
         });
         ret.iter_mut().for_each(|mut d_o| match &mut d_o.obj {
-            DrawObjInner::Point(_) => unimplemented!(),
             DrawObjInner::Polygon(pg) => {
                 *pg *= 2.0;
                 pg.rotate(&Pt(1.0, 1.0), rot);
@@ -242,6 +241,7 @@ fn draw_tile(
                 sg.rotate(&Pt(1.0, 1.0), rot);
                 *sg += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
             }
+            DrawObjInner::Point(_) | DrawObjInner::Char(_, _) => unimplemented!(),
         });
         ret
     })
@@ -281,9 +281,6 @@ fn main() {
         .draw_obj_vec
         .iter_mut()
         .for_each(|d_o| match &mut d_o.obj {
-            DrawObjInner::Point(p) => {
-                unimplemented!();
-            }
             DrawObjInner::Polygon(p) => {
                 *p *= scale;
                 *p += Pt(margin, margin);
@@ -291,6 +288,9 @@ fn main() {
             DrawObjInner::Segment(s) => {
                 *s *= scale;
                 *s += Pt(margin, margin);
+            }
+            DrawObjInner::Point(_) | DrawObjInner::Char(_, _) => {
+                unimplemented!()
             }
         });
 

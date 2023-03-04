@@ -664,6 +664,14 @@ impl Polygon {
 
         Ok(resultant_polygons)
     }
+
+    /// avg pt
+    pub fn average(&self) -> Pt {
+        let num: f64 = self.pts.len() as f64;
+        let sum_x: f64 = self.pts.iter().map(|pt| pt.x.0).sum();
+        let sum_y: f64 = self.pts.iter().map(|pt| pt.y.0).sum();
+        Pt(sum_x / num, sum_y / num)
+    }
 }
 
 // Angle between points. Projects OI onto OJ and finds the angle IOJ.

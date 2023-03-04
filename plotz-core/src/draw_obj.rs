@@ -19,15 +19,16 @@ pub enum DrawObjInner {
     Polygon(Polygon),
     /// A segment.
     Segment(Segment),
+    /// A character to be printed in SVG, at a point.
+    Char(Pt, char),
 }
 
 impl DrawObjInner {
     /// Returns true if the object is empty (i.e. zero points)
     pub fn is_empty(&self) -> bool {
         match self {
-            DrawObjInner::Point(_) => false,
             DrawObjInner::Polygon(p) => p.pts.is_empty(),
-            DrawObjInner::Segment(_) => false,
+            DrawObjInner::Point(_) | DrawObjInner::Segment(_) | DrawObjInner::Char(_, _) => false,
         }
     }
 }
@@ -37,6 +38,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Point(p) => p.right_bound(),
             DrawObjInner::Polygon(p) => p.right_bound(),
             DrawObjInner::Segment(s) => s.right_bound(),
+            DrawObjInner::Char(p, _ch) => p.right_bound(),
         }
     }
 
@@ -45,6 +47,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Point(p) => p.left_bound(),
             DrawObjInner::Polygon(p) => p.left_bound(),
             DrawObjInner::Segment(s) => s.left_bound(),
+            DrawObjInner::Char(p, _ch) => p.left_bound(),
         }
     }
 
@@ -53,6 +56,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Point(p) => p.top_bound(),
             DrawObjInner::Polygon(p) => p.top_bound(),
             DrawObjInner::Segment(s) => s.top_bound(),
+            DrawObjInner::Char(p, _ch) => p.top_bound(),
         }
     }
 
@@ -61,6 +65,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Point(p) => p.bottom_bound(),
             DrawObjInner::Polygon(p) => p.bottom_bound(),
             DrawObjInner::Segment(s) => s.bottom_bound(),
+            DrawObjInner::Char(p, _ch) => p.bottom_bound(),
         }
     }
 }
@@ -101,6 +106,11 @@ impl DrawObj {
     /// from a segment.
     pub fn from_segment(s: Segment) -> DrawObj {
         Self::from_obj(DrawObjInner::Segment(s))
+    }
+
+    /// from a character.
+    pub fn from_char(p: Pt, ch: char) -> DrawObj {
+        Self::from_obj(DrawObjInner::Char(p, ch))
     }
 
     // builders
@@ -201,6 +211,9 @@ impl DrawObjs {
                     f(&mut s.i);
                     f(&mut s.f);
                 }
+                DrawObjInner::Char(pt, _ch) => {
+                    f(pt);
+                }
             })
     }
 
@@ -221,7 +234,9 @@ impl DrawObjs {
                         DrawObjInner::Segment(s) => {
                             pts_to_pts.insert(s.i, s.f);
                         }
-                        DrawObjInner::Point(_) | DrawObjInner::Polygon(_) => {
+                        DrawObjInner::Point(_)
+                        | DrawObjInner::Polygon(_)
+                        | DrawObjInner::Char(_, _) => {
                             // do nothing
                         }
                     }

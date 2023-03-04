@@ -166,6 +166,11 @@ impl Pt {
     pub fn dist(&self, other: &Pt) -> f64 {
         Segment(*self, *other).abs()
     }
+
+    /// Average of two points.
+    pub fn avg(&self, other: &Pt) -> Pt {
+        Pt((self.x.0 + other.x.0) / 2.0, (self.y.0 + other.y.0) / 2.0)
+    }
 }
 
 #[cfg(test)]

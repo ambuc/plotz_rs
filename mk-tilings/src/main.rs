@@ -12,7 +12,7 @@ use {
     plotz_geometry::{
         point::{PolarPt, Pt},
         polygon::Polygon,
-        segment::Segment,
+        shading_02::{shade_polygon, ShadeConfig},
     },
     std::f64::consts::PI,
 };
@@ -67,36 +67,32 @@ impl Kind {
         match self {
             Kind::T0 => &BLUE,
             Kind::T1 => &RED,
-            Kind::T2 => &YELLOWGREEN,
+            Kind::T2 => &GREENYELLOW,
         }
     }
 }
 
 #[derive(Debug, Clone, Copy)]
+enum Orientation {
+    CW,
+    CCW,
+}
+
+#[derive(Debug, Clone, Copy)]
 struct Tile {
     kind: Kind,
+    orientation: Orientation,
     pts: [Pt; 3],
 }
 
 #[allow(non_snake_case)]
 // Accepts three points in no particular order.
-fn Tile(kind: Kind, p1: Pt, p2: Pt, p3: Pt) -> Tile {
+fn Tile(kind: Kind, orientation: Orientation, p1: Pt, p2: Pt, p3: Pt) -> Tile {
+    // use orientation here
     Tile {
         kind,
+        orientation,
         pts: [p1, p2, p3],
-    }
-}
-
-impl Tile {
-    fn rotate(&mut self, about: &Pt, by: f64) {
-        self.pts.iter_mut().for_each(|p| p.rotate(about, by))
-    }
-
-    fn ctr(&self) -> Pt {
-        Pt(
-            (self.pts[0].x.0 + self.pts[1].x.0 + self.pts[2].x.0) / 3.0,
-            (self.pts[0].y.0 + self.pts[1].y.0 + self.pts[2].y.0) / 3.0,
-        )
     }
 }
 
@@ -114,12 +110,12 @@ impl Tile {
                 let g = f + (h - f) / *A_B * *B;
 
                 vec![
-                    Tile(Kind::T1, b, c, a),
-                    Tile(Kind::T0, c, b, d),
-                    Tile(Kind::T2, d, e, c),
-                    Tile(Kind::T0, f, e, d),
-                    Tile(Kind::T2, d, g, f),
-                    Tile(Kind::T0, h, g, d),
+                    Tile(Kind::T1, Orientation::CCW, b, c, a),
+                    Tile(Kind::T0, Orientation::CW, c, b, d),
+                    Tile(Kind::T2, Orientation::CCW, e, c, d),
+                    Tile(Kind::T0, Orientation::CW, f, e, d),
+                    Tile(Kind::T2, Orientation::CCW, d, g, f),
+                    Tile(Kind::T0, Orientation::CW, h, g, d),
                 ]
             }
             Kind::T1 => {
@@ -134,14 +130,14 @@ impl Tile {
                 let f = g + (e - g) / *B_C * *B;
 
                 vec![
-                    Tile(Kind::T1, f, b, a),
-                    Tile(Kind::T0, a, g, f),
-                    Tile(Kind::T2, f, g, h),
-                    Tile(Kind::T1, i, f, h),
-                    Tile(Kind::T0, f, i, e),
-                    Tile(Kind::T0, f, b, c),
-                    Tile(Kind::T1, e, c, f),
-                    Tile(Kind::T1, c, e, d),
+                    Tile(Kind::T1, Orientation::CCW, f, b, a),
+                    Tile(Kind::T0, Orientation::CW, a, g, f),
+                    Tile(Kind::T2, Orientation::CCW, f, g, h),
+                    Tile(Kind::T1, Orientation::CCW, i, f, h),
+                    Tile(Kind::T0, Orientation::CW, f, i, e),
+                    Tile(Kind::T0, Orientation::CCW, f, b, c),
+                    Tile(Kind::T1, Orientation::CW, c, e, f),
+                    Tile(Kind::T1, Orientation::CCW, c, e, d),
                 ]
             }
             Kind::T2 => {
@@ -158,17 +154,17 @@ impl Tile {
                 let d = e + (a - e) / *B_C_C * *C;
 
                 vec![
-                    Tile(Kind::T1, f, d, e),
-                    Tile(Kind::T0, f, d, b),
-                    Tile(Kind::T2, f, g, b),
-                    Tile(Kind::T0, h, g, b),
-                    Tile(Kind::T2, h, c, b),
-                    Tile(Kind::T0, a, c, b),
-                    Tile(Kind::T1, i, f, e),
-                    Tile(Kind::T0, i, f, g),
-                    Tile(Kind::T2, i, j, g),
-                    Tile(Kind::T0, k, j, g),
-                    Tile(Kind::T1, h, g, k),
+                    Tile(Kind::T1, Orientation::CW, d, f, e),
+                    Tile(Kind::T0, Orientation::CCW, f, d, b),
+                    Tile(Kind::T2, Orientation::CW, b, g, f),
+                    Tile(Kind::T0, Orientation::CCW, h, g, b),
+                    Tile(Kind::T2, Orientation::CW, b, c, h),
+                    Tile(Kind::T0, Orientation::CCW, a, c, b),
+                    Tile(Kind::T1, Orientation::CW, f, i, e),
+                    Tile(Kind::T0, Orientation::CCW, i, f, g),
+                    Tile(Kind::T2, Orientation::CW, g, j, i),
+                    Tile(Kind::T0, Orientation::CCW, k, j, g),
+                    Tile(Kind::T1, Orientation::CW, g, h, k),
                 ]
             }
         }
@@ -182,6 +178,7 @@ fn main() {
 
     let t0 = Tile(
         Kind::T0,
+        Orientation::CCW,
         origin,
         origin + PolarPt(*A, PI - T0_ANGLE_OPP_S2_RAD),
         origin + Pt(-1.0 * *C, 0.0),
@@ -189,62 +186,99 @@ fn main() {
 
     let t1 = Tile(
         Kind::T1,
-        origin,
+        Orientation::CCW,
         origin + PolarPt(*A, -1.0 * T1_BASE_ANGLE_RAD),
+        origin,
         origin + Pt(*C, 0.0),
     );
 
     let t2 = Tile(
         Kind::T2,
+        Orientation::CW,
         origin,
         origin + PolarPt(*B, -1.0 * T1_VERTEX_ANGLE_RAD),
         origin + PolarPt(*C, T1_VERTEX_ANGLE_RAD),
     );
 
-    let mut t_copy = t2;
-    t_copy.rotate(&Pt(0.0, 0.0), 0.1 * PI);
+    let mut all_tiles = vec![];
 
-    let mut tiles = vec![];
-    tiles.push(t_copy.clone());
+    for (idx, t) in [t0, t1, t2].iter().enumerate() {
+        for (jdx, expansion_depth) in (0..4).enumerate() {
+            //
+            let mut t_copy = t.clone();
 
-    for _ in 0..3 {
-        let next_layer = tiles
-            .iter()
-            .flat_map(|tile| tile.expand())
-            .collect::<Vec<_>>();
-        tiles = next_layer;
+            // centerings
+            t_copy.pts.iter_mut().for_each(|pt| {
+                pt.rotate(&Pt(0.0, 0.0), 0.1 * PI);
+                *pt = *pt * Pt(1.0, -1.0);
+                *pt *= 270.0;
+                *pt += Pt(70.0 + 230.0 * (jdx as f64), 250.0 + 70.0 * (idx as f64));
+                match t.kind {
+                    Kind::T0 => {
+                        *pt += Pt(230.0, 0.0);
+                    }
+                    Kind::T1 => {
+                        *pt += Pt(-20.0, 25.0);
+                    }
+                    Kind::T2 => {
+                        *pt += Pt(0.0, 110.0);
+                    }
+                }
+            });
+
+            let mut tiles = vec![];
+            tiles.push(t_copy.clone());
+
+            for _ in 0..expansion_depth {
+                let next_layer = tiles
+                    .iter()
+                    .flat_map(|tile| tile.expand())
+                    .collect::<Vec<_>>();
+                tiles = next_layer;
+            }
+
+            all_tiles.extend(tiles);
+        }
     }
 
-    let dos: Vec<DrawObj> = tiles
+    let dos: Vec<DrawObj> = all_tiles
         .into_iter()
         .flat_map(|tile| {
             let color = tile.kind.color();
-            let p = Polygon(tile.pts.into_iter()).unwrap();
 
-            vec![
-                DrawObj::from_polygon(p.clone()).with_color(color),
-                // DrawObj::from_segment(Segment(tile.pts[0], tile.p2)).with_color(color),
-                // DrawObj::from_pt(tile.ctr()).with_color(color),
-            ]
+            let p = Polygon(tile.pts).unwrap();
+
+            let config = ShadeConfig {
+                gap: 2.0,
+                slope: 1.0,
+                thickness: 1.0,
+            };
+            let segments = shade_polygon(&config, &p).unwrap();
+
+            let mut ret = vec![];
+            ret.push(DrawObj::from_polygon(p.clone()));
+            ret.extend(
+                segments
+                    .into_iter()
+                    .map(|s| DrawObj::from_segment(s).with_color(color)),
+            );
+
+            ret
         })
         .collect();
 
-    let mut draw_objs = DrawObjs::from_objs(dos)
-        .with_frame(make_frame((DIM, DIM), /*offset=*/ Pt(50.0, 50.0)));
-
-    // invert
-    draw_objs.mutate(|pt| {
-        *pt = *pt * Pt(1.0, -1.0);
-        *pt *= 760.0;
-        *pt += Pt(5.0, 660.0);
-    });
+    let phi: f64 = (1.0 + (5.0_f64).sqrt()) / 2.0;
+    let draw_objs = DrawObjs::from_objs(dos).with_frame(make_frame(
+        (DIM, DIM * phi),
+        /*offset=*/ Pt(50.0, 50.0),
+    ));
 
     // scale
 
     let () = draw_objs
         .write_to_svg(
             Size {
-                width: 750,
+                width: (750.0 * phi) as usize,
                 height: 750,
             },
             &args.output_path_prefix,
