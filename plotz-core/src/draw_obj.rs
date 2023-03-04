@@ -217,59 +217,56 @@ impl DrawObjs {
             })
     }
 
-    /// joins. not sure if this works.
+    /// join adjacent segments to save on path draw time.
     pub fn join_adjacent_segments(&mut self) {
-        // seg
-        let colors_and_draw_objs: Vec<(&'static ColorRGB, Vec<DrawObj>)> =
-            self.clone().group_by_color();
-
-        let new_paths: Vec<DrawObj> = colors_and_draw_objs
+        self.draw_obj_vec = self
+            .clone()
+            .group_by_color()
             .into_iter()
             .flat_map(|(color, draw_obj_vec)| {
                 //
-                let mut pts_to_pts: MultiMap<Pt, Pt> = MultiMap::new();
+                let mut mmap: MultiMap<Pt, Pt> = MultiMap::new();
 
-                for draw_obj in draw_obj_vec.iter() {
-                    match draw_obj.obj {
+                draw_obj_vec.iter().for_each(|d_o| {
+                    match d_o.obj {
                         DrawObjInner::Segment(s) => {
-                            pts_to_pts.insert(s.i, s.f);
+                            mmap.insert(s.i, s.f);
                         }
-                        DrawObjInner::Point(_)
-                        | DrawObjInner::Polygon(_)
-                        | DrawObjInner::Char(_, _) => {
+                        DrawObjInner::Polygon(ref p) => {
+                            for s in p.to_segments() {
+                                mmap.insert(s.i, s.f);
+                            }
+                        }
+                        DrawObjInner::Point(_) | DrawObjInner::Char(_, _) => {
                             // do nothing
                         }
                     }
-                }
+                });
 
-                let mut new_paths: Vec<DrawObj> = vec![];
+                let mut ret: Vec<DrawObj> = vec![];
 
-                while !pts_to_pts.is_empty() {
+                while !mmap.is_empty() {
                     let mut adjacent_pts: Vec<Pt> = vec![];
 
-                    let mut key: Pt = pts_to_pts.keys().next().unwrap().clone();
-                    adjacent_pts.push(key);
+                    let mut p = *mmap.keys().next().unwrap();
+                    adjacent_pts.push(p);
 
-                    while let Some(val) = pts_to_pts.get_vec_mut(&key).and_then(|v| v.pop()) {
-                        adjacent_pts.push(val);
-                        key = val;
+                    while let Some(next) = mmap.get_vec_mut(&p).and_then(|v| v.pop()) {
+                        adjacent_pts.push(next);
+                        p = next;
                     }
-                    pts_to_pts.remove(&key);
+                    mmap.remove(&p);
 
                     if adjacent_pts.len() >= 2 {
-                        println!("pts: {:?}", adjacent_pts);
-                        new_paths.push(
+                        ret.push(
                             DrawObj::from_polygon(Multiline(adjacent_pts).unwrap())
                                 .with_color(color),
                         );
                     }
                 }
 
-                new_paths
+                ret
             })
             .collect();
-
-        // rejoin
-        self.draw_obj_vec = new_paths;
     }
 }

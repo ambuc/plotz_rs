@@ -63,6 +63,13 @@ enum Kind {
     T2,
 }
 impl Kind {
+    fn as_usize(&self) -> usize {
+        match self {
+            Kind::T0 => 0,
+            Kind::T1 => 1,
+            Kind::T2 => 2,
+        }
+    }
     fn color(&self) -> &'static ColorRGB {
         match self {
             Kind::T0 => &BLUE,
@@ -212,7 +219,7 @@ fn main() {
                 pt.rotate(&Pt(0.0, 0.0), 0.1 * PI);
                 *pt = *pt * Pt(1.0, -1.0);
                 *pt *= 270.0;
-                *pt += Pt(70.0 + 230.0 * (jdx as f64), 250.0 + 70.0 * (idx as f64));
+                *pt += Pt(30.0 + 230.0 * (jdx as f64), 140.0 + 150.0 * (idx as f64));
                 match t.kind {
                     Kind::T0 => {
                         *pt += Pt(230.0, 0.0);
@@ -249,8 +256,8 @@ fn main() {
             let p = Polygon(tile.pts).unwrap();
 
             let config = ShadeConfig {
-                gap: 2.0,
-                slope: 1.0,
+                gap: 1.5,
+                slope: [-1.0, 0.0, 1.0][tile.kind.as_usize()],
                 thickness: 1.0,
             };
             let segments = shade_polygon(&config, &p).unwrap();
@@ -268,12 +275,12 @@ fn main() {
         .collect();
 
     let phi: f64 = (1.0 + (5.0_f64).sqrt()) / 2.0;
-    let draw_objs = DrawObjs::from_objs(dos).with_frame(make_frame(
+    let mut draw_objs = DrawObjs::from_objs(dos).with_frame(make_frame(
         (DIM, DIM * phi),
-        /*offset=*/ Pt(50.0, 50.0),
+        /*offset=*/ Pt(10.0, 10.0),
     ));
 
-    // scale
+    draw_objs.join_adjacent_segments();
 
     let () = draw_objs
         .write_to_svg(
