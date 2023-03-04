@@ -19,9 +19,15 @@ use {
 static DIM: f64 = 600.0;
 
 lazy_static! {
-    static ref S1: f64 = (PI / 7.0).sin();
-    static ref S2: f64 = (2.0 * PI / 7.0).sin();
-    static ref S3: f64 = (3.0 * PI / 7.0).sin();
+    static ref A: f64 = (PI / 7.0).sin();
+    static ref B: f64 = (2.0 * PI / 7.0).sin();
+    static ref C: f64 = (3.0 * PI / 7.0).sin();
+    static ref A_B: f64 = *A + *B;
+    static ref B_C: f64 = *B + *C;
+    static ref A_B_C: f64 = *A + *B + *C;
+    static ref A_C_C: f64 = *A + *C + *C;
+    static ref B_B_C: f64 = *B + *B + *C;
+    static ref B_C_C: f64 = *B + *C + *C;
 }
 
 // t0 is a scalene triangle with side lengths (s1, s2, s3) and three kinds of
@@ -96,11 +102,11 @@ impl Tile {
                 let a = self.p3;
                 let f = self.p2;
                 let h = self.p1;
-                let b = a + (h - a) / (*S3 + *S2 + *S3) * (*S3);
-                let d = a + (h - a) / (*S3 + *S2 + *S3) * (*S3 + *S2);
-                let c = a + (f - a) / (*S1 + *S2 + *S3) * (*S3);
-                let e = a + (f - a) / (*S1 + *S2 + *S3) * (*S3 + *S2);
-                let g = f + (h - f) / (*S1 + *S2) * (*S2);
+                let b = a + (h - a) / *B_C_C * *C;
+                let d = a + (h - a) / *B_C_C * *B_C;
+                let c = a + (f - a) / *A_B_C * *C;
+                let e = a + (f - a) / *A_B_C * *B_C;
+                let g = f + (h - f) / *A_B * *B;
 
                 vec![
                     Tile(Kind::T1, b, c, a),
@@ -115,12 +121,12 @@ impl Tile {
                 let a = self.p1;
                 let h = self.p2;
                 let d = self.p3;
-                let b = a + ((d - a) / (*S3 + *S2 + *S3) * *S3);
-                let c = a + ((d - a) / (*S3 + *S2 + *S3) * (*S3 + *S2));
-                let g = a + ((h - a) / (*S2 + *S1) * *S1);
-                let i = h + ((d - h) / (*S3 + *S2 + *S3) * (*S3));
-                let e = h + ((i - h) / (*S3) * (*S2 + *S3));
-                let f = g + (e - g) / (*S2 + *S3) * (*S2);
+                let b = a + (d - a) / *B_C_C * *C;
+                let c = a + (d - a) / *B_C_C * *B_C;
+                let g = a + (h - a) / *A_B * *A;
+                let i = h + (d - h) / *B_C_C * *C;
+                let e = h + (i - h) / *C * *B_C;
+                let f = g + (e - g) / *B_C * *B;
 
                 vec![
                     Tile(Kind::T1, f, b, a),
@@ -137,14 +143,14 @@ impl Tile {
                 let e = self.p1;
                 let k = self.p2;
                 let a = self.p3;
-                let i = e + (k - e) / (*S3 + *S2 + *S1) * (*S3);
-                let j = e + (k - e) / (*S3 + *S2 + *S1) * (*S3 + *S2);
-                let c = k + (a - k) / (*S3 + *S2 + *S1) * (*S3 + *S2);
-                let h = k + (a - k) / (*S3 + *S3 + *S1) * (*S3);
-                let g = e + (h - e) / (*S3 + *S2 + *S1) * (*S3 + *S2);
-                let f = e + (h - e) / (*S3 + *S2 + *S1) * (*S3);
-                let b = e + (a - e) / (*S3 + *S2 + *S3) * (*S3 + *S2);
-                let d = e + (a - e) / (*S3 + *S2 + *S3) * (*S3);
+                let i = e + (k - e) / *A_B_C * *C;
+                let j = e + (k - e) / *A_B_C * *B_C;
+                let c = k + (a - k) / *A_B_C * *B_C;
+                let h = k + (a - k) / *A_C_C * *C;
+                let g = e + (h - e) / *A_B_C * *B_C;
+                let f = e + (h - e) / *A_B_C * *C;
+                let b = e + (a - e) / *B_C_C * *B_C;
+                let d = e + (a - e) / *B_C_C * *C;
 
                 vec![
                     Tile(Kind::T1, f, d, e),
@@ -170,18 +176,18 @@ fn main() {
     let origin = Pt(0.1, 0.1);
 
     let t0a = origin;
-    let t0b = t0a + PolarPt(*S1, PI - T0_ANGLE_OPP_S2_RAD);
-    let t0c = t0a + Pt(-1.0 * *S3, 0.0);
+    let t0b = t0a + PolarPt(*A, PI - T0_ANGLE_OPP_S2_RAD);
+    let t0c = t0a + Pt(-1.0 * *C, 0.0);
     let t0 = Tile(Kind::T0, t0a, t0b, t0c);
 
     let t1a = origin;
-    let t1b = t1a + PolarPt(*S1, -1.0 * T1_BASE_ANGLE_RAD);
-    let t1c = t1a + Pt(*S3, 0.0);
+    let t1b = t1a + PolarPt(*A, -1.0 * T1_BASE_ANGLE_RAD);
+    let t1c = t1a + Pt(*C, 0.0);
     let t1 = Tile(Kind::T1, t1a, t1b, t1c);
 
     let t2a = origin;
-    let t2b = t2a + PolarPt(*S2, -1.0 * T1_VERTEX_ANGLE_RAD);
-    let t2c = t2a + PolarPt(*S3, T1_VERTEX_ANGLE_RAD);
+    let t2b = t2a + PolarPt(*B, -1.0 * T1_VERTEX_ANGLE_RAD);
+    let t2c = t2a + PolarPt(*C, T1_VERTEX_ANGLE_RAD);
     let t2 = Tile(Kind::T2, t2a, t2b, t2c);
 
     let mut t_copy = t2;
