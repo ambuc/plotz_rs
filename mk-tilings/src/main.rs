@@ -12,6 +12,7 @@ use {
     plotz_geometry::{
         point::{PolarPt, Pt},
         polygon::Polygon,
+        segment::Segment,
     },
     std::f64::consts::PI,
 };
@@ -61,36 +62,40 @@ enum Kind {
     T1,
     T2,
 }
+impl Kind {
+    fn color(&self) -> &'static ColorRGB {
+        match self {
+            Kind::T0 => &BLUE,
+            Kind::T1 => &RED,
+            Kind::T2 => &YELLOWGREEN,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 struct Tile {
     kind: Kind,
-    p1: Pt,
-    p2: Pt,
-    p3: Pt,
+    pts: [Pt; 3],
 }
 
 #[allow(non_snake_case)]
 // Accepts three points in no particular order.
 fn Tile(kind: Kind, p1: Pt, p2: Pt, p3: Pt) -> Tile {
-    Tile { kind, p1, p2, p3 }
+    Tile {
+        kind,
+        pts: [p1, p2, p3],
+    }
 }
 
 impl Tile {
-    fn pts(&self) -> Vec<Pt> {
-        vec![self.p1, self.p2, self.p3]
-    }
-
     fn rotate(&mut self, about: &Pt, by: f64) {
-        self.p1.rotate(about, by);
-        self.p2.rotate(about, by);
-        self.p3.rotate(about, by);
+        self.pts.iter_mut().for_each(|p| p.rotate(about, by))
     }
 
     fn ctr(&self) -> Pt {
         Pt(
-            (self.p1.x.0 + self.p2.x.0 + self.p3.x.0) / 3.0,
-            (self.p1.y.0 + self.p2.y.0 + self.p3.y.0) / 3.0,
+            (self.pts[0].x.0 + self.pts[1].x.0 + self.pts[2].x.0) / 3.0,
+            (self.pts[0].y.0 + self.pts[1].y.0 + self.pts[2].y.0) / 3.0,
         )
     }
 }
@@ -99,9 +104,9 @@ impl Tile {
     fn expand(&self) -> Vec<Tile> {
         match self.kind {
             Kind::T0 => {
-                let a = self.p3;
-                let f = self.p2;
-                let h = self.p1;
+                let a = self.pts[2];
+                let f = self.pts[1];
+                let h = self.pts[0];
                 let b = a + (h - a) / *B_C_C * *C;
                 let d = a + (h - a) / *B_C_C * *B_C;
                 let c = a + (f - a) / *A_B_C * *C;
@@ -118,9 +123,9 @@ impl Tile {
                 ]
             }
             Kind::T1 => {
-                let a = self.p1;
-                let h = self.p2;
-                let d = self.p3;
+                let a = self.pts[0];
+                let h = self.pts[1];
+                let d = self.pts[2];
                 let b = a + (d - a) / *B_C_C * *C;
                 let c = a + (d - a) / *B_C_C * *B_C;
                 let g = a + (h - a) / *A_B * *A;
@@ -140,9 +145,9 @@ impl Tile {
                 ]
             }
             Kind::T2 => {
-                let e = self.p1;
-                let k = self.p2;
-                let a = self.p3;
+                let e = self.pts[0];
+                let k = self.pts[1];
+                let a = self.pts[2];
                 let i = e + (k - e) / *A_B_C * *C;
                 let j = e + (k - e) / *A_B_C * *B_C;
                 let c = k + (a - k) / *A_B_C * *B_C;
@@ -175,20 +180,26 @@ fn main() {
 
     let origin = Pt(0.1, 0.1);
 
-    let t0a = origin;
-    let t0b = t0a + PolarPt(*A, PI - T0_ANGLE_OPP_S2_RAD);
-    let t0c = t0a + Pt(-1.0 * *C, 0.0);
-    let t0 = Tile(Kind::T0, t0a, t0b, t0c);
+    let t0 = Tile(
+        Kind::T0,
+        origin,
+        origin + PolarPt(*A, PI - T0_ANGLE_OPP_S2_RAD),
+        origin + Pt(-1.0 * *C, 0.0),
+    );
 
-    let t1a = origin;
-    let t1b = t1a + PolarPt(*A, -1.0 * T1_BASE_ANGLE_RAD);
-    let t1c = t1a + Pt(*C, 0.0);
-    let t1 = Tile(Kind::T1, t1a, t1b, t1c);
+    let t1 = Tile(
+        Kind::T1,
+        origin,
+        origin + PolarPt(*A, -1.0 * T1_BASE_ANGLE_RAD),
+        origin + Pt(*C, 0.0),
+    );
 
-    let t2a = origin;
-    let t2b = t2a + PolarPt(*B, -1.0 * T1_VERTEX_ANGLE_RAD);
-    let t2c = t2a + PolarPt(*C, T1_VERTEX_ANGLE_RAD);
-    let t2 = Tile(Kind::T2, t2a, t2b, t2c);
+    let t2 = Tile(
+        Kind::T2,
+        origin,
+        origin + PolarPt(*B, -1.0 * T1_VERTEX_ANGLE_RAD),
+        origin + PolarPt(*C, T1_VERTEX_ANGLE_RAD),
+    );
 
     let mut t_copy = t2;
     t_copy.rotate(&Pt(0.0, 0.0), 0.1 * PI);
@@ -207,22 +218,19 @@ fn main() {
     let dos: Vec<DrawObj> = tiles
         .into_iter()
         .flat_map(|tile| {
-            let color = match tile.kind {
-                Kind::T0 => &BLUE,
-                Kind::T1 => &RED,
-                Kind::T2 => &YELLOWGREEN,
-            };
-            let p = Polygon(tile.pts().into_iter()).unwrap();
+            let color = tile.kind.color();
+            let p = Polygon(tile.pts.into_iter()).unwrap();
 
             vec![
                 DrawObj::from_polygon(p.clone()).with_color(color),
-                // DrawObj::from_segment(Segment(tile.p1, tile.p2)).with_color(color),
+                // DrawObj::from_segment(Segment(tile.pts[0], tile.p2)).with_color(color),
                 // DrawObj::from_pt(tile.ctr()).with_color(color),
             ]
         })
         .collect();
 
-    let mut draw_objs = DrawObjs::from_objs(dos).with_frame(make_frame((DIM, DIM), Pt(50.0, 50.0)));
+    let mut draw_objs = DrawObjs::from_objs(dos)
+        .with_frame(make_frame((DIM, DIM), /*offset=*/ Pt(50.0, 50.0)));
 
     // invert
     draw_objs.mutate(|pt| {
