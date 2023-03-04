@@ -20,6 +20,7 @@ pub enum DrawObjInner {
     /// A segment.
     Segment(Segment),
 }
+
 impl DrawObjInner {
     /// Returns true if the object is empty (i.e. zero points)
     pub fn is_empty(&self) -> bool {
@@ -69,8 +70,10 @@ impl Bounded for DrawObjInner {
 pub struct DrawObj {
     /// The object.
     pub obj: DrawObjInner,
+
     /// The color.
     pub color: &'static ColorRGB,
+
     /// The thickness.
     pub thickness: f64,
 }
@@ -100,13 +103,16 @@ impl DrawObj {
         Self::from_obj(DrawObjInner::Segment(s))
     }
 
+    // builders
+
     /// with a color.
     pub fn with_color(self, color: &'static ColorRGB) -> DrawObj {
-        DrawObj {
-            obj: self.obj,
-            color: color,
-            thickness: self.thickness,
-        }
+        DrawObj { color, ..self }
+    }
+
+    /// with a thickness.
+    pub fn with_thickness(self, thickness: f64) -> DrawObj {
+        DrawObj { thickness, ..self }
     }
 }
 
@@ -114,7 +120,8 @@ impl DrawObj {
 #[derive(Debug, Clone)]
 pub struct DrawObjs {
     /// the objs.
-    pub draw_objs: Vec<DrawObj>,
+    pub draw_obj_vec: Vec<DrawObj>,
+
     /// the frame, maybe.
     pub frame: Option<DrawObj>,
 }
@@ -123,7 +130,7 @@ impl DrawObjs {
     /// ctor from objs
     pub fn from_objs<O: IntoIterator<Item = DrawObj>>(objs: O) -> DrawObjs {
         DrawObjs {
-            draw_objs: objs.into_iter().collect(),
+            draw_obj_vec: objs.into_iter().collect(),
             frame: None,
         }
     }
@@ -131,15 +138,15 @@ impl DrawObjs {
     /// with a frame
     pub fn with_frame(self, frame: DrawObj) -> DrawObjs {
         DrawObjs {
-            draw_objs: self.draw_objs,
             frame: Some(frame),
+            ..self
         }
     }
 
     /// Sorts and groups the internal draw objects by color.
     pub fn group_by_color(mut self) -> Vec<(&'static ColorRGB, Vec<DrawObj>)> {
-        self.draw_objs.sort_by_key(|d_o| d_o.color);
-        self.draw_objs
+        self.draw_obj_vec.sort_by_key(|d_o| d_o.color);
+        self.draw_obj_vec
             .into_iter()
             .group_by(|a| a.color)
             .into_iter()
@@ -156,7 +163,7 @@ impl DrawObjs {
             if let Some(frame) = self.frame.clone() {
                 all.push(frame);
             }
-            all.extend(self.draw_objs.clone());
+            all.extend(self.draw_obj_vec.clone());
             write_layer_to_svg(size, name, &all)?;
         }
 
@@ -181,7 +188,7 @@ impl DrawObjs {
 
     /// apply a fn to each pt.
     pub fn mutate(&mut self, f: impl Fn(&mut Pt)) {
-        self.draw_objs
+        self.draw_obj_vec
             .iter_mut()
             .for_each(|d_o| match &mut d_o.obj {
                 DrawObjInner::Point(p) => {
@@ -248,6 +255,6 @@ impl DrawObjs {
             .collect();
 
         // rejoin
-        self.draw_objs = new_paths;
+        self.draw_obj_vec = new_paths;
     }
 }

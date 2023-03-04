@@ -278,7 +278,7 @@ fn main() {
     let scale = image_width / 2.0 / (grid_cardinality as f64);
 
     draw_objs
-        .draw_objs
+        .draw_obj_vec
         .iter_mut()
         .for_each(|d_o| match &mut d_o.obj {
             DrawObjInner::Point(p) => {
