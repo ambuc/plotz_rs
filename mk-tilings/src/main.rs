@@ -210,7 +210,7 @@ fn main() {
     let mut all_tiles = vec![];
 
     for (idx, t) in [t0, t1, t2].iter().enumerate() {
-        for (jdx, expansion_depth) in (0..4).enumerate() {
+        for (jdx, expansion_depth) in (0..3).enumerate() {
             //
             let mut t_copy = t.clone();
 
@@ -219,7 +219,7 @@ fn main() {
                 pt.rotate(&Pt(0.0, 0.0), 0.1 * PI);
                 *pt = *pt * Pt(1.0, -1.0);
                 *pt *= 270.0;
-                *pt += Pt(30.0 + 230.0 * (jdx as f64), 140.0 + 150.0 * (idx as f64));
+                *pt += Pt(40.0 + 270.0 * (jdx as f64), 150.0 + 150.0 * (idx as f64));
                 match t.kind {
                     Kind::T0 => {
                         *pt += Pt(230.0, 0.0);
@@ -255,11 +255,11 @@ fn main() {
 
             let p = Polygon(tile.pts).unwrap();
 
-            let config = ShadeConfig {
-                gap: 1.5,
-                slope: [-1.0, 0.0, 1.0][tile.kind.as_usize()],
-                thickness: 1.0,
-            };
+            let config = ShadeConfig::builder()
+                .gap(1.0)
+                .slope([-1.0, 0.0, 1.0][tile.kind.as_usize()])
+                .switchback(true)
+                .build();
             let segments = shade_polygon(&config, &p).unwrap();
 
             let mut ret = vec![];
@@ -274,9 +274,8 @@ fn main() {
         })
         .collect();
 
-    let phi: f64 = (1.0 + (5.0_f64).sqrt()) / 2.0;
     let mut draw_objs = DrawObjs::from_objs(dos).with_frame(make_frame(
-        (DIM, DIM * phi),
+        (DIM, DIM * 1.4),
         /*offset=*/ Pt(10.0, 10.0),
     ));
 
@@ -285,7 +284,7 @@ fn main() {
     let () = draw_objs
         .write_to_svg(
             Size {
-                width: (750.0 * phi) as usize,
+                width: (750.0 * 1.4) as usize,
                 height: 750,
             },
             &args.output_path_prefix,

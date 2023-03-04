@@ -15,6 +15,7 @@ num = "*"
 num-traits = "*"
 rand = "*"
 thiserror = "*"
+typed-builder = "*"
 
 [dev-dependencies]
 float_eq = "*"

@@ -8,9 +8,10 @@ use crate::{
     shading::ShadePolygonError,
     //
 };
+use typed_builder::TypedBuilder;
 
 /// Config for controlling crosshatching.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, TypedBuilder)]
 pub struct ShadeConfig {
     /// The gap between lines.
     pub gap: f64,
@@ -23,7 +24,12 @@ pub struct ShadeConfig {
     pub slope: f64,
 
     /// The thickness of a line (SVG only.)
+    #[builder(default = 1.0)]
     pub thickness: f64,
+
+    /// whether or not to zig zag.
+    #[builder(default = false)]
+    pub switchback: bool,
 }
 
 fn compute_vertical_step(gap: f64, slope: f64) -> f64 {
@@ -66,5 +72,20 @@ pub fn shade_polygon(
         line -= Pt(0.0, step);
     }
 
-    Ok(segments)
+    if config.switchback {
+        Ok(segments
+            .iter()
+            .zip(segments.iter().skip(1))
+            .zip([true, false].iter().cycle())
+            .map(|((sa, sb), should_alternate)| {
+                if *should_alternate {
+                    Segment(sa.i, sb.f)
+                } else {
+                    Segment(sb.i, sa.f)
+                }
+            })
+            .collect())
+    } else {
+        Ok(segments)
+    }
 }

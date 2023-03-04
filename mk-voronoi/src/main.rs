@@ -38,11 +38,10 @@ impl Style {
         [
             (
                 Style::Shade(
-                    ShadeConfig {
-                        gap: 4.0,
-                        slope: (rng.gen_range(0.0_f64..360.0_f64)).tan(),
-                        thickness: 1.0,
-                    },
+                    ShadeConfig::builder()
+                        .gap(4.0)
+                        .slope((rng.gen_range(0.0_f64..360.0_f64)).tan())
+                        .build(),
                     palette.choose(&mut rng).expect("color"),
                     rand::random(),
                 ),

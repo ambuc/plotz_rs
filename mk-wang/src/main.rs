@@ -202,11 +202,7 @@ fn draw_tile(
         });
         ret.extend({
             shade_polygon(
-                &(ShadeConfig {
-                    gap: 0.05,
-                    slope: 0.00,
-                    thickness: 1.0,
-                }),
+                &ShadeConfig::builder().gap(0.05).slope(0.0).build(),
                 &Polygon([Pt(0.1, 0.1), Pt(0.5, 0.5), Pt(0.9, 0.1)]).unwrap(),
             )
             .unwrap()
