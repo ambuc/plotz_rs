@@ -30,7 +30,7 @@ fn main() {
         /*offset=*/ Pt(10.0, 10.0),
     ));
 
-    // draw_objs.join_adjacent_segments();
+    draw_objs.join_adjacent_segments();
 
     let () = draw_objs
         .write_to_svg(

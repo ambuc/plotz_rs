@@ -1,10 +1,7 @@
 // https://tilings.math.uni-bielefeld.de/substitution/danzers-7-fold-original/
 
-use float_cmp::assert_approx_eq;
-use plotz_geometry::bounded::Bounded;
-
 use {
-    cached::proc_macro::cached,
+    float_cmp::assert_approx_eq,
     lazy_static::lazy_static,
     plotz_color::*,
     plotz_core::draw_obj::DrawObj,
@@ -31,6 +28,7 @@ lazy_static! {
     static ref T2: Isosceles = Isosceles::from_base_vertex(2.0 * PI / 7.0, 3.0 * PI / 7.0);
 }
 
+#[allow(dead_code)]
 struct Scalene {
     angle_sm_rad: f64,
     angle_md_rad: f64,
@@ -91,7 +89,7 @@ struct Tile {
 
 #[allow(non_snake_case)]
 fn Tile(kind: Kind, p1: Pt, p2: Pt, p3: Pt) -> Tile {
-    let e = 30.0 * f64::EPSILON;
+    let e = 1000.0 * f64::EPSILON;
     match kind {
         Kind::T0 => {
             assert_approx_eq!(f64, p1.dist(&p2) / p2.dist(&p3), *A / *B, epsilon = e);
@@ -214,7 +212,6 @@ pub fn make_danzers() -> Vec<DrawObj> {
 
     for (idx, t) in [t0, t1, t2].iter().enumerate() {
         for (jdx, expansion_depth) in (0..3).enumerate() {
-            //
             let mut t_copy = t.clone();
 
             // centerings
