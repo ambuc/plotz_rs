@@ -60,7 +60,7 @@ fn write_obj_to_context(co: &DrawObj, context: &mut cairo::Context) -> Result<()
             context.select_font_face("serif", cairo::FontSlant::Normal, cairo::FontWeight::Bold);
             context.set_font_size(12.0);
 
-            context.move_to(pt.x.0 - 2.0, pt.y.0 + 2.0);
+            context.move_to(pt.x.0, pt.y.0);
             context.show_text(&ch.to_string()).expect("show text");
         }
     }

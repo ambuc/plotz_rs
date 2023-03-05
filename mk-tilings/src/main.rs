@@ -7,26 +7,30 @@ use {
 
 mod danzers;
 
-static DIM: f64 = 600.0;
-
 #[derive(FromArgs)]
 #[argh(description = "...")]
 struct Args {
     #[argh(option, description = "output path")]
     output_path_prefix: String,
+
+    #[argh(option, description = "danzers, etc ")]
+    pattern: String,
 }
 
 fn main() {
     let args: Args = argh::from_env();
 
-    let dos = make_danzers();
+    let dos = match args.pattern.as_ref() {
+        "danzers" => make_danzers(),
+        _ => vec![],
+    };
 
     let mut draw_objs = DrawObjs::from_objs(dos).with_frame(make_frame(
-        (DIM, DIM * 1.4),
+        (600.0, 600.0 * 1.4),
         /*offset=*/ Pt(10.0, 10.0),
     ));
 
-    draw_objs.join_adjacent_segments();
+    // draw_objs.join_adjacent_segments();
 
     let () = draw_objs
         .write_to_svg(

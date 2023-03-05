@@ -4,17 +4,19 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+
 anyhow = "*"
-itertools = "*"
 argh = "*"
+cached = "*"
 clap = "*"
 console = "*"
 dialoguer = "*"
-float-ord = "*"
-float-cmp = "*"
 exitcode = "*"
+float-cmp = "*"
+float-ord = "*"
 glob = "*"
 indicatif = "*"
+itertools = "*"
 lazy_static = "*"
 plotz-color = { path = "../plotz-color" }
 plotz-core = { path = "../plotz-core" }

@@ -1,6 +1,10 @@
 // https://tilings.math.uni-bielefeld.de/substitution/danzers-7-fold-original/
 
+use float_cmp::assert_approx_eq;
+use plotz_geometry::bounded::Bounded;
+
 use {
+    cached::proc_macro::cached,
     lazy_static::lazy_static,
     plotz_color::*,
     plotz_core::draw_obj::DrawObj,
@@ -22,25 +26,39 @@ lazy_static! {
     static ref A_C_C: f64 = *A + *C + *C;
     static ref B_B_C: f64 = *B + *B + *C;
     static ref B_C_C: f64 = *B + *C + *C;
+    static ref T0: Scalene = Scalene::from_sm_lg(PI / 7.0, 4.0 * PI / 7.0);
+    static ref T1: Isosceles = Isosceles::from_base_vertex(3.0 * PI / 7.0, PI / 7.0);
+    static ref T2: Isosceles = Isosceles::from_base_vertex(2.0 * PI / 7.0, 3.0 * PI / 7.0);
 }
 
-// t0 is a scalene triangle with side lengths (s1, s2, s3) and three kinds of
-// interior angles:
-static T0_ANGLE_OPP_S1_RAD: f64 = PI / 7.0;
-static T0_ANGLE_OPP_S3_RAD: f64 = 4.0 * PI / 7.0;
-static T0_ANGLE_OPP_S2_RAD: f64 = PI - T0_ANGLE_OPP_S1_RAD - T0_ANGLE_OPP_S3_RAD;
+struct Scalene {
+    angle_sm_rad: f64,
+    angle_md_rad: f64,
+    angle_lg_rad: f64,
+}
+impl Scalene {
+    fn from_sm_lg(sm: f64, lg: f64) -> Scalene {
+        Scalene {
+            angle_sm_rad: sm,
+            angle_md_rad: PI - sm - lg,
+            angle_lg_rad: lg,
+        }
+    }
+}
 
-// t1 is an isosceles triangle, so it has three sides (s1, s3, s3) and two kinds
-// of interior angles (vertex angle and base angle).
-static T1_BASE_ANGLE_RAD: f64 = 3.0 * PI / 7.0;
-static T1_VERTEX_ANGLE_RAD: f64 = PI / 7.0;
+struct Isosceles {
+    angle_base_rad: f64,
+    angle_vertex_rad: f64,
+}
 
-// t2 is an isosceles triangle, so it has three sides (s2, s3, s4) and two kinds
-// of interior angles (vertex angle and base angle).
-#[allow(dead_code)]
-static T2_BASE_ANGLE_RAD: f64 = 2.0 * PI / 7.0;
-#[allow(dead_code)]
-static T2_VERTEX_ANGLE_RAD: f64 = 3.0 * PI / 7.0;
+impl Isosceles {
+    fn from_base_vertex(base: f64, vertex: f64) -> Isosceles {
+        Isosceles {
+            angle_base_rad: base,
+            angle_vertex_rad: vertex,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 enum Kind {
@@ -66,25 +84,31 @@ impl Kind {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum Orientation {
-    CW,
-    CCW,
-}
-
-#[derive(Debug, Clone, Copy)]
 struct Tile {
     kind: Kind,
-    orientation: Orientation,
     pts: [Pt; 3],
 }
 
 #[allow(non_snake_case)]
-// Accepts three points in no particular order.
-fn Tile(kind: Kind, orientation: Orientation, p1: Pt, p2: Pt, p3: Pt) -> Tile {
-    // use orientation here
+fn Tile(kind: Kind, p1: Pt, p2: Pt, p3: Pt) -> Tile {
+    let e = 30.0 * f64::EPSILON;
+    match kind {
+        Kind::T0 => {
+            assert_approx_eq!(f64, p1.dist(&p2) / p2.dist(&p3), *A / *B, epsilon = e);
+            assert_approx_eq!(f64, p2.dist(&p3) / p3.dist(&p1), *B / *C, epsilon = e);
+        }
+        Kind::T1 => {
+            assert_approx_eq!(f64, p1.dist(&p2) / p2.dist(&p3), *A / *C, epsilon = e);
+            assert_approx_eq!(f64, p2.dist(&p3) / p3.dist(&p1), 1.0, epsilon = e);
+        }
+        Kind::T2 => {
+            //
+            assert_approx_eq!(f64, p1.dist(&p2) / p2.dist(&p3), 1.0, epsilon = e);
+            assert_approx_eq!(f64, p2.dist(&p3) / p3.dist(&p1), *B / *C, epsilon = e);
+        }
+    }
     Tile {
         kind,
-        orientation,
         pts: [p1, p2, p3],
     }
 }
@@ -102,12 +126,12 @@ fn expand_tile(tile: &Tile) -> Vec<Tile> {
             let g = f + (h - f) / *A_B * *B;
 
             vec![
-                Tile(Kind::T1, Orientation::CCW, b, c, a),
-                Tile(Kind::T0, Orientation::CW, c, b, d),
-                Tile(Kind::T2, Orientation::CCW, e, c, d),
-                Tile(Kind::T0, Orientation::CW, f, e, d),
-                Tile(Kind::T2, Orientation::CCW, d, g, f),
-                Tile(Kind::T0, Orientation::CW, h, g, d),
+                Tile(Kind::T1, b, c, a),
+                Tile(Kind::T0, c, b, d),
+                Tile(Kind::T2, c, e, d),
+                Tile(Kind::T0, f, e, d),
+                Tile(Kind::T2, d, g, f),
+                Tile(Kind::T0, h, g, d),
             ]
         }
         Kind::T1 => {
@@ -122,14 +146,14 @@ fn expand_tile(tile: &Tile) -> Vec<Tile> {
             let f = g + (e - g) / *B_C * *B;
 
             vec![
-                Tile(Kind::T1, Orientation::CCW, f, b, a),
-                Tile(Kind::T0, Orientation::CW, a, g, f),
-                Tile(Kind::T2, Orientation::CCW, f, g, h),
-                Tile(Kind::T1, Orientation::CCW, i, f, h),
-                Tile(Kind::T0, Orientation::CW, f, i, e),
-                Tile(Kind::T0, Orientation::CCW, f, b, c),
-                Tile(Kind::T1, Orientation::CW, c, e, f),
-                Tile(Kind::T1, Orientation::CCW, c, e, d),
+                Tile(Kind::T1, f, b, a),
+                Tile(Kind::T0, a, g, f),
+                Tile(Kind::T2, h, g, f),
+                Tile(Kind::T1, i, f, h),
+                Tile(Kind::T0, f, i, e),
+                Tile(Kind::T0, f, b, c),
+                Tile(Kind::T1, c, e, f),
+                Tile(Kind::T1, c, e, d),
             ]
         }
         Kind::T2 => {
@@ -139,24 +163,24 @@ fn expand_tile(tile: &Tile) -> Vec<Tile> {
             let i = e + (k - e) / *A_B_C * *C;
             let j = e + (k - e) / *A_B_C * *B_C;
             let c = k + (a - k) / *A_B_C * *B_C;
-            let h = k + (a - k) / *A_C_C * *C;
+            let h = k + (a - k) / *A_B_C * *C;
             let g = e + (h - e) / *A_B_C * *B_C;
             let f = e + (h - e) / *A_B_C * *C;
             let b = e + (a - e) / *B_C_C * *B_C;
             let d = e + (a - e) / *B_C_C * *C;
 
             vec![
-                Tile(Kind::T1, Orientation::CW, d, f, e),
-                Tile(Kind::T0, Orientation::CCW, f, d, b),
-                Tile(Kind::T2, Orientation::CW, b, g, f),
-                Tile(Kind::T0, Orientation::CCW, h, g, b),
-                Tile(Kind::T2, Orientation::CW, b, c, h),
-                Tile(Kind::T0, Orientation::CCW, a, c, b),
-                Tile(Kind::T1, Orientation::CW, f, i, e),
-                Tile(Kind::T0, Orientation::CCW, i, f, g),
-                Tile(Kind::T2, Orientation::CW, g, j, i),
-                Tile(Kind::T0, Orientation::CCW, k, j, g),
-                Tile(Kind::T1, Orientation::CW, g, h, k),
+                Tile(Kind::T1, d, f, e),
+                Tile(Kind::T0, f, d, b),
+                Tile(Kind::T2, b, g, f),
+                Tile(Kind::T0, h, g, b),
+                Tile(Kind::T2, b, c, h),
+                Tile(Kind::T0, a, c, b),
+                Tile(Kind::T1, f, i, e),
+                Tile(Kind::T0, i, f, g),
+                Tile(Kind::T2, g, j, i),
+                Tile(Kind::T0, k, j, g),
+                Tile(Kind::T1, g, h, k),
             ]
         }
     }
@@ -167,26 +191,23 @@ pub fn make_danzers() -> Vec<DrawObj> {
 
     let t0 = Tile(
         Kind::T0,
-        Orientation::CCW,
         origin,
-        origin + PolarPt(*A, PI - T0_ANGLE_OPP_S2_RAD),
+        origin + PolarPt(*A, PI - T0.angle_md_rad),
         origin + Pt(-1.0 * *C, 0.0),
     );
 
     let t1 = Tile(
         Kind::T1,
-        Orientation::CCW,
-        origin + PolarPt(*A, -1.0 * T1_BASE_ANGLE_RAD),
         origin,
+        origin + PolarPt(*A, -1.0 * T1.angle_base_rad),
         origin + Pt(*C, 0.0),
     );
 
     let t2 = Tile(
         Kind::T2,
-        Orientation::CW,
         origin,
-        origin + PolarPt(*B, -1.0 * T1_VERTEX_ANGLE_RAD),
-        origin + PolarPt(*C, T1_VERTEX_ANGLE_RAD),
+        origin + PolarPt(*B, -1.0 * T1.angle_vertex_rad),
+        origin + PolarPt(*C, T1.angle_vertex_rad),
     );
 
     let mut all_tiles = vec![];
@@ -198,7 +219,7 @@ pub fn make_danzers() -> Vec<DrawObj> {
 
             // centerings
             t_copy.pts.iter_mut().for_each(|pt| {
-                pt.rotate(&Pt(0.0, 0.0), 0.1 * PI);
+                pt.rotate(&Pt(0.0, 0.0), 0.0 * PI);
                 *pt = *pt * Pt(1.0, -1.0);
                 *pt *= 270.0;
                 *pt += Pt(40.0 + 270.0 * (jdx as f64), 150.0 + 150.0 * (idx as f64));
