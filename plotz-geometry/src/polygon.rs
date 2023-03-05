@@ -351,6 +351,16 @@ impl Polygon {
         false
     }
 
+    /// Returns true if any line segment from this polygon intersects other.
+    pub fn intersects_segment(&self, other: &Segment) -> bool {
+        for l1 in self.to_segments() {
+            if l1.intersects(other).is_some() {
+                return true;
+            }
+        }
+        false
+    }
+
     /// Calculates whether a point is within, without, or along a closed polygon
     /// using the https://en.wikipedia.org/wiki/Winding_number method.
     pub fn contains_pt(&self, other: &Pt) -> Result<PointLoc, ContainsPointError> {
@@ -732,6 +742,14 @@ impl Mul<f64> for Polygon {
     fn mul(mut self, rhs: f64) -> Polygon {
         self *= rhs;
         self
+    }
+}
+
+impl Mul<Pt> for Polygon {
+    type Output = Polygon;
+
+    fn mul(self, rhs: Pt) -> Polygon {
+        Polygon(self.pts.iter().map(|p| *p * rhs)).unwrap()
     }
 }
 

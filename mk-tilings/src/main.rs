@@ -1,10 +1,11 @@
 use {
-    crate::danzers::make_danzers,
+    crate::{ab_rhomb::make_ab_rhomb, danzers::make_danzers},
     argh::FromArgs,
     plotz_core::{draw_obj::DrawObjs, frame::make_frame, svg::Size},
     plotz_geometry::point::Pt,
 };
 
+mod ab_rhomb;
 mod danzers;
 
 #[derive(FromArgs)]
@@ -22,6 +23,7 @@ fn main() {
 
     let dos = match args.pattern.as_ref() {
         "danzers" => make_danzers(),
+        "ab_rhomb" => make_ab_rhomb(),
         _ => vec![],
     };
 

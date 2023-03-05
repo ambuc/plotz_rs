@@ -49,15 +49,17 @@ pub fn shade_polygon(
     let bbox = polygon.bbox()?;
     let mut segments: Vec<Segment> = vec![];
 
+    let xnudge = Pt(1.0, -1.0);
+    let ynudge = Pt(-1.0, 1.0);
     let mut line = if config.slope > 0.0 {
         Segment(
-            bbox.tl_bound(),
-            bbox.tl_bound() + Pt(bbox.width(), bbox.width() * config.slope),
+            bbox.tl_bound() - xnudge,
+            bbox.tl_bound() + Pt(bbox.width(), bbox.width() * config.slope) + xnudge,
         )
     } else {
         Segment(
-            bbox.tr_bound(),
-            bbox.tr_bound() + Pt(-1.0 * bbox.width(), -1.0 * bbox.width() * config.slope),
+            bbox.tr_bound() - ynudge,
+            bbox.tr_bound() + Pt(-1.0 * bbox.width(), -1.0 * bbox.width() * config.slope) + ynudge,
         )
     };
 
@@ -68,6 +70,7 @@ pub fn shade_polygon(
     {
         let cropped_strokes = polygon.as_frame_to_segment(&line)?;
         segments.extend(cropped_strokes.iter());
+        // segments.push(line);
 
         line -= Pt(0.0, step);
     }
