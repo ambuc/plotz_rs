@@ -1,5 +1,4 @@
 use {
-    crate::{ab_rhomb::make_ab_rhomb, danzers::make_danzers},
     argh::FromArgs,
     plotz_core::{draw_obj::DrawObjs, frame::make_frame, svg::Size},
     plotz_geometry::point::Pt,
@@ -22,8 +21,8 @@ fn main() {
     let args: Args = argh::from_env();
 
     let dos = match args.pattern.as_ref() {
-        "danzers" => make_danzers(),
-        "ab_rhomb" => make_ab_rhomb(),
+        "danzers" => danzers::make(),
+        "ab_rhomb" => ab_rhomb::make(),
         _ => vec![],
     };
 

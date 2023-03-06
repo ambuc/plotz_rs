@@ -184,7 +184,7 @@ fn expand_tile(tile: &Tile) -> Vec<Tile> {
     }
 }
 
-pub fn make_danzers() -> Vec<DrawObj> {
+pub fn make() -> Vec<DrawObj> {
     let origin = Pt(0.1, 0.1);
 
     let t0 = Tile(

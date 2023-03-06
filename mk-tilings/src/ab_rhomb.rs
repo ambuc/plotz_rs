@@ -110,7 +110,7 @@ trait Tile {
     fn slope(&self) -> f64;
 }
 
-pub fn make_ab_rhomb() -> Vec<DrawObj> {
+pub fn make() -> Vec<DrawObj> {
     let origin = Pt(0.1, 0.1);
 
     let sq2: f64 = 2.0_f64.sqrt();
@@ -118,12 +118,12 @@ pub fn make_ab_rhomb() -> Vec<DrawObj> {
     let x: f64 = ell / sq2;
 
     let t1 = T1([origin, origin + Pt(ell, ell), origin + Pt(2.0 * ell, 0.0)]);
-    let t2 = T2([
+    let _t2 = T2([
         origin,
         origin + Pt(ell, -1.0 * ell),
         origin + Pt(2.0 * ell, 0.0),
     ]);
-    let t3 = T3([
+    let _t3 = T3([
         origin,
         origin + Pt(ell, 0.0),
         origin + Pt(ell + x, -x),
