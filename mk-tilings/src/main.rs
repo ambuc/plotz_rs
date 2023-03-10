@@ -1,10 +1,17 @@
+use plotz_core::draw_obj::DrawObjInner;
+
 use {
     argh::FromArgs,
-    plotz_core::{draw_obj::DrawObjs, frame::make_frame, svg::Size},
-    plotz_geometry::point::Pt,
+    plotz_core::{
+        draw_obj::{DrawObj, DrawObjs},
+        frame::make_frame,
+        svg::Size,
+    },
+    plotz_geometry::{point::Pt, polygon::PointLoc},
 };
 
 mod ab_rhomb;
+mod cromwell;
 mod danzers;
 
 #[derive(FromArgs)]
@@ -20,23 +27,40 @@ struct Args {
 fn main() {
     let args: Args = argh::from_env();
 
-    let dos = match args.pattern.as_ref() {
-        "danzers" => danzers::make(),
+    let mut dos = match args.pattern.as_ref() {
         "ab_rhomb" => ab_rhomb::make(),
+        "cromwell" => cromwell::make(),
+        "danzers" => danzers::make(),
         _ => vec![],
     };
 
-    let mut draw_objs = DrawObjs::from_objs(dos).with_frame(make_frame(
-        (600.0, 600.0 * 1.4),
-        /*offset=*/ Pt(10.0, 10.0),
-    ));
+    let frame: DrawObj = make_frame((720.0, 720.0 * 1.3), /*offset=*/ Pt(20.0, 20.0));
+    let frame_polygon = match frame.obj {
+        DrawObjInner::Polygon(ref pg) => pg.clone(),
+        _ => unimplemented!(),
+    };
 
-    draw_objs.join_adjacent_segments();
+    // drain things not in frame
+    dos = dos
+        .into_iter()
+        .filter(|d_o| {
+            d_o.iter().all(|pt| {
+                matches!(
+                    frame_polygon.contains_pt(pt),
+                    Ok(PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_))
+                )
+            })
+        })
+        .collect();
+
+    let mut draw_objs = DrawObjs::from_objs(dos).with_frame(frame);
+
+    //draw_objs.join_adjacent_segments();
 
     let () = draw_objs
         .write_to_svg(
             Size {
-                width: (750.0 * 1.4) as usize,
+                width: (750.0 * 1.3) as usize,
                 height: 750,
             },
             &args.output_path_prefix,

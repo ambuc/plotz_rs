@@ -92,7 +92,7 @@ impl Tile for T3 {
         ]
     }
     fn color(&self) -> &'static ColorRGB {
-        &BLACK
+        &BLUE
     }
     fn pts(&self) -> Vec<Pt> {
         self.0.to_vec()
@@ -117,20 +117,20 @@ pub fn make() -> Vec<DrawObj> {
     let ell = 1.0;
     let x: f64 = ell / sq2;
 
-    let t1 = T1([origin, origin + Pt(ell, ell), origin + Pt(2.0 * ell, 0.0)]);
+    let _t1 = T1([origin, origin + Pt(ell, ell), origin + Pt(2.0 * ell, 0.0)]);
     let _t2 = T2([
         origin,
         origin + Pt(ell, -1.0 * ell),
         origin + Pt(2.0 * ell, 0.0),
     ]);
-    let _t3 = T3([
+    let t3 = T3([
         origin,
         origin + Pt(ell, 0.0),
         origin + Pt(ell + x, -x),
         origin + Pt(x, -x),
     ]);
 
-    let mut all_tiles: Vec<Box<dyn Tile>> = vec![Box::new(t1)];
+    let mut all_tiles: Vec<Box<dyn Tile>> = vec![Box::new(t3)];
 
     for _ in 0..4 {
         let next_layer = all_tiles
@@ -147,11 +147,11 @@ pub fn make() -> Vec<DrawObj> {
             let color = tile.color();
             let mut p = Polygon(tile.pts()).unwrap();
             p = p * Pt(1.0, -1.0); // flip
-            p *= 350.0;
-            p += Pt(40.0, 490.0); // translate
+            p *= 530.0;
+            p += Pt(-17.0, 240.0); // translate
 
             let config = ShadeConfig::builder()
-                .gap(1.0)
+                .gap(1.5)
                 .slope(tile.slope())
                 .switchback(true)
                 .build();

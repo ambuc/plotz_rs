@@ -124,6 +124,18 @@ impl DrawObj {
     pub fn with_thickness(self, thickness: f64) -> DrawObj {
         DrawObj { thickness, ..self }
     }
+
+    /// to iterator
+    pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        match &self.obj {
+            DrawObjInner::Char(ref pt, _) => Box::new(std::iter::once(pt)),
+            DrawObjInner::Point(ref pt) => Box::new(std::iter::once(pt)),
+            DrawObjInner::Polygon(pg) => Box::new(pg.pts.iter()),
+            DrawObjInner::Segment(sg) => {
+                Box::new(std::iter::once(&sg.i).chain(std::iter::once(&sg.f)))
+            }
+        }
+    }
 }
 
 /// Many draw objs.
