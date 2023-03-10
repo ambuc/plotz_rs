@@ -80,13 +80,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Polygon(p) => p.right_bound(),
             DrawObjInner::Segment(s) => s.right_bound(),
             DrawObjInner::Char(ch) => ch.right_bound(),
-            DrawObjInner::Group(dos) => {
-                dos.iter_pts()
-                    .map(|doi| float_ord::FloatOrd(doi.right_bound()))
-                    .max()
-                    .unwrap()
-                    .0
-            }
+            DrawObjInner::Group(dos) => dos.right_bound(),
         }
     }
 
@@ -96,13 +90,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Polygon(p) => p.left_bound(),
             DrawObjInner::Segment(s) => s.left_bound(),
             DrawObjInner::Char(ch) => ch.left_bound(),
-            DrawObjInner::Group(dos) => {
-                dos.iter_pts()
-                    .map(|doi| float_ord::FloatOrd(doi.left_bound()))
-                    .min()
-                    .unwrap()
-                    .0
-            }
+            DrawObjInner::Group(dos) => dos.left_bound(),
         }
     }
 
@@ -112,13 +100,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Polygon(p) => p.top_bound(),
             DrawObjInner::Segment(s) => s.top_bound(),
             DrawObjInner::Char(ch) => ch.top_bound(),
-            DrawObjInner::Group(dos) => {
-                dos.iter_pts()
-                    .map(|doi| float_ord::FloatOrd(doi.top_bound()))
-                    .min()
-                    .unwrap()
-                    .0
-            }
+            DrawObjInner::Group(dos) => dos.top_bound(),
         }
     }
 
@@ -128,13 +110,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Polygon(p) => p.bottom_bound(),
             DrawObjInner::Segment(s) => s.bottom_bound(),
             DrawObjInner::Char(ch) => ch.bottom_bound(),
-            DrawObjInner::Group(dos) => {
-                dos.iter_pts()
-                    .map(|doi| float_ord::FloatOrd(doi.bottom_bound()))
-                    .max()
-                    .unwrap()
-                    .0
-            }
+            DrawObjInner::Group(dos) => dos.bottom_bound(),
         }
     }
 }
