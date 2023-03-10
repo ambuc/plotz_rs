@@ -44,16 +44,12 @@ fn main() {
     dos = dos
         .into_iter()
         .filter(|d_o| {
-            d_o.iter().all(|pt| {
-                matches!(
-                    frame_polygon.contains_pt(pt),
-                    Ok(PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_))
-                )
-            })
+            d_o.iter()
+                .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLoc::Inside)))
         })
         .collect();
 
-    let mut draw_objs = DrawObjs::from_objs(dos).with_frame(frame);
+    let draw_objs = DrawObjs::from_objs(dos).with_frame(frame);
 
     //draw_objs.join_adjacent_segments();
 

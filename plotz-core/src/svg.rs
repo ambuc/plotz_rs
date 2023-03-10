@@ -33,12 +33,11 @@ pub enum SvgWriteError {
     CairoError(#[from] cairo::Error),
 }
 
-fn write_obj_to_context(co: &DrawObj, context: &mut cairo::Context) -> Result<(), SvgWriteError> {
-    if co.obj.is_empty() {
-        return Ok(());
-    }
-
-    match &co.obj {
+fn write_doi_to_context(
+    doi: &DrawObjInner,
+    context: &mut cairo::Context,
+) -> Result<(), SvgWriteError> {
+    match &doi {
         DrawObjInner::Point(p) => {
             context.line_to(p.x.0, p.y.0);
             context.line_to(p.x.0 + 1.0, p.y.0 + 1.0);
@@ -63,7 +62,21 @@ fn write_obj_to_context(co: &DrawObj, context: &mut cairo::Context) -> Result<()
             context.move_to(pt.x.0, pt.y.0);
             context.show_text(&ch.to_string()).expect("show text");
         }
+        DrawObjInner::Group(dois) => {
+            for doi in dois {
+                write_doi_to_context(doi, context).expect("write");
+            }
+        }
     }
+    Ok(())
+}
+
+fn write_obj_to_context(co: &DrawObj, context: &mut cairo::Context) -> Result<(), SvgWriteError> {
+    if co.obj.is_empty() {
+        return Ok(());
+    }
+
+    write_doi_to_context(&co.obj, context)?;
 
     context.set_source_rgb(co.color.r, co.color.g, co.color.b);
     context.set_line_width(co.thickness);

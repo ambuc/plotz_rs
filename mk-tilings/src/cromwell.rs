@@ -1,20 +1,15 @@
 // https://tilings.math.uni-bielefeld.de/substitution/cromwell-kite-rhombus-trapezium/
 
-use std::f64::consts::{FRAC_PI_2, PI};
-
-use plotz_geometry::{
-    interpolate::{self, extrapolate_2d as extrapolate},
-    point::PolarPt,
-};
-
 use {
     plotz_color::*,
-    plotz_core::draw_obj::DrawObj,
+    plotz_core::draw_obj::{DrawObj, DrawObjInner},
     plotz_geometry::{
-        point::Pt,
+        interpolate::extrapolate_2d as extrapolate,
+        point::{PolarPt, Pt},
         polygon::Polygon,
         shading_02::{shade_polygon, ShadeConfig},
     },
+    std::f64::consts::PI,
 };
 
 // kite, green
@@ -181,9 +176,6 @@ impl Tile for T4 {
         let ell: f64 = (5.0_f64.sqrt() - 1.0) / 2.0;
         let x = 1.0_f64;
 
-        let ell: f64 = (5.0_f64.sqrt() - 1.0) / 2.0;
-        let x = 1.0_f64;
-
         let ab = extrapolate(*a, *b, x / (x + ell));
         let bc = extrapolate(*b, *c, ell / (ell + x));
         let cd1 = extrapolate(*c, *d, x / (x + ell + x));
@@ -239,14 +231,7 @@ trait Tile {
 }
 
 pub fn make() -> Vec<DrawObj> {
-    let origin = Pt(0.1, 0.1);
-
     let ell: f64 = (5.0_f64.sqrt() - 1.0) / 2.0;
-    let x: f64 = 1.0_f64;
-
-    let r2p5 = 2.0 * PI / 5.0;
-    let r3p5 = 3.0 * PI / 5.0;
-    let r4p5 = 4.0 * PI / 5.0;
 
     let t1 = {
         let a = Pt(0.0, 0.0);
@@ -256,7 +241,7 @@ pub fn make() -> Vec<DrawObj> {
         T1([a, b, c, d])
     };
 
-    let t2 = {
+    let _t2 = {
         let a = Pt(0.0, 0.0);
         let b = a + PolarPt(ell, -3.0 * PI / 10.0);
         let c = a + PolarPt(1.0, 15.0 * PI / 10.0);
@@ -264,7 +249,7 @@ pub fn make() -> Vec<DrawObj> {
         T2([a, b, c, d])
     };
 
-    let t3 = {
+    let _t3 = {
         let a = Pt(0.0, 0.0);
         let b = a + Pt(ell, 0.0);
         let c = b + PolarPt(ell, 16.0 * PI / 10.0);
@@ -275,7 +260,7 @@ pub fn make() -> Vec<DrawObj> {
         t
     };
 
-    let t4 = {
+    let _t4 = {
         let a = Pt(0.0, 0.0);
         let b = a - Pt(ell, 0.0);
         let c = b + PolarPt(ell, 14.0 * PI / 10.0);
@@ -304,7 +289,7 @@ pub fn make() -> Vec<DrawObj> {
             let mut p = Polygon(tile.pts()).unwrap();
             p = p * Pt(1.0, -1.0); // flip
             p *= 3500.0;
-            p += Pt(100.0, -300.0); // translate
+            p += Pt(95.0, -300.0); // translate
 
             let config = ShadeConfig::builder()
                 .gap(1.5)
@@ -313,13 +298,11 @@ pub fn make() -> Vec<DrawObj> {
                 .build();
             let segments = shade_polygon(&config, &p).unwrap();
 
-            // std::iter::empty()
             std::iter::once(DrawObj::from_polygon(p).with_color(&BLACK)) //
-                // .chain(
-                //     segments
-                //         .into_iter()
-                //         .map(|s| DrawObj::from_segment(s).with_color(color)),
-                // )
+                .chain([DrawObj::from_group(
+                    segments.into_iter().map(|s| DrawObjInner::Segment(s)),
+                )
+                .with_color(color)])
         })
         .collect();
 

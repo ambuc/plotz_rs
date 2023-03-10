@@ -21,6 +21,8 @@ pub enum DrawObjInner {
     Segment(Segment),
     /// A character to be printed in SVG, at a point.
     Char(Pt, char),
+    /// A group of other drawobjects.
+    Group(Vec<DrawObjInner>),
 }
 
 impl DrawObjInner {
@@ -29,6 +31,43 @@ impl DrawObjInner {
         match self {
             DrawObjInner::Polygon(p) => p.pts.is_empty(),
             DrawObjInner::Point(_) | DrawObjInner::Segment(_) | DrawObjInner::Char(_, _) => false,
+            DrawObjInner::Group(dois) => dois.iter().all(|doi| doi.is_empty()),
+        }
+    }
+    /// mutate a doi.
+    pub fn mutate(&mut self, f: impl Fn(&mut Pt)) {
+        match self {
+            DrawObjInner::Point(p) => {
+                f(p);
+            }
+            DrawObjInner::Polygon(p) => {
+                p.pts.iter_mut().for_each(|pt| f(pt));
+            }
+            DrawObjInner::Segment(s) => {
+                f(&mut s.i);
+                f(&mut s.f);
+            }
+            DrawObjInner::Char(pt, _ch) => {
+                f(pt);
+            }
+            DrawObjInner::Group(dois) => {
+                for doi in dois {
+                    doi.mutate(&f);
+                }
+            }
+        }
+    }
+
+    /// to iterator
+    pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        match &self {
+            DrawObjInner::Char(ref pt, _) => Box::new(std::iter::once(pt)),
+            DrawObjInner::Point(ref pt) => Box::new(std::iter::once(pt)),
+            DrawObjInner::Polygon(pg) => Box::new(pg.pts.iter()),
+            DrawObjInner::Segment(sg) => {
+                Box::new(std::iter::once(&sg.i).chain(std::iter::once(&sg.f)))
+            }
+            DrawObjInner::Group(dois) => Box::new(dois.iter().map(|doi| doi.iter()).flatten()),
         }
     }
 }
@@ -39,6 +78,13 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Polygon(p) => p.right_bound(),
             DrawObjInner::Segment(s) => s.right_bound(),
             DrawObjInner::Char(p, _ch) => p.right_bound(),
+            DrawObjInner::Group(dos) => {
+                dos.iter()
+                    .map(|doi| float_ord::FloatOrd(doi.right_bound()))
+                    .max()
+                    .unwrap()
+                    .0
+            }
         }
     }
 
@@ -48,6 +94,13 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Polygon(p) => p.left_bound(),
             DrawObjInner::Segment(s) => s.left_bound(),
             DrawObjInner::Char(p, _ch) => p.left_bound(),
+            DrawObjInner::Group(dos) => {
+                dos.iter()
+                    .map(|doi| float_ord::FloatOrd(doi.left_bound()))
+                    .min()
+                    .unwrap()
+                    .0
+            }
         }
     }
 
@@ -57,6 +110,13 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Polygon(p) => p.top_bound(),
             DrawObjInner::Segment(s) => s.top_bound(),
             DrawObjInner::Char(p, _ch) => p.top_bound(),
+            DrawObjInner::Group(dos) => {
+                dos.iter()
+                    .map(|doi| float_ord::FloatOrd(doi.top_bound()))
+                    .min()
+                    .unwrap()
+                    .0
+            }
         }
     }
 
@@ -66,6 +126,13 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Polygon(p) => p.bottom_bound(),
             DrawObjInner::Segment(s) => s.bottom_bound(),
             DrawObjInner::Char(p, _ch) => p.bottom_bound(),
+            DrawObjInner::Group(dos) => {
+                dos.iter()
+                    .map(|doi| float_ord::FloatOrd(doi.bottom_bound()))
+                    .max()
+                    .unwrap()
+                    .0
+            }
         }
     }
 }
@@ -113,6 +180,11 @@ impl DrawObj {
         Self::from_obj(DrawObjInner::Char(p, ch))
     }
 
+    /// from a group.
+    pub fn from_group(dos: impl IntoIterator<Item = DrawObjInner>) -> DrawObj {
+        Self::from_obj(DrawObjInner::Group(dos.into_iter().collect::<Vec<_>>()))
+    }
+
     // builders
 
     /// with a color.
@@ -127,14 +199,7 @@ impl DrawObj {
 
     /// to iterator
     pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
-        match &self.obj {
-            DrawObjInner::Char(ref pt, _) => Box::new(std::iter::once(pt)),
-            DrawObjInner::Point(ref pt) => Box::new(std::iter::once(pt)),
-            DrawObjInner::Polygon(pg) => Box::new(pg.pts.iter()),
-            DrawObjInner::Segment(sg) => {
-                Box::new(std::iter::once(&sg.i).chain(std::iter::once(&sg.f)))
-            }
-        }
+        self.obj.iter()
     }
 }
 
@@ -212,21 +277,7 @@ impl DrawObjs {
     pub fn mutate(&mut self, f: impl Fn(&mut Pt)) {
         self.draw_obj_vec
             .iter_mut()
-            .for_each(|d_o| match &mut d_o.obj {
-                DrawObjInner::Point(p) => {
-                    f(p);
-                }
-                DrawObjInner::Polygon(p) => {
-                    p.pts.iter_mut().for_each(|pt| f(pt));
-                }
-                DrawObjInner::Segment(s) => {
-                    f(&mut s.i);
-                    f(&mut s.f);
-                }
-                DrawObjInner::Char(pt, _ch) => {
-                    f(pt);
-                }
-            })
+            .for_each(|d_o| d_o.obj.mutate(&f));
     }
 
     /// join adjacent segments to save on path draw time.
@@ -251,6 +302,10 @@ impl DrawObjs {
                         }
                         DrawObjInner::Point(_) | DrawObjInner::Char(_, _) => {
                             // do nothing
+                        }
+                        DrawObjInner::Group(_) => {
+                            // do nothing
+                            // TODO handle groups
                         }
                     }
                 });
