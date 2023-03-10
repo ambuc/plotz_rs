@@ -1,6 +1,6 @@
 //! An annotated object with color and thickness.
 
-use crate::svg::{write_layer_to_svg, Size};
+use crate::{char::Char, svg::{write_layer_to_svg, Size}};
 use anyhow::Error;
 use itertools::Itertools;
 use multimap::MultiMap;
@@ -20,7 +20,7 @@ pub enum DrawObjInner {
     /// A segment.
     Segment(Segment),
     /// A character to be printed in SVG, at a point.
-    Char(Pt, char),
+    Char(Char),
     /// A group of other drawobjects.
     Group(Vec<DrawObjInner>),
 }
@@ -30,7 +30,7 @@ impl DrawObjInner {
     pub fn is_empty(&self) -> bool {
         match self {
             DrawObjInner::Polygon(p) => p.pts.is_empty(),
-            DrawObjInner::Point(_) | DrawObjInner::Segment(_) | DrawObjInner::Char(_, _) => false,
+            DrawObjInner::Point(_) | DrawObjInner::Segment(_) | DrawObjInner::Char(_) => false,
             DrawObjInner::Group(dois) => dois.iter().all(|doi| doi.is_empty()),
         }
     }
@@ -47,7 +47,7 @@ impl DrawObjInner {
                 f(&mut s.i);
                 f(&mut s.f);
             }
-            DrawObjInner::Char(pt, _ch) => {
+            DrawObjInner::Char(Char{pt, ..}) => {
                 f(pt);
             }
             DrawObjInner::Group(dois) => {
@@ -61,7 +61,7 @@ impl DrawObjInner {
     /// to iterator
     pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
         match &self {
-            DrawObjInner::Char(ref pt, _) => Box::new(std::iter::once(pt)),
+            DrawObjInner::Char(Char{pt, .. }) => Box::new(std::iter::once(pt)),
             DrawObjInner::Point(ref pt) => Box::new(std::iter::once(pt)),
             DrawObjInner::Polygon(pg) => Box::new(pg.pts.iter()),
             DrawObjInner::Segment(sg) => {
@@ -77,7 +77,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Point(p) => p.right_bound(),
             DrawObjInner::Polygon(p) => p.right_bound(),
             DrawObjInner::Segment(s) => s.right_bound(),
-            DrawObjInner::Char(p, _ch) => p.right_bound(),
+            DrawObjInner::Char(ch) => ch.right_bound(),
             DrawObjInner::Group(dos) => {
                 dos.iter()
                     .map(|doi| float_ord::FloatOrd(doi.right_bound()))
@@ -93,7 +93,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Point(p) => p.left_bound(),
             DrawObjInner::Polygon(p) => p.left_bound(),
             DrawObjInner::Segment(s) => s.left_bound(),
-            DrawObjInner::Char(p, _ch) => p.left_bound(),
+            DrawObjInner::Char(ch) => ch.left_bound(),
             DrawObjInner::Group(dos) => {
                 dos.iter()
                     .map(|doi| float_ord::FloatOrd(doi.left_bound()))
@@ -109,7 +109,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Point(p) => p.top_bound(),
             DrawObjInner::Polygon(p) => p.top_bound(),
             DrawObjInner::Segment(s) => s.top_bound(),
-            DrawObjInner::Char(p, _ch) => p.top_bound(),
+            DrawObjInner::Char(ch) => ch.top_bound(),
             DrawObjInner::Group(dos) => {
                 dos.iter()
                     .map(|doi| float_ord::FloatOrd(doi.top_bound()))
@@ -125,7 +125,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Point(p) => p.bottom_bound(),
             DrawObjInner::Polygon(p) => p.bottom_bound(),
             DrawObjInner::Segment(s) => s.bottom_bound(),
-            DrawObjInner::Char(p, _ch) => p.bottom_bound(),
+            DrawObjInner::Char(ch) => ch.bottom_bound(),
             DrawObjInner::Group(dos) => {
                 dos.iter()
                     .map(|doi| float_ord::FloatOrd(doi.bottom_bound()))
@@ -176,8 +176,8 @@ impl DrawObj {
     }
 
     /// from a character.
-    pub fn from_char(p: Pt, ch: char) -> DrawObj {
-        Self::from_obj(DrawObjInner::Char(p, ch))
+    pub fn from_char(pt: Pt, chr: char) -> DrawObj {
+        Self::from_obj(DrawObjInner::Char(Char{pt, chr}))
     }
 
     /// from a group.
@@ -300,7 +300,7 @@ impl DrawObjs {
                                 mmap.insert(s.i, s.f);
                             }
                         }
-                        DrawObjInner::Point(_) | DrawObjInner::Char(_, _) => {
+                        DrawObjInner::Point(_) | DrawObjInner::Char(_) => {
                             // do nothing
                         }
                         DrawObjInner::Group(_) => {

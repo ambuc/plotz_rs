@@ -1,7 +1,11 @@
 //! SVG plotting utilities.
 //!
-use crate::draw_obj::{DrawObj, DrawObjInner};
+use crate::{
+    char::Char,
+    draw_obj::{DrawObj, DrawObjInner},
+};
 use plotz_color::BLACK;
+
 use plotz_geometry::polygon::PolygonKind;
 use std::fmt::Debug;
 use thiserror::Error;
@@ -55,12 +59,12 @@ fn write_doi_to_context(
             context.line_to(segment.i.x.0, segment.i.y.0);
             context.line_to(segment.f.x.0, segment.f.y.0);
         }
-        DrawObjInner::Char(pt, ch) => {
+        DrawObjInner::Char(Char { pt, chr }) => {
             context.select_font_face("serif", cairo::FontSlant::Normal, cairo::FontWeight::Bold);
             context.set_font_size(12.0);
 
             context.move_to(pt.x.0, pt.y.0);
-            context.show_text(&ch.to_string()).expect("show text");
+            context.show_text(&chr.to_string()).expect("show text");
         }
         DrawObjInner::Group(dois) => {
             for doi in dois {

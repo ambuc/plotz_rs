@@ -237,7 +237,7 @@ fn draw_tile(
                 sg.rotate(&Pt(1.0, 1.0), rot);
                 *sg += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
             }
-            DrawObjInner::Group(_) | DrawObjInner::Point(_) | DrawObjInner::Char(_, _) => {
+            DrawObjInner::Group(_) | DrawObjInner::Point(_) | DrawObjInner::Char(_) => {
                 unimplemented!()
             }
         });
@@ -287,7 +287,7 @@ fn main() {
                 *s *= scale;
                 *s += Pt(margin, margin);
             }
-            DrawObjInner::Point(_) | DrawObjInner::Char(_, _) | DrawObjInner::Group(_) => {
+            DrawObjInner::Point(_) | DrawObjInner::Char(_) | DrawObjInner::Group(_) => {
                 unimplemented!()
             }
         });
