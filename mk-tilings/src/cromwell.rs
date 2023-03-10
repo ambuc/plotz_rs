@@ -293,16 +293,16 @@ pub fn make() -> Vec<DrawObj> {
 
             let config = ShadeConfig::builder()
                 .gap(1.5)
-                .slope(10.0)
+                .slope(0.0)
                 .switchback(true)
                 .build();
             let segments = shade_polygon(&config, &p).unwrap();
 
-            std::iter::once(DrawObj::from_polygon(p).with_color(&BLACK)) //
-                .chain([DrawObj::from_group(
-                    segments.into_iter().map(|s| DrawObjInner::Segment(s)),
-                )
-                .with_color(color)])
+            // std::iter::empty() //
+            std::iter::once(DrawObj::from_polygon(p).with_color(&color)).chain([
+                DrawObj::from_group(segments.into_iter().map(|s| DrawObjInner::Segment(s)))
+                    .with_color(color),
+            ])
         })
         .collect();
 
