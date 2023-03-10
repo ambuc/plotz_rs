@@ -1,6 +1,10 @@
 //! An annotated object with color and thickness.
 
-use crate::{char::Char, svg::{write_layer_to_svg, Size}};
+use crate::{
+    char::Char,
+    group::Group,
+    svg::{write_layer_to_svg, Size},
+};
 use anyhow::Error;
 use itertools::Itertools;
 use multimap::MultiMap;
@@ -22,7 +26,7 @@ pub enum DrawObjInner {
     /// A character to be printed in SVG, at a point.
     Char(Char),
     /// A group of other drawobjects.
-    Group(Vec<DrawObjInner>),
+    Group(Group),
 }
 
 impl DrawObjInner {
@@ -31,7 +35,7 @@ impl DrawObjInner {
         match self {
             DrawObjInner::Polygon(p) => p.pts.is_empty(),
             DrawObjInner::Point(_) | DrawObjInner::Segment(_) | DrawObjInner::Char(_) => false,
-            DrawObjInner::Group(dois) => dois.iter().all(|doi| doi.is_empty()),
+            DrawObjInner::Group(dois) => dois.iter_dois().all(|doi| doi.is_empty()),
         }
     }
     /// mutate a doi.
@@ -47,27 +51,25 @@ impl DrawObjInner {
                 f(&mut s.i);
                 f(&mut s.f);
             }
-            DrawObjInner::Char(Char{pt, ..}) => {
+            DrawObjInner::Char(Char { pt, .. }) => {
                 f(pt);
             }
             DrawObjInner::Group(dois) => {
-                for doi in dois {
-                    doi.mutate(&f);
-                }
+                dois.mutate(&f);
             }
         }
     }
 
     /// to iterator
-    pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    pub fn iter_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
         match &self {
-            DrawObjInner::Char(Char{pt, .. }) => Box::new(std::iter::once(pt)),
+            DrawObjInner::Char(Char { pt, .. }) => Box::new(std::iter::once(pt)),
             DrawObjInner::Point(ref pt) => Box::new(std::iter::once(pt)),
             DrawObjInner::Polygon(pg) => Box::new(pg.pts.iter()),
             DrawObjInner::Segment(sg) => {
                 Box::new(std::iter::once(&sg.i).chain(std::iter::once(&sg.f)))
             }
-            DrawObjInner::Group(dois) => Box::new(dois.iter().map(|doi| doi.iter()).flatten()),
+            DrawObjInner::Group(dois) => dois.iter_pts(),
         }
     }
 }
@@ -79,7 +81,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Segment(s) => s.right_bound(),
             DrawObjInner::Char(ch) => ch.right_bound(),
             DrawObjInner::Group(dos) => {
-                dos.iter()
+                dos.iter_pts()
                     .map(|doi| float_ord::FloatOrd(doi.right_bound()))
                     .max()
                     .unwrap()
@@ -95,7 +97,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Segment(s) => s.left_bound(),
             DrawObjInner::Char(ch) => ch.left_bound(),
             DrawObjInner::Group(dos) => {
-                dos.iter()
+                dos.iter_pts()
                     .map(|doi| float_ord::FloatOrd(doi.left_bound()))
                     .min()
                     .unwrap()
@@ -111,7 +113,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Segment(s) => s.top_bound(),
             DrawObjInner::Char(ch) => ch.top_bound(),
             DrawObjInner::Group(dos) => {
-                dos.iter()
+                dos.iter_pts()
                     .map(|doi| float_ord::FloatOrd(doi.top_bound()))
                     .min()
                     .unwrap()
@@ -127,7 +129,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Segment(s) => s.bottom_bound(),
             DrawObjInner::Char(ch) => ch.bottom_bound(),
             DrawObjInner::Group(dos) => {
-                dos.iter()
+                dos.iter_pts()
                     .map(|doi| float_ord::FloatOrd(doi.bottom_bound()))
                     .max()
                     .unwrap()
@@ -177,12 +179,12 @@ impl DrawObj {
 
     /// from a character.
     pub fn from_char(pt: Pt, chr: char) -> DrawObj {
-        Self::from_obj(DrawObjInner::Char(Char{pt, chr}))
+        Self::from_obj(DrawObjInner::Char(Char { pt, chr }))
     }
 
     /// from a group.
     pub fn from_group(dos: impl IntoIterator<Item = DrawObjInner>) -> DrawObj {
-        Self::from_obj(DrawObjInner::Group(dos.into_iter().collect::<Vec<_>>()))
+        Self::from_obj(DrawObjInner::Group(Group::new(dos)))
     }
 
     // builders
@@ -198,8 +200,8 @@ impl DrawObj {
     }
 
     /// to iterator
-    pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
-        self.obj.iter()
+    pub fn iter_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        self.obj.iter_pts()
     }
 }
 

@@ -44,7 +44,7 @@ fn main() {
     dos = dos
         .into_iter()
         .filter(|d_o| {
-            d_o.iter()
+            d_o.iter_pts()
                 .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLoc::Inside)))
         })
         .collect();

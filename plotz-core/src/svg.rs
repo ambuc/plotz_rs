@@ -67,8 +67,8 @@ fn write_doi_to_context(
             context.show_text(&chr.to_string()).expect("show text");
         }
         DrawObjInner::Group(dois) => {
-            for doi in dois {
-                write_doi_to_context(doi, context).expect("write");
+            for doi in dois.iter_dois() {
+                write_doi_to_context(&doi, context).expect("write");
             }
         }
     }
