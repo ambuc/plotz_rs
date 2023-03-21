@@ -13,7 +13,7 @@ impl Group {
 
     /// to iterator
     pub fn iter_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
-        Box::new(self.0.iter().map(|doi| doi.iter_pts()).flatten())
+        Box::new(self.0.iter().flat_map(|doi| doi.iter_pts()).flatten())
     }
 
     pub fn iter_dois(&self) -> Box<dyn Iterator<Item = &DrawObjInner> + '_> {

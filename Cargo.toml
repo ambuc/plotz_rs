@@ -9,6 +9,7 @@ edition = "2021"
 
 [workspace]
 members = [
+    "mk-arcs",
     "mk-tilings",
     "mk-voronoi",
     "mk-wang",

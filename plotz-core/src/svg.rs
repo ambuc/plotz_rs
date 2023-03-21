@@ -71,6 +71,15 @@ fn write_doi_to_context(
                 write_doi_to_context(&doi, context).expect("write");
             }
         }
+        DrawObjInner::CurveArc(arc) => {
+            context.arc(
+                arc.ctr.x.0,
+                arc.ctr.y.0,
+                arc.radius.0,
+                arc.angle_1.0,
+                arc.angle_2.0,
+            );
+        }
     }
     Ok(())
 }

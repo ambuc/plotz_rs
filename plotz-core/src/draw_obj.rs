@@ -9,10 +9,13 @@ use anyhow::Error;
 use itertools::Itertools;
 use multimap::MultiMap;
 use plotz_color::{ColorRGB, BLACK};
-use plotz_geometry::bounded::Bounded;
-use plotz_geometry::point::Pt;
-use plotz_geometry::polygon::{Multiline, Polygon};
-use plotz_geometry::segment::Segment;
+use plotz_geometry::{
+    bounded::Bounded,
+    curve::CurveArc,
+    point::Pt,
+    polygon::{Multiline, Polygon},
+    segment::Segment,
+};
 
 /// Either a polygon or a segment.
 #[derive(Debug, PartialEq, Clone)]
@@ -23,6 +26,8 @@ pub enum DrawObjInner {
     Polygon(Polygon),
     /// A segment.
     Segment(Segment),
+    /// An arc.
+    CurveArc(CurveArc),
     /// A character to be printed in SVG, at a point.
     Char(Char),
     /// A group of other drawobjects.
@@ -34,8 +39,11 @@ impl DrawObjInner {
     pub fn is_empty(&self) -> bool {
         match self {
             DrawObjInner::Polygon(p) => p.pts.is_empty(),
-            DrawObjInner::Point(_) | DrawObjInner::Segment(_) | DrawObjInner::Char(_) => false,
             DrawObjInner::Group(dois) => dois.iter_dois().all(|doi| doi.is_empty()),
+            DrawObjInner::Point(_)
+            | DrawObjInner::Segment(_)
+            | DrawObjInner::Char(_)
+            | DrawObjInner::CurveArc(_) => false,
         }
     }
     /// mutate a doi.
@@ -57,19 +65,23 @@ impl DrawObjInner {
             DrawObjInner::Group(dois) => {
                 dois.mutate(&f);
             }
+            DrawObjInner::CurveArc(a) => {
+                f(&mut a.ctr);
+            }
         }
     }
 
     /// to iterator
-    pub fn iter_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    pub fn iter_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
         match &self {
-            DrawObjInner::Char(Char { pt, .. }) => Box::new(std::iter::once(pt)),
-            DrawObjInner::Point(ref pt) => Box::new(std::iter::once(pt)),
-            DrawObjInner::Polygon(pg) => Box::new(pg.pts.iter()),
-            DrawObjInner::Segment(sg) => {
-                Box::new(std::iter::once(&sg.i).chain(std::iter::once(&sg.f)))
-            }
-            DrawObjInner::Group(dois) => dois.iter_pts(),
+            DrawObjInner::Char(Char { pt, .. }) => Some(Box::new(std::iter::once(pt))),
+            DrawObjInner::Point(ref pt) => Some(Box::new(std::iter::once(pt))),
+            DrawObjInner::Polygon(pg) => Some(Box::new(pg.pts.iter())),
+            DrawObjInner::Segment(sg) => Some(Box::new(
+                std::iter::once(&sg.i).chain(std::iter::once(&sg.f)),
+            )),
+            DrawObjInner::Group(dois) => Some(dois.iter_pts()),
+            DrawObjInner::CurveArc(_arc) => None,
         }
     }
 }
@@ -81,6 +93,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Segment(s) => s.right_bound(),
             DrawObjInner::Char(ch) => ch.right_bound(),
             DrawObjInner::Group(dos) => dos.right_bound(),
+            DrawObjInner::CurveArc(arc) => arc.right_bound(),
         }
     }
 
@@ -91,6 +104,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Segment(s) => s.left_bound(),
             DrawObjInner::Char(ch) => ch.left_bound(),
             DrawObjInner::Group(dos) => dos.left_bound(),
+            DrawObjInner::CurveArc(arc) => arc.left_bound(),
         }
     }
 
@@ -101,6 +115,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Segment(s) => s.top_bound(),
             DrawObjInner::Char(ch) => ch.top_bound(),
             DrawObjInner::Group(dos) => dos.top_bound(),
+            DrawObjInner::CurveArc(arc) => arc.top_bound(),
         }
     }
 
@@ -111,6 +126,7 @@ impl Bounded for DrawObjInner {
             DrawObjInner::Segment(s) => s.bottom_bound(),
             DrawObjInner::Char(ch) => ch.bottom_bound(),
             DrawObjInner::Group(dos) => dos.bottom_bound(),
+            DrawObjInner::CurveArc(arc) => arc.bottom_bound(),
         }
     }
 }
@@ -163,6 +179,10 @@ impl DrawObj {
         Self::from_obj(DrawObjInner::Group(Group::new(dos)))
     }
 
+    pub fn from_curve_arc(curve_arc: CurveArc) -> DrawObj {
+        Self::from_obj(DrawObjInner::CurveArc(curve_arc))
+    }
+
     // builders
 
     /// with a color.
@@ -176,7 +196,7 @@ impl DrawObj {
     }
 
     /// to iterator
-    pub fn iter_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    pub fn iter_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
         self.obj.iter_pts()
     }
 }
@@ -284,6 +304,9 @@ impl DrawObjs {
                         DrawObjInner::Group(_) => {
                             // do nothing
                             // TODO handle groups
+                        }
+                        DrawObjInner::CurveArc(_arc) => {
+                            // do nothing
                         }
                     }
                 });
