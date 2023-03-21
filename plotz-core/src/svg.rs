@@ -157,7 +157,7 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![&DrawObj {
-                color: BLACK,
+                color: &BLACK,
                 obj: DrawObjInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
                 thickness: 1.0,
             }],
@@ -184,12 +184,12 @@ mod test_super {
             path.to_str().unwrap(),
             vec![
                 &DrawObj {
-                    color: BLACK,
+                    color: &BLACK,
                     obj: DrawObjInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
                     thickness: 1.0,
                 },
                 &DrawObj {
-                    color: BLACK,
+                    color: &BLACK,
                     obj: DrawObjInner::Polygon(Polygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)]).unwrap()),
                     thickness: 1.0,
                 },

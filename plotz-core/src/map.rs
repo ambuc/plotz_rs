@@ -439,7 +439,7 @@ mod tests {
                     Bucket::Area(Area::Beach),
                     vec![DrawObj {
                         obj: obj,
-                        color: ALICEBLUE,
+                        color: &ALICEBLUE,
                         thickness: 1.0,
                     }],
                 )],
@@ -485,7 +485,7 @@ mod tests {
                     Bucket::Area(Area::Beach),
                     vec![DrawObj {
                         obj: obj,
-                        color: ALICEBLUE,
+                        color: &ALICEBLUE,
                         thickness: 1.0,
                     }],
                 )],
