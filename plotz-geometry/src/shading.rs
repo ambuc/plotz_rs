@@ -45,7 +45,6 @@ pub fn shade_polygon(
     let mut segments: Vec<Segment> = vec![];
 
     let mut slope_height = bbox.width() / config.slope;
-    println!("slope_height: {:?}, gap: {:?}", slope_height, config.gap);
     if config.slope < 0.0 {
         slope_height *= -1.0;
     }
