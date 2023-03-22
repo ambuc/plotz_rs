@@ -1,5 +1,7 @@
 use std::f64::consts::PI;
 
+use plotz_geometry::bounded::Bounded;
+
 use {
     argh::FromArgs,
     plotz_color::*,
@@ -36,15 +38,17 @@ fn main() {
 
         let ctr = frame_ctr;
 
-        let angle_1 = 0.0;
-        let angle_2 = 0.5 * PI;
+        let angle_1 = 0.0 + 0.3 * i;
+        let angle_2 = 0.5 * PI + 0.4 * i;
 
-        let radius = 1.0 + 3.0 * i;
+        let radius = 1.0 + 10.0 * i;
+
+        let ca = CurveArc::new(ctr, angle_1, angle_2, radius);
 
         dos.push(
-            DrawObj::from_curve_arc(CurveArc::new(ctr, angle_1, angle_2, radius))
+            DrawObj::from_curve_arc(ca)
                 .with_color(&BROWN)
-                .with_thickness(0.5),
+                .with_thickness(1.0),
         );
     }
 
