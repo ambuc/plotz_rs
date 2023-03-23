@@ -3,7 +3,7 @@ use plotz_geometry::bounded::Bounded;
 use {
     argh::FromArgs,
     plotz_color::*,
-    plotz_core::{draw_obj::DrawObj, draw_objs::DrawObjs, frame::make_frame, svg::Size},
+    plotz_core::{draw_obj::DrawObj, canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{curve::CurveArc, point::Pt},
     std::f64::consts::PI,
 };
@@ -43,7 +43,7 @@ fn main() {
         dos.push(DrawObj::new(ca).with_color(&BROWN).with_thickness(1.0));
     }
 
-    let draw_objs = DrawObjs::from_objs(dos).with_frame(frame);
+    let draw_objs = Canvas::from_objs(dos).with_frame(frame);
 
     let () = draw_objs
         .write_to_svg(

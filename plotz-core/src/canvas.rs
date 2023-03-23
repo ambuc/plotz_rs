@@ -15,26 +15,26 @@ use {
 
 /// Many draw objs.
 #[derive(Debug, Clone)]
-pub struct DrawObjs {
+pub struct Canvas {
     /// the objs.
-    pub draw_obj_vec: Vec<DrawObj>,
+    pub dos: Vec<DrawObj>,
 
     /// the frame, maybe.
     pub frame: Option<DrawObj>,
 }
 
-impl DrawObjs {
+impl Canvas {
     /// ctor from objs
-    pub fn from_objs<O: IntoIterator<Item = DrawObj>>(objs: O) -> DrawObjs {
-        DrawObjs {
-            draw_obj_vec: objs.into_iter().collect(),
+    pub fn from_objs<O: IntoIterator<Item = DrawObj>>(objs: O) -> Canvas {
+        Canvas {
+            dos: objs.into_iter().collect(),
             frame: None,
         }
     }
 
     /// with a frame
-    pub fn with_frame(self, frame: DrawObj) -> DrawObjs {
-        DrawObjs {
+    pub fn with_frame(self, frame: DrawObj) -> Canvas {
+        Canvas {
             frame: Some(frame),
             ..self
         }
@@ -42,8 +42,8 @@ impl DrawObjs {
 
     /// Sorts and groups the internal draw objects by color.
     pub fn group_by_color(mut self) -> Vec<(&'static ColorRGB, Vec<DrawObj>)> {
-        self.draw_obj_vec.sort_by_key(|d_o| d_o.color);
-        self.draw_obj_vec
+        self.dos.sort_by_key(|d_o| d_o.color);
+        self.dos
             .into_iter()
             .group_by(|a| a.color)
             .into_iter()
@@ -60,7 +60,7 @@ impl DrawObjs {
             if let Some(frame) = self.frame.clone() {
                 all.push(frame);
             }
-            all.extend(self.draw_obj_vec.clone());
+            all.extend(self.dos.clone());
             write_layer_to_svg(size, name, &all)?;
         }
 
@@ -85,7 +85,7 @@ impl DrawObjs {
 
     /// join adjacent segments to save on path draw time.
     pub fn join_adjacent_segments(&mut self) {
-        self.draw_obj_vec = self
+        self.dos = self
             .clone()
             .group_by_color()
             .into_iter()

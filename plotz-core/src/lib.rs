@@ -3,7 +3,7 @@
 pub mod char;
 pub mod draw_obj;
 pub mod draw_obj_inner;
-pub mod draw_objs;
+pub mod canvas;
 pub mod frame;
 pub mod group;
 pub mod map;

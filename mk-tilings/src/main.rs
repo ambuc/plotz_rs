@@ -1,7 +1,7 @@
 use {
     argh::FromArgs,
     plotz_core::{
-        draw_obj::DrawObj, draw_obj_inner::DrawObjInner, draw_objs::DrawObjs, frame::make_frame,
+        draw_obj::DrawObj, draw_obj_inner::DrawObjInner, canvas::Canvas, frame::make_frame,
         svg::Size,
     },
     plotz_geometry::{point::Pt, polygon::PointLoc, traits::YieldPoints},
@@ -47,7 +47,7 @@ fn main() {
         }
     });
 
-    let draw_objs = DrawObjs::from_objs(dos).with_frame(frame);
+    let draw_objs = Canvas::from_objs(dos).with_frame(frame);
 
     //draw_objs.join_adjacent_segments();
 

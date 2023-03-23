@@ -1,7 +1,7 @@
 use {
     argh::FromArgs,
     plotz_color::{take_random_colors, ColorRGB},
-    plotz_core::{draw_obj::DrawObj, draw_objs::DrawObjs, frame::make_frame, svg::Size},
+    plotz_core::{draw_obj::DrawObj, canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         bounded::Bounded,
         point::Pt,
@@ -97,7 +97,7 @@ fn main() {
         })
         .collect();
 
-    let draw_objs = DrawObjs::from_objs(polygons.iter().flat_map(|p| {
+    let draw_objs = Canvas::from_objs(polygons.iter().flat_map(|p| {
         match Style::rand(&palette) {
             Style::Shade(shade_config, color, draw_border) => std::iter::once(if draw_border {
                 Some(DrawObj::new(p.clone()).with_color(color))

@@ -7,7 +7,7 @@ use {
     argh::FromArgs,
     plotz_color::{take_random_colors, ColorRGB},
     plotz_core::{
-        draw_obj::DrawObj, draw_obj_inner::DrawObjInner, draw_objs::DrawObjs, frame::make_frame,
+        draw_obj::DrawObj, draw_obj_inner::DrawObjInner, canvas::Canvas, frame::make_frame,
         svg::Size,
     },
     plotz_geometry::{
@@ -269,13 +269,13 @@ fn main() {
         }
     }
 
-    let mut draw_objs = DrawObjs::from_objs(draw_obj_vec)
+    let mut draw_objs = Canvas::from_objs(draw_obj_vec)
         .with_frame(make_frame((image_width, image_width), Pt(margin, margin)));
 
     let scale = image_width / 2.0 / (grid_cardinality as f64);
 
     draw_objs
-        .draw_obj_vec
+        .dos
         .iter_mut()
         .for_each(|d_o| match &mut d_o.obj {
             DrawObjInner::Polygon(p) => {
