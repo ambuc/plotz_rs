@@ -1,9 +1,9 @@
 //! A 2D segment.
 use crate::{
     bounded::Bounded,
-    crop::{CropToPolygonError, Croppable, PointLoc,},
-    interpolate::interpolate_2d_checked,
+    crop::{CropToPolygonError, Croppable, PointLoc},
     interpolate,
+    interpolate::interpolate_2d_checked,
     point::Pt,
     polygon::Polygon,
     traits::{Mutable, YieldPoints, YieldPointsMut},
@@ -314,7 +314,9 @@ impl YieldPointsMut for Segment {
 impl Mutable for Segment {}
 
 impl Croppable for Segment {
-    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self>, CropToPolygonError>
+    type Output = Segment;
+
+    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
     where
         Self: Sized,
     {
@@ -322,6 +324,16 @@ impl Croppable for Segment {
         let mut resultants: Vec<Segment> = vec![];
         let mut curr_pt = self.i;
         let mut curr_pen_down = !matches!(frame.contains_pt(&self.i)?, PointLoc::Outside);
+
+        match (frame.contains_pt(&self.i)?, frame.contains_pt(&self.f)?) {
+            (PointLoc::Inside, PointLoc::Inside) => {
+                resultants.push(*self);
+            }
+            _ => {
+                // continue
+            }
+        }
+
         loop {
             if curr_pt == self.f {
                 break;
@@ -338,13 +350,14 @@ impl Croppable for Segment {
             isxns.sort_by(|i, j| i.percent_along_inner.cmp(&j.percent_along_inner));
             let (_, vs) = isxns.into_iter().partition(|i| {
                 i.percent_along_inner.0
-                    <= interpolate::interpolate_2d_checked(self.i, self.f, curr_pt)
-                        .unwrap_or_else(|_| {
+                    <= interpolate::interpolate_2d_checked(self.i, self.f, curr_pt).unwrap_or_else(
+                        |_| {
                             panic!(
                                 "interpolate failed: a: {:?}, b: {:?}, i: {:?}",
                                 self.i, self.f, curr_pt,
                             )
-                        })
+                        },
+                    )
             });
             isxns = vs;
 

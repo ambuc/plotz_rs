@@ -3,8 +3,11 @@ use plotz_geometry::bounded::Bounded;
 use {
     argh::FromArgs,
     plotz_color::*,
-    plotz_core::{draw_obj::DrawObj, canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{curve::CurveArc, point::Pt},
+    plotz_core::{
+        canvas::Canvas, draw_obj::DrawObj, draw_obj_inner::DrawObjInner, frame::make_frame,
+        svg::Size,
+    },
+    plotz_geometry::{crop::Croppable, curve::CurveArc, point::Pt},
     std::f64::consts::PI,
 };
 
@@ -23,6 +26,10 @@ fn main() {
     let asp = 1.3;
 
     let frame: DrawObj = make_frame((ell, ell * asp), /*offset=*/ Pt(mgn, mgn));
+    let frame_polygon = match frame.obj {
+        DrawObjInner::Polygon(ref pg) => pg.clone(),
+        _ => unimplemented!(),
+    };
 
     let frame_ctr = frame.obj.bbox_center();
 
@@ -40,7 +47,15 @@ fn main() {
 
         let ca = CurveArc::new(ctr, angle_1, angle_2, radius);
 
-        dos.push(DrawObj::new(ca).with_color(&BROWN).with_thickness(1.0));
+        dos.push(DrawObj::new(ca).with_color(&RED).with_thickness(1.0));
+
+        dos.extend(
+            ca.crop_to(&frame_polygon)
+                .unwrap()
+                .into_iter()
+                .map(|ca| DrawObj::new(ca).with_color(&GREEN).with_thickness(1.0))
+                .into_iter(),
+        );
     }
 
     let draw_objs = Canvas::from_objs(dos).with_frame(frame);

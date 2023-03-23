@@ -57,8 +57,10 @@ pub enum PointLoc {
 
 /// Crops
 pub trait Croppable {
+    type Output;
+
     /// Crop to an outer frame
-    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self>, CropToPolygonError>
+    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
     where
         Self: Sized;
 }

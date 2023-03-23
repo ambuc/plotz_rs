@@ -383,12 +383,13 @@ impl<'a> Cursor<'a> {
 }
 
 impl Croppable for Polygon {
+    type Output = Polygon;
     /// Crop this polygon to some frame. Returns a list of resultant polygons.
     /// Both polygons must already be closed and positively oriented.
     ///
     /// Known bug: If multiple resultant polygons are present, this will return
     /// only one.
-    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Polygon>, CropToPolygonError> {
+    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
         // crop self to frame, return modified self.
 
         if self.kind != PolygonKind::Closed {

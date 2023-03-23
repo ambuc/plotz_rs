@@ -1,8 +1,16 @@
 #![allow(unused)]
 #![allow(missing_docs)]
 
+use std::process::exit;
+
+use crate::{
+    crop::{CropToPolygonError, Croppable},
+    point::PolarPt,
+    segment::Segment,
+};
+
 use {
-    crate::{bounded::Bounded, interpolate, point::Pt},
+    crate::{bounded::Bounded, crop::PointLoc, interpolate, point::Pt},
     float_ord::FloatOrd,
     std::f64::consts::*,
 };
@@ -104,6 +112,12 @@ impl CurveArc {
             radius: FloatOrd(radius),
         }
     }
+    fn pt_i(&self) -> Pt {
+        self.ctr + PolarPt(self.radius.0, self.angle_1.0)
+    }
+    fn pt_f(&self) -> Pt {
+        self.ctr + PolarPt(self.radius.0, self.angle_2.0)
+    }
 }
 
 impl std::ops::Add<Pt> for CurveArc {
@@ -113,5 +127,18 @@ impl std::ops::Add<Pt> for CurveArc {
             ctr: self.ctr + rhs,
             ..self
         }
+    }
+}
+
+impl Croppable for CurveArc {
+    type Output = CurveArc;
+    fn crop_to(
+        &self,
+        frame: &crate::polygon::Polygon,
+    ) -> Result<Vec<Self::Output>, CropToPolygonError>
+    where
+        Self: Sized,
+    {
+        Ok(vec![])
     }
 }
