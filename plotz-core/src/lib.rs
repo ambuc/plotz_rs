@@ -2,10 +2,12 @@
 
 pub mod char;
 pub mod draw_obj;
+pub mod draw_obj_inner;
+pub mod draw_objs;
 pub mod frame;
+pub mod group;
 pub mod map;
 pub mod svg;
-pub mod group;
 
 mod bucket;
 mod bucketer;

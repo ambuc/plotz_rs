@@ -1,14 +1,12 @@
 //! SVG plotting utilities.
 //!
-use crate::{
-    char::Char,
-    draw_obj::{DrawObj, DrawObjInner},
+use {
+    crate::{char::Char, draw_obj::DrawObj, draw_obj_inner::DrawObjInner},
+    plotz_color::BLACK,
+    plotz_geometry::polygon::PolygonKind,
+    std::fmt::Debug,
+    thiserror::Error,
 };
-use plotz_color::BLACK;
-
-use plotz_geometry::polygon::PolygonKind;
-use std::fmt::Debug;
-use thiserror::Error;
 
 /// The size of a canvas.
 #[derive(Debug, Copy, Clone)]

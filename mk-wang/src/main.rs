@@ -7,8 +7,7 @@ use {
     argh::FromArgs,
     plotz_color::{take_random_colors, ColorRGB},
     plotz_core::{
-        draw_obj::{DrawObj, DrawObjInner, DrawObjs},
-        frame::make_frame,
+        draw_obj::DrawObj, draw_obj_inner::DrawObjInner, draw_objs::DrawObjs, frame::make_frame,
         svg::Size,
     },
     plotz_geometry::{

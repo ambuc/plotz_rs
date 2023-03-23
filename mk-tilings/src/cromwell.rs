@@ -2,10 +2,7 @@
 
 use {
     plotz_color::*,
-    plotz_core::{
-        draw_obj::{DrawObj, DrawObjInner},
-        group::Group,
-    },
+    plotz_core::{draw_obj::DrawObj, draw_obj_inner::DrawObjInner, group::Group},
     plotz_geometry::{
         interpolate::extrapolate_2d as extrapolate,
         point::{PolarPt, Pt},

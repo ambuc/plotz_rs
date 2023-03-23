@@ -1,8 +1,12 @@
-use crate::draw_obj::DrawObjInner;
-use float_ord::FloatOrd;
-use plotz_geometry::bounded::Bounded;
-use plotz_geometry::point::Pt;
-use plotz_geometry::traits::{Mutable, YieldPoints, YieldPointsMut};
+use {
+    crate::draw_obj_inner::DrawObjInner,
+    float_ord::FloatOrd,
+    plotz_geometry::{
+        bounded::Bounded,
+        point::Pt,
+        traits::{Mutable, YieldPoints, YieldPointsMut},
+    },
+};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Group(Vec<DrawObjInner>);

@@ -1,11 +1,7 @@
 use {
     argh::FromArgs,
     plotz_color::{take_random_colors, ColorRGB},
-    plotz_core::{
-        draw_obj::{DrawObj, DrawObjs},
-        frame::make_frame,
-        svg::Size,
-    },
+    plotz_core::{draw_obj::DrawObj, draw_objs::DrawObjs, frame::make_frame, svg::Size},
     plotz_geometry::{
         bounded::Bounded,
         point::Pt,

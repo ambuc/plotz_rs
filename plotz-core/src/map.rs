@@ -2,34 +2,37 @@
 
 #![allow(clippy::let_unit_value)]
 
-use crate::{
-    bucket::{Area, Bucket, Path as BucketPath},
-    bucketer::{Bucketer, DefaultBucketer},
-    draw_obj::{DrawObj, DrawObjInner},
-    frame::make_frame,
-    svg::{write_layer_to_svg, Size, SvgWriteError},
+use {
+    crate::{
+        bucket::{Area, Bucket, Path as BucketPath},
+        bucketer::{Bucketer, DefaultBucketer},
+        draw_obj::DrawObj,
+        draw_obj_inner::DrawObjInner,
+        frame::make_frame,
+        svg::{write_layer_to_svg, Size, SvgWriteError},
+    },
+    float_ord::FloatOrd,
+    itertools::Itertools,
+    lazy_static::lazy_static,
+    plotz_color::*,
+    plotz_geojson::GeoJsonConversionError,
+    plotz_geometry::{
+        bounded::{streaming_bbox, Bounded, BoundingBoxError},
+        point::Pt,
+        polygon::Polygon,
+        shading::{shade_polygon, ShadeConfig},
+    },
+    std::{
+        collections::HashMap,
+        fs::File,
+        io::BufReader,
+        path::{Path, PathBuf},
+    },
+    string_interner::{symbol::SymbolU32, StringInterner},
+    thiserror::Error,
+    tracing::*,
+    typed_builder::TypedBuilder,
 };
-use float_ord::FloatOrd;
-use itertools::Itertools;
-use lazy_static::lazy_static;
-use plotz_color::*;
-use plotz_geojson::GeoJsonConversionError;
-use plotz_geometry::{
-    bounded::{streaming_bbox, Bounded, BoundingBoxError},
-    point::Pt,
-    polygon::Polygon,
-    shading::{shade_polygon, ShadeConfig},
-};
-use std::{
-    collections::HashMap,
-    fs::File,
-    io::BufReader,
-    path::{Path, PathBuf},
-};
-use string_interner::{symbol::SymbolU32, StringInterner};
-use thiserror::Error;
-use tracing::*;
-use typed_builder::TypedBuilder;
 
 #[derive(Debug, Error)]
 /// A general error you might encounter when rendering a Map.
