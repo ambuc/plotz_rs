@@ -6,7 +6,7 @@ use crate::{
 };
 use plotz_color::BLACK;
 
-use plotz_geometry::{plottable::PlotContext, point::Pt, polygon::PolygonKind};
+use plotz_geometry::polygon::PolygonKind;
 use std::fmt::Debug;
 use thiserror::Error;
 
@@ -35,32 +35,6 @@ pub enum SvgWriteError {
     /// cairo error
     #[error("cairo error")]
     CairoError(#[from] cairo::Error),
-}
-
-struct ContextHolder {
-    context: cairo::Context,
-}
-
-impl PlotContext for ContextHolder {
-    fn line_to(&mut self, pt: &Pt) {
-        self.context.line_to(pt.x.0, pt.y.0);
-    }
-    fn move_to(&mut self, pt: &Pt) {
-        self.context.move_to(pt.x.0, pt.y.0);
-    }
-    fn select_font_face(&mut self, family: &str) {
-        self.context
-            .select_font_face(family, cairo::FontSlant::Normal, cairo::FontWeight::Bold);
-    }
-    fn set_font_size(&mut self, size: f64) {
-        self.context.set_font_size(size);
-    }
-    fn show_text(&mut self, text: &str) {
-        self.context.show_text(text).expect("show text failed");
-    }
-    fn arc(&mut self, xc: f64, yc: f64, radius: f64, angle1: f64, angle2: f64) {
-        self.context.arc(xc, yc, radius, angle1, angle2);
-    }
 }
 
 fn write_doi_to_context(

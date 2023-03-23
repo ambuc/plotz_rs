@@ -10,4 +10,3 @@ pub mod curve;
 pub mod segment;
 pub mod shading;
 pub mod shading_02;
-pub mod plottable;

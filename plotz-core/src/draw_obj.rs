@@ -85,6 +85,7 @@ impl DrawObjInner {
         }
     }
 }
+
 impl Bounded for DrawObjInner {
     fn right_bound(&self) -> f64 {
         match self {

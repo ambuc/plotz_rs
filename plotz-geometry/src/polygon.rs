@@ -4,7 +4,6 @@ use {
     crate::{
         bounded::Bounded,
         interpolate,
-        plottable::{PlotContext, Plottable},
         point::Pt,
         segment::{Contains, Intersection, IntersectionOutcome, Segment},
     },
@@ -769,16 +768,6 @@ impl Bounded for Polygon {
     }
 }
 
-impl Plottable for Polygon {
-    fn plot<P: PlotContext>(&self, context: &mut P) {
-        for p in &self.pts {
-            context.line_to(p);
-        }
-        if self.kind == PolygonKind::Closed {
-            context.line_to(&self.pts[0]);
-        }
-    }
-}
 
 #[cfg(test)]
 mod tests {
