@@ -1,5 +1,3 @@
-use std::f64::consts::PI;
-
 use plotz_geometry::bounded::Bounded;
 
 use {
@@ -11,6 +9,7 @@ use {
         svg::Size,
     },
     plotz_geometry::{curve::CurveArc, point::Pt},
+    std::f64::consts::PI,
 };
 
 #[derive(FromArgs)]
@@ -29,7 +28,7 @@ fn main() {
 
     let frame: DrawObj = make_frame((ell, ell * asp), /*offset=*/ Pt(mgn, mgn));
 
-    let frame_ctr = Pt(mgn + (ell * asp) / 2.0, ell / 2.0 + mgn);
+    let frame_ctr = frame.obj.bbox_center();
 
     let mut dos = vec![];
 
