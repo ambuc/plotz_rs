@@ -7,7 +7,7 @@ use {
         frame::make_frame,
         svg::Size,
     },
-    plotz_geometry::{point::Pt, polygon::PointLoc},
+    plotz_geometry::{point::Pt, polygon::PointLoc, traits::YieldPoints},
 };
 
 mod ab_rhomb;
@@ -44,8 +44,7 @@ fn main() {
     dos = dos
         .into_iter()
         .filter(|d_o| {
-            d_o.iter_pts()
-                .expect("")
+            d_o.yield_pts()
                 .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLoc::Inside)))
         })
         .collect();

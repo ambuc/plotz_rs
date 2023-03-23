@@ -2,6 +2,7 @@ use crate::draw_obj::DrawObjInner;
 use float_ord::FloatOrd;
 use plotz_geometry::bounded::Bounded;
 use plotz_geometry::point::Pt;
+use plotz_geometry::traits::{YieldPoints, YieldPointsMut};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Group(Vec<DrawObjInner>);
@@ -9,11 +10,6 @@ pub struct Group(Vec<DrawObjInner>);
 impl Group {
     pub fn new(dois: impl IntoIterator<Item = DrawObjInner>) -> Group {
         Group(dois.into_iter().collect::<Vec<_>>())
-    }
-
-    /// to iterator
-    pub fn iter_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
-        Box::new(self.0.iter().flat_map(|doi| doi.iter_pts()).flatten())
     }
 
     pub fn iter_dois(&self) -> Box<dyn Iterator<Item = &DrawObjInner> + '_> {
@@ -24,6 +20,25 @@ impl Group {
         for doi in &mut self.0 {
             doi.mutate(&f);
         }
+    }
+}
+
+impl YieldPoints for Group {
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        Box::new(
+            self.0
+                .iter()
+                .flat_map(|doi| doi.inner_impl_yield_points().yield_pts()),
+        )
+    }
+}
+impl YieldPointsMut for Group {
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        Box::new(
+            self.0
+                .iter_mut()
+                .flat_map(|doi| doi.inner_impl_yield_points_mut().yield_pts_mut()),
+        )
     }
 }
 

@@ -2,7 +2,11 @@
 
 use std::fmt::Debug;
 
-use crate::{bounded::Bounded, segment::Segment};
+use crate::{
+    bounded::Bounded,
+    segment::Segment,
+    traits::{YieldPoints, YieldPointsMut},
+};
 use {
     float_ord::FloatOrd,
     std::{
@@ -170,6 +174,17 @@ impl Pt {
     /// Average of two points.
     pub fn avg(&self, other: &Pt) -> Pt {
         Pt((self.x.0 + other.x.0) / 2.0, (self.y.0 + other.y.0) / 2.0)
+    }
+}
+
+impl YieldPoints for Pt {
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        Box::new(std::iter::once(self))
+    }
+}
+impl YieldPointsMut for Pt {
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        Box::new(std::iter::once(self))
     }
 }
 
