@@ -44,8 +44,12 @@ fn main() {
     dos = dos
         .into_iter()
         .filter(|d_o| {
-            d_o.yield_pts()
-                .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLoc::Inside)))
+            if let Some(yp) = d_o.yield_pts() {
+                yp.into_iter()
+                    .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLoc::Inside)))
+            } else {
+                true
+            }
         })
         .collect();
 

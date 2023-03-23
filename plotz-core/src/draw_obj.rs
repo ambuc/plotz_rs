@@ -15,7 +15,7 @@ use plotz_geometry::{
     point::Pt,
     polygon::{Multiline, Polygon},
     segment::Segment,
-    traits::{YieldPoints, YieldPointsMut},
+    traits::{Mutable, YieldPoints, YieldPointsMut},
 };
 
 /// Either a polygon or a segment.
@@ -47,67 +47,53 @@ impl DrawObjInner {
             | DrawObjInner::CurveArc(_) => false,
         }
     }
-    /// mutate a doi.
-    pub fn mutate(&mut self, f: impl Fn(&mut Pt)) {
-        match self {
-            DrawObjInner::Point(p) => {
-                f(p);
-            }
-            DrawObjInner::Polygon(p) => {
-                p.pts.iter_mut().for_each(|pt| f(pt));
-            }
-            DrawObjInner::Segment(s) => {
-                f(&mut s.i);
-                f(&mut s.f);
-            }
-            DrawObjInner::Char(Char { pt, .. }) => {
-                f(pt);
-            }
-            DrawObjInner::Group(dois) => {
-                dois.mutate(&f);
-            }
-            DrawObjInner::CurveArc(a) => {
-                f(&mut a.ctr);
-            }
-        }
-    }
 
     pub fn inner_impl_bounded(&self) -> &dyn Bounded {
         match self {
+            DrawObjInner::Char(ch) => ch,
+            DrawObjInner::CurveArc(arc) => arc,
+            DrawObjInner::Group(dos) => dos,
             DrawObjInner::Point(p) => p,
             DrawObjInner::Polygon(pg) => pg,
             DrawObjInner::Segment(s) => s,
-            DrawObjInner::Char(ch) => ch,
-            DrawObjInner::Group(dos) => dos,
-            DrawObjInner::CurveArc(arc) => arc,
         }
     }
-
-    pub fn inner_impl_yield_points(&self) -> &dyn YieldPoints {
+    pub fn inner_impl_yield_points(&self) -> Option<&dyn YieldPoints> {
         match self {
-            DrawObjInner::Point(p) => p,
-            _ => panic!("uh-oh"),
+            DrawObjInner::Point(p) => Some(p),
+            DrawObjInner::Char(ch) => Some(ch),
+            DrawObjInner::CurveArc(_) => None,
+            DrawObjInner::Group(g) => Some(g),
+            DrawObjInner::Polygon(pg) => Some(pg),
+            DrawObjInner::Segment(sg) => Some(sg),
         }
     }
-    pub fn inner_impl_yield_points_mut(&mut self) -> &mut dyn YieldPointsMut {
+    pub fn inner_impl_yield_points_mut(&mut self) -> Option<&mut dyn YieldPointsMut> {
         match self {
-            DrawObjInner::Point(p) => p,
-            _ => panic!("uh-oh"),
+            DrawObjInner::Point(p) => Some(p),
+            DrawObjInner::Char(ch) => Some(ch),
+            DrawObjInner::CurveArc(_) => None,
+            DrawObjInner::Group(g) => Some(g),
+            DrawObjInner::Polygon(pg) => Some(pg),
+            DrawObjInner::Segment(sg) => Some(sg),
         }
     }
 }
 
 impl YieldPoints for DrawObjInner {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
-        self.inner_impl_yield_points().yield_pts()
+    fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
+        self.inner_impl_yield_points().and_then(|yp| yp.yield_pts())
     }
 }
 
 impl YieldPointsMut for DrawObjInner {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
-        self.inner_impl_yield_points_mut().yield_pts_mut()
+    fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
+        self.inner_impl_yield_points_mut()
+            .and_then(|ypm| ypm.yield_pts_mut())
     }
 }
+
+impl Mutable for DrawObjInner {}
 
 impl Bounded for DrawObjInner {
     fn right_bound(&self) -> f64 {
@@ -193,16 +179,22 @@ impl DrawObj {
 }
 
 impl YieldPoints for DrawObj {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
-        self.obj.inner_impl_yield_points().yield_pts()
+    fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
+        self.obj
+            .inner_impl_yield_points()
+            .and_then(|yp| yp.yield_pts())
     }
 }
 
 impl YieldPointsMut for DrawObj {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
-        self.obj.inner_impl_yield_points_mut().yield_pts_mut()
+    fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
+        self.obj
+            .inner_impl_yield_points_mut()
+            .and_then(|ypm| ypm.yield_pts_mut())
     }
 }
+
+impl Mutable for DrawObj {}
 
 /// Many draw objs.
 #[derive(Debug, Clone)]
@@ -276,9 +268,9 @@ impl DrawObjs {
 
     /// apply a fn to each pt.
     pub fn mutate(&mut self, f: impl Fn(&mut Pt)) {
-        self.draw_obj_vec
-            .iter_mut()
-            .for_each(|d_o| d_o.obj.mutate(&f));
+        self.draw_obj_vec.iter_mut().for_each(|d_o| {
+            d_o.obj.mutate(&f);
+        });
     }
 
     /// join adjacent segments to save on path draw time.

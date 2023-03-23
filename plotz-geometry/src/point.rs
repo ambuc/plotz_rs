@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use crate::{
     bounded::Bounded,
     segment::Segment,
-    traits::{YieldPoints, YieldPointsMut},
+    traits::{Mutable, YieldPoints, YieldPointsMut},
 };
 use {
     float_ord::FloatOrd,
@@ -178,15 +178,16 @@ impl Pt {
 }
 
 impl YieldPoints for Pt {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
-        Box::new(std::iter::once(self))
+    fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
+        Some(Box::new(std::iter::once(self)))
     }
 }
 impl YieldPointsMut for Pt {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
-        Box::new(std::iter::once(self))
+    fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
+        Some(Box::new(std::iter::once(self)))
     }
 }
+impl Mutable for Pt {}
 
 #[cfg(test)]
 mod tests {

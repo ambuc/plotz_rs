@@ -1,6 +1,9 @@
 //！ A character at a point.
-use plotz_geometry::point::Pt;
-use plotz_geometry::bounded::Bounded;
+use plotz_geometry::{
+    bounded::Bounded,
+    point::Pt,
+    traits::{Mutable, YieldPoints, YieldPointsMut},
+};
 
 #[derive(Debug, PartialEq, Clone)]
 /// A character laid out at a point.
@@ -26,3 +29,16 @@ impl Bounded for Char {
     }
 }
 
+impl YieldPoints for Char {
+    fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
+        Some(Box::new(std::iter::once(&self.pt)))
+    }
+}
+
+impl YieldPointsMut for Char {
+    fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
+        Some(Box::new(std::iter::once(&mut self.pt)))
+    }
+}
+
+impl Mutable for Char {}

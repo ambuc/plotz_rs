@@ -6,6 +6,7 @@ use {
         interpolate,
         point::Pt,
         segment::{Contains, Intersection, IntersectionOutcome, Segment},
+        traits::{Mutable, YieldPoints, YieldPointsMut},
     },
     derivative::Derivative,
     either::Either,
@@ -767,7 +768,17 @@ impl Bounded for Polygon {
         self.pts.iter().map(|p| p.x).max().expect("not empty").0
     }
 }
-
+impl YieldPoints for Polygon {
+    fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
+        Some(Box::new(self.pts.iter()))
+    }
+}
+impl YieldPointsMut for Polygon {
+    fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
+        Some(Box::new(self.pts.iter_mut()))
+    }
+}
+impl Mutable for Polygon {}
 
 #[cfg(test)]
 mod tests {

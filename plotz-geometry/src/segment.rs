@@ -1,5 +1,10 @@
 //! A 2D segment.
-use crate::{bounded::Bounded, interpolate::interpolate_2d_checked, point::Pt};
+use crate::{
+    bounded::Bounded,
+    interpolate::interpolate_2d_checked,
+    point::Pt,
+    traits::{Mutable, YieldPoints, YieldPointsMut},
+};
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::{
@@ -292,6 +297,18 @@ impl Bounded for Segment {
         std::cmp::max(self.i.x, self.f.x).0
     }
 }
+
+impl YieldPoints for Segment {
+    fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
+        Some(Box::new([&self.i, &self.f].into_iter()))
+    }
+}
+impl YieldPointsMut for Segment {
+    fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
+        Some(Box::new([&mut self.i, &mut self.f].into_iter()))
+    }
+}
+impl Mutable for Segment {}
 
 #[cfg(test)]
 mod tests {
