@@ -223,7 +223,7 @@ impl Polygon {
 
         let mut theta = 0_f64;
         for (i, j) in zip(self.pts.iter(), self.pts.iter().cycle().skip(1)) {
-            theta += _abp(other, i, j)
+            theta += abp(other, i, j)
         }
 
         Ok(match approx_eq!(f64, theta, 0_f64, epsilon = 0.00001) {
@@ -586,8 +586,8 @@ impl Croppable for Polygon {
     }
 }
 
-// Angle between points. Projects OI onto OJ and finds the angle IOJ.
-fn _abp(o: &Pt, i: &Pt, j: &Pt) -> f64 {
+/// Angle between points. Projects OI onto OJ and finds the angle IOJ.
+pub fn abp(o: &Pt, i: &Pt, j: &Pt) -> f64 {
     let a: Pt = *i - *o;
     let b: Pt = *j - *o;
     f64::atan2(
@@ -815,46 +815,46 @@ mod tests {
         let i = Pt(2, 0);
 
         // circle around E. (quadrants 1, 2, 3, 4)
-        assert_float_eq!(_abp(&e, &f, &b), PI / 2.0, ulps <= 10);
-        assert_float_eq!(_abp(&e, &f, &d), PI, ulps <= 10);
-        assert_float_eq!(_abp(&e, &f, &h), -1.0 * PI / 2.0, ulps <= 10);
-        assert_float_eq!(_abp(&e, &f, &f), 0.0, ulps <= 10);
+        assert_float_eq!(abp(&e, &f, &b), PI / 2.0, ulps <= 10);
+        assert_float_eq!(abp(&e, &f, &d), PI, ulps <= 10);
+        assert_float_eq!(abp(&e, &f, &h), -1.0 * PI / 2.0, ulps <= 10);
+        assert_float_eq!(abp(&e, &f, &f), 0.0, ulps <= 10);
 
         // circle around E, inverse. (quadrants 1, 2, 3, 4)
-        assert_float_eq!(_abp(&e, &f, &h), -1.0 * PI / 2.0, ulps <= 10);
-        assert_float_eq!(_abp(&e, &f, &d), PI, ulps <= 10);
-        assert_float_eq!(_abp(&e, &f, &b), PI / 2.0, ulps <= 10);
-        assert_float_eq!(_abp(&e, &f, &f), 0.0, ulps <= 10);
+        assert_float_eq!(abp(&e, &f, &h), -1.0 * PI / 2.0, ulps <= 10);
+        assert_float_eq!(abp(&e, &f, &d), PI, ulps <= 10);
+        assert_float_eq!(abp(&e, &f, &b), PI / 2.0, ulps <= 10);
+        assert_float_eq!(abp(&e, &f, &f), 0.0, ulps <= 10);
 
         // circle around G. (quadrant 1)
-        assert_float_eq!(_abp(&g, &i, &i), 0.0, ulps <= 10);
-        assert_float_eq!(_abp(&g, &i, &h), 0.0, ulps <= 10);
-        assert_float_eq!(_abp(&g, &i, &f), 0.5_f64.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&g, &i, &e), 1.0_f64.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&g, &i, &c), 1.0_f64.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&g, &i, &b), 2.0_f64.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&g, &i, &d), PI / 2.0, ulps <= 10);
-        assert_float_eq!(_abp(&g, &i, &a), PI / 2.0, ulps <= 10);
+        assert_float_eq!(abp(&g, &i, &i), 0.0, ulps <= 10);
+        assert_float_eq!(abp(&g, &i, &h), 0.0, ulps <= 10);
+        assert_float_eq!(abp(&g, &i, &f), 0.5_f64.atan(), ulps <= 10);
+        assert_float_eq!(abp(&g, &i, &e), 1.0_f64.atan(), ulps <= 10);
+        assert_float_eq!(abp(&g, &i, &c), 1.0_f64.atan(), ulps <= 10);
+        assert_float_eq!(abp(&g, &i, &b), 2.0_f64.atan(), ulps <= 10);
+        assert_float_eq!(abp(&g, &i, &d), PI / 2.0, ulps <= 10);
+        assert_float_eq!(abp(&g, &i, &a), PI / 2.0, ulps <= 10);
 
         // circle around H (quadrants 1, 2)
-        assert_float_eq!(_abp(&h, &i, &i), 0.0, ulps <= 10);
-        assert_float_eq!(_abp(&h, &i, &b), PI / 2.0, ulps <= 10);
-        assert_float_eq!(_abp(&h, &i, &a), PI / 2.0 + 0.5_f64.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&h, &i, &d), PI / 2.0 + 1.0_f64.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&h, &i, &g), PI, ulps <= 10);
+        assert_float_eq!(abp(&h, &i, &i), 0.0, ulps <= 10);
+        assert_float_eq!(abp(&h, &i, &b), PI / 2.0, ulps <= 10);
+        assert_float_eq!(abp(&h, &i, &a), PI / 2.0 + 0.5_f64.atan(), ulps <= 10);
+        assert_float_eq!(abp(&h, &i, &d), PI / 2.0 + 1.0_f64.atan(), ulps <= 10);
+        assert_float_eq!(abp(&h, &i, &g), PI, ulps <= 10);
 
         // circle around B (quadrants 3, 4)
-        assert_float_eq!(_abp(&b, &c, &c), 0.0, ulps <= 10);
-        assert_float_eq!(_abp(&b, &c, &f), -1.0_f64.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&b, &c, &i), -2.0_f64.atan(), ulps <= 10);
-        assert_float_eq!(_abp(&b, &c, &e), -1.0 * PI / 2.0, ulps <= 10);
-        assert_float_eq!(_abp(&b, &c, &h), -1.0 * PI / 2.0, ulps <= 10);
+        assert_float_eq!(abp(&b, &c, &c), 0.0, ulps <= 10);
+        assert_float_eq!(abp(&b, &c, &f), -1.0_f64.atan(), ulps <= 10);
+        assert_float_eq!(abp(&b, &c, &i), -2.0_f64.atan(), ulps <= 10);
+        assert_float_eq!(abp(&b, &c, &e), -1.0 * PI / 2.0, ulps <= 10);
+        assert_float_eq!(abp(&b, &c, &h), -1.0 * PI / 2.0, ulps <= 10);
         assert_float_eq!(
-            _abp(&b, &c, &g),
+            abp(&b, &c, &g),
             -1.0 * PI / 2.0 - 0.5_f64.atan(),
             ulps <= 10
         );
-        assert_float_eq!(_abp(&b, &c, &d), -3.0 * PI / 4.0, ulps <= 10);
+        assert_float_eq!(abp(&b, &c, &d), -3.0 * PI / 4.0, ulps <= 10);
     }
 
     #[test]

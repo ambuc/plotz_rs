@@ -20,3 +20,4 @@ typed-builder = "*"
 [dev-dependencies]
 float_eq = "*"
 matches = "*"
+assert_matches = "*"
