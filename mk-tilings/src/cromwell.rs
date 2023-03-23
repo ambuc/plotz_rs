@@ -2,7 +2,10 @@
 
 use {
     plotz_color::*,
-    plotz_core::draw_obj::{DrawObj, DrawObjInner},
+    plotz_core::{
+        draw_obj::{DrawObj, DrawObjInner},
+        group::Group,
+    },
     plotz_geometry::{
         interpolate::extrapolate_2d as extrapolate,
         point::{PolarPt, Pt},
@@ -299,10 +302,10 @@ pub fn make() -> Vec<DrawObj> {
             let segments = shade_polygon(&config, &p).unwrap();
 
             // std::iter::empty() //
-            std::iter::once(DrawObj::from_polygon(p).with_color(&color)).chain([
-                DrawObj::from_group(segments.into_iter().map(|s| DrawObjInner::Segment(s)))
-                    .with_color(color),
-            ])
+            std::iter::once(DrawObj::new(p).with_color(&color)).chain([DrawObj::new(Group::new(
+                segments.into_iter().map(|s| DrawObjInner::Segment(s)),
+            ))
+            .with_color(color)])
         })
         .collect();
 

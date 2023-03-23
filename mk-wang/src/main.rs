@@ -198,7 +198,7 @@ fn draw_tile(
                 ])
                 .unwrap(),
             };
-            DrawObj::from_polygon(shape).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
+            DrawObj::new(shape).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
         });
         ret.extend({
             shade_polygon(
@@ -208,7 +208,7 @@ fn draw_tile(
             .unwrap()
             .iter()
             .map(|sg| {
-                DrawObj::from_segment(*sg).with_color(
+                DrawObj::new(*sg).with_color(
                     [
                         &ALICEBLUE,      // 1
                         &BLUEVIOLET,     // 2

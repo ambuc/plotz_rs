@@ -263,11 +263,11 @@ pub fn make() -> Vec<DrawObj> {
             let segments = shade_polygon(&config, &p).unwrap();
 
             let mut ret = vec![];
-            ret.push(DrawObj::from_polygon(p.clone()));
+            ret.push(DrawObj::new(p.clone()));
             ret.extend(
                 segments
                     .into_iter()
-                    .map(|s| DrawObj::from_segment(s).with_color(color)),
+                    .map(|s| DrawObj::new(s).with_color(color)),
             );
 
             ret

@@ -6,6 +6,7 @@ use crate::{
     svg::{write_layer_to_svg, Size},
 };
 use anyhow::Error;
+use derive_more::From;
 use itertools::Itertools;
 use multimap::MultiMap;
 use plotz_color::{ColorRGB, BLACK};
@@ -19,7 +20,7 @@ use plotz_geometry::{
 };
 
 /// Either a polygon or a segment.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, From)]
 pub enum DrawObjInner {
     /// A point.
     Point(Pt),
@@ -128,44 +129,13 @@ pub struct DrawObj {
 
 impl DrawObj {
     /// from an object.
-    pub fn from_obj(obj: DrawObjInner) -> DrawObj {
+    pub fn new(obj: impl Into<DrawObjInner>) -> DrawObj {
         DrawObj {
-            obj,
+            obj: obj.into(),
             color: &BLACK,
             thickness: 1.0,
         }
     }
-
-    /// from a pt
-    pub fn from_pt(p: Pt) -> DrawObj {
-        Self::from_obj(DrawObjInner::Point(p))
-    }
-
-    /// from a polygon.
-    pub fn from_polygon(p: Polygon) -> DrawObj {
-        Self::from_obj(DrawObjInner::Polygon(p))
-    }
-
-    /// from a segment.
-    pub fn from_segment(s: Segment) -> DrawObj {
-        Self::from_obj(DrawObjInner::Segment(s))
-    }
-
-    /// from a character.
-    pub fn from_char(pt: Pt, chr: char) -> DrawObj {
-        Self::from_obj(DrawObjInner::Char(Char { pt, chr }))
-    }
-
-    /// from a group.
-    pub fn from_group(dos: impl IntoIterator<Item = DrawObjInner>) -> DrawObj {
-        Self::from_obj(DrawObjInner::Group(Group::new(dos)))
-    }
-
-    pub fn from_curve_arc(curve_arc: CurveArc) -> DrawObj {
-        Self::from_obj(DrawObjInner::CurveArc(curve_arc))
-    }
-
-    // builders
 
     /// with a color.
     pub fn with_color(self, color: &'static ColorRGB) -> DrawObj {
@@ -266,13 +236,6 @@ impl DrawObjs {
         Ok(())
     }
 
-    /// apply a fn to each pt.
-    pub fn mutate(&mut self, f: impl Fn(&mut Pt)) {
-        self.draw_obj_vec.iter_mut().for_each(|d_o| {
-            d_o.obj.mutate(&f);
-        });
-    }
-
     /// join adjacent segments to save on path draw time.
     pub fn join_adjacent_segments(&mut self) {
         self.draw_obj_vec = self
@@ -321,10 +284,7 @@ impl DrawObjs {
                     mmap.remove(&p);
 
                     if adjacent_pts.len() >= 2 {
-                        ret.push(
-                            DrawObj::from_polygon(Multiline(adjacent_pts).unwrap())
-                                .with_color(color),
-                        );
+                        ret.push(DrawObj::new(Multiline(adjacent_pts).unwrap()).with_color(color));
                     }
                 }
 

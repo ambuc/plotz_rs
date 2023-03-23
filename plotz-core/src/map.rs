@@ -66,7 +66,7 @@ pub struct AnnotatedPolygon {
 impl AnnotatedPolygon {
     /// Consumes an AnnotatedPolygon and casts down to a ColoredPolygon.
     pub fn to_colored_polygon(self) -> DrawObj {
-        DrawObj::from_polygon(self.polygon)
+        DrawObj::new(self.polygon)
             .with_color(self.color)
             .with_thickness(self.thickness)
     }

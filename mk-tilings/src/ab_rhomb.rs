@@ -162,7 +162,7 @@ pub fn make() -> Vec<DrawObj> {
                 .chain(
                     segments
                         .into_iter()
-                        .map(|s| DrawObj::from_segment(s).with_color(color)),
+                        .map(|s| DrawObj::new(s).with_color(color)),
                 )
         })
         .collect();

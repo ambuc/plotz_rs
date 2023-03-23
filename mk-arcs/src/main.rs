@@ -45,7 +45,7 @@ fn main() {
         let ca = CurveArc::new(ctr, angle_1, angle_2, radius);
 
         dos.push(
-            DrawObj::from_curve_arc(ca)
+            DrawObj::new(ca)
                 .with_color(&BROWN)
                 .with_thickness(1.0),
         );
