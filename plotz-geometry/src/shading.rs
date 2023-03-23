@@ -1,8 +1,9 @@
 //! Shading and crosshatching algorithms.
 use crate::{
     bounded::{Bounded, BoundingBoxError},
+    crop::CropToPolygonError,
     point::Pt,
-    polygon::{CropToPolygonError, Polygon, PolygonKind},
+    polygon::{Polygon, PolygonKind},
     segment::Segment,
 };
 
@@ -65,7 +66,7 @@ pub fn shade_polygon(
 
 #[cfg(test)]
 mod tests {
-    use crate::polygon::PointLoc;
+    use crate::crop::PointLoc;
     use float_cmp::approx_eq;
 
     use super::*;

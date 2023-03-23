@@ -1,10 +1,10 @@
 use {
     argh::FromArgs,
     plotz_core::{
-        draw_obj::DrawObj, draw_obj_inner::DrawObjInner, canvas::Canvas, frame::make_frame,
+        canvas::Canvas, draw_obj::DrawObj, draw_obj_inner::DrawObjInner, frame::make_frame,
         svg::Size,
     },
-    plotz_geometry::{point::Pt, polygon::PointLoc, traits::YieldPoints},
+    plotz_geometry::{crop::PointLoc, point::Pt, traits::YieldPoints},
 };
 
 mod ab_rhomb;
