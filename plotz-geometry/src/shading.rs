@@ -1,7 +1,7 @@
 //! Shading and crosshatching algorithms.
 use crate::{
     bounded::{Bounded, BoundingBoxError},
-    crop::CropToPolygonError,
+    crop::{CropToPolygonError, Croppable},
     point::Pt,
     polygon::{Polygon, PolygonKind},
     segment::Segment,
@@ -55,7 +55,7 @@ pub fn shade_polygon(
 
     while [i, f].iter().any(|p| p.y.0 <= bbox.top_bound()) {
         let full_stroke = Segment(i, f);
-        let cropped_strokes = polygon.as_frame_to_segment(&full_stroke)?;
+        let cropped_strokes = full_stroke.crop_to(polygon)?;
         segments.extend(cropped_strokes.iter());
         // segments.push(full_stroke);
         i.y.0 += config.gap;

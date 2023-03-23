@@ -3,6 +3,7 @@
 use crate::{
     bounded::Bounded,
     point::Pt,
+    crop::Croppable,
     polygon::{Polygon, PolygonKind},
     segment::Segment,
     shading::ShadePolygonError,
@@ -68,7 +69,7 @@ pub fn shade_polygon(
     while line.i.y > float_ord::FloatOrd(bbox.bottom_bound())
         || line.f.y > float_ord::FloatOrd(bbox.bottom_bound())
     {
-        let cropped_strokes = polygon.as_frame_to_segment(&line)?;
+        let cropped_strokes = line.crop_to(polygon)?;
         segments.extend(cropped_strokes.iter());
         // segments.push(line);
 

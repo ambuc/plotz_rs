@@ -1,17 +1,17 @@
 //! A 2D polygon (or multi&line).
 
+use crate::crop::Croppable;
+
 use {
     crate::{
         bounded::Bounded,
-        crop::{
-            ContainsPointError, CropToPolygonError, Cursor, Isxn, IsxnOutcome, On, OnePolygon,
-            PointLoc,
-        },
+        crop::{ContainsPointError, CropToPolygonError, PointLoc},
         interpolate,
         point::Pt,
         segment::{Contains, Intersection, IntersectionOutcome, Segment},
         traits::{Mutable, YieldPoints, YieldPointsMut},
     },
+    derivative::Derivative,
     either::Either,
     float_cmp::approx_eq,
     itertools::{all, iproduct, zip},
@@ -252,71 +252,145 @@ impl Polygon {
         }
     }
 
-    /// Treating this polygon as a frame, crop an |inner| polygon to it.
-    pub fn as_frame_to_polygon(&self, inner: &Polygon) -> Result<Vec<Polygon>, CropToPolygonError> {
-        inner.crop_to_polygon(self)
+    /// avg pt
+    pub fn average(&self) -> Pt {
+        let num: f64 = self.pts.len() as f64;
+        let sum_x: f64 = self.pts.iter().map(|pt| pt.x.0).sum();
+        let sum_y: f64 = self.pts.iter().map(|pt| pt.y.0).sum();
+        Pt(sum_x / num, sum_y / num)
     }
+}
 
-    /// Treating this polygon as a frame, crop an |inner| segment to it.
-    pub fn as_frame_to_segment(&self, inner: &Segment) -> Result<Vec<Segment>, CropToPolygonError> {
-        let frame_segments = self.to_segments();
-        let mut resultants: Vec<Segment> = vec![];
-        let mut curr_pt = inner.i;
-        let mut curr_pen_down = !matches!(self.contains_pt(&inner.i)?, PointLoc::Outside);
-        loop {
-            if curr_pt == inner.f {
-                break;
-            }
+#[derive(Debug)]
+struct IsxnOutcome {
+    frame_segment_idx: usize,
+    inner_segment_idx: usize,
+    outcome: IntersectionOutcome,
+}
 
-            let mut isxns = frame_segments
-                .iter()
-                .filter_map(|f| inner.intersects(f))
-                .filter_map(|isxn_outcome| match isxn_outcome {
-                    IntersectionOutcome::Yes(isxn) => Some(isxn),
-                    _ => None,
-                })
-                .collect::<Vec<Intersection>>();
-            isxns.sort_by(|i, j| i.percent_along_inner.cmp(&j.percent_along_inner));
-            let (_, vs) = isxns.into_iter().partition(|i| {
-                i.percent_along_inner.0
-                    <= interpolate::interpolate_2d_checked(inner.i, inner.f, curr_pt)
-                        .unwrap_or_else(|_| {
-                            panic!(
-                                "interpolate failed: a: {:?}, b: {:?}, i: {:?}",
-                                inner.i, inner.f, curr_pt,
-                            )
-                        })
-            });
-            isxns = vs;
-
-            match isxns.get(0) {
-                Some(intersection) => {
-                    let new_pt = interpolate::extrapolate_2d(
-                        inner.i,
-                        inner.f,
-                        intersection.percent_along_inner.0,
-                    );
-                    if !matches!(self.contains_pt(&new_pt)?, PointLoc::Outside) && curr_pen_down {
-                        resultants.push(Segment(curr_pt, new_pt));
-                    }
-                    curr_pt = new_pt;
-                    curr_pen_down = !curr_pen_down;
-                }
-                None => {
-                    return Ok(resultants);
-                }
-            }
+impl IsxnOutcome {
+    pub fn to_isxn(&self) -> Option<Isxn> {
+        match self.outcome {
+            IntersectionOutcome::Yes(i) => Some(Isxn {
+                frame_segment_idx: self.frame_segment_idx,
+                inner_segment_idx: self.inner_segment_idx,
+                intersection: i,
+            }),
+            _ => None,
         }
+    }
+}
 
-        Ok(resultants)
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+struct Isxn {
+    pub frame_segment_idx: usize,
+    pub inner_segment_idx: usize,
+    pub intersection: Intersection,
+}
+impl Isxn {
+    pub fn pt_given_self_segs(&self, self_segs: &[(usize, Segment)]) -> Pt {
+        let (_, seg) = self_segs[self.inner_segment_idx];
+        interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_inner.0)
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+enum On {
+    OnInner,
+    OnFrame,
+}
+impl On {
+    pub fn flip(&self) -> On {
+        match self {
+            On::OnInner => On::OnFrame,
+            On::OnFrame => On::OnInner,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+struct OnePolygon {
+    on_polygon: On,
+    at_point_index: usize,
+}
+
+#[derive(Derivative)]
+#[derivative(Debug)]
+struct Cursor<'a> {
+    // current position
+    position: Either<OnePolygon, Isxn>,
+    facing_along: On,
+    facing_along_segment_idx: usize, // segment index
+    // context
+    #[derivative(Debug = "ignore")]
+    inner_pts: &'a Vec<(usize, &'a Pt)>,
+    #[derivative(Debug = "ignore")]
+    inner_pts_len: &'a usize,
+    #[derivative(Debug = "ignore")]
+    frame_pts: &'a Vec<(usize, &'a Pt)>,
+    #[derivative(Debug = "ignore")]
+    frame_pts_len: &'a usize,
+    #[derivative(Debug = "ignore")]
+    inner_segments: &'a Vec<(usize, Segment)>,
+}
+impl<'a> Cursor<'a> {
+    fn pt(&self) -> Pt {
+        match &self.position {
+            Either::Left(one_polygon) => match one_polygon.on_polygon {
+                On::OnInner => *self.inner_pts[one_polygon.at_point_index].1,
+                On::OnFrame => *self.frame_pts[one_polygon.at_point_index].1,
+            },
+            Either::Right(isxn) => isxn.pt_given_self_segs(self.inner_segments),
+        }
+    }
+    fn pts_len(&self, on: On) -> usize {
+        match on {
+            On::OnInner => *self.inner_pts_len,
+            On::OnFrame => *self.frame_pts_len,
+        }
+    }
+    fn march_to_next_point(&mut self) {
+        let v = (match self.position {
+            Either::Left(one_polygon) => one_polygon.at_point_index,
+            Either::Right(isxn) => match self.facing_along {
+                On::OnInner => isxn.inner_segment_idx,
+                On::OnFrame => isxn.frame_segment_idx,
+            },
+        } + 1)
+            % self.pts_len(self.facing_along);
+        self.position = Either::Left(OnePolygon {
+            on_polygon: self.facing_along,
+            at_point_index: v,
+        });
+        self.facing_along_segment_idx = v;
     }
 
+    fn march_to_isxn(&mut self, next_isxn: Isxn, should_flip: bool) {
+        let new_position: Either<_, Isxn> = Either::Right(next_isxn);
+        let new_facing_along = if should_flip {
+            self.facing_along.flip()
+        } else {
+            self.facing_along
+        };
+        let new_facing_along_segment_idx = match new_facing_along {
+            On::OnFrame => next_isxn.frame_segment_idx,
+            On::OnInner => next_isxn.inner_segment_idx,
+        };
+        self.position = new_position;
+        self.facing_along = new_facing_along;
+        self.facing_along_segment_idx = new_facing_along_segment_idx;
+    }
+}
+
+impl Croppable for Polygon {
     /// Crop this polygon to some frame. Returns a list of resultant polygons.
     /// Both polygons must already be closed and positively oriented.
     ///
     /// Known bug: If multiple resultant polygons are present, this will return
     /// only one.
-    pub fn crop_to_polygon(&self, frame: &Polygon) -> Result<Vec<Polygon>, CropToPolygonError> {
+    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Polygon>, CropToPolygonError> {
+        // crop self to frame, return modified self.
+
         if self.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThisPolygonNotClosed);
         }
@@ -508,14 +582,6 @@ impl Polygon {
         resultant_polygons.push(Polygon(resultant_pts)?);
 
         Ok(resultant_polygons)
-    }
-
-    /// avg pt
-    pub fn average(&self) -> Pt {
-        let num: f64 = self.pts.len() as f64;
-        let sum_x: f64 = self.pts.iter().map(|pt| pt.x.0).sum();
-        let sum_y: f64 = self.pts.iter().map(|pt| pt.y.0).sum();
-        Pt(sum_x / num, sum_y / num)
     }
 }
 
@@ -884,7 +950,7 @@ mod tests {
         assert_eq!(
             Multiline([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)])
                 .unwrap()
-                .crop_to_polygon(&Polygon([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
+                .crop_to(&Polygon([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
                 .unwrap_err(),
             CropToPolygonError::ThisPolygonNotClosed
         );
@@ -895,7 +961,7 @@ mod tests {
         assert_eq!(
             Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)])
                 .unwrap()
-                .crop_to_polygon(&Multiline([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
+                .crop_to(&Multiline([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
                 .unwrap_err(),
             CropToPolygonError::ThatPolygonNotClosed
         );
@@ -906,7 +972,7 @@ mod tests {
         assert_eq!(
             Polygon([Pt(1, 1), Pt(1, 3), Pt(3, 3), Pt(3, 1)])
                 .unwrap()
-                .crop_to_polygon(&Polygon([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
+                .crop_to(&Polygon([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
                 .unwrap_err(),
             CropToPolygonError::ThisPolygonNotPositivelyOriented
         );
@@ -917,7 +983,7 @@ mod tests {
         assert_eq!(
             Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)])
                 .unwrap()
-                .crop_to_polygon(&Polygon([Pt(0, 0), Pt(0, 4), Pt(4, 4), Pt(4, 0)]).unwrap())
+                .crop_to(&Polygon([Pt(0, 0), Pt(0, 4), Pt(4, 4), Pt(4, 0)]).unwrap())
                 .unwrap_err(),
             CropToPolygonError::ThatPolygonNotPositivelyOriented
         );
@@ -934,7 +1000,7 @@ mod tests {
         let inner = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟥
         let frame = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟨
         assert_eq!(inner, frame);
-        let crops = inner.crop_to_polygon(&frame).unwrap(); // 🟧
+        let crops = inner.crop_to(&frame).unwrap(); // 🟧
         assert_eq!(crops, vec![inner]);
     }
 
@@ -948,7 +1014,7 @@ mod tests {
         // 🟨🟨🟨🟨⬜ ➡️ x
         let inner = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟥
         let frame = Polygon([Pt(0, 0), Pt(3, 0), Pt(3, 3), Pt(0, 3)]).unwrap(); // 🟨
-        assert_eq!(inner.crop_to_polygon(&frame).unwrap()[0].pts, inner.pts);
+        assert_eq!(inner.crop_to(&frame).unwrap()[0].pts, inner.pts);
 
         // ⬆️ y
         // ⬜⬜⬜⬜⬜
@@ -957,7 +1023,7 @@ mod tests {
         // ⬜🟧🟧🟧🟨
         // ⬜🟨🟨🟨🟨 ➡️ x
         assert_eq!(
-            inner.crop_to_polygon(&(&frame + Pt(1, 0))).unwrap()[0].pts,
+            inner.crop_to(&(&frame + Pt(1, 0))).unwrap()[0].pts,
             inner.pts
         );
 
@@ -968,7 +1034,7 @@ mod tests {
         // 🟨🟧🟧🟧⬜
         // ⬜⬜⬜⬜⬜ ➡ x
         assert_eq!(
-            inner.crop_to_polygon(&(&frame + Pt(0, 1))).unwrap()[0].pts,
+            inner.crop_to(&(&frame + Pt(0, 1))).unwrap()[0].pts,
             inner.pts
         );
 
@@ -979,7 +1045,7 @@ mod tests {
         // ⬜🟧🟧🟧🟨
         // ⬜⬜⬜⬜⬜ ➡ x
         assert_eq!(
-            inner.crop_to_polygon(&(&frame + Pt(1, 1))).unwrap()[0].pts,
+            inner.crop_to(&(&frame + Pt(1, 1))).unwrap()[0].pts,
             inner.pts
         );
     }
@@ -996,10 +1062,10 @@ mod tests {
         let frame = Polygon([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap(); // 🟨
 
         // inner /\ frame == inner
-        let crops = inner.crop_to_polygon(&frame).unwrap(); // 🟧
+        let crops = inner.crop_to(&frame).unwrap(); // 🟧
         assert_eq!(crops, vec![inner.clone()]);
         // frame /\ inner = inner
-        let crops = frame.crop_to_polygon(&inner).unwrap(); // 🟧
+        let crops = frame.crop_to(&inner).unwrap(); // 🟧
         assert_eq!(crops, vec![inner]);
     }
 
@@ -1015,10 +1081,10 @@ mod tests {
         let frame = Polygon([Pt(0, 0), Pt(3, 0), Pt(3, 3), Pt(0, 3)]).unwrap(); // 🟨
         let expected = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟧
 
-        let crops = inner.crop_to_polygon(&frame).unwrap();
+        let crops = inner.crop_to(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
 
-        let crops = frame.crop_to_polygon(&inner).unwrap();
+        let crops = frame.crop_to(&inner).unwrap();
         assert_eq!(crops, vec![expected]);
     }
 
@@ -1034,10 +1100,10 @@ mod tests {
         let frame = Polygon([Pt(0, 1), Pt(3, 1), Pt(3, 4), Pt(0, 4)]).unwrap(); // 🟨
         let expected = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟧
 
-        let crops = inner.crop_to_polygon(&frame).unwrap();
+        let crops = inner.crop_to(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
 
-        let crops = frame.crop_to_polygon(&inner).unwrap();
+        let crops = frame.crop_to(&inner).unwrap();
         assert_eq!(crops, vec![expected]);
     }
 
@@ -1081,10 +1147,10 @@ mod tests {
         ])
         .unwrap(); // 🟧
 
-        let crops = inner.crop_to_polygon(&frame).unwrap();
+        let crops = inner.crop_to(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
 
-        let crops = frame.crop_to_polygon(&inner).unwrap();
+        let crops = frame.crop_to(&inner).unwrap();
         assert_eq!(crops, vec![expected]);
     }
 
@@ -1113,9 +1179,9 @@ mod tests {
         .unwrap(); // 🟥
         let frame = Polygon([Pt(0, 1), Pt(5, 1), Pt(5, 4), Pt(0, 4)]).unwrap(); // 🟨
         let expected = inner.clone();
-        let crops = inner.crop_to_polygon(&frame).unwrap();
+        let crops = inner.crop_to(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
-        let crops = frame.crop_to_polygon(&inner).unwrap();
+        let crops = frame.crop_to(&inner).unwrap();
         assert_eq!(crops, vec![expected]);
     }
 
@@ -1144,9 +1210,9 @@ mod tests {
         .unwrap(); // 🟥
         let frame = Polygon([Pt(1, 1), Pt(4, 1), Pt(4, 4), Pt(1, 4)]).unwrap(); // 🟨
         let expected = inner.clone();
-        let crops = inner.crop_to_polygon(&frame).unwrap();
+        let crops = inner.crop_to(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
-        let crops = frame.crop_to_polygon(&inner).unwrap();
+        let crops = frame.crop_to(&inner).unwrap();
         assert_eq!(crops, vec![expected]);
     }
 
@@ -1175,7 +1241,7 @@ mod tests {
             Polygon([Pt(1, 1), Pt(2, 1), Pt(2, 3), Pt(1, 3)]).unwrap(),
             Polygon([Pt(3, 1), Pt(4, 1), Pt(4, 3), Pt(3, 3)]).unwrap(),
         ];
-        let crops = inner.crop_to_polygon(&frame).unwrap();
+        let crops = inner.crop_to(&frame).unwrap();
         assert_eq!(crops.len(), 2);
         assert_eq!(crops[0], expected[0]);
         assert_eq!(crops[1], expected[1]);
@@ -1306,7 +1372,7 @@ mod tests {
         .unwrap();
         let segment = Segment(Pt(0, 2), Pt(5, 2));
         assert_eq!(
-            frame.as_frame_to_segment(&segment).unwrap(),
+            segment.crop_to(&frame).unwrap(),
             vec![
                 Segment(Pt(0, 2), Pt(1, 2)),
                 Segment(Pt(2, 2), Pt(3, 2)),
@@ -1319,7 +1385,7 @@ mod tests {
     fn test_frame_to_segment_crop() {
         let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]).unwrap();
         assert_eq!(
-            frame.as_frame_to_segment(&Segment(Pt(0, 2), Pt(2, 0))),
+            Segment(Pt(0, 2), Pt(2, 0)).crop_to(&frame),
             Ok(vec![Segment(Pt(0.5, 1.5), Pt(1.5, 0.5))])
         );
     }
@@ -1327,23 +1393,20 @@ mod tests {
     fn test_frame_to_segment_crop_02() {
         let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]).unwrap();
         assert_eq!(
-            frame.as_frame_to_segment(&Segment(Pt(0, 0), Pt(2, 2))),
+            Segment(Pt(0, 0), Pt(2, 2)).crop_to(&frame),
             Ok(vec![Segment(Pt(0.5, 0.5), Pt(1.5, 1.5))])
         );
     }
     #[test]
     fn test_frame_to_segment_crop_empty() {
         let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]).unwrap();
-        assert_eq!(
-            frame.as_frame_to_segment(&Segment(Pt(0, 2), Pt(2, 2))),
-            Ok(vec![])
-        );
+        assert_eq!(Segment(Pt(0, 2), Pt(2, 2)).crop_to(&frame), Ok(vec![]));
     }
     #[test]
     fn test_frame_to_segment_crop_unchanged() {
         let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]).unwrap();
         assert_eq!(
-            frame.as_frame_to_segment(&Segment(Pt(0, 1), Pt(2, 1))),
+            Segment(Pt(0, 1), Pt(2, 1)).crop_to(&frame),
             Ok(vec![Segment(Pt(0, 1), Pt(2, 1))])
         );
     }

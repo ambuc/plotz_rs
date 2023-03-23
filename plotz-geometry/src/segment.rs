@@ -1,8 +1,11 @@
 //! A 2D segment.
 use crate::{
     bounded::Bounded,
+    crop::{CropToPolygonError, Croppable, PointLoc,},
     interpolate::interpolate_2d_checked,
+    interpolate,
     point::Pt,
+    polygon::Polygon,
     traits::{Mutable, YieldPoints, YieldPointsMut},
 };
 use float_cmp::approx_eq;
@@ -309,6 +312,64 @@ impl YieldPointsMut for Segment {
     }
 }
 impl Mutable for Segment {}
+
+impl Croppable for Segment {
+    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self>, CropToPolygonError>
+    where
+        Self: Sized,
+    {
+        let frame_segments = frame.to_segments();
+        let mut resultants: Vec<Segment> = vec![];
+        let mut curr_pt = self.i;
+        let mut curr_pen_down = !matches!(frame.contains_pt(&self.i)?, PointLoc::Outside);
+        loop {
+            if curr_pt == self.f {
+                break;
+            }
+
+            let mut isxns = frame_segments
+                .iter()
+                .filter_map(|f| self.intersects(f))
+                .filter_map(|isxn_outcome| match isxn_outcome {
+                    IntersectionOutcome::Yes(isxn) => Some(isxn),
+                    _ => None,
+                })
+                .collect::<Vec<Intersection>>();
+            isxns.sort_by(|i, j| i.percent_along_inner.cmp(&j.percent_along_inner));
+            let (_, vs) = isxns.into_iter().partition(|i| {
+                i.percent_along_inner.0
+                    <= interpolate::interpolate_2d_checked(self.i, self.f, curr_pt)
+                        .unwrap_or_else(|_| {
+                            panic!(
+                                "interpolate failed: a: {:?}, b: {:?}, i: {:?}",
+                                self.i, self.f, curr_pt,
+                            )
+                        })
+            });
+            isxns = vs;
+
+            match isxns.get(0) {
+                Some(intersection) => {
+                    let new_pt = interpolate::extrapolate_2d(
+                        self.i,
+                        self.f,
+                        intersection.percent_along_inner.0,
+                    );
+                    if !matches!(frame.contains_pt(&new_pt)?, PointLoc::Outside) && curr_pen_down {
+                        resultants.push(Segment(curr_pt, new_pt));
+                    }
+                    curr_pt = new_pt;
+                    curr_pen_down = !curr_pen_down;
+                }
+                None => {
+                    return Ok(resultants);
+                }
+            }
+        }
+
+        Ok(resultants)
+    }
+}
 
 #[cfg(test)]
 mod tests {
