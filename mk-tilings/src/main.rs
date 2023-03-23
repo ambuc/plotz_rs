@@ -41,17 +41,14 @@ fn main() {
     };
 
     // drain things not in frame
-    dos = dos
-        .into_iter()
-        .filter(|d_o| {
-            if let Some(yp) = d_o.yield_pts() {
-                yp.into_iter()
-                    .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLoc::Inside)))
-            } else {
-                true
-            }
-        })
-        .collect();
+    dos.retain(|d_o| {
+        if let Some(yp) = d_o.yield_pts() {
+            yp.into_iter()
+                .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLoc::Inside)))
+        } else {
+            true
+        }
+    });
 
     let draw_objs = DrawObjs::from_objs(dos).with_frame(frame);
 

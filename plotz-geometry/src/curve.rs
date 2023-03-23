@@ -15,6 +15,7 @@ pub struct CurveArc {
     pub radius: FloatOrd<f64>,
 }
 
+#[allow(clippy::upper_case_acronyms)]
 enum Quadrant {
     I,
     II,

@@ -16,7 +16,7 @@ pub trait YieldPointsMut {
 pub trait Mutable: YieldPointsMut {
     fn mutate(&mut self, f: impl Fn(&mut Pt)) -> bool {
         if let Some(yp) = self.yield_pts_mut() {
-            yp.for_each(|pt| f(pt));
+            yp.for_each(f);
             return true;
         }
         false

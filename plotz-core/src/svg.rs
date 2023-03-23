@@ -68,7 +68,7 @@ fn write_doi_to_context(
         }
         DrawObjInner::Group(dois) => {
             for doi in dois.iter_dois() {
-                write_doi_to_context(&doi, context).expect("write");
+                write_doi_to_context(doi, context).expect("write");
             }
         }
         DrawObjInner::CurveArc(arc) => {

@@ -13,6 +13,7 @@ use {
         shading_02::{shade_polygon, ShadeConfig},
     },
     rand::{prelude::SliceRandom, Rng},
+    std::f64::consts::*,
 };
 
 static DIM: f64 = 600.0;
@@ -48,7 +49,7 @@ impl Style {
                 3,
             ),
             (
-                Style::Nested(vec![0.9], *palette.choose(&mut rng).expect("color")),
+                Style::Nested(vec![0.9], palette.choose(&mut rng).expect("color")),
                 1,
             ),
             (Style::None, 1),
@@ -70,7 +71,7 @@ fn main() {
         .step_by(1)
         .map(|_| {
             let r: f64 = rng.gen_range(0.0..0.5);
-            let theta: f64 = rng.gen_range(0.0..6.28318531);
+            let theta: f64 = rng.gen_range(0.0..TAU);
 
             voronoice::Point {
                 x: r * theta.cos() + 0.5,

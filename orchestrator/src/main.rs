@@ -49,7 +49,7 @@ fn is_command_ok(c: &mut Command) -> Option<std::process::Output> {
                 }
                 Some(output)
             } else {
-                print_err(&std::str::from_utf8(&output.stderr).unwrap().to_string());
+                print_err(std::str::from_utf8(&output.stderr).unwrap());
                 None
             }
         }
@@ -128,7 +128,7 @@ fn parse_prediction(s: &str) -> Option<Duration> {
 
 fn do_layer(s: &str, special_name: Option<&str>) {
     println!();
-    let path: String = canonicalize(&s).unwrap().to_str().unwrap().to_string();
+    let path: String = canonicalize(s).unwrap().to_str().unwrap().to_string();
 
     let predicted_duration: Option<Duration> = if hits_yes(&format!(
         "Preview {}{}",

@@ -279,13 +279,12 @@ pub fn make() -> Vec<DrawObj> {
     for _ in 0..5 {
         let next_layer = all_tiles
             .iter()
-            .map(|tile: &Box<dyn Tile>| tile.expand())
-            .flatten()
+            .flat_map(|tile: &Box<dyn Tile>| tile.expand())
             .collect::<Vec<_>>();
         all_tiles = next_layer;
     }
 
-    let dos = all_tiles
+    all_tiles
         .into_iter()
         .flat_map(|tile| {
             let color = tile.color();
@@ -302,12 +301,10 @@ pub fn make() -> Vec<DrawObj> {
             let segments = shade_polygon(&config, &p).unwrap();
 
             // std::iter::empty() //
-            std::iter::once(DrawObj::new(p).with_color(&color)).chain([DrawObj::new(Group::new(
-                segments.into_iter().map(|s| DrawObjInner::Segment(s)),
+            std::iter::once(DrawObj::new(p).with_color(color)).chain([DrawObj::new(Group::new(
+                segments.into_iter().map(DrawObjInner::Segment),
             ))
             .with_color(color)])
         })
-        .collect();
-
-    dos
+        .collect()
 }

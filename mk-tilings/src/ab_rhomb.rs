@@ -135,8 +135,7 @@ pub fn make() -> Vec<DrawObj> {
     for _ in 0..4 {
         let next_layer = all_tiles
             .iter()
-            .map(|tile: &Box<dyn Tile>| tile.expand())
-            .flatten()
+            .flat_map(|tile: &Box<dyn Tile>| tile.expand())
             .collect::<Vec<_>>();
         all_tiles = next_layer;
     }

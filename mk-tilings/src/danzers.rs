@@ -212,7 +212,7 @@ pub fn make() -> Vec<DrawObj> {
 
     for (idx, t) in [t0, t1, t2].iter().enumerate() {
         for (jdx, expansion_depth) in (0..3).enumerate() {
-            let mut t_copy = t.clone();
+            let mut t_copy = *t;
 
             // centerings
             t_copy.pts.iter_mut().for_each(|pt| {
@@ -233,14 +233,10 @@ pub fn make() -> Vec<DrawObj> {
                 }
             });
 
-            let mut tiles = vec![];
-            tiles.push(t_copy.clone());
+            let mut tiles = vec![t_copy];
 
             for _ in 0..expansion_depth {
-                let next_layer = tiles
-                    .iter()
-                    .flat_map(|tile| expand_tile(&tile))
-                    .collect::<Vec<_>>();
+                let next_layer = tiles.iter().flat_map(expand_tile).collect::<Vec<_>>();
                 tiles = next_layer;
             }
 
@@ -263,7 +259,7 @@ pub fn make() -> Vec<DrawObj> {
             let segments = shade_polygon(&config, &p).unwrap();
 
             let mut ret = vec![];
-            ret.push(DrawObj::new(p.clone()));
+            ret.push(DrawObj::new(p));
             ret.extend(
                 segments
                     .into_iter()
