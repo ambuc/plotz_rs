@@ -1,7 +1,7 @@
 #![allow(unused)]
 #![allow(missing_docs)]
 
-use crate::interpolate::interpolate_2d_checked;
+use crate::{interpolate::interpolate_2d_checked, segment::Intersection};
 
 use {
     crate::{
@@ -135,22 +135,40 @@ impl std::ops::Add<Pt> for CurveArc {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 enum SegmentLoc {
     I,
     M(f64), // percentage of the way along
     F,
 }
+impl SegmentLoc {
+    fn to_f(&self) -> f64 {
+        match self {
+            SegmentLoc::I => 0.0,
+            SegmentLoc::M(f) => *f,
+            SegmentLoc::F => 1.0,
+        }
+    }
+}
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone, PartialOrd)]
 enum CurveLoc {
     I,
     M(f64), // percentage of the way along
     F,
 }
+impl CurveLoc {
+    fn to_f(&self) -> f64 {
+        match self {
+            CurveLoc::I => 0.0,
+            CurveLoc::M(f) => *f,
+            CurveLoc::F => 1.0,
+        }
+    }
+}
 
-#[derive(Debug, PartialEq)]
-struct PtLoc(SegmentLoc, CurveLoc);
+#[derive(Debug, PartialEq, Copy, Clone)]
+struct PtLoc(Pt, SegmentLoc, CurveLoc);
 
 #[derive(Debug, PartialEq)]
 enum IntersectionResult {
@@ -164,16 +182,15 @@ fn intersections_of_line_and_curvearc(
     segment: &Segment,
     curve_arc: &CurveArc,
 ) -> IntersectionResult {
+    let (x_0, y_0) = (curve_arc.ctr.x.0, curve_arc.ctr.y.0);
+    let (x_1, y_1) = (segment.i.x.0, segment.i.y.0);
+    let (x_2, y_2) = (segment.f.x.0, segment.f.y.0);
+    let r = curve_arc.radius.0;
+
     // d is distance to line. (see (14) in
     // https://mathworld.wolfram.com/Point-LineDistance2-Dimensional.html)
-    let x0 = curve_arc.ctr.x.0;
-    let x1 = segment.i.x.0;
-    let x2 = segment.f.x.0;
-    let y0 = curve_arc.ctr.y.0;
-    let y1 = segment.i.y.0;
-    let y2 = segment.f.y.0;
-    let d: f64 = ((x2 - x1) * (y1 - y0) - (x1 - x0) * (y2 - y1)).abs()
-        / ((x2 - x1).powi(2) + (y2 - y1).powi(2)).sqrt();
+    let d: f64 = ((x_2 - x_1) * (y_1 - y_0) - (x_1 - x_0) * (y_2 - y_1)).abs()
+        / ((x_2 - x_1).powi(2) + (y_2 - y_1).powi(2)).sqrt();
 
     match FloatOrd(d).cmp(&curve_arc.radius) {
         Ordering::Greater => IntersectionResult::None,
@@ -207,26 +224,14 @@ fn intersections_of_line_and_curvearc(
                 }
             };
 
-            IntersectionResult::One(PtLoc(segment_loc, curve_loc))
+            IntersectionResult::One(PtLoc(isxn, segment_loc, curve_loc))
         }
         Ordering::Less => {
             // possibly one intersection, if the curve crosses the line.
             // or, possibly two intersections.
 
-            // does the curve (ci->cf) cross the line (si->sf)?
-            // if so, then si->sf x si->ci will have a different sign from si->sf x si->cf.
-            if segment.cross_z(&Segment(segment.i, curve_arc.pt_i()))
-                * segment.cross_z(&Segment(segment.i, curve_arc.pt_f()))
-                < 0.0
-            {
-                let r = curve_arc.radius.0;
-                let x_0 = curve_arc.ctr.x.0;
-                let x_1 = segment.i.x.0;
-                let x_2 = segment.f.x.0;
-                let y_0 = curve_arc.ctr.y.0;
-                let y_1 = segment.i.y.0;
-                let y_2 = segment.f.y.0;
-
+            // calculate two possible intersections.
+            let (isxn_1, isxn_2) = {
                 // https://math.stackexchange.com/questions/228841/how-do-i-calculate-the-intersections-of-a-straight-line-and-a-circle
                 //
                 // here's how we do that: two equations:
@@ -270,65 +275,70 @@ fn intersections_of_line_and_curvearc(
                     Pt(x, y)
                 };
 
-                // here pac == percent along curve, and pas == percent along segment.
+                (isxn_1, isxn_2)
+            };
 
-                let pac1 = abp(&curve_arc.ctr, &isxn_1, &curve_arc.pt_i())
-                    / abp(&curve_arc.ctr, &curve_arc.pt_f(), &curve_arc.pt_i());
-                let pac2 = abp(&curve_arc.ctr, &isxn_2, &curve_arc.pt_i())
-                    / abp(&curve_arc.ctr, &curve_arc.pt_f(), &curve_arc.pt_i());
+            // both good options! But only one will have an segment and
+            // curve interpolation value of between 0 and 1.
 
-                // both good options! But only one will have an segment and
-                // curve interpolation value of between 0 and 1.
+            // here pac == percent along curve, and pas == percent along segment.
 
-                let (isxn, pas, pac) = match (
-                    interpolate_2d_checked(segment.i, segment.f, isxn_1),
-                    interpolate_2d_checked(segment.i, segment.f, isxn_2),
-                ) {
-                    (Ok(pas1), Ok(pas2)) => {
-                        match (
-                            FloatOrd(pac1).cmp(&FloatOrd(0.0)),
-                            FloatOrd(pac2).cmp(&FloatOrd(0.0)),
-                        ) {
-                            (Ordering::Less, Ordering::Equal | Ordering::Greater) => {
-                                (isxn_2, pas2, pac2)
-                            }
-                            (Ordering::Equal | Ordering::Greater, Ordering::Less) => {
-                                (isxn_1, pas1, pac2)
-                            }
-                            _ => panic!("cannot have two valid intersection values"),
-                        }
-                    }
-                    (Ok(pas1), Err(_)) => (isxn_1, pas1, pac1),
-                    (Err(_), Ok(pas2)) => (isxn_2, pas2, pac2),
-                    (Err(_), Err(_)) => panic!("cannot have zero valid intersection values."),
-                };
+            let full_curve_angle = curve_arc.angle_2.0 - curve_arc.angle_1.0;
+            // abp(&curve_arc.ctr, &curve_arc.pt_f(), &curve_arc.pt_i());
 
-                let segment_loc = {
-                    if approx_eq!(f64, pas, 0.0) {
-                        SegmentLoc::I
-                    } else if approx_eq!(f64, pas, 1.0) {
-                        SegmentLoc::F
-                    } else {
-                        SegmentLoc::M(pas)
-                    }
-                };
+            /// percent_along_segment to option<segment_location>, if valid
+            fn pas_to_sl<E>(pas_result: Result<f64, E>) -> Option<SegmentLoc> {
+                match pas_result {
+                    Ok(f) if approx_eq!(f64, f, 0.0) => Some(SegmentLoc::I),
+                    Ok(f) if approx_eq!(f64, f, 1.0) => Some(SegmentLoc::F),
+                    Ok(f) if f < 0.0 || f > 1.0 || f.is_nan() => None,
+                    Ok(f) => Some(SegmentLoc::M(f)),
+                    Err(_) => None,
+                }
+            }
 
-                let curve_loc = {
-                    let pac = abp(&curve_arc.ctr, &isxn, &curve_arc.pt_i())
-                        / abp(&curve_arc.ctr, &curve_arc.pt_f(), &curve_arc.pt_i());
+            // percent_along_curve to option<curve_location>, if valid
+            fn pac_to_cl(pac: f64) -> Option<CurveLoc> {
+                match pac {
+                    f if approx_eq!(f64, f, 0.0) => Some(CurveLoc::I),
+                    f if approx_eq!(f64, f, 1.0) => Some(CurveLoc::F),
+                    f if f < 0.0 || f > 1.0 || f.is_nan() => None,
+                    f => Some(CurveLoc::M(f)),
+                }
+            }
 
-                    if approx_eq!(f64, pac, 0.0) {
-                        CurveLoc::I
-                    } else if approx_eq!(f64, pac, 1.0) {
-                        CurveLoc::F
-                    } else {
-                        CurveLoc::M(pac)
-                    }
-                };
+            let pac1 = {
+                let mut partial_angle = abp(&curve_arc.ctr, &curve_arc.pt_i(), &isxn_1);
+                partial_angle += TAU;
+                partial_angle %= TAU;
+                let percent_along_curve = partial_angle / full_curve_angle;
+                percent_along_curve
+            };
 
-                return IntersectionResult::One(PtLoc(segment_loc, curve_loc));
-            } else {
-                IntersectionResult::None
+            let pac2 = {
+                let mut partial_angle = abp(&curve_arc.ctr, &curve_arc.pt_i(), &isxn_2);
+                partial_angle += TAU;
+                partial_angle %= TAU;
+                let percent_along_curve = partial_angle / full_curve_angle;
+                percent_along_curve
+            };
+
+            match (
+                pas_to_sl(interpolate_2d_checked(segment.i, segment.f, isxn_1)), // sl1
+                pac_to_cl(pac1),                                                 // cl1
+                pas_to_sl(interpolate_2d_checked(segment.i, segment.f, isxn_2)), // sl2
+                pac_to_cl(pac2),                                                 // cl2
+            ) {
+                (Some(sl1), Some(cl1), Some(sl2), Some(cl2)) => {
+                    IntersectionResult::Two(PtLoc(isxn_1, sl1, cl1), PtLoc(isxn_2, sl2, cl2))
+                }
+                (Some(sl1), Some(cl1), _, _) => IntersectionResult::One(PtLoc(isxn_1, sl1, cl1)),
+                (_, _, Some(sl2), Some(cl2)) => IntersectionResult::One(PtLoc(isxn_2, sl2, cl2)),
+                a => {
+                    // is this right?
+                    dbg!(a);
+                    IntersectionResult::None
+                }
             }
         }
     }
@@ -343,7 +353,77 @@ impl Croppable for CurveArc {
     where
         Self: Sized,
     {
-        Ok(vec![])
+        dbg!(&self);
+
+        let mut isxns: Vec<PtLoc> = vec![];
+        for frame_segment in frame.to_segments() {
+            match intersections_of_line_and_curvearc(&frame_segment, self) {
+                IntersectionResult::None => {
+                    // do nothing
+                }
+                IntersectionResult::One(pl) => isxns.push(pl),
+                IntersectionResult::Two(ref pl1 @ PtLoc(_, _, cl1), ref pl2 @ PtLoc(_, _, cl2)) => {
+                    // sort by cl
+                    if cl1 < cl2 {
+                        isxns.push(*pl1);
+                        isxns.push(*pl2);
+                    } else {
+                        isxns.push(*pl2);
+                        isxns.push(*pl1);
+                    }
+                }
+            }
+        }
+
+        // either the curve is totally within and has no overlaps, or is totally
+        // without and has no overlaps.
+        if isxns.is_empty()
+            && !matches!(
+                frame.contains_pt(&self.pt_i()).expect("contains pt"),
+                PointLoc::Outside
+            )
+            && !matches!(
+                frame.contains_pt(&self.pt_f()).expect("contains pt"),
+                PointLoc::Outside
+            )
+        {
+            return Ok(vec![*self]);
+        }
+
+        let mut r = vec![];
+
+        while !isxns.is_empty() {
+            if let Some(ref plb @ PtLoc(_, _, ref cl_b)) = isxns.pop() {
+                if let Some(ref pla @ PtLoc(_, _, ref cl_a)) = isxns.pop() {
+                    let angle_i = self.angle_1.0 + (self.angle_2.0 - self.angle_1.0) * cl_a.to_f();
+                    let mut angle_f =
+                        self.angle_1.0 + (self.angle_2.0 - self.angle_1.0) * cl_b.to_f();
+                    while angle_f < angle_i {
+                        angle_f += TAU;
+                    }
+
+                    let angle_m = (angle_i + angle_f) / 2.0;
+
+                    if matches!(
+                        frame
+                            .contains_pt(&(self.ctr + PolarPt(self.radius.0, angle_m)))
+                            .expect("contains pt"),
+                        PointLoc::Outside
+                    ) {
+                        println!("swap");
+                        isxns.insert(0, *plb);
+                        isxns.push(*pla);
+                    } else {
+                        println!("goahead");
+                        let sweep = angle_i..angle_f;
+
+                        r.push(CurveArc(self.ctr, sweep, self.radius.0))
+                    }
+                }
+            }
+        }
+
+        Ok(r)
     }
 }
 
@@ -424,7 +504,7 @@ mod test {
         ] {
             let (sl, cl) = assert_matches!(
                 intersections_of_line_and_curvearc(&segment, &curve_arc),
-                IntersectionResult::One(PtLoc(sl, cl)) => (sl, cl)
+                IntersectionResult::One(PtLoc(_, sl, cl)) => (sl, cl)
             );
             assert_eq!(sl, expected_segment_loc);
             assert_eq!(cl, expected_curve_loc);
@@ -437,34 +517,34 @@ mod test {
 
         let curve_arc = CurveArc(Pt(1.0, 0.0), FRAC_PI_2..3.0 * FRAC_PI_2, 0.5);
 
-        let (sl, cl) = assert_matches!(
+        let (pl, sl, cl) = assert_matches!(
             intersections_of_line_and_curvearc(&segment, &curve_arc),
-            IntersectionResult::One(PtLoc(sl, cl)) => (sl, cl)
+            IntersectionResult::One(PtLoc(pl, sl, cl)) => (pl, sl, cl)
         );
         assert_eq!(sl, SegmentLoc::M(0.25));
         assert_eq!(cl, CurveLoc::M(0.5));
+        assert_eq!(pl, Pt(0.50, 0.0));
     }
 
     #[test]
     fn test_curve_two_intersections() {
-        let segment = Segment(Pt(0.0, 0.0), Pt(2.0, 0.0));
-        for (
-            curve_arc,
-            (expected_segment_loc_1, expected_curve_loc_1),
-            (expected_segment_loc_2, expected_curve_loc_2),
-        ) in [
-            // foo
+        let segment = Segment(Pt(0.0, 0.0), Pt(3.0, 0.0));
 
+        for (curve_arc, e_pl1, e_pl2) in [
+            // segment m curve i, segment m curve f
+            (
+                CurveArc(Pt(1.5, 0.0), 0.0..PI, 0.5),
+                PtLoc(Pt(2.0, 0.0), SegmentLoc::M(2.0 / 3.0), CurveLoc::I),
+                PtLoc(Pt(1.0, 0.0), SegmentLoc::M(1.0 / 3.0), CurveLoc::F),
+            ),
+            // not sure if correct. TODO(write other tests.)
         ] {
-            let ((sl1, cl1), (sl2, cl2)) = assert_matches!(
+            let (pl1, pl2) = assert_matches!(
                 intersections_of_line_and_curvearc(&segment, &curve_arc),
-                IntersectionResult::Two(PtLoc(sl1, cl1), PtLoc(sl2, cl2)) => ((sl1, cl1), (sl2, cl2))
-
+                IntersectionResult::Two(pl1, pl2) => (pl1, pl2)
             );
-            assert_eq!(sl1, expected_segment_loc_1);
-            assert_eq!(cl1, expected_curve_loc_1);
-            assert_eq!(sl2, expected_segment_loc_2);
-            assert_eq!(cl2, expected_curve_loc_2);
+            assert_eq!(pl1, e_pl1);
+            assert_eq!(pl2, e_pl2);
         }
     }
 }

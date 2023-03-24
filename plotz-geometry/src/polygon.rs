@@ -1,11 +1,9 @@
 //! A 2D polygon (or multi&line).
 
-use crate::crop::Croppable;
-
 use {
     crate::{
         bounded::Bounded,
-        crop::{ContainsPointError, CropToPolygonError, PointLoc},
+        crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
         interpolate,
         point::Pt,
         segment::{Contains, Intersection, IntersectionOutcome, Segment},
@@ -590,10 +588,16 @@ impl Croppable for Polygon {
 pub fn abp(o: &Pt, i: &Pt, j: &Pt) -> f64 {
     let a: Pt = *i - *o;
     let b: Pt = *j - *o;
-    f64::atan2(
+    let angle = f64::atan2(
         /*det=*/ a.x.0 * b.y.0 - a.y.0 * b.x.0,
         /*dot=*/ a.x.0 * b.x.0 + a.y.0 * b.y.0,
-    )
+    );
+
+    if approx_eq!(f64, angle, 0.0) {
+        0.0
+    } else {
+        angle
+    }
 }
 
 /// An add operation between a polygon and a point. This can be seen as

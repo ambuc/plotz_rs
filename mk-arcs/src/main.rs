@@ -35,15 +35,15 @@ fn main() {
 
     let mut dos = vec![];
 
-    for i in 1..100 {
+    for i in 1..13 {
         let i: f64 = i as f64;
 
         let ctr = frame_ctr;
 
-        let angle_1 = 0.0 + 0.3 * i;
-        let angle_2 = 0.5 * PI + 0.4 * i;
+        let angle_1 = 0.0;
+        let angle_2 = 2.0 * PI;
 
-        let radius = 1.0 + 10.0 * i;
+        let radius = 150.0 + 10.0 * i;
 
         let ca = CurveArc(ctr, angle_1..angle_2, radius);
 
