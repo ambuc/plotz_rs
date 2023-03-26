@@ -66,7 +66,7 @@ pub fn shade_polygon(
 
 #[cfg(test)]
 mod tests {
-    use crate::{polygon::Rect, crop::PointLoc};
+    use crate::{crop::PointLoc, polygon::Rect};
     use float_cmp::approx_eq;
 
     use super::*;
