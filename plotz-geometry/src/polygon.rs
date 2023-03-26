@@ -126,6 +126,12 @@ pub fn Polygon(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, PolygonConstr
     })
 }
 
+/// Convenience constructor for rectangles.
+#[allow(non_snake_case)]
+pub fn Rect(tl: Pt, (w, h): (f64, f64)) -> Result<Polygon, PolygonConstructorError> {
+    Polygon([tl, tl + Pt(w, 0.0), tl + Pt(w, h), tl + Pt(0.0, h)])
+}
+
 /// Whether a curve is positively or negatively oriented (whether its points are
 /// listed in clockwise or counter-clockwise order).
 #[derive(Debug, PartialEq, Eq)]
@@ -955,7 +961,7 @@ mod tests {
         assert_eq!(
             Multiline([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)])
                 .unwrap()
-                .crop_to(&Polygon([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
+                .crop_to(&Rect(Pt(0., 0.), (4., 4.)).unwrap())
                 .unwrap_err(),
             CropToPolygonError::ThisPolygonNotClosed
         );
@@ -964,7 +970,7 @@ mod tests {
     #[test]
     fn test_crop_to_polygon_that_not_closed() {
         assert_eq!(
-            Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)])
+            Rect(Pt(1., 1.), (2., 2.))
                 .unwrap()
                 .crop_to(&Multiline([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
                 .unwrap_err(),

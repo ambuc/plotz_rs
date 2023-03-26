@@ -431,7 +431,10 @@ impl Croppable for CurveArc {
 mod test {
     use {
         super::*,
-        crate::{polygon::Polygon, segment::Segment},
+        crate::{
+            polygon::{Polygon, Rect},
+            segment::Segment,
+        },
         assert_matches::assert_matches,
         std::f64::consts::*,
         test_case::test_case,
@@ -564,7 +567,7 @@ mod test {
     }
 
     #[test_case(
-        Polygon([Pt(0.0, 0.0), Pt(2.0, 0.0), Pt(2.0, 2.0), Pt(0.0, 2.0)]).unwrap(),
+        Rect(Pt(0.0, 0.0), (2.0, 2.0)).unwrap(),
         CurveArc(Pt(2.0, 0.0), 0.0..3.0 * FRAC_PI_2, 1.0),
         vec![
             CurveArc(Pt(2.0, 0.0), FRAC_PI_2..PI, 1.0)
@@ -572,7 +575,7 @@ mod test {
         "two intersections, one resultant"
     )]
     #[test_case(
-        Polygon([Pt(0.0, 0.0), Pt(2.0, 0.0), Pt(2.0, 2.0), Pt(0.0, 2.0)]).unwrap(),
+        Rect(Pt(0.0, 0.0), (2.0, 2.0)).unwrap(),
         CurveArc(Pt(1.0, 1.0), 0.0..TAU, 0.5),
         vec![
             CurveArc(Pt(1.0, 1.0), 0.0..TAU, 0.5)
@@ -580,7 +583,7 @@ mod test {
         "no intersections"
     )]
     #[test_case(
-        Polygon([Pt(0.0, 0.0), Pt(2.0, 0.0), Pt(2.0, 2.0), Pt(0.0, 2.0)]).unwrap(),
+        Rect(Pt(0.0, 0.0), (2.0, 2.0)).unwrap(),
         CurveArc(Pt(1.0, 1.0), 0.0..TAU, 1.0),
         vec![
             CurveArc(Pt(1.0, 1.0), 0.0..TAU, 1.0)
@@ -588,7 +591,7 @@ mod test {
         "four intersections, all tangent"
     )]
     #[test_case(
-        Polygon([Pt(100.00, 100.00), Pt(100.00, 600.00), Pt(750.00, 600.00), Pt(750.00, 100.00)]).unwrap(),
+        Rect(Pt(100.0, 100.0), (650.0, 500.0)).unwrap(),
         CurveArc(Pt(425.0, 350.0), 0.0..TAU, 250.0),
         vec![
             CurveArc(Pt(425.0, 350.0), 0.0..TAU, 250.0)
@@ -596,7 +599,7 @@ mod test {
         "four intersections, all tangent, v2"
     )]
     #[test_case(
-        Polygon([ Pt(100.00, 100.00), Pt(100.00, 600.00), Pt(750.00, 600.00), Pt(750.00, 100.00), ]) .unwrap(),
+        Rect(Pt(100.0, 100.0), (650.0, 500.0)).unwrap(),
         CurveArc(Pt(425.0, 350.0), 0.0..TAU, 330.0),
         vec![
             // nothing

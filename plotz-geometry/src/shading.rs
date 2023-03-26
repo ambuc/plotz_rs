@@ -66,7 +66,7 @@ pub fn shade_polygon(
 
 #[cfg(test)]
 mod tests {
-    use crate::crop::PointLoc;
+    use crate::{polygon::Rect, crop::PointLoc};
     use float_cmp::approx_eq;
 
     use super::*;
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn test_shade_square_gap_1_0_slope_1_0() {
-        let frame = Polygon([Pt(0, 0), Pt(1, 0), Pt(1, 1), Pt(0, 1)]).unwrap();
+        let frame = Rect(Pt(0., 0.), (1., 1.)).unwrap();
 
         // +-----+-----/
         // | .   | . / |
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn test_shade_square_gap_0_5_slope_1_0() {
-        let frame = Polygon([Pt(0, 0), Pt(1, 0), Pt(1, 1), Pt(0, 1)]).unwrap();
+        let frame = Rect(Pt(0., 0.), (1., 1.)).unwrap();
 
         // +-----/-----/
         // | . / | . / |
@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn test_shade_square_gap_0_5_slope_0_5() {
-        let frame = Polygon([Pt(0, 0), Pt(1, 0), Pt(1, 1), Pt(0, 1)]).unwrap();
+        let frame = Rect(Pt(0., 0.), (1., 1.)).unwrap();
 
         // +-----/-----/
         // | . / | . / |
