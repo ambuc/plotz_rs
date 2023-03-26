@@ -325,13 +325,10 @@ impl Croppable for Segment {
         let mut curr_pt = self.i;
         let mut curr_pen_down = !matches!(frame.contains_pt(&self.i)?, PointLoc::Outside);
 
-        match (frame.contains_pt(&self.i)?, frame.contains_pt(&self.f)?) {
-            (PointLoc::Inside, PointLoc::Inside) => {
-                resultants.push(*self);
-            }
-            _ => {
-                // continue
-            }
+        if let (PointLoc::Inside, PointLoc::Inside) =
+            (frame.contains_pt(&self.i)?, frame.contains_pt(&self.f)?)
+        {
+            resultants.push(*self);
         }
 
         loop {

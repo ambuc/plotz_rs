@@ -35,7 +35,7 @@ fn main() {
 
     let mut dos = vec![];
 
-    for i in 1..13 {
+    for i in 1..19 {
         let i: f64 = i as f64;
 
         let ctr = frame_ctr;
