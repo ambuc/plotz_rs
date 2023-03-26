@@ -7,7 +7,7 @@ use {
     argh::FromArgs,
     plotz_color::{take_random_colors, ColorRGB},
     plotz_core::{
-        draw_obj::DrawObj, draw_obj_inner::DrawObjInner, canvas::Canvas, frame::make_frame,
+        canvas::Canvas, draw_obj::DrawObj, draw_obj_inner::DrawObjInner, frame::make_frame,
         svg::Size,
     },
     plotz_geometry::{
@@ -274,22 +274,19 @@ fn main() {
 
     let scale = image_width / 2.0 / (grid_cardinality as f64);
 
-    draw_objs
-        .dos
-        .iter_mut()
-        .for_each(|d_o| match &mut d_o.obj {
-            DrawObjInner::Polygon(p) => {
-                *p *= scale;
-                *p += Pt(margin, margin);
-            }
-            DrawObjInner::Segment(s) => {
-                *s *= scale;
-                *s += Pt(margin, margin);
-            }
-            _ => {
-                unimplemented!()
-            }
-        });
+    draw_objs.dos.iter_mut().for_each(|d_o| match &mut d_o.obj {
+        DrawObjInner::Polygon(p) => {
+            *p *= scale;
+            *p += Pt(margin, margin);
+        }
+        DrawObjInner::Segment(s) => {
+            *s *= scale;
+            *s += Pt(margin, margin);
+        }
+        _ => {
+            unimplemented!()
+        }
+    });
 
     let () = draw_objs
         .write_to_svg(

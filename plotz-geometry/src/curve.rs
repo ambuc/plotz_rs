@@ -401,25 +401,23 @@ impl Croppable for CurveArc {
 
         let mut r = vec![];
 
-        for (a1, a2) in isxns_angles.iter().zip(
-            isxns_angles
-                .iter()
-                .map(|x| FloatOrd(x.0 + TAU))
-                .cycle()
-                .skip(1),
-        ) {
-            // THIS IS WRONG !!!!!
-            // THIS IS WRONG !!!!!
-            // THIS IS WRONG !!!!!
-            // THIS IS WRONG !!!!!
-            // THIS IS WRONG !!!!!
-            // THIS IS WRONG !!!!!
-            let midpt = self.ctr + PolarPt(self.radius.0, (a1.0 + a2.0) / 2.0);
-            match frame.contains_pt(&midpt).expect("contains pt") {
+        for (a1, a2) in isxns_angles
+            .iter()
+            .zip(isxns_angles.iter().cycle().skip(1))
+            .map(|(a1, a2)| {
+                if a1 > a2 {
+                    (*a1, FloatOrd(a2.0 + TAU))
+                } else {
+                    (*a1, *a2)
+                }
+            })
+        {
+            let mdpt = self.ctr + PolarPt(self.radius.0, (a1.0 + a2.0) / 2.0);
+            match frame.contains_pt(&mdpt).expect("contains pt") {
                 PointLoc::Outside => {
                     // do nothing
                 }
-                _ => {
+                a => {
                     r.push(CurveArc(self.ctr, a1.0..a2.0, self.radius.0));
                 }
             }
@@ -436,6 +434,7 @@ mod test {
         crate::{polygon::Polygon, segment::Segment},
         assert_matches::assert_matches,
         std::f64::consts::*,
+        test_case::test_case,
     };
 
     #[test]
@@ -564,55 +563,47 @@ mod test {
         }
     }
 
-    #[test]
-    fn test_curvearc_crop() {
-        for (rect, ca, e_cas) in [
-            (
-                Polygon([Pt(0.0, 0.0), Pt(2.0, 0.0), Pt(2.0, 2.0), Pt(0.0, 2.0)]).unwrap(),
-                CurveArc(Pt(2.0, 0.0), 0.0..3.0 * FRAC_PI_2, 1.0),
-                vec![CurveArc(Pt(2.0, 0.0), FRAC_PI_2..PI, 1.0)],
-            ),
-            // (
-            //     // no intersections
-            //     Polygon([Pt(0.0, 0.0), Pt(2.0, 0.0), Pt(2.0, 2.0), Pt(0.0, 2.0)]).unwrap(),
-            //     CurveArc(Pt(1.0, 1.0), 0.0..TAU, 0.5),
-            //     vec![CurveArc(Pt(1.0, 1.0), 0.0..TAU, 0.5)],
-            // ),
-            // (
-            //     // four intersections but nothing serious
-            //     Polygon([Pt(0.0, 0.0), Pt(2.0, 0.0), Pt(2.0, 2.0), Pt(0.0, 2.0)]).unwrap(),
-            //     CurveArc(Pt(1.0, 1.0), 0.0..TAU, 1.0),
-            //     vec![CurveArc(Pt(1.0, 1.0), 0.0..TAU, 1.0)],
-            // ),
-            // (
-            //     // the same as above, four intersections but nothing serious.
-            //     Polygon([
-            //         Pt(100.00, 100.00),
-            //         Pt(100.00, 600.00),
-            //         Pt(750.00, 600.00),
-            //         Pt(750.00, 100.00),
-            //     ])
-            //     .unwrap(),
-            //     CurveArc(Pt(425.0, 350.0), 0.0..TAU, 250.0),
-            //     vec![CurveArc(Pt(425.0, 350.0), 0.0..TAU, 250.0)],
-            // ),
-            // // hard case, splits into four (?)
-            // (
-            //     Polygon([
-            //         Pt(100.00, 100.00),
-            //         Pt(100.00, 600.00),
-            //         Pt(750.00, 600.00),
-            //         Pt(750.00, 100.00),
-            //     ])
-            //     .unwrap(),
-            //     CurveArc(Pt(425.0, 350.0), 0.0..TAU, 330.0),
-            //     vec![
-            //         // nothing
-            //     ],
-            // ),
-        ] {
-            let cas = ca.crop_to(&rect).unwrap();
-            assert_eq!(cas, e_cas);
-        }
+    #[test_case(
+        Polygon([Pt(0.0, 0.0), Pt(2.0, 0.0), Pt(2.0, 2.0), Pt(0.0, 2.0)]).unwrap(),
+        CurveArc(Pt(2.0, 0.0), 0.0..3.0 * FRAC_PI_2, 1.0),
+        vec![
+            CurveArc(Pt(2.0, 0.0), FRAC_PI_2..PI, 1.0)
+        ];
+        "two intersections, one resultant"
+    )]
+    #[test_case(
+        Polygon([Pt(0.0, 0.0), Pt(2.0, 0.0), Pt(2.0, 2.0), Pt(0.0, 2.0)]).unwrap(),
+        CurveArc(Pt(1.0, 1.0), 0.0..TAU, 0.5),
+        vec![
+            CurveArc(Pt(1.0, 1.0), 0.0..TAU, 0.5)
+        ];
+        "no intersections"
+    )]
+    #[test_case(
+        Polygon([Pt(0.0, 0.0), Pt(2.0, 0.0), Pt(2.0, 2.0), Pt(0.0, 2.0)]).unwrap(),
+        CurveArc(Pt(1.0, 1.0), 0.0..TAU, 1.0),
+        vec![
+            CurveArc(Pt(1.0, 1.0), 0.0..TAU, 1.0)
+        ];
+        "four intersections, all tangent"
+    )]
+    #[test_case(
+        Polygon([Pt(100.00, 100.00), Pt(100.00, 600.00), Pt(750.00, 600.00), Pt(750.00, 100.00)]).unwrap(),
+        CurveArc(Pt(425.0, 350.0), 0.0..TAU, 250.0),
+        vec![
+            CurveArc(Pt(425.0, 350.0), 0.0..TAU, 250.0)
+        ];
+        "four intersections, all tangent, v2"
+    )]
+    #[test_case(
+        Polygon([ Pt(100.00, 100.00), Pt(100.00, 600.00), Pt(750.00, 600.00), Pt(750.00, 100.00), ]) .unwrap(),
+        CurveArc(Pt(425.0, 350.0), 0.0..TAU, 330.0),
+        vec![
+            // nothing
+        ];
+        "hard case"
+    )]
+    fn test_curvearc_crop(rect: Polygon, curvearc: CurveArc, expected_curvearcs: Vec<CurveArc>) {
+        assert_eq!(curvearc.crop_to(&rect).unwrap(), expected_curvearcs);
     }
 }

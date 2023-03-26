@@ -2,8 +2,8 @@
 
 use crate::{
     bounded::Bounded,
-    point::Pt,
     crop::Croppable,
+    point::Pt,
     polygon::{Polygon, PolygonKind},
     segment::Segment,
     shading::ShadePolygonError,
