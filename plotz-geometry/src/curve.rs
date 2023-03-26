@@ -1,6 +1,8 @@
 #![allow(unused)]
 #![allow(missing_docs)]
 
+use std::f64::EPSILON;
+
 use crate::{interpolate::interpolate_2d_checked, segment::Intersection};
 
 use {
@@ -244,10 +246,9 @@ fn intersections_of_line_and_curvearc(
                 // . where
                 // . . L_A = y_2 - y_1
                 // . . L_B = x_1 - x_2
-                // . . L_C = x_2 * y_1 - x_1 * y^2
+                // . . L_C = x_2 * y_1 - x_1 * y_2
                 let l_a = y_2 - y_1;
                 let l_b = x_1 - x_2;
-
                 let l_c = x_2 * y_1 - x_1 * y_2;
 
                 // we can rearrange this into a big quadratic eqn:
@@ -275,7 +276,20 @@ fn intersections_of_line_and_curvearc(
                         let x = (-1.0 * c_b + if is_neg { -1.0 } else { 1.0 } * (c_d).sqrt())
                             / (2.0 * c_a);
 
-                        let y = {
+                        let y = if approx_eq!(f64, l_b, 0.0) {
+                            // if l_b == 0.0, then the line is vertical -- and
+                            // we have to get the value of |y| from the circle,
+                            // not from the line (since the equation for a line
+                            // is just x=c. y is not involved, it's not a
+                            // function)
+
+                            // (x - x_0)^2 + (y - y_0)^2 = r^2 ==>
+                            // y = +/- sqrt(r^2 - (x-x_0)^2) + y_0
+                            let c = if is_neg { -1.0 } else { 1.0 };
+                            c * ((curve_arc.radius.0).powi(2) - (x - curve_arc.ctr.x.0).powi(2))
+                                .sqrt()
+                                + curve_arc.ctr.y.0
+                        } else {
                             let y_top = -1.0 * (l_a * x + l_c);
                             let y_bottom = l_b;
 
@@ -529,14 +543,18 @@ mod test {
     }
 
     #[test_case(
+        Segment(Pt(0., 0.), Pt(3., 0.)),
         CurveArc(Pt(1.5, 0.0), 0.0..PI, 0.5),
         PtLoc(Pt(1.0, 0.0), SegmentLoc::M(1.0 / 3.0), CurveLoc::F),
         PtLoc(Pt(2.0, 0.0), SegmentLoc::M(2.0 / 3.0), CurveLoc::I);
         "segment m curve i, segment m curve f"
     )]
-    fn test_curve_two_intersections(curve_arc: CurveArc, e_pl1: PtLoc, e_pl2: PtLoc) {
-        let segment = Segment(Pt(0.0, 0.0), Pt(3.0, 0.0));
-
+    fn test_curve_two_intersections(
+        segment: Segment,
+        curve_arc: CurveArc,
+        e_pl1: PtLoc,
+        e_pl2: PtLoc,
+    ) {
         let (pl1, pl2) = assert_matches!(
             intersections_of_line_and_curvearc(&segment, &curve_arc),
             IntersectionResult::Two(pl1, pl2) => (pl1, pl2)
