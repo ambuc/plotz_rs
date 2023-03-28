@@ -11,8 +11,11 @@ use {
     },
     float_cmp::approx_eq,
     float_ord::FloatOrd,
-    std::cmp::{max, min, Ordering},
-    std::f64::consts::*,
+    std::{
+        cmp::{max, min, Ordering},
+        f64::consts::*,
+        ops::RangeInclusive,
+    },
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -30,8 +33,8 @@ impl CurveArc {
     fn pt_f(&self) -> Pt {
         self.ctr + PolarPt(self.radius, self.angle_f)
     }
-    fn angle_range(&self) -> std::ops::Range<f64> {
-        self.angle_i..self.angle_f
+    fn angle_range(&self) -> RangeInclusive<f64> {
+        self.angle_i..=self.angle_f
     }
 }
 
@@ -75,24 +78,64 @@ impl Bounded for CurveArc {
 }
 
 #[allow(non_snake_case)]
-pub fn CurveArc(ctr: Pt, sweep: std::ops::Range<f64>, radius: f64) -> CurveArc {
-    assert!(sweep.start <= sweep.end);
+pub fn CurveArc(ctr: Pt, sweep: RangeInclusive<f64>, radius: f64) -> CurveArc {
+    assert!(sweep.start() <= sweep.end(), "sweep: {:?}", sweep);
     assert!(
-        (-1.0 * TAU..=TAU).contains(&sweep.start),
-        "sweep.start: {:?}",
-        sweep.start
+        (-1.0 * TAU..=TAU).contains(sweep.start()),
+        "sweep: {:?}",
+        sweep,
     );
     assert!(
-        (-1.0 * TAU..=TAU).contains(&sweep.end),
-        "sweep.end: {:?}",
-        sweep.end
+        (-1.0 * TAU..=TAU).contains(sweep.end()),
+        "sweep: {:?}",
+        sweep,
     );
     CurveArc {
         ctr,
-        angle_i: sweep.start,
-        angle_f: sweep.end,
+        angle_i: *sweep.start(),
+        angle_f: *sweep.end(),
         radius,
     }
+}
+
+fn split_range(
+    input: RangeInclusive<f64>,
+    basis: RangeInclusive<f64>,
+) -> Box<dyn Iterator<Item = RangeInclusive<f64>>> {
+    let basis_width: f64 = basis.end() - basis.start();
+    match (basis.contains(input.start()), basis.contains(input.end())) {
+        (true, true) => Box::new(std::iter::once(input.clone())),
+        (true, false) => {
+            // normal case
+            let new_input_start = *basis.start();
+            let new_input_end = *input.end() - basis_width;
+            let new_input = new_input_start..=new_input_end;
+
+            Box::new(
+                std::iter::once(*input.start()..=*basis.end())
+                    .chain(split_range(new_input, basis))
+            )
+        }
+        (false, _) => {
+            let mut new_input = input;
+            while new_input.start() < basis.start() {
+                new_input = (new_input.start() + basis_width)..=(new_input.end() + basis_width);
+            }
+            while new_input.start() > basis.end() {
+                new_input = (new_input.start() - basis_width)..=(new_input.end() - basis_width);
+            }
+
+            split_range(new_input, basis)
+        }
+    }
+}
+
+#[allow(non_snake_case)]
+pub fn CurveArcs(ctr: Pt, sweep: RangeInclusive<f64>, radius: f64) -> Vec<CurveArc> {
+    split_range(sweep, 0.0..=TAU)
+        .into_iter()
+        .map(|r| CurveArc(ctr, r, radius))
+        .collect::<Vec<_>>()
 }
 
 impl std::ops::Add<Pt> for CurveArc {
@@ -396,7 +439,7 @@ impl Croppable for CurveArc {
                 frame.contains_pt(&mdpt).expect("contains pt"),
                 PointLoc::Outside
             ) {
-                r.push(CurveArc(self.ctr, a1..a2, self.radius));
+                r.push(CurveArc(self.ctr, a1..=a2, self.radius));
             }
         }
 
@@ -422,46 +465,46 @@ mod test {
         assert_matches!(
             intersections_of_line_and_curvearc(
                 &Segment(Pt(0.0, 0.0), Pt(3.0, 0.0)),
-                &CurveArc(Pt(1.0, 1.0), 0.0..PI, 0.5)
+                &CurveArc(Pt(1.0, 1.0), 0.0..=PI, 0.5)
             ),
             IntersectionResult::None
         );
     }
 
     #[test_case(
-        CurveArc(Pt(1.0, 1.0), 0.0..PI, 1.0), SegmentLoc::M(0.5),
+        CurveArc(Pt(1.0, 1.0), 0.0..=PI, 1.0), SegmentLoc::M(0.5),
         CurveLoc::M(0.5); "segment m, curve m"
     )]
     #[test_case(
-        CurveArc(Pt(1.0, 1.0), -1.0 * FRAC_PI_2..FRAC_PI_2, 1.0), SegmentLoc::M(0.5),
+        CurveArc(Pt(1.0, 1.0), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), SegmentLoc::M(0.5),
         CurveLoc::F; "segment m, curve f"
     )]
     #[test_case(
-        CurveArc(Pt(1.0, 1.0), FRAC_PI_2..3.0 * FRAC_PI_2, 1.0), SegmentLoc::M(0.5),
+        CurveArc(Pt(1.0, 1.0), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), SegmentLoc::M(0.5),
         CurveLoc::I; "segment m, curve i"
     )]
     #[test_case(
-        CurveArc(Pt(0.0, 1.0), -1.0 * FRAC_PI_2..FRAC_PI_2, 1.0), SegmentLoc::I,
+        CurveArc(Pt(0.0, 1.0), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), SegmentLoc::I,
         CurveLoc::F; "segment i, curve f"
     )]
     #[test_case(
-        CurveArc(Pt(0.0, 1.0), FRAC_PI_2..3.0 * FRAC_PI_2, 1.0), SegmentLoc::I,
+        CurveArc(Pt(0.0, 1.0), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), SegmentLoc::I,
         CurveLoc::I; "segment i, curve i"
     )]
     #[test_case(
-        CurveArc(Pt(0.0, 1.0), 0.0..PI, 1.0), SegmentLoc::I,
+        CurveArc(Pt(0.0, 1.0), 0.0..=PI, 1.0), SegmentLoc::I,
         CurveLoc::M(0.5); "segment i, curve m"
     )]
     #[test_case(
-        CurveArc(Pt(2.0, 1.0), 0.0..PI, 1.0), SegmentLoc::F,
+        CurveArc(Pt(2.0, 1.0), 0.0..=PI, 1.0), SegmentLoc::F,
         CurveLoc::M(0.5); "segment f, curve m"
     )]
     #[test_case(
-        CurveArc(Pt(2.0, 1.0), FRAC_PI_2..3.0 * FRAC_PI_2, 1.0), SegmentLoc::F,
+        CurveArc(Pt(2.0, 1.0), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), SegmentLoc::F,
         CurveLoc::I; "segment f, curve i"
     )]
     #[test_case(
-        CurveArc(Pt(2.0, 1.0), -1.0 * FRAC_PI_2..FRAC_PI_2, 1.0), SegmentLoc::F,
+        CurveArc(Pt(2.0, 1.0), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), SegmentLoc::F,
         CurveLoc::F; "segment f, curve f"
     )]
     fn test_curve_one_intersection_tangent(
@@ -481,13 +524,13 @@ mod test {
 
     #[test_case(
         Segment(Pt(0.0, 0.0), Pt(2.0, 0.0)),
-        CurveArc(Pt(1.0, 0.0), FRAC_PI_2..3.0 * FRAC_PI_2, 0.5),
+        CurveArc(Pt(1.0, 0.0), FRAC_PI_2..=3.0 * FRAC_PI_2, 0.5),
         (Pt(0.50, 0.0), SegmentLoc::M(0.25), CurveLoc::M(0.5));
         "intersection 1"
     )]
     #[test_case(
         Segment(Pt(2.0, 0.0), Pt(2.0, 2.0)),
-        CurveArc(Pt(2.0, 0.0), 0.0..3.0 * FRAC_PI_2, 1.0),
+        CurveArc(Pt(2.0, 0.0), 0.0..=3.0 * FRAC_PI_2, 1.0),
         (Pt(2.0, 1.0), SegmentLoc::M(0.5), CurveLoc::M(1.0 / 3.0));
         "intersection 2"
     )]
@@ -507,14 +550,14 @@ mod test {
 
     #[test_case(
         Segment(Pt(0., 0.), Pt(3., 0.)),
-        CurveArc(Pt(1.5, 0.0), 0.0..PI, 0.5),
+        CurveArc(Pt(1.5, 0.0), 0.0..=PI, 0.5),
         PtLoc(Pt(1.0, 0.0), SegmentLoc::M(1.0 / 3.0), CurveLoc::F),
         PtLoc(Pt(2.0, 0.0), SegmentLoc::M(2.0 / 3.0), CurveLoc::I);
         "segment m curve i, segment m curve f"
     )]
     #[test_case(
         Segment(Pt(0.0, 2.0), Pt(0.0, 0.18)),
-        CurveArc(Pt(1.0, 1.0), 0.0..TAU, 1.1),
+        CurveArc(Pt(1.0, 1.0), 0.0..=TAU, 1.1),
         PtLoc(Pt(0.0, 0.5417424305044158), SegmentLoc::M(0.8012404227997715), CurveLoc::M(0.5683888259129364)),
         PtLoc(Pt(0.0, 1.4582575694955842), SegmentLoc::M(0.29766067610132735), CurveLoc::M(0.4316111740870635));
         "vertical")
@@ -548,36 +591,36 @@ mod test {
 
     #[test_case(
         Rect(Pt(0.0, 0.0), (2.0, 2.0)).unwrap(),
-        CurveArc(Pt(2.0, 0.0), 0.0..3.0 * FRAC_PI_2, 1.0),
+        CurveArc(Pt(2.0, 0.0), 0.0..=3.0 * FRAC_PI_2, 1.0),
         vec![
-            CurveArc(Pt(2.0, 0.0), FRAC_PI_2..PI, 1.0)
+            CurveArc(Pt(2.0, 0.0), FRAC_PI_2..=PI, 1.0)
         ];
         "two intersections, one resultant"
     )]
     #[test_case(
         Rect(Pt(0.0, 0.0), (2.0, 2.0)).unwrap(),
-        CurveArc(Pt(1.0, 1.0), 0.0..TAU, 0.5),
+        CurveArc(Pt(1.0, 1.0), 0.0..=TAU, 0.5),
         vec![
-            CurveArc(Pt(1.0, 1.0), 0.0..TAU, 0.5)
+            CurveArc(Pt(1.0, 1.0), 0.0..=TAU, 0.5)
         ];
         "no intersections"
     )]
     #[test_case(
         Rect(Pt(0.0, 0.0), (2.0, 2.0)).unwrap(),
-        CurveArc(Pt(1.0, 1.0), 0.0..TAU, 1.0),
+        CurveArc(Pt(1.0, 1.0), 0.0..=TAU, 1.0),
         vec![
-            CurveArc(Pt(1.0, 1.0), 0.0..TAU, 1.0)
+            CurveArc(Pt(1.0, 1.0), 0.0..=TAU, 1.0)
         ];
         "four intersections, all tangent"
     )]
     #[test_case(
         Rect(Pt(0.0, 0.0), (2.0, 2.0)).unwrap(),
-        CurveArc(Pt(1.0, 1.0), 0.0..TAU, 1.1),
+        CurveArc(Pt(1.0, 1.0), 0.0..=TAU, 1.1),
         vec![
-            CurveArc(Pt(1.0, 1.0), 0.4296996661514249..1.141096660643471, 1.1),
-            CurveArc(Pt(1.0, 1.0), 2.0004959929463215..2.711892987438368, 1.1),
-            CurveArc(Pt(1.0, 1.0), 3.5712923197412176..4.282689314233265, 1.1),
-            CurveArc(Pt(1.0, 1.0), 5.1420886465361150..5.853485641028161, 1.1),
+            CurveArc(Pt(1.0, 1.0), 0.4296996661514249..=1.141096660643471, 1.1),
+            CurveArc(Pt(1.0, 1.0), 2.0004959929463215..=2.711892987438368, 1.1),
+            CurveArc(Pt(1.0, 1.0), 3.5712923197412176..=4.282689314233265, 1.1),
+            CurveArc(Pt(1.0, 1.0), 5.1420886465361150..=5.853485641028161, 1.1),
         ];
         "four intersections, all passthrough"
     )]
@@ -590,6 +633,26 @@ mod test {
             assert_approx_eq!(f64, actual.angle_i, expected.angle_i);
             assert_approx_eq!(f64, actual.angle_f, expected.angle_f);
             assert_eq!(actual.radius, expected.radius);
+        }
+    }
+
+    #[test_case(0.0..=1.0, 0.0..=1.0, vec![0.0..=1.0]; "no-op")]
+    #[test_case(0.0..=0.9, 0.0..=1.0, vec![0.0..=0.9]; "input ends early")]
+    #[test_case(0.1..=1.0, 0.0..=1.0, vec![0.1..=1.0]; "input starts late")]
+    #[test_case(0.1..=0.9, 0.0..=1.0, vec![0.1..=0.9]; "input within basis")]
+    #[test_case(0.0..=1.5, 0.0..=1.0, vec![0.0..=1.0, 0.0..=0.5]; "one point five width")]
+    #[test_case(0.0..=2.0, 0.0..=1.0, vec![0.0..=1.0, 0.0..=1.0]; "double width")]
+    #[test_case(0.0..=3.0, 0.0..=1.0, vec![0.0..=1.0, 0.0..=1.0, 0.0..=1.0]; "triple width")]
+    #[test_case(0.1..=2.9, 0.0..=1.0, vec![0.1..=1.0, 0.0..=1.0, 0.0..=0.9]; "triple width, precropped")]
+    fn test_split_range(
+        input: RangeInclusive<f64>,
+        basis: RangeInclusive<f64>,
+        expected: Vec<RangeInclusive<f64>>,
+    ) {
+        let actual = split_range(input, basis);
+        for (actual, expected) in actual.zip(expected.iter()) {
+            assert_approx_eq!(f64, *actual.start(), *expected.start());
+            assert_approx_eq!(f64, *actual.end(), *expected.end());
         }
     }
 }

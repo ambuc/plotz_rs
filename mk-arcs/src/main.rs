@@ -7,7 +7,7 @@ use {
         canvas::Canvas, draw_obj::DrawObj, draw_obj_inner::DrawObjInner, frame::make_frame,
         svg::Size,
     },
-    plotz_geometry::{crop::Croppable, curve::CurveArc, point::Pt},
+    plotz_geometry::{crop::Croppable, curve::CurveArcs, point::Pt},
     std::f64::consts::*,
 };
 
@@ -33,24 +33,23 @@ fn main() {
             _ => unimplemented!(),
         };
         let frame_ctr = frame.obj.bbox_center();
-        for i in 1..80 {
+        for i in 1..300 {
             let i: f64 = i as f64;
 
             let ctr = frame_ctr;
 
-            let d = 0.1;
-            let angle_1 = 0.0 + d;
-            let angle_2 = 2.0 * PI;
+            let angle_1 = 0.0 + 0.1 * i;
+            let angle_2 = 1.2 * angle_1 + FRAC_PI_2;
 
-            let radius = 1.0 + 5.0 * i;
+            let radius = 1.0 + 2.0 * i.powf(0.95);
 
-            let ca = CurveArc(ctr, angle_1..angle_2, radius);
+            let cas = CurveArcs(ctr, angle_1..=angle_2, radius);
 
-            dos.push(DrawObj::new(ca).with_color(&RED).with_thickness(1.0));
+            // dos.push(DrawObj::new(ca).with_color(&RED).with_thickness(1.0));
 
             dos.extend(
-                ca.crop_to(&frame_polygon)
-                    .unwrap()
+                cas.iter()
+                    .flat_map(|ca| ca.crop_to(&frame_polygon).unwrap())
                     .into_iter()
                     .map(|ca| DrawObj::new(ca).with_color(&GREEN).with_thickness(1.0))
                     .into_iter(),
