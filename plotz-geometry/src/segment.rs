@@ -360,11 +360,19 @@ impl Croppable for Segment {
 
             match isxns.get(0) {
                 Some(intersection) => {
+
+
                     let new_pt = interpolate::extrapolate_2d(
                         self.i,
                         self.f,
                         intersection.percent_along_inner.0,
                     );
+
+                    // Not sure why. But escape the loop.
+                    if new_pt == curr_pt {
+                        return Ok(resultants);
+                    }
+
                     if !matches!(frame.contains_pt(&new_pt)?, PointLoc::Outside) && curr_pen_down {
                         resultants.push(Segment(curr_pt, new_pt));
                     }

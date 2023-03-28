@@ -112,7 +112,7 @@ lazy_static! {
             ShadeConfig {
                 gap: 5.0,
                 slope: 10.0,
-                thickness: 2.0,
+                thickness: 1.0,
             }
         ),
         (
@@ -120,13 +120,13 @@ lazy_static! {
             ShadeConfig {
                 gap: 5.0,
                 slope: -10.0,
-                thickness: 2.0,
+                thickness: 1.0,
             }
         ),
     ].into();
 
     /// How thick the default line is.
-    pub static ref DEFAULT_THICKNESS: f64 = 5.0;
+    pub static ref DEFAULT_THICKNESS: f64 = 1.0;
 }
 
 /// An unadjusted set of annotated polygons, ready to be printed to SVG.
@@ -242,17 +242,19 @@ impl Map {
                 let crosshatchings: Vec<DrawObj> = layers
                     .iter()
                     .filter_map(|co| match &co.obj {
-                        DrawObjInner::Polygon(p) => Some(
-                            shade_polygon(shade_config, p)
-                                .expect("bad shade")
-                                .into_iter()
-                                .map(|s| DrawObj {
-                                    obj: DrawObjInner::Segment(s),
-                                    color: co.color,
-                                    thickness: shade_config.thickness,
-                                })
-                                .collect::<Vec<_>>(),
-                        ),
+                        DrawObjInner::Polygon(p) => match shade_polygon(shade_config, p) {
+                            Err(_) => None,
+                            Ok(segments) => Some(
+                                segments
+                                    .into_iter()
+                                    .map(|s| DrawObj {
+                                        obj: DrawObjInner::Segment(s),
+                                        color: co.color,
+                                        thickness: shade_config.thickness,
+                                    })
+                                    .collect::<Vec<_>>(),
+                            ),
+                        },
                         _ => None,
                     })
                     .flatten()

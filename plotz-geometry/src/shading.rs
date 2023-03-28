@@ -22,6 +22,7 @@ pub enum ShadePolygonError {
 }
 
 /// Config for controlling crosshatching.
+#[derive(Debug)]
 pub struct ShadeConfig {
     /// The gap between lines
     pub gap: f64,
