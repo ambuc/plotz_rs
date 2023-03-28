@@ -1,20 +1,15 @@
-#![allow(unused)]
 #![allow(missing_docs)]
-
-use std::f64::EPSILON;
-
-use crate::{interpolate::interpolate_2d_checked, segment::Intersection};
 
 use {
     crate::{
         bounded::Bounded,
         crop::{CropToPolygonError, Croppable, PointLoc},
-        curve, interpolate,
+        interpolate::interpolate_2d_checked,
         point::{PolarPt, Pt},
         polygon::abp,
         segment::Segment,
     },
-    float_cmp::{approx_eq, assert_approx_eq},
+    float_cmp::approx_eq,
     float_ord::FloatOrd,
     std::cmp::Ordering,
     std::f64::consts::*,
@@ -28,30 +23,6 @@ pub struct CurveArc {
     pub radius: f64,
 }
 
-#[allow(clippy::upper_case_acronyms)]
-enum Quadrant {
-    I,
-    II,
-    III,
-    IV,
-}
-
-fn quadrant(angle: f64) -> Option<Quadrant> {
-    if angle < 0.0 {
-        None
-    } else if angle <= PI / 2.0 {
-        Some(Quadrant::I)
-    } else if angle <= PI {
-        Some(Quadrant::II)
-    } else if angle <= 3.0 * PI / 2.0 {
-        Some(Quadrant::III)
-    } else if angle <= 2.0 * PI {
-        Some(Quadrant::IV)
-    } else {
-        None
-    }
-}
-
 impl Bounded for CurveArc {
     fn right_bound(&self) -> f64 {
         self.ctr.x.0
@@ -59,11 +30,7 @@ impl Bounded for CurveArc {
                 * if (self.angle_1..self.angle_2).contains(&TAU) {
                     1.0
                 } else {
-                    std::cmp::max(
-                        FloatOrd(self.angle_1.cos()),
-                        FloatOrd(self.angle_2.cos()),
-                    )
-                    .0
+                    std::cmp::max(FloatOrd(self.angle_1.cos()), FloatOrd(self.angle_2.cos())).0
                 }
     }
     fn left_bound(&self) -> f64 {
@@ -72,11 +39,7 @@ impl Bounded for CurveArc {
                 * if (self.angle_1..self.angle_2).contains(&PI) {
                     -1.0
                 } else {
-                    std::cmp::min(
-                        FloatOrd(self.angle_1.cos()),
-                        FloatOrd(self.angle_2.cos()),
-                    )
-                    .0
+                    std::cmp::min(FloatOrd(self.angle_1.cos()), FloatOrd(self.angle_2.cos())).0
                 }
     }
     fn top_bound(&self) -> f64 {
@@ -85,11 +48,7 @@ impl Bounded for CurveArc {
                 * if (self.angle_1..self.angle_2).contains(&FRAC_PI_2) {
                     1.0
                 } else {
-                    std::cmp::max(
-                        FloatOrd(self.angle_1.sin()),
-                        FloatOrd(self.angle_2.sin()),
-                    )
-                    .0
+                    std::cmp::max(FloatOrd(self.angle_1.sin()), FloatOrd(self.angle_2.sin())).0
                 }
     }
     fn bottom_bound(&self) -> f64 {
@@ -98,11 +57,7 @@ impl Bounded for CurveArc {
                 * if (self.angle_1..self.angle_2).contains(&(3.0 * FRAC_PI_2)) {
                     -1.0
                 } else {
-                    std::cmp::min(
-                        FloatOrd(self.angle_1.sin()),
-                        FloatOrd(self.angle_2.sin()),
-                    )
-                    .0
+                    std::cmp::min(FloatOrd(self.angle_1.sin()), FloatOrd(self.angle_2.sin())).0
                 }
     }
 }
@@ -165,6 +120,7 @@ enum SegmentLoc {
     F,
 }
 impl SegmentLoc {
+    #[cfg(test)]
     fn as_f64(&self) -> f64 {
         match self {
             SegmentLoc::I => 0.0,
@@ -483,7 +439,7 @@ mod test {
             segment::Segment,
         },
         assert_matches::assert_matches,
-        std::f64::consts::*,
+        float_cmp::assert_approx_eq,
         test_case::test_case,
     };
 
