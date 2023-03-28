@@ -91,7 +91,7 @@ pub fn CurveArc(ctr: Pt, sweep: std::ops::Range<f64>, radius: f64) -> CurveArc {
         ctr,
         angle_i: sweep.start,
         angle_f: sweep.end,
-        radius: radius,
+        radius,
     }
 }
 
@@ -349,16 +349,12 @@ impl Croppable for CurveArc {
             //
             let contains_i = frame.contains_pt(&self.pt_i()).expect("contains pt");
             let contains_f = frame.contains_pt(&self.pt_f()).expect("contains pt");
-            match (contains_i, contains_f) {
-                (
-                    PointLoc::Inside | PointLoc::OnSegment(_) | PointLoc::OnPoint(_),
-                    PointLoc::Inside | PointLoc::OnSegment(_) | PointLoc::OnPoint(_),
-                ) => {
-                    return Ok(vec![*self]);
-                }
-                _ => {
-                    // do nothing
-                }
+            if let (
+                PointLoc::Inside | PointLoc::OnSegment(_) | PointLoc::OnPoint(_),
+                PointLoc::Inside | PointLoc::OnSegment(_) | PointLoc::OnPoint(_),
+            ) = (contains_i, contains_f)
+            {
+                return Ok(vec![*self]);
             }
         }
 
