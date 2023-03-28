@@ -114,11 +114,40 @@ impl CurveArc {
     fn pt_f(&self) -> Pt {
         self.ctr + PolarPt(self.radius.0, self.angle_2.0)
     }
+    fn quantize(&self, n: usize) -> Vec<Segment> {
+        let mut r = vec![];
+        for i in 0..n {
+            let i: f64 = i as f64;
+            r.push(Segment(
+                self.ctr
+                    + PolarPt(
+                        self.radius.0,
+                        self.angle_1.0 + (self.angle_2.0 - self.angle_1.0) * i,
+                    ),
+                self.ctr
+                    + PolarPt(
+                        self.radius.0,
+                        self.angle_1.0 + (self.angle_2.0 - self.angle_1.0) * (i + 1.0),
+                    ),
+            ));
+        }
+        r
+    }
 }
 
 #[allow(non_snake_case)]
 pub fn CurveArc(ctr: Pt, sweep: std::ops::Range<f64>, radius: f64) -> CurveArc {
     assert!(sweep.start <= sweep.end);
+    assert!(
+        (-1.0 * TAU..=TAU).contains(&sweep.start),
+        "sweep.start: {:?}",
+        sweep.start
+    );
+    assert!(
+        (-1.0 * TAU..=TAU).contains(&sweep.end),
+        "sweep.end: {:?}",
+        sweep.end
+    );
     CurveArc {
         ctr,
         angle_1: FloatOrd(sweep.start),
@@ -134,6 +163,17 @@ impl std::ops::Add<Pt> for CurveArc {
             ctr: self.ctr + rhs,
             ..self
         }
+    }
+}
+impl std::ops::AddAssign<Pt> for CurveArc {
+    fn add_assign(&mut self, rhs: Pt) {
+        self.ctr += rhs;
+    }
+}
+impl std::ops::MulAssign<f64> for CurveArc {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.ctr *= rhs;
+        self.radius.0 *= rhs;
     }
 }
 
@@ -273,7 +313,7 @@ fn intersections_of_line_and_curvearc(
                 match [true, false]
                     .into_iter()
                     .map(|is_neg| {
-                        let x = (-1.0 * c_b + if is_neg { -1.0 } else { 1.0 } * (c_d).sqrt())
+                        let x = (-1.0 * c_b + if is_neg { -1.0 } else { 1.0 } * (c_d.abs()).sqrt())
                             / (2.0 * c_a);
 
                         let y = if approx_eq!(f64, l_b, 0.0) {
@@ -287,6 +327,7 @@ fn intersections_of_line_and_curvearc(
                             // y = +/- sqrt(r^2 - (x-x_0)^2) + y_0
                             let c = if is_neg { -1.0 } else { 1.0 };
                             c * ((curve_arc.radius.0).powi(2) - (x - curve_arc.ctr.x.0).powi(2))
+                                .abs()
                                 .sqrt()
                                 + curve_arc.ctr.y.0
                         } else {
@@ -411,13 +452,25 @@ impl Croppable for CurveArc {
                 FloatOrd(self.angle_1.0 + (self.angle_2.0 - self.angle_1.0) * cl.as_f64())
             })
             .collect::<Vec<_>>();
+        if !matches!(
+            frame.contains_pt(&self.pt_i()).expect("contains pt"),
+            PointLoc::Outside
+        ) {
+            isxns_angles.insert(0, FloatOrd(self.angle_1.0));
+        }
+        if !matches!(
+            frame.contains_pt(&self.pt_f()).expect("contains pt"),
+            PointLoc::Outside
+        ) {
+            isxns_angles.insert(0, FloatOrd(self.angle_2.0));
+        }
         isxns_angles.sort();
 
         let mut r = vec![];
 
         for (a1, a2) in isxns_angles
             .iter()
-            .zip(isxns_angles.iter().cycle().skip(1))
+            .zip(isxns_angles.iter().skip(1))
             .map(|(a1, a2)| {
                 if a1 > a2 {
                     (*a1, FloatOrd(a2.0 + TAU))
@@ -426,14 +479,13 @@ impl Croppable for CurveArc {
                 }
             })
         {
+            let cand_curve_arc = CurveArc(self.ctr, a1.0..a2.0, self.radius.0);
             let mdpt = self.ctr + PolarPt(self.radius.0, (a1.0 + a2.0) / 2.0);
-            match frame.contains_pt(&mdpt).expect("contains pt") {
-                PointLoc::Outside => {
-                    // do nothing
-                }
-                a => {
-                    r.push(CurveArc(self.ctr, a1.0..a2.0, self.radius.0));
-                }
+            if !matches!(
+                frame.contains_pt(&mdpt).expect("contains pt"),
+                PointLoc::Outside
+            ) {
+                r.push(cand_curve_arc);
             }
         }
 
@@ -549,6 +601,13 @@ mod test {
         PtLoc(Pt(2.0, 0.0), SegmentLoc::M(2.0 / 3.0), CurveLoc::I);
         "segment m curve i, segment m curve f"
     )]
+    #[test_case(
+        Segment(Pt(0.0, 2.0), Pt(0.0, 0.18)),
+        CurveArc(Pt(1.0, 1.0), 0.0..TAU, 1.1),
+        PtLoc(Pt(0.0, 0.5417424305044158), SegmentLoc::M(0.8012404227997715), CurveLoc::M(0.5683888259129364)),
+        PtLoc(Pt(0.0, 1.4582575694955842), SegmentLoc::M(0.29766067610132735), CurveLoc::M(0.4316111740870635));
+        "vertical")
+    ]
     fn test_curve_two_intersections(
         segment: Segment,
         curve_arc: CurveArc,
@@ -559,8 +618,21 @@ mod test {
             intersections_of_line_and_curvearc(&segment, &curve_arc),
             IntersectionResult::Two(pl1, pl2) => (pl1, pl2)
         );
-        assert_eq!(pl1, e_pl1);
-        assert_eq!(pl2, e_pl2);
+
+        let PtLoc(pt1, sl1, cl1) = pl1;
+        let PtLoc(pt2, sl2, cl2) = pl2;
+        let PtLoc(e_pt1, e_sl1, e_cl1) = e_pl1;
+        let PtLoc(e_pt2, e_sl2, e_cl2) = e_pl2;
+
+        assert_approx_eq!(f64, pt1.x.0, e_pt1.x.0);
+        assert_approx_eq!(f64, pt1.y.0, e_pt1.y.0);
+        assert_approx_eq!(f64, sl1.as_f64(), e_sl1.as_f64());
+        assert_approx_eq!(f64, cl1.as_f64(), e_cl1.as_f64());
+
+        assert_approx_eq!(f64, pt2.x.0, e_pt2.x.0);
+        assert_approx_eq!(f64, pt2.y.0, e_pt2.y.0);
+        assert_approx_eq!(f64, sl2.as_f64(), e_sl2.as_f64());
+        assert_approx_eq!(f64, cl2.as_f64(), e_cl2.as_f64());
     }
 
     #[test_case(
@@ -588,22 +660,25 @@ mod test {
         "four intersections, all tangent"
     )]
     #[test_case(
-        Rect(Pt(100.0, 100.0), (650.0, 500.0)).unwrap(),
-        CurveArc(Pt(425.0, 350.0), 0.0..TAU, 250.0),
+        Rect(Pt(0.0, 0.0), (2.0, 2.0)).unwrap(),
+        CurveArc(Pt(1.0, 1.0), 0.0..TAU, 1.1),
         vec![
-            CurveArc(Pt(425.0, 350.0), 0.0..TAU, 250.0)
+            CurveArc(Pt(1.0, 1.0), 0.4296996661514249..1.141096660643471, 1.1),
+            CurveArc(Pt(1.0, 1.0), 2.0004959929463215..2.711892987438368, 1.1),
+            CurveArc(Pt(1.0, 1.0), 3.5712923197412176..4.282689314233265, 1.1),
+            CurveArc(Pt(1.0, 1.0), 5.1420886465361150..5.853485641028161, 1.1),
         ];
-        "four intersections, all tangent, v2"
-    )]
-    #[test_case(
-        Rect(Pt(100.0, 100.0), (650.0, 500.0)).unwrap(),
-        CurveArc(Pt(425.0, 350.0), 0.0..TAU, 330.0),
-        vec![
-            // nothing
-        ];
-        "hard case"
+        "four intersections, all passthrough"
     )]
     fn test_curvearc_crop(rect: Polygon, curvearc: CurveArc, expected_curvearcs: Vec<CurveArc>) {
-        assert_eq!(curvearc.crop_to(&rect).unwrap(), expected_curvearcs);
+        let actual_curvearcs = curvearc.crop_to(&rect).unwrap();
+        assert_eq!(actual_curvearcs.len(), expected_curvearcs.len());
+
+        for (actual, expected) in actual_curvearcs.iter().zip(expected_curvearcs.iter()) {
+            assert_eq!(actual.ctr, expected.ctr);
+            assert_approx_eq!(f64, actual.angle_1.0, expected.angle_1.0);
+            assert_approx_eq!(f64, actual.angle_2.0, expected.angle_2.0);
+            assert_eq!(actual.radius.0, expected.radius.0);
+        }
     }
 }

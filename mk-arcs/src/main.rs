@@ -8,7 +8,7 @@ use {
         svg::Size,
     },
     plotz_geometry::{crop::Croppable, curve::CurveArc, point::Pt},
-    std::f64::consts::PI,
+    std::f64::consts::*,
 };
 
 #[derive(FromArgs)]
@@ -21,41 +21,41 @@ struct Args {
 fn main() {
     let args: Args = argh::from_env();
 
+    let mut dos = vec![];
     let mgn = 100.0; // 20.0;
     let ell = 500.0; // 720.0;
     let asp = 1.3;
 
     let frame: DrawObj = make_frame((ell, ell * asp), /*offset=*/ Pt(mgn, mgn));
-    let frame_polygon = match frame.obj {
-        DrawObjInner::Polygon(ref pg) => pg.clone(),
-        _ => unimplemented!(),
-    };
+    {
+        let frame_polygon = match frame.obj {
+            DrawObjInner::Polygon(ref pg) => pg.clone(),
+            _ => unimplemented!(),
+        };
+        let frame_ctr = frame.obj.bbox_center();
+        for i in 1..80 {
+            let i: f64 = i as f64;
 
-    let frame_ctr = frame.obj.bbox_center();
+            let ctr = frame_ctr;
 
-    let mut dos = vec![];
+            let d = 0.1;
+            let angle_1 = 0.0 + d;
+            let angle_2 = 2.0 * PI;
 
-    for i in 1..19 {
-        let i: f64 = i as f64;
+            let radius = 1.0 + 5.0 * i;
 
-        let ctr = frame_ctr;
+            let ca = CurveArc(ctr, angle_1..angle_2, radius);
 
-        let angle_1 = 0.0;
-        let angle_2 = 2.0 * PI;
+            dos.push(DrawObj::new(ca).with_color(&RED).with_thickness(1.0));
 
-        let radius = 150.0 + 10.0 * i;
-
-        let ca = CurveArc(ctr, angle_1..angle_2, radius);
-
-        dos.push(DrawObj::new(ca).with_color(&RED).with_thickness(1.0));
-
-        dos.extend(
-            ca.crop_to(&frame_polygon)
-                .unwrap()
-                .into_iter()
-                .map(|ca| DrawObj::new(ca).with_color(&GREEN).with_thickness(1.0))
-                .into_iter(),
-        );
+            dos.extend(
+                ca.crop_to(&frame_polygon)
+                    .unwrap()
+                    .into_iter()
+                    .map(|ca| DrawObj::new(ca).with_color(&GREEN).with_thickness(1.0))
+                    .into_iter(),
+            );
+        }
     }
 
     let draw_objs = Canvas::from_objs(dos).with_frame(frame);
