@@ -11,63 +11,66 @@ use {
     },
     float_cmp::approx_eq,
     float_ord::FloatOrd,
-    std::cmp::Ordering,
+    std::cmp::{max, min, Ordering},
     std::f64::consts::*,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CurveArc {
     pub ctr: Pt,
-    pub angle_1: f64,
-    pub angle_2: f64,
+    pub angle_i: f64,
+    pub angle_f: f64,
     pub radius: f64,
+}
+
+impl CurveArc {
+    fn pt_i(&self) -> Pt {
+        self.ctr + PolarPt(self.radius, self.angle_i)
+    }
+    fn pt_f(&self) -> Pt {
+        self.ctr + PolarPt(self.radius, self.angle_f)
+    }
+    fn angle_range(&self) -> std::ops::Range<f64> {
+        self.angle_i..self.angle_f
+    }
 }
 
 impl Bounded for CurveArc {
     fn right_bound(&self) -> f64 {
         self.ctr.x.0
             + self.radius
-                * if (self.angle_1..self.angle_2).contains(&TAU) {
+                * if self.angle_range().contains(&TAU) {
                     1.0
                 } else {
-                    std::cmp::max(FloatOrd(self.angle_1.cos()), FloatOrd(self.angle_2.cos())).0
+                    max(FloatOrd(self.angle_i.cos()), FloatOrd(self.angle_f.cos())).0
                 }
     }
     fn left_bound(&self) -> f64 {
         self.ctr.x.0
             + self.radius
-                * if (self.angle_1..self.angle_2).contains(&PI) {
+                * if self.angle_range().contains(&PI) {
                     -1.0
                 } else {
-                    std::cmp::min(FloatOrd(self.angle_1.cos()), FloatOrd(self.angle_2.cos())).0
+                    min(FloatOrd(self.angle_i.cos()), FloatOrd(self.angle_f.cos())).0
                 }
     }
     fn top_bound(&self) -> f64 {
         self.ctr.y.0
             + self.radius
-                * if (self.angle_1..self.angle_2).contains(&FRAC_PI_2) {
+                * if self.angle_range().contains(&FRAC_PI_2) {
                     1.0
                 } else {
-                    std::cmp::max(FloatOrd(self.angle_1.sin()), FloatOrd(self.angle_2.sin())).0
+                    max(FloatOrd(self.angle_i.sin()), FloatOrd(self.angle_f.sin())).0
                 }
     }
     fn bottom_bound(&self) -> f64 {
         self.ctr.y.0
             + self.radius
-                * if (self.angle_1..self.angle_2).contains(&(3.0 * FRAC_PI_2)) {
+                * if self.angle_range().contains(&(3.0 * FRAC_PI_2)) {
                     -1.0
                 } else {
-                    std::cmp::min(FloatOrd(self.angle_1.sin()), FloatOrd(self.angle_2.sin())).0
+                    min(FloatOrd(self.angle_i.sin()), FloatOrd(self.angle_f.sin())).0
                 }
-    }
-}
-
-impl CurveArc {
-    fn pt_i(&self) -> Pt {
-        self.ctr + PolarPt(self.radius, self.angle_1)
-    }
-    fn pt_f(&self) -> Pt {
-        self.ctr + PolarPt(self.radius, self.angle_2)
     }
 }
 
@@ -86,8 +89,8 @@ pub fn CurveArc(ctr: Pt, sweep: std::ops::Range<f64>, radius: f64) -> CurveArc {
     );
     CurveArc {
         ctr,
-        angle_1: sweep.start,
-        angle_2: sweep.end,
+        angle_i: sweep.start,
+        angle_f: sweep.end,
         radius: radius,
     }
 }
@@ -193,19 +196,17 @@ fn intersections_of_line_and_curvearc(
             let isxn =
                 curve_arc.ctr + PolarPt(curve_arc.radius, segment.slope().atan() + FRAC_PI_2);
 
-            let segment_loc = SegmentLoc::from_f64(
+            if let Some(segment_loc) = SegmentLoc::from_f64(
                 interpolate_2d_checked(segment.i, segment.f, isxn).expect("interpolation failed"),
-            );
-
-            let curve_loc = CurveLoc::from_f64(
-                abp(&curve_arc.ctr, &isxn, &curve_arc.pt_i())
-                    / abp(&curve_arc.ctr, &curve_arc.pt_f(), &curve_arc.pt_i()),
-            );
-
-            match (segment_loc, curve_loc) {
-                (Some(sl), Some(cl)) => IntersectionResult::One(PtLoc(isxn, sl, cl)),
-                _ => IntersectionResult::None,
+            ) {
+                if let Some(curve_loc) = CurveLoc::from_f64(
+                    abp(&curve_arc.ctr, &isxn, &curve_arc.pt_i())
+                        / abp(&curve_arc.ctr, &curve_arc.pt_f(), &curve_arc.pt_i()),
+                ) {
+                    return IntersectionResult::One(PtLoc(isxn, segment_loc, curve_loc));
+                }
             }
+            IntersectionResult::None
         }
         Ordering::Less => {
             // also an option if d==0 is that the curve is centered _on_ the line.
@@ -250,8 +251,8 @@ fn intersections_of_line_and_curvearc(
                 match [true, false]
                     .into_iter()
                     .map(|is_neg| {
-                        let x = (-1.0 * c_b + if is_neg { -1.0 } else { 1.0 } * (c_d.abs()).sqrt())
-                            / (2.0 * c_a);
+                        let one = if is_neg { -1.0 } else { 1.0 };
+                        let x = (-1.0 * c_b + one * (c_d.abs()).sqrt()) / (2.0 * c_a);
 
                         let y = if approx_eq!(f64, l_b, 0.0) {
                             // if l_b == 0.0, then the line is vertical -- and
@@ -262,8 +263,7 @@ fn intersections_of_line_and_curvearc(
 
                             // (x - x_0)^2 + (y - y_0)^2 = r^2 ==>
                             // y = +/- sqrt(r^2 - (x-x_0)^2) + y_0
-                            let c = if is_neg { -1.0 } else { 1.0 };
-                            c * ((curve_arc.radius).powi(2) - (x - curve_arc.ctr.x.0).powi(2))
+                            one * ((curve_arc.radius).powi(2) - (x - curve_arc.ctr.x.0).powi(2))
                                 .abs()
                                 .sqrt()
                                 + curve_arc.ctr.y.0
@@ -291,39 +291,27 @@ fn intersections_of_line_and_curvearc(
             // curve interpolation value of between 0 and 1.
 
             // here pac == percent along curve, and pas == percent along segment.
-            let full_curve_angle = curve_arc.angle_2 - curve_arc.angle_1;
+            let full_curve_angle = curve_arc.angle_f - curve_arc.angle_i;
 
-            /// percent_along_segment to option<segment_location>, if valid
-            fn pas_to_sl<E>(pas_result: Result<f64, E>) -> Option<SegmentLoc> {
-                pas_result.ok().and_then(SegmentLoc::from_f64)
-            }
+            let sl1 = interpolate_2d_checked(segment.i, segment.f, isxn_1)
+                .ok()
+                .and_then(SegmentLoc::from_f64);
+            let cl1 = CurveLoc::from_f64(
+                ((abp(&curve_arc.ctr, &curve_arc.pt_i(), &isxn_1) + TAU) % TAU) / full_curve_angle,
+            );
+            let sl2 = interpolate_2d_checked(segment.i, segment.f, isxn_2)
+                .ok()
+                .and_then(SegmentLoc::from_f64);
+            let cl2 = CurveLoc::from_f64(
+                ((abp(&curve_arc.ctr, &curve_arc.pt_i(), &isxn_2) + TAU) % TAU) / full_curve_angle,
+            );
 
-            let pac1 = {
-                let mut partial_angle = abp(&curve_arc.ctr, &curve_arc.pt_i(), &isxn_1);
-                partial_angle += TAU;
-                partial_angle %= TAU;
-                partial_angle / full_curve_angle
-            };
-
-            let pac2 = {
-                let mut partial_angle = abp(&curve_arc.ctr, &curve_arc.pt_i(), &isxn_2);
-                partial_angle += TAU;
-                partial_angle %= TAU;
-                partial_angle / full_curve_angle
-            };
-
-            match (
-                pas_to_sl(interpolate_2d_checked(segment.i, segment.f, isxn_1)), // sl1
-                CurveLoc::from_f64(pac1),                                        // cl1
-                pas_to_sl(interpolate_2d_checked(segment.i, segment.f, isxn_2)), // sl2
-                CurveLoc::from_f64(pac2),                                        // cl2
-            ) {
+            match (sl1, cl1, sl2, cl2) {
+                (Some(sl1), Some(cl1), Some(sl2), Some(cl2)) if sl1 == sl2 && cl1 == cl2 => {
+                    IntersectionResult::One(PtLoc(isxn_1, sl1, cl1))
+                }
                 (Some(sl1), Some(cl1), Some(sl2), Some(cl2)) => {
-                    if sl1 == sl2 && cl1 == cl2 {
-                        IntersectionResult::One(PtLoc(isxn_1, sl1, cl1))
-                    } else {
-                        IntersectionResult::Two(PtLoc(isxn_1, sl1, cl1), PtLoc(isxn_2, sl2, cl2))
-                    }
+                    IntersectionResult::Two(PtLoc(isxn_1, sl1, cl1), PtLoc(isxn_2, sl2, cl2))
                 }
                 (Some(sl1), Some(cl1), _, _) => IntersectionResult::One(PtLoc(isxn_1, sl1, cl1)),
                 (_, _, Some(sl2), Some(cl2)) => IntersectionResult::One(PtLoc(isxn_2, sl2, cl2)),
@@ -348,18 +336,9 @@ impl Croppable for CurveArc {
         let mut isxns: Vec<PtLoc> = vec![];
         for frame_segment in frame.to_segments() {
             let discovered = match intersections_of_line_and_curvearc(&frame_segment, self) {
-                IntersectionResult::None => {
-                    vec![]
-                }
+                IntersectionResult::None => vec![],
                 IntersectionResult::One(pl) => vec![pl],
-                IntersectionResult::Two(ref pl1 @ PtLoc(_, _, cl1), ref pl2 @ PtLoc(_, _, cl2)) => {
-                    // sort by cl
-                    if cl1 < cl2 {
-                        vec![*pl1, *pl2]
-                    } else {
-                        vec![*pl2, *pl1]
-                    }
-                }
+                IntersectionResult::Two(pl1, pl2) => vec![pl1, pl2],
             };
             isxns.extend(discovered);
         }
@@ -386,20 +365,20 @@ impl Croppable for CurveArc {
         let mut isxns_angles: Vec<FloatOrd<f64>> = isxns
             .into_iter()
             .map(|PtLoc(_, _, cl)| {
-                FloatOrd(self.angle_1 + (self.angle_2 - self.angle_1) * cl.as_f64())
+                FloatOrd(self.angle_i + (self.angle_f - self.angle_i) * cl.as_f64())
             })
             .collect::<Vec<_>>();
         if !matches!(
             frame.contains_pt(&self.pt_i()).expect("contains pt"),
             PointLoc::Outside
         ) {
-            isxns_angles.insert(0, FloatOrd(self.angle_1));
+            isxns_angles.insert(0, FloatOrd(self.angle_i));
         }
         if !matches!(
             frame.contains_pt(&self.pt_f()).expect("contains pt"),
             PointLoc::Outside
         ) {
-            isxns_angles.insert(0, FloatOrd(self.angle_2));
+            isxns_angles.insert(0, FloatOrd(self.angle_f));
         }
         isxns_angles.sort();
 
@@ -416,13 +395,12 @@ impl Croppable for CurveArc {
                 }
             })
         {
-            let cand_curve_arc = CurveArc(self.ctr, a1..a2, self.radius);
             let mdpt = self.ctr + PolarPt(self.radius, (a1 + a2) / 2.0);
             if !matches!(
                 frame.contains_pt(&mdpt).expect("contains pt"),
                 PointLoc::Outside
             ) {
-                r.push(cand_curve_arc);
+                r.push(CurveArc(self.ctr, a1..a2, self.radius));
             }
         }
 
@@ -613,8 +591,8 @@ mod test {
 
         for (actual, expected) in actual_curvearcs.iter().zip(expected_curvearcs.iter()) {
             assert_eq!(actual.ctr, expected.ctr);
-            assert_approx_eq!(f64, actual.angle_1, expected.angle_1);
-            assert_approx_eq!(f64, actual.angle_2, expected.angle_2);
+            assert_approx_eq!(f64, actual.angle_i, expected.angle_i);
+            assert_approx_eq!(f64, actual.angle_f, expected.angle_f);
             assert_eq!(actual.radius, expected.radius);
         }
     }

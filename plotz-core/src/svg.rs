@@ -74,8 +74,8 @@ fn write_doi_to_context(
                 arc.ctr.x.0,
                 arc.ctr.y.0,
                 arc.radius,
-                arc.angle_1,
-                arc.angle_2,
+                arc.angle_i,
+                arc.angle_f,
             );
         }
     }
