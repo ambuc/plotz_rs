@@ -118,7 +118,7 @@ mod test_super {
                 output_svg.hash(&mut s);
                 s.finish()
             },
-            7343303057793024555,
+            3768939834666708681,
         );
 
         assert!(write_svg_to_pixmap(size, &output_svg)

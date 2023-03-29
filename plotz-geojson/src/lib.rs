@@ -38,6 +38,7 @@ lazy_static::lazy_static! {
     pub static ref INTERESTING_PROPERTIES: HashSet<&'static str> = {
         HashSet::from_iter([
            "administrative",
+           "route", "subway",
            "amenity",
            "apartments",
            "bare_rock",
@@ -136,18 +137,6 @@ pub fn parse_geojson(
             }
         } {
             for polygon in polygons {
-                // trace!(
-                //     "#{:?} ({:10}, {:2}pts) w/ {:?}",
-                //     idx,
-                //     geom_type,
-                //     polygon.pts.len(),
-                //     tags.iter()
-                //         .map(|(k, v)| (
-                //             interner.resolve(*k).unwrap(),
-                //             interner.resolve(*v).unwrap()
-                //         ))
-                //         .collect::<Vec<_>>(),
-                // );
                 lines.push((polygon, tags.clone()));
             }
         }

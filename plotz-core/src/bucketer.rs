@@ -92,6 +92,7 @@ lazy_static! {
         (Bucket::Path(Path::Pedestrian), ("highway", "residential")),
         (Bucket::Path(Path::Pedestrian), ("highway", "steps")),
         (Bucket::Path(Path::Rail), ("railway", "rail")),
+        (Bucket::Path(Path::Subway), ("route", "subway")),
     ];
 }
 

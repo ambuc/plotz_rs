@@ -20,7 +20,7 @@ use {
         bounded::{streaming_bbox, Bounded, BoundingBoxError},
         point::Pt,
         polygon::Polygon,
-        shading::{shade_polygon, ShadeConfig},
+        shading_02::{shade_polygon, ShadeConfig},
     },
     std::{
         collections::HashMap,
@@ -80,9 +80,15 @@ fn latitude_to_y(latitude: f64) -> f64 {
     (((latitude + 90.0) / 360.0 * PI).tan()).ln() / PI * 180.0
 }
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ShadeAndOutline {
+    JustShade,
+    Both,
+}
+
 lazy_static! {
     /// Which areas get shaded, and how much.
-    pub static ref DEFAULT_COLORING: std::collections::HashMap<Bucket, ColorRGB> =
+    pub static ref DEFAULT_COLORING: HashMap<Bucket, ColorRGB> =
             HashMap::from([
                 (Bucket::Path(BucketPath::Highway1), BLACK),
                 (Bucket::Path(BucketPath::Highway2), DARKGRAY),
@@ -101,28 +107,49 @@ lazy_static! {
                 (Bucket::Area(Area::Rail), ORANGE),
                 (Bucket::Area(Area::Tree), BROWN),
                 (Bucket::Area(Area::Water), LIGHTBLUE),
+                (Bucket::Path(BucketPath::Subway), BLACK),
             ]);
 
     /// Which areas get shaded, and how much.
-    pub static ref SHADINGS: std::collections::HashMap<Bucket, ShadeConfig> = [
+    pub static ref SHADINGS: HashMap<Bucket, (ShadeAndOutline, ShadeConfig)> = [
         // TODO(jbuckland): Some of these scale poorly or fail to render. Can I
         // somehow autoderive this density?
-        (
-            Bucket::Area(Area::Park),
-            ShadeConfig {
-                gap: 5.0,
-                slope: 10.0,
-                thickness: 1.0,
-            }
-        ),
-        (
-            Bucket::Area(Area::Water),
-            ShadeConfig {
-                gap: 5.0,
-                slope: -10.0,
-                thickness: 1.0,
-            }
-        ),
+        // (
+        //     Bucket::Area(Area::Park),
+        //     (
+        //         ShadeAndOutline::Both,
+        //         ShadeConfig {
+        //             gap: 2.0,
+        //             slope: 10.0,
+        //             thickness: 1.0,
+        //             switchback: true,
+        //         }
+        //     )
+        // ),
+        // (
+        //     Bucket::Area(Area::Fun),
+        //     (
+        //         ShadeAndOutline::Both,
+        //         ShadeConfig {
+        //             gap: 1.0,
+        //             slope: 1.0,
+        //             thickness: 1.0,
+        //             switchback: true,
+        //         }
+        //     )
+        // ),
+        // (
+        //     Bucket::Area(Area::Water),
+        //     (
+        //         ShadeAndOutline::JustShade,
+        //         ShadeConfig {
+        //             gap: 2.0,
+        //             slope: 0.0,
+        //             thickness: 1.0,
+        //             switchback: false,
+        //         }
+        //     )
+        // ),
     ].into();
 
     /// How thick the default line is.
@@ -145,6 +172,7 @@ impl Map {
             .input_files
             .iter()
             .flat_map(|file| {
+                trace!("processing file: {:?}", file);
                 plotz_geojson::parse_geojson(
                     &mut interner,
                     serde_json::from_reader(BufReader::new(file)).expect("read"),
@@ -172,6 +200,7 @@ impl Map {
             .into_iter()
             .map(|(k, v)| (k, v.map(|ap| ap.to_colored_polygon()).collect()))
             .collect::<Vec<(Bucket, Vec<DrawObj>)>>();
+        trace!("made {:?} layers", layers.len());
 
         Ok(Map { layers })
     }
@@ -237,7 +266,8 @@ impl Map {
 
     fn apply_shading(&mut self) {
         for (bucket, layers) in self.layers.iter_mut() {
-            if let Some(shade_config) = SHADINGS.get(bucket) {
+            if let Some((shade_and_outline, shade_config)) = SHADINGS.get(bucket) {
+                let mut v = vec![];
                 // keep the frame, add the crosshatchings.
                 let crosshatchings: Vec<DrawObj> = layers
                     .iter()
@@ -259,7 +289,16 @@ impl Map {
                     })
                     .flatten()
                     .collect();
-                layers.extend(crosshatchings);
+                match shade_and_outline {
+                    ShadeAndOutline::JustShade => {
+                        v.extend(crosshatchings);
+                    }
+                    ShadeAndOutline::Both => {
+                        v.extend(crosshatchings);
+                        v.extend(layers.clone());
+                    }
+                }
+                *layers = v;
             }
         }
     }

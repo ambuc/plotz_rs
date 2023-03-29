@@ -20,6 +20,7 @@ pub enum Path {
     Cycleway,
     Pedestrian,
     Rail,
+    Subway,
     Boundary,
 }
 

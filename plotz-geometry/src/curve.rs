@@ -112,8 +112,7 @@ fn split_range(
             let new_input = new_input_start..=new_input_end;
 
             Box::new(
-                std::iter::once(*input.start()..=*basis.end())
-                    .chain(split_range(new_input, basis))
+                std::iter::once(*input.start()..=*basis.end()).chain(split_range(new_input, basis)),
             )
         }
         (false, _) => {
