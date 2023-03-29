@@ -20,8 +20,23 @@ pub enum Path {
     Cycleway,
     Pedestrian,
     Rail,
-    Subway,
+    Subway(Subway),
     Boundary,
+}
+
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+pub enum Subway {
+    ACE,
+    BDFM,
+    G,
+    L,
+    JZ,
+    NQRW,
+    _123,
+    _456,
+    _7,
+    T,
+    S,
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]

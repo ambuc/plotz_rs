@@ -1,3 +1,5 @@
+use crate::bucket::Subway;
+
 use {
     crate::bucket::{Area, Bucket, Path},
     lazy_static::lazy_static,
@@ -92,7 +94,7 @@ lazy_static! {
         (Bucket::Path(Path::Pedestrian), ("highway", "residential")),
         (Bucket::Path(Path::Pedestrian), ("highway", "steps")),
         (Bucket::Path(Path::Rail), ("railway", "rail")),
-        (Bucket::Path(Path::Subway), ("route", "subway")),
+        (Bucket::Path(Path::Subway(Subway::ACE)), ("route", "subway")),
     ];
 }
 
