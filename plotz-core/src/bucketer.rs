@@ -2,8 +2,6 @@ use crate::bucket::Subway;
 
 use {
     crate::bucket::{Area, Bucket, Path},
-    lazy_static::lazy_static,
-    string_interner::{symbol::SymbolU32, StringInterner},
     thiserror::Error,
     tracing::*,
 };
@@ -22,111 +20,263 @@ pub enum BucketerError {
     BucketerError,
 }
 
-pub struct DefaultBucketer {
-    //
-    list: Vec<((SymbolU32, SymbolU32), Bucket)>,
+pub trait Bucketer2 {
+    type Tag;
+    type Bucket;
+    type Error;
+    /// Given a set of tags, sort into bucket or return error.
+    fn bucket(&self, tags: &[Self::Tag]) -> Result<Self::Bucket, Self::Error>;
 }
 
-impl DefaultBucketer {
-    pub fn new(interner: &mut StringInterner) -> DefaultBucketer {
-        let mut list = vec![];
-        for (bucket, (tag0, tag1)) in TAGS.iter() {
-            list.push((
-                (interner.get_or_intern(tag0), interner.get_or_intern(tag1)),
-                *bucket,
-            ));
-        }
-        DefaultBucketer { list }
-    }
+#[derive(Debug, PartialEq, Eq)]
+enum Seq {
+    AnyOf(Vec<(&'static str, &'static str)>),
+    AllOf(Vec<(&'static str, &'static str)>),
 }
 
-impl Bucketer for DefaultBucketer {
-    type Tag = (SymbolU32, SymbolU32);
+pub struct DefaultBucketer2 {}
+
+impl Bucketer2 for DefaultBucketer2 {
+    type Tag = (String, String);
     type Bucket = Bucket;
     type Error = BucketerError;
-    fn bucket(&self, tag: Self::Tag) -> Result<Self::Bucket, Self::Error> {
-        self.list
-            .iter()
-            .find_map(|(tags, bucket)| if *tags == tag { Some(*bucket) } else { None })
-            .ok_or(BucketerError::BucketerError)
-    }
-}
+    fn bucket(&self, tags: &[Self::Tag]) -> Result<Self::Bucket, Self::Error> {
+        for (seq, b) in [
+            (
+                Seq::AnyOf(vec![("natural", "beach"), ("natural", "sand")]),
+                Bucket::Area(Area::Beach),
+            ),
+            (
+                Seq::AnyOf(vec![
+                    ("building", "apartments"),
+                    ("building", "garages"),
+                    ("building", "yes"),
+                    ("landuse", "commercial"),
+                    ("landuse", "construction"),
+                    ("landuse", "industrial"),
+                ]),
+                Bucket::Area(Area::Building),
+            ),
+            (
+                Seq::AnyOf(vec![
+                    ("amenity", "school"),
+                    ("fitness_station", "box"),
+                    ("leisure", "pitch"),
+                    ("leisure", "playground"),
+                    ("leisure", "swimming_pool"),
+                ]),
+                Bucket::Area(Area::Fun),
+            ),
+            (
+                Seq::AnyOf(vec![("natural", "bare_rock")]),
+                Bucket::Area(Area::NaturalRock),
+            ),
+            (
+                Seq::AnyOf(vec![
+                    ("landuse", "brownfield"),
+                    ("landuse", "cemetery"),
+                    ("landuse", "grass"),
+                    ("landuse", "greenfield"),
+                    ("landuse", "meadow"),
+                    ("leisure", "garden"),
+                    ("leisure", "park"),
+                    ("natural", "scrub"),
+                ]),
+                Bucket::Area(Area::Park),
+            ),
+            (
+                Seq::AnyOf(vec![("landuse", "railway")]),
+                Bucket::Area(Area::Rail),
+            ),
+            (
+                Seq::AnyOf(vec![("natural", "tree")]),
+                Bucket::Area(Area::Tree),
+            ),
+            (
+                Seq::AnyOf(vec![
+                    ("natural", "bay"),
+                    ("natural", "coastline"),
+                    ("natural", "water"),
+                ]),
+                Bucket::Area(Area::Water),
+            ),
+            (
+                Seq::AnyOf(vec![("boundary", "administrative")]),
+                Bucket::Path(Path::Boundary),
+            ),
+            (
+                Seq::AnyOf(vec![("highway", "cycleway")]),
+                Bucket::Path(Path::Cycleway),
+            ),
+            (
+                Seq::AnyOf(vec![("highway", "primary")]),
+                Bucket::Path(Path::Highway1),
+            ),
+            (
+                Seq::AnyOf(vec![("highway", "secondary")]),
+                Bucket::Path(Path::Highway2),
+            ),
+            (
+                Seq::AnyOf(vec![("highway", "tertiary")]),
+                Bucket::Path(Path::Highway3),
+            ),
+            (
+                Seq::AnyOf(vec![
+                    ("highway", "primary_link"),
+                    ("highway", "secondary_link"),
+                    ("highway", "service"),
+                ]),
+                Bucket::Path(Path::Highway4),
+            ),
+            (
+                Seq::AnyOf(vec![
+                    ("highway", "footway"),
+                    ("highway", "pedestrian"),
+                    ("highway", "residential"),
+                    ("highway", "steps"),
+                ]),
+                Bucket::Path(Path::Pedestrian),
+            ),
+            //
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "A")]),
+                Bucket::Path(Path::Subway(Subway::_ACE)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "C")]),
+                Bucket::Path(Path::Subway(Subway::_ACE)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "E")]),
+                Bucket::Path(Path::Subway(Subway::_ACE)),
+            ),
+            //
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "B")]),
+                Bucket::Path(Path::Subway(Subway::_BDFM)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "D")]),
+                Bucket::Path(Path::Subway(Subway::_BDFM)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "F")]),
+                Bucket::Path(Path::Subway(Subway::_BDFM)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "M")]),
+                Bucket::Path(Path::Subway(Subway::_BDFM)),
+            ),
+            //
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "G")]),
+                Bucket::Path(Path::Subway(Subway::_G)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "L")]),
+                Bucket::Path(Path::Subway(Subway::_L)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "J")]),
+                Bucket::Path(Path::Subway(Subway::_JZ)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "Z")]),
+                Bucket::Path(Path::Subway(Subway::_JZ)),
+            ),
+            //
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "N")]),
+                Bucket::Path(Path::Subway(Subway::_NQRW)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "Q")]),
+                Bucket::Path(Path::Subway(Subway::_NQRW)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "R")]),
+                Bucket::Path(Path::Subway(Subway::_NQRW)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "W")]),
+                Bucket::Path(Path::Subway(Subway::_NQRW)),
+            ),
+            //
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "1")]),
+                Bucket::Path(Path::Subway(Subway::_123)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "2")]),
+                Bucket::Path(Path::Subway(Subway::_123)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "3")]),
+                Bucket::Path(Path::Subway(Subway::_123)),
+            ),
+            //
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "4")]),
+                Bucket::Path(Path::Subway(Subway::_456)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "5")]),
+                Bucket::Path(Path::Subway(Subway::_456)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "6")]),
+                Bucket::Path(Path::Subway(Subway::_456)),
+            ),
+            //
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "7")]),
+                Bucket::Path(Path::Subway(Subway::_7)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "T")]),
+                Bucket::Path(Path::Subway(Subway::_T)),
+            ),
+            (
+                Seq::AllOf(vec![("route", "subway"), ("ref", "S")]),
+                Bucket::Path(Path::Subway(Subway::_S)),
+            ),
+            (
+                Seq::AnyOf(vec![("railway", "rail"), ("route", "subway")]),
+                Bucket::Path(Path::Rail),
+            ),
+        ] {
+            if match seq {
+                Seq::AllOf(seq) => seq.iter().all(|tag| {
+                    tags.iter()
+                        .any(|found| found.0 == tag.0 && found.1 == tag.1)
+                }),
+                Seq::AnyOf(seq) => seq.iter().any(|tag| {
+                    tags.iter()
+                        .any(|found| found.0 == tag.0 && found.1 == tag.1)
+                }),
+            } {
+                return Ok(b);
+            }
+        }
+        println!("Skipping polygon with tags: {:?}", tags);
 
-lazy_static! {
-    pub static ref TAGS: Vec<(Bucket, (&'static str, &'static str))> = vec![
-        (Bucket::Area(Area::Beach), ("natural", "beach")),
-        (Bucket::Area(Area::Beach), ("natural", "sand")),
-        (Bucket::Area(Area::Building), ("building", "apartments")),
-        (Bucket::Area(Area::Building), ("building", "garages")),
-        (Bucket::Area(Area::Building), ("building", "yes")),
-        (Bucket::Area(Area::Business), ("landuse", "commercial")),
-        (Bucket::Area(Area::Business), ("landuse", "construction")),
-        (Bucket::Area(Area::Business), ("landuse", "industrial")),
-        (Bucket::Area(Area::Fun), ("amenity", "school")),
-        (Bucket::Area(Area::Fun), ("fitness_station", "box")),
-        (Bucket::Area(Area::Fun), ("leisure", "pitch")),
-        (Bucket::Area(Area::Fun), ("leisure", "playground")),
-        (Bucket::Area(Area::Fun), ("leisure", "swimming_pool")),
-        (Bucket::Area(Area::NaturalRock), ("natural", "bare_rock")),
-        (Bucket::Area(Area::Park), ("landuse", "brownfield")),
-        (Bucket::Area(Area::Park), ("landuse", "cemetery")),
-        (Bucket::Area(Area::Park), ("landuse", "grass")),
-        (Bucket::Area(Area::Park), ("landuse", "greenfield")),
-        (Bucket::Area(Area::Park), ("landuse", "meadow")),
-        (Bucket::Area(Area::Park), ("leisure", "garden")),
-        (Bucket::Area(Area::Park), ("leisure", "park")),
-        (Bucket::Area(Area::Park), ("natural", "scrub")),
-        (Bucket::Area(Area::Rail), ("landuse", "railway")),
-        (Bucket::Area(Area::Tree), ("natural", "tree")),
-        (Bucket::Area(Area::Water), ("natural", "bay")),
-        (Bucket::Area(Area::Water), ("natural", "coastline")),
-        (Bucket::Area(Area::Water), ("natural", "water")),
-        (Bucket::Path(Path::Boundary), ("boundary", "administrative")),
-        (Bucket::Path(Path::Cycleway), ("highway", "cycleway")),
-        (Bucket::Path(Path::Highway1), ("highway", "primary")),
-        (Bucket::Path(Path::Highway2), ("highway", "secondary")),
-        (Bucket::Path(Path::Highway3), ("highway", "tertiary")),
-        (Bucket::Path(Path::Highway4), ("highway", "primary_link")),
-        (Bucket::Path(Path::Highway4), ("highway", "secondary_link")),
-        (Bucket::Path(Path::Highway4), ("highway", "service")),
-        (Bucket::Path(Path::Pedestrian), ("highway", "footway")),
-        (Bucket::Path(Path::Pedestrian), ("highway", "pedestrian")),
-        (Bucket::Path(Path::Pedestrian), ("highway", "residential")),
-        (Bucket::Path(Path::Pedestrian), ("highway", "steps")),
-        (Bucket::Path(Path::Rail), ("railway", "rail")),
-        (Bucket::Path(Path::Subway(Subway::ACE)), ("route", "subway")),
-    ];
+        Err(BucketerError::BucketerError)
+    }
 }
 
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use plotz_geojson::INTERESTING_PROPERTIES;
-
-    #[test]
-    fn test_tags_marked_interesting() {
-        for (_, (k, v)) in TAGS.iter() {
-            assert!(INTERESTING_PROPERTIES.contains(k), "{}", k);
-            assert!(INTERESTING_PROPERTIES.contains(v), "{}", v);
-        }
-    }
 
     #[test]
     fn test_bucket() {
-        let mut interner = StringInterner::new();
-        let bucketer = DefaultBucketer::new(&mut interner);
+        let bucketer = DefaultBucketer2 {};
         assert_eq!(
-            bucketer.bucket((
-                interner.get_or_intern("natural"),
-                interner.get_or_intern("sand")
-            )),
+            bucketer.bucket(&vec![("natural".to_string(), "sand".to_string())]),
             Ok(Bucket::Area(Area::Beach))
         );
         assert_eq!(
-            bucketer.bucket((
-                interner.get_or_intern("natural"),
-                interner.get_or_intern("")
-            )),
+            bucketer.bucket(&vec![("natural".to_string(), "".to_string())]),
             Err(BucketerError::BucketerError)
         );
     }

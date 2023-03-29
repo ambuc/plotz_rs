@@ -4,8 +4,8 @@
 
 use {
     crate::{
-        bucket::{Area, Subway as BucketSubway, Bucket, Path as BucketPath},
-        bucketer::{Bucketer, DefaultBucketer},
+        bucket::{Area, Bucket, Path as BucketPath, Subway as BucketSubway},
+        bucketer::{Bucketer2, DefaultBucketer2},
         draw_obj::DrawObj,
         draw_obj_inner::DrawObjInner,
         frame::make_frame,
@@ -28,7 +28,6 @@ use {
         io::BufReader,
         path::{Path, PathBuf},
     },
-    string_interner::{symbol::SymbolU32, StringInterner},
     thiserror::Error,
     tracing::*,
     typed_builder::TypedBuilder,
@@ -64,7 +63,7 @@ pub struct AnnotatedPolygon {
     bucket: Bucket,
     color: &'static ColorRGB,
     thickness: f64,
-    _tags: Vec<(SymbolU32, SymbolU32)>,
+    _tags: Vec<(String, String)>,
 }
 impl AnnotatedPolygon {
     /// Consumes an AnnotatedPolygon and casts down to a ColoredPolygon.
@@ -107,17 +106,17 @@ lazy_static! {
                 (Bucket::Area(Area::Rail), ORANGE),
                 (Bucket::Area(Area::Tree), BROWN),
                 (Bucket::Area(Area::Water), LIGHTBLUE),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::ACE)), BLUE),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::BDFM)), ORANGE),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::G)), LIMEGREEN),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::L)), LIGHTGRAY),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::JZ)), BROWN),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::NQRW)), YELLOW),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_ACE)), BLUE),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_BDFM)), ORANGE),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_G)), LIMEGREEN),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_L)), LIGHTGRAY),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_JZ)), BROWN),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_NQRW)), YELLOW),
                 (Bucket::Path(BucketPath::Subway(BucketSubway::_123)), RED),
                 (Bucket::Path(BucketPath::Subway(BucketSubway::_456)), GREEN),
                 (Bucket::Path(BucketPath::Subway(BucketSubway::_7)), PLUM),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::T)), TURQUOISE),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::S)), GRAY),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_T)), TURQUOISE),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_S)), GRAY),
             ]);
 
     /// Which areas get shaded, and how much.
@@ -175,8 +174,7 @@ impl Map {
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
     /// unadjusted Map instance.
     pub fn new(map_config: &MapConfig) -> Result<Map, MapError> {
-        let mut interner = StringInterner::new();
-        let bucketer = DefaultBucketer::new(&mut interner);
+        let bucketer = DefaultBucketer2 {};
 
         let layers = map_config
             .input_files
@@ -184,24 +182,22 @@ impl Map {
             .flat_map(|file| {
                 trace!("processing file: {:?}", file);
                 plotz_geojson::parse_geojson(
-                    &mut interner,
                     serde_json::from_reader(BufReader::new(file)).expect("read"),
                 )
                 .expect("parse")
                 .iter()
                 .filter_map(|(polygon, tags)| {
-                    let bucket = tags
-                        .iter()
-                        .map(|t| bucketer.bucket(*t))
-                        .find_map(|r| r.ok())?;
-
-                    Some(AnnotatedPolygon {
-                        polygon: polygon.clone(),
-                        bucket,
-                        color: &DEFAULT_COLORING[&bucket],
-                        thickness: *DEFAULT_THICKNESS,
-                        _tags: tags.clone(),
-                    })
+                    if let Ok(bucket) = bucketer.bucket(tags) {
+                        Some(AnnotatedPolygon {
+                            polygon: polygon.clone(),
+                            bucket,
+                            color: &DEFAULT_COLORING[&bucket],
+                            thickness: *DEFAULT_THICKNESS,
+                            _tags: tags.clone(),
+                        })
+                    } else {
+                        None
+                    }
                 })
                 .collect::<Vec<_>>()
             })

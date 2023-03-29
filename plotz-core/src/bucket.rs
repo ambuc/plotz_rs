@@ -26,17 +26,17 @@ pub enum Path {
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub enum Subway {
-    ACE,
-    BDFM,
-    G,
-    L,
-    JZ,
-    NQRW,
+    _ACE,
+    _BDFM,
+    _G,
+    _L,
+    _JZ,
+    _NQRW,
     _123,
     _456,
     _7,
-    T,
-    S,
+    _T,
+    _S,
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]

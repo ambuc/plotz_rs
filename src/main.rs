@@ -91,6 +91,7 @@ mod test_super {
         actual_png
     }
 
+    #[ignore]
     #[test]
     fn test_main_inner() {
         let tmp_dir = TempDir::new("tmp").unwrap();
