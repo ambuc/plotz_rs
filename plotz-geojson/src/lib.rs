@@ -179,7 +179,7 @@ fn parse_to_circle(coords: &Value) -> Result<Vec<DrawObjInner>, GeoJsonConversio
             return Ok(vec![DrawObjInner::from(CurveArc(
                 Pt(x, y),
                 0.0..=TAU,
-                10.0,
+                0.005,
             ))]);
         }
     }

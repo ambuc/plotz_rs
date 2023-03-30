@@ -217,7 +217,7 @@ pub fn make() -> Vec<DrawObj> {
             // centerings
             t_copy.pts.iter_mut().for_each(|pt| {
                 pt.rotate(&Pt(0.0, 0.0), 0.0 * PI);
-                *pt = *pt * Pt(1.0, -1.0);
+                *pt *= Pt(1.0, -1.0);
                 *pt *= 270.0;
                 *pt += Pt(40.0 + 270.0 * (jdx as f64), 150.0 + 150.0 * (idx as f64));
                 match t.kind {

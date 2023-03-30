@@ -2,8 +2,6 @@
 
 #![allow(clippy::let_unit_value)]
 
-use plotz_geometry::traits::Mutable;
-
 use {
     crate::{
         bucket::{Area, Bucket, Path as BucketPath, Subway as BucketSubway},
@@ -23,6 +21,7 @@ use {
         point::Pt,
         polygon::Polygon,
         shading_02::{shade_polygon, ShadeConfig},
+        traits::*,
     },
     std::{
         collections::HashMap,
@@ -226,6 +225,16 @@ impl Map {
             })
     }
 
+    fn scale_all(&mut self, f: impl Fn(&mut dyn ScalableAssign)) {
+        self.layers
+            .iter_mut()
+            .flat_map(|(_b, vec)| vec)
+            .map(|co| &mut co.obj)
+            .for_each(|obj| {
+                f(obj);
+            });
+    }
+
     fn get_bbox(&self) -> Result<Polygon, MapError> {
         Ok(streaming_bbox(self.objs_iter())?)
     }
@@ -256,9 +265,7 @@ impl Map {
             FloatOrd(dest_size.width as f64 / curr_bbox.width().abs()),
         )
         .0 * scale_factor;
-        self.mutate_all(|pt| {
-            *pt *= scaling_factor;
-        });
+        self.scale_all(|obj| *obj *= scaling_factor);
         Ok(())
     }
 
@@ -330,20 +337,6 @@ impl Map {
         let () = self.adjust(config.scale_factor, &config.size)?;
         let () = self.shift(config.shift_x, config.shift_y)?;
         self.apply_shading_to_layers();
-
-        for (_, layers) in &self.layers {
-            for obj in layers.iter() {
-                match obj.obj {
-                    DrawObjInner::CurveArc(ca) => {
-                        // bug here:  mutate() is no good. need translate and scale and maybe rotate, later.
-                        dbg!(&ca, &ca.bbox());
-                    }
-                    _ => {
-                        //
-                    }
-                }
-            }
-        }
 
         if config.draw_frame {
             info!("Adding frame.");

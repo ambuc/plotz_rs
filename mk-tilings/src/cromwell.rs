@@ -288,7 +288,7 @@ pub fn make() -> Vec<DrawObj> {
         .flat_map(|tile| {
             let color = tile.color();
             let mut p = Polygon(tile.pts()).unwrap();
-            p = p * Pt(1.0, -1.0); // flip
+            p *= Pt(1.0, -1.0); // flip
             p *= 3500.0;
             p += Pt(95.0, -300.0); // translate
 

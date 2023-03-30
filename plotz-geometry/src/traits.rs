@@ -26,3 +26,5 @@ pub trait Mutable: YieldPointsMut {
 pub trait Translatable: Add<Pt> + AddAssign<Pt> + Sub<Pt> + SubAssign<Pt> + Sized {}
 
 pub trait Scalable<T>: Mul<T> + MulAssign<T> + Div<T> + DivAssign<T> + Sized {}
+
+pub trait ScalableAssign: MulAssign<f64> + DivAssign<f64> {}
