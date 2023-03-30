@@ -4,8 +4,8 @@ use {
     float_cmp::assert_approx_eq,
     lazy_static::lazy_static,
     plotz_color::*,
-    plotz_core::draw_obj::DrawObj,
     plotz_geometry::{
+        draw_obj::DrawObj,
         point::{PolarPt, Pt},
         polygon::Polygon,
         shading_02::{shade_polygon, ShadeConfig},

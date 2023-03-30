@@ -2,8 +2,10 @@
 
 use {
     plotz_color::*,
-    plotz_core::{draw_obj::DrawObj, draw_obj_inner::DrawObjInner, group::Group},
     plotz_geometry::{
+        draw_obj::DrawObj,
+        draw_obj_inner::DrawObjInner,
+        group::Group,
         interpolate::extrapolate_2d as extrapolate,
         point::{PolarPt, Pt},
         polygon::Polygon,

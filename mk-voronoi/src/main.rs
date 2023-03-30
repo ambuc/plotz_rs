@@ -1,9 +1,10 @@
 use {
     argh::FromArgs,
     plotz_color::{take_random_colors, ColorRGB},
-    plotz_core::{canvas::Canvas, draw_obj::DrawObj, frame::make_frame, svg::Size},
+    plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         bounded::Bounded,
+        draw_obj::DrawObj,
         point::Pt,
         polygon::Polygon,
         shading_02::{shade_polygon, ShadeConfig},

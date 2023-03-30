@@ -1,5 +1,5 @@
 //！ A character at a point.
-use plotz_geometry::{
+use crate::{
     bounded::Bounded,
     point::Pt,
     traits::{Mutable, YieldPoints, YieldPointsMut},

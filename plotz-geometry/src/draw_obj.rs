@@ -2,11 +2,11 @@
 
 use {
     crate::draw_obj_inner::DrawObjInner,
-    plotz_color::{ColorRGB, BLACK},
-    plotz_geometry::{
+    crate::{
         point::Pt,
         traits::{Mutable, YieldPoints, YieldPointsMut},
     },
+    plotz_color::{ColorRGB, BLACK},
 };
 
 /// An object with a color and thickness.

@@ -1,10 +1,14 @@
-#![deny(missing_docs)]
+#![allow(missing_docs)]
 
 //! A general-purpose 2D geometry library.
 
 pub mod bounded;
+pub mod char;
 pub mod crop;
 pub mod curve;
+pub mod draw_obj;
+pub mod draw_obj_inner;
+pub mod group;
 pub mod interpolate;
 pub mod point;
 pub mod polygon;

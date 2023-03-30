@@ -2,8 +2,8 @@
 
 use {
     plotz_color::*,
-    plotz_core::draw_obj::DrawObj,
     plotz_geometry::{
+        draw_obj::DrawObj,
         point::Pt,
         polygon::Polygon,
         shading_02::{shade_polygon, ShadeConfig},

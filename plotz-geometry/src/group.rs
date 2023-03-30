@@ -1,11 +1,11 @@
 use {
     crate::draw_obj_inner::DrawObjInner,
-    float_ord::FloatOrd,
-    plotz_geometry::{
+    crate::{
         bounded::Bounded,
         point::Pt,
         traits::{Mutable, YieldPoints, YieldPointsMut},
     },
+    float_ord::FloatOrd,
 };
 
 #[derive(Debug, PartialEq, Clone)]

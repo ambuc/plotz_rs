@@ -1,17 +1,15 @@
 #![allow(unused)]
 
 use plotz_color::*;
-use plotz_core::draw_obj;
 use std::f64::consts::{FRAC_PI_2, FRAC_PI_8, PI};
 use {
     argh::FromArgs,
     plotz_color::{take_random_colors, ColorRGB},
-    plotz_core::{
-        canvas::Canvas, draw_obj::DrawObj, draw_obj_inner::DrawObjInner, frame::make_frame,
-        svg::Size,
-    },
+    plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         bounded::Bounded,
+        draw_obj::DrawObj,
+        draw_obj_inner::DrawObjInner,
         point::Pt,
         polygon::{Multiline, Polygon},
         shading_02::{shade_polygon, ShadeConfig},

@@ -1,9 +1,9 @@
 //! SVG plotting utilities.
 //!
 use {
-    crate::{char::Char, draw_obj::DrawObj, draw_obj_inner::DrawObjInner},
     plotz_color::BLACK,
     plotz_geometry::polygon::PolygonKind,
+    plotz_geometry::{char::Char, draw_obj::DrawObj, draw_obj_inner::DrawObjInner},
     std::fmt::Debug,
     thiserror::Error,
 };
@@ -126,7 +126,7 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use crate::draw_obj::DrawObj;
+    use plotz_geometry::draw_obj::DrawObj;
     use plotz_geometry::{point::Pt, polygon::Polygon};
     use tempdir::TempDir;
 

@@ -1,8 +1,8 @@
 //! Default frames.
 
 use {
-    crate::draw_obj::DrawObj,
     plotz_color::BLACK,
+    plotz_geometry::draw_obj::DrawObj,
     plotz_geometry::{point::Pt, polygon::Polygon},
 };
 

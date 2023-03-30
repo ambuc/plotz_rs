@@ -1,15 +1,12 @@
 //! Many draw objs.
 
 use {
-    crate::{
-        draw_obj::DrawObj,
-        draw_obj_inner::DrawObjInner,
-        svg::{write_layer_to_svg, Size},
-    },
+    crate::svg::{write_layer_to_svg, Size},
     anyhow::Error,
     itertools::Itertools,
     multimap::MultiMap,
     plotz_color::ColorRGB,
+    plotz_geometry::{draw_obj::DrawObj, draw_obj_inner::DrawObjInner},
     plotz_geometry::{point::Pt, polygon::Multiline},
 };
 

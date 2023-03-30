@@ -1,7 +1,5 @@
 use {
-    crate::{char::Char, group::Group},
-    derive_more::From,
-    plotz_geometry::{
+    crate::{
         bounded::Bounded,
         curve::CurveArc,
         point::Pt,
@@ -9,6 +7,8 @@ use {
         segment::Segment,
         traits::{Mutable, YieldPoints, YieldPointsMut},
     },
+    crate::{char::Char, group::Group},
+    derive_more::From,
 };
 
 /// Either a polygon or a segment.

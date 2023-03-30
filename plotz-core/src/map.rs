@@ -6,8 +6,6 @@ use {
     crate::{
         bucket::{Area, Bucket, Path as BucketPath, Subway as BucketSubway},
         bucketer::{Bucketer2, DefaultBucketer2},
-        draw_obj::DrawObj,
-        draw_obj_inner::DrawObjInner,
         frame::make_frame,
         svg::{write_layer_to_svg, Size, SvgWriteError},
     },
@@ -18,6 +16,8 @@ use {
     plotz_geojson::GeoJsonConversionError,
     plotz_geometry::{
         bounded::{streaming_bbox, Bounded, BoundingBoxError},
+        draw_obj::DrawObj,
+        draw_obj_inner::DrawObjInner,
         point::Pt,
         polygon::Polygon,
         shading_02::{shade_polygon, ShadeConfig},

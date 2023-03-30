@@ -3,11 +3,11 @@ use plotz_geometry::bounded::Bounded;
 use {
     argh::FromArgs,
     plotz_color::*,
-    plotz_core::{
-        canvas::Canvas, draw_obj::DrawObj, draw_obj_inner::DrawObjInner, frame::make_frame,
-        svg::Size,
+    plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
+    plotz_geometry::{
+        crop::Croppable, curve::CurveArcs, draw_obj::DrawObj, draw_obj_inner::DrawObjInner,
+        point::Pt,
     },
-    plotz_geometry::{crop::Croppable, curve::CurveArcs, point::Pt},
     std::f64::consts::*,
 };
 
