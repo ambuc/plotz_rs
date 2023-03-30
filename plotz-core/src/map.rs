@@ -215,24 +215,29 @@ impl Map {
             .map(|co| &co.obj)
     }
 
-    fn mutate_all(&mut self, f: impl Fn(&mut Pt)) {
+    fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut DrawObjInner> {
         self.layers
             .iter_mut()
             .flat_map(|(_b, vec)| vec)
             .map(|co| &mut co.obj)
-            .for_each(|obj| {
-                obj.mutate(&f);
-            })
+    }
+
+    fn mutate_all(&mut self, f: impl Fn(&mut Pt)) {
+        self.objs_iter_mut().for_each(|obj| {
+            obj.mutate(&f);
+        })
+    }
+
+    fn translate_all(&mut self, f: impl Fn(&mut dyn TranslatableAssign)) {
+        self.objs_iter_mut().for_each(|obj| {
+            f(obj);
+        });
     }
 
     fn scale_all(&mut self, f: impl Fn(&mut dyn ScalableAssign)) {
-        self.layers
-            .iter_mut()
-            .flat_map(|(_b, vec)| vec)
-            .map(|co| &mut co.obj)
-            .for_each(|obj| {
-                f(obj);
-            });
+        self.objs_iter_mut().for_each(|obj| {
+            f(obj);
+        });
     }
 
     fn get_bbox(&self) -> Result<Polygon, MapError> {
@@ -241,7 +246,7 @@ impl Map {
 
     fn apply_bl_shift(&mut self) -> Result<(), MapError> {
         let curr_bbox = self.get_bbox()?;
-        self.mutate_all(|pt| {
+        self.translate_all(|pt| {
             *pt -= curr_bbox.bl_bound();
         });
         Ok(())
@@ -249,7 +254,7 @@ impl Map {
 
     fn apply_centering(&mut self, dest_size: &Size) -> Result<(), MapError> {
         let curr_bbox = self.get_bbox()?;
-        self.mutate_all(|pt| {
+        self.translate_all(|pt| {
             *pt += Pt(
                 (dest_size.width as f64 - curr_bbox.right_bound()) / 2.0,
                 (dest_size.height as f64 - curr_bbox.top_bound()) / 2.0,
@@ -323,7 +328,7 @@ impl Map {
 
     /// Adjusts the map for manual transform correction issues.
     pub fn shift(&mut self, shift_x: f64, shift_y: f64) -> Result<(), MapError> {
-        self.mutate_all(|pt| {
+        self.translate_all(|pt| {
             *pt += (shift_x, shift_y).into();
         });
         Ok(())

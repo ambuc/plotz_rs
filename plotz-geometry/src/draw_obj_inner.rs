@@ -256,3 +256,4 @@ impl DivAssign<f64> for DrawObjInner {
 impl Translatable for DrawObjInner {}
 impl Scalable<f64> for DrawObjInner {}
 impl ScalableAssign for DrawObjInner {}
+impl TranslatableAssign for DrawObjInner {}
