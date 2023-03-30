@@ -9,6 +9,7 @@ use {
         polygon::{Multiline, MultilineConstructorError, Polygon, PolygonConstructorError},
     },
     serde_json::Value,
+    std::collections::HashMap,
     thiserror::Error,
     tracing::*,
 };
@@ -31,12 +32,23 @@ pub enum GeoJsonConversionError {
     CoordinatesNotArray,
 }
 
+#[derive(Debug, PartialEq, Eq, Hash)]
+enum GeomType {
+    LineString,
+    MultiLineString,
+    Polygon,
+    MultiPolygon,
+    Point,
+}
+
 /// Parses a GeoJSON file and returns a list of tagged polygons.
 pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Polygon, TagsList)>, GeoJsonConversionError> {
     let features = geo_json["features"].as_array().expect("features not array");
 
     info!("Parsing geojson file with {:?} features.", features.len());
     let mut lines: Vec<(Polygon, TagsList)> = vec![];
+
+    let mut stats = HashMap::<GeomType, usize>::new();
 
     for (_idx, feature) in features.iter().enumerate() {
         let tags = feature["properties"]
@@ -58,11 +70,41 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Polygon, TagsList)>, GeoJso
         let coords = &feature["geometry"]["coordinates"];
 
         if let Ok(polygons) = match geom_type {
-            "LineString" => parse_to_linestring(coords),
-            "MultiLineString" => parse_to_multilinestring(coords),
-            "Polygon" => parse_to_polygon(coords),
-            "MultiPolygon" => parse_to_multipolygon(coords),
-            "Point" => Ok(vec![]),
+            "LineString" => parse_to_linestring(coords).map(|v| {
+                stats
+                    .entry(GeomType::LineString)
+                    .and_modify(|e| *e += 1)
+                    .or_insert(1);
+                v
+            }),
+            "MultiLineString" => parse_to_multilinestring(coords).map(|v| {
+                stats
+                    .entry(GeomType::MultiLineString)
+                    .and_modify(|e| *e += 1)
+                    .or_insert(1);
+                v
+            }),
+            "Polygon" => parse_to_polygon(coords).map(|v| {
+                stats
+                    .entry(GeomType::Polygon)
+                    .and_modify(|e| *e += 1)
+                    .or_insert(1);
+                v
+            }),
+            "MultiPolygon" => parse_to_multipolygon(coords).map(|v| {
+                stats
+                    .entry(GeomType::MultiPolygon)
+                    .and_modify(|e| *e += 1)
+                    .or_insert(1);
+                v
+            }),
+            "Point" => Ok(vec![]).map(|v| {
+                stats
+                    .entry(GeomType::Point)
+                    .and_modify(|e| *e += 1)
+                    .or_insert(1);
+                v
+            }),
             other => {
                 unimplemented!("other: {:?}", other);
             }
@@ -70,8 +112,13 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Polygon, TagsList)>, GeoJso
             for polygon in polygons {
                 lines.push((polygon, tags.clone()));
             }
+        } else {
+            error!("geojson parse failure");
         }
     }
+
+    trace!("stats: {:?}", stats);
+
     Ok(lines)
 }
 
