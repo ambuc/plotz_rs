@@ -58,19 +58,15 @@ pub enum MapError {
 
 #[derive(Debug)]
 /// A polygon with some annotations (bucket, color, tags, etc.).
-pub struct AnnotatedPolygon {
-    polygon: Polygon,
+pub struct AnnotatedDrawObj {
+    draw_obj: DrawObj,
     bucket: Bucket,
-    color: &'static ColorRGB,
-    thickness: f64,
     _tags: Vec<(String, String)>,
 }
-impl AnnotatedPolygon {
+impl AnnotatedDrawObj {
     /// Consumes an AnnotatedPolygon and casts down to a ColoredPolygon.
-    pub fn to_colored_polygon(self) -> DrawObj {
-        DrawObj::new(self.polygon)
-            .with_color(self.color)
-            .with_thickness(self.thickness)
+    pub fn to_draw_obj(self) -> DrawObj {
+        self.draw_obj
     }
 }
 
@@ -186,13 +182,13 @@ impl Map {
                 )
                 .expect("parse")
                 .iter()
-                .filter_map(|(polygon, tags)| {
+                .filter_map(|(draw_obj_inner, tags)| {
                     if let Ok(bucket) = bucketer.bucket(tags) {
-                        Some(AnnotatedPolygon {
-                            polygon: polygon.clone(),
+                        Some(AnnotatedDrawObj {
+                            draw_obj: DrawObj::new(draw_obj_inner.clone())
+                                .with_color(&DEFAULT_COLORING[&bucket])
+                                .with_thickness(*DEFAULT_THICKNESS),
                             bucket,
-                            color: &DEFAULT_COLORING[&bucket],
-                            thickness: *DEFAULT_THICKNESS,
                             _tags: tags.clone(),
                         })
                     } else {
@@ -204,7 +200,7 @@ impl Map {
             .sorted_by(|ap_1, ap_2| std::cmp::Ord::cmp(&ap_1.bucket, &ap_2.bucket))
             .group_by(|ap| ap.bucket)
             .into_iter()
-            .map(|(k, v)| (k, v.map(|ap| ap.to_colored_polygon()).collect()))
+            .map(|(k, v)| (k, v.map(|ap| ap.to_draw_obj()).collect()))
             .collect::<Vec<(Bucket, Vec<DrawObj>)>>();
         trace!("made {:?} layers", layers.len());
 
