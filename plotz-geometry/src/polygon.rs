@@ -144,12 +144,14 @@ pub enum CurveOrientation {
 
 impl Polygon {
     /// Inverts the polygon across the x-axis.
+    #[deprecated]
     pub fn flip_x(&mut self) {
-        self.pts.iter_mut().for_each(|p| p.x.0 *= -1.0);
+        self.pts.iter_mut().for_each(|p| p.flip_x());
     }
     /// Inverts the polygon across the y-axis.
+    #[deprecated]
     pub fn flip_y(&mut self) {
-        self.pts.iter_mut().for_each(|p| p.y.0 *= -1.0);
+        self.pts.iter_mut().for_each(|p| p.flip_y());
     }
     /// Returns the segments of a polygon, one at a time.
     ///

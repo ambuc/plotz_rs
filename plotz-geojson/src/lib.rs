@@ -102,7 +102,7 @@ pub fn parse_geojson(
                     .or_insert(1);
                 v
             }),
-            "Point" => Ok(vec![]).map(|v| {
+            "Point" => parse_to_circle(coords).map(|v| {
                 stats
                     .entry(GeomType::Point)
                     .and_modify(|e| *e += 1)
@@ -169,6 +169,17 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<DrawObjInner>, GeoJsonCon
         })
         .collect::<Result<_, _>>()?)
     .map(|v: Vec<Polygon>| v.into_iter().map(DrawObjInner::from).collect::<Vec<_>>())
+}
+
+fn parse_to_circle(_coords: &Value) -> Result<Vec<DrawObjInner>, GeoJsonConversionError> {
+    Ok(vec![])
+    // let array = &coords.as_array().expect("not array");
+    // if let Some(x) = array.get(0).and_then(|o| o.as_f64()) {
+    //     if let Some(y) = array.get(1).and_then(|o| o.as_f64()) {
+    //         return Ok(vec![DrawObjInner::from(CurveArc(Pt(x, y), 0.0..=TAU, 0.0))]);
+    //     }
+    // }
+    // Err(GeoJsonConversionError::CoordinatesNotArray)
 }
 
 #[cfg(test)]

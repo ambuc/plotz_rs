@@ -175,6 +175,16 @@ impl Pt {
     pub fn avg(&self, other: &Pt) -> Pt {
         Pt((self.x.0 + other.x.0) / 2.0, (self.y.0 + other.y.0) / 2.0)
     }
+
+    /// Flip x
+    pub fn flip_x(&mut self) {
+        self.x.0 *= -1.0;
+    }
+
+    /// Flip y
+    pub fn flip_y(&mut self) {
+        self.y.0 *= -1.0;
+    }
 }
 
 impl YieldPoints for Pt {

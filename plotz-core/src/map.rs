@@ -2,6 +2,8 @@
 
 #![allow(clippy::let_unit_value)]
 
+use plotz_geometry::traits::Mutable;
+
 use {
     crate::{
         bucket::{Area, Bucket, Path as BucketPath, Subway as BucketSubway},
@@ -213,41 +215,33 @@ impl Map {
             .flat_map(|(_b, vec)| vec)
             .map(|co| &co.obj)
     }
-    fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut DrawObjInner> {
+
+    fn mutate_all(&mut self, f: impl Fn(&mut Pt)) {
         self.layers
             .iter_mut()
             .flat_map(|(_b, vec)| vec)
             .map(|co| &mut co.obj)
-    }
-    fn polygons_iter(&self) -> impl Iterator<Item = &Polygon> {
-        self.objs_iter().filter_map(|o| match o {
-            DrawObjInner::Polygon(p) => Some(p),
-            _ => None,
-        })
-    }
-    fn polygons_iter_mut(&mut self) -> impl Iterator<Item = &mut Polygon> {
-        self.objs_iter_mut().filter_map(|o| match o {
-            DrawObjInner::Polygon(p) => Some(p),
-            _ => None,
-        })
+            .for_each(|obj| {
+                obj.mutate(&f);
+            })
     }
 
     fn get_bbox(&self) -> Result<Polygon, MapError> {
-        Ok(streaming_bbox(self.polygons_iter())?)
+        Ok(streaming_bbox(self.objs_iter())?)
     }
 
     fn apply_bl_shift(&mut self) -> Result<(), MapError> {
         let curr_bbox = self.get_bbox()?;
-        self.polygons_iter_mut().for_each(|p| {
-            *p -= curr_bbox.bl_bound();
+        self.mutate_all(|pt| {
+            *pt -= curr_bbox.bl_bound();
         });
         Ok(())
     }
 
     fn apply_centering(&mut self, dest_size: &Size) -> Result<(), MapError> {
         let curr_bbox = self.get_bbox()?;
-        self.polygons_iter_mut().for_each(|p| {
-            *p += Pt(
+        self.mutate_all(|pt| {
+            *pt += Pt(
                 (dest_size.width as f64 - curr_bbox.right_bound()) / 2.0,
                 (dest_size.height as f64 - curr_bbox.top_bound()) / 2.0,
             );
@@ -262,7 +256,9 @@ impl Map {
             FloatOrd(dest_size.width as f64 / curr_bbox.width().abs()),
         )
         .0 * scale_factor;
-        self.polygons_iter_mut().for_each(|p| *p *= scaling_factor);
+        self.mutate_all(|pt| {
+            *pt *= scaling_factor;
+        });
         Ok(())
     }
 
@@ -308,11 +304,9 @@ impl Map {
     /// Adjusts the map for scale/transform issues.
     pub fn adjust(&mut self, scale_factor: f64, dest_size: &Size) -> Result<(), MapError> {
         // first compute current bbox and shift everything positive.
-        self.polygons_iter_mut().for_each(|p| {
-            p.flip_y();
-            p.pts
-                .iter_mut()
-                .for_each(|pt| pt.y.0 = latitude_to_y(pt.y.0))
+        self.mutate_all(|pt| {
+            pt.flip_y();
+            pt.y.0 = latitude_to_y(pt.y.0);
         });
         self.apply_bl_shift()?;
         self.apply_scaling(scale_factor, dest_size)?;
@@ -322,9 +316,8 @@ impl Map {
 
     /// Adjusts the map for manual transform correction issues.
     pub fn shift(&mut self, shift_x: f64, shift_y: f64) -> Result<(), MapError> {
-        //
-        self.polygons_iter_mut().for_each(|p| {
-            *p += (shift_x, shift_y).into();
+        self.mutate_all(|pt| {
+            *pt += (shift_x, shift_y).into();
         });
         Ok(())
     }
