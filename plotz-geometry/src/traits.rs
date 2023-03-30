@@ -3,7 +3,7 @@
 #![allow(unused)]
 #![allow(missing_docs)]
 
-use crate::point::Pt;
+use {crate::point::Pt, std::ops::*};
 
 pub trait YieldPoints {
     fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>>;
@@ -22,3 +22,7 @@ pub trait Mutable: YieldPointsMut {
         false
     }
 }
+
+pub trait Translatable: Add<Pt> + AddAssign<Pt> + Sub<Pt> + SubAssign<Pt> + Sized {}
+
+pub trait Scalable<T>: Mul<T> + MulAssign<T> + Div<T> + DivAssign<T> + Sized {}

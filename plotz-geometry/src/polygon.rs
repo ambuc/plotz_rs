@@ -1,5 +1,7 @@
 //! A 2D polygon (or multi&line).
 
+use std::ops::DivAssign;
+
 use {
     crate::{
         bounded::Bounded,
@@ -7,7 +9,7 @@ use {
         interpolate,
         point::Pt,
         segment::{Contains, Intersection, IntersectionOutcome, Segment},
-        traits::{Mutable, YieldPoints, YieldPointsMut},
+        traits::*,
     },
     derivative::Derivative,
     either::Either,
@@ -17,7 +19,7 @@ use {
         cmp::{Eq, PartialEq},
         collections::HashSet,
         fmt::Debug,
-        ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign},
+        ops::*,
     },
     thiserror::Error,
 };
@@ -608,8 +610,6 @@ pub fn abp(o: &Pt, i: &Pt, j: &Pt) -> f64 {
     }
 }
 
-/// An add operation between a polygon and a point. This can be seen as
-/// transposition by |rhs|.
 impl Add<Pt> for &Polygon {
     type Output = Polygon;
     fn add(self, rhs: Pt) -> Self::Output {
@@ -627,6 +627,51 @@ impl AddAssign<Pt> for Polygon {
         self.pts.iter_mut().for_each(|p| *p += rhs);
     }
 }
+impl Div<Pt> for Polygon {
+    type Output = Polygon;
+    fn div(self, rhs: Pt) -> Self::Output {
+        Polygon(self.pts.iter().map(|p| *p / rhs)).unwrap()
+    }
+}
+impl Div<f64> for Polygon {
+    type Output = Polygon;
+    fn div(self, rhs: f64) -> Self::Output {
+        Polygon(self.pts.iter().map(|p| *p / rhs)).unwrap()
+    }
+}
+impl DivAssign<Pt> for Polygon {
+    fn div_assign(&mut self, rhs: Pt) {
+        self.pts.iter_mut().for_each(|p| *p /= rhs);
+    }
+}
+impl DivAssign<f64> for Polygon {
+    fn div_assign(&mut self, rhs: f64) {
+        self.pts.iter_mut().for_each(|p| *p /= rhs);
+    }
+}
+impl Mul<Pt> for Polygon {
+    type Output = Polygon;
+    fn mul(self, rhs: Pt) -> Polygon {
+        Polygon(self.pts.iter().map(|p| *p * rhs)).unwrap()
+    }
+}
+impl Mul<f64> for Polygon {
+    type Output = Polygon;
+    fn mul(mut self, rhs: f64) -> Polygon {
+        self *= rhs;
+        self
+    }
+}
+impl MulAssign<Pt> for Polygon {
+    fn mul_assign(&mut self, rhs: Pt) {
+        self.pts.iter_mut().for_each(|p| *p *= rhs);
+    }
+}
+impl MulAssign<f64> for Polygon {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.pts.iter_mut().for_each(|p| *p *= rhs);
+    }
+}
 impl Sub<Pt> for &Polygon {
     type Output = Polygon;
     fn sub(self, rhs: Pt) -> Self::Output {
@@ -642,28 +687,6 @@ impl Sub<Pt> for Polygon {
 impl SubAssign<Pt> for Polygon {
     fn sub_assign(&mut self, rhs: Pt) {
         self.pts.iter_mut().for_each(|p| *p -= rhs);
-    }
-}
-impl MulAssign<f64> for Polygon {
-    fn mul_assign(&mut self, rhs: f64) {
-        self.pts.iter_mut().for_each(|p| *p *= rhs);
-    }
-}
-
-impl Mul<f64> for Polygon {
-    type Output = Polygon;
-
-    fn mul(mut self, rhs: f64) -> Polygon {
-        self *= rhs;
-        self
-    }
-}
-
-impl Mul<Pt> for Polygon {
-    type Output = Polygon;
-
-    fn mul(self, rhs: Pt) -> Polygon {
-        Polygon(self.pts.iter().map(|p| *p * rhs)).unwrap()
     }
 }
 
@@ -692,6 +715,10 @@ impl YieldPointsMut for Polygon {
     }
 }
 impl Mutable for Polygon {}
+
+impl Translatable for Polygon {}
+impl Scalable<Pt> for Polygon {}
+impl Scalable<f64> for Polygon {}
 
 #[cfg(test)]
 mod tests {

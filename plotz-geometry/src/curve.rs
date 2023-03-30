@@ -1,7 +1,5 @@
 #![allow(missing_docs)]
 
-use crate::traits::Mutable;
-
 use {
     crate::{
         bounded::Bounded,
@@ -10,14 +8,14 @@ use {
         point::{PolarPt, Pt},
         polygon::abp,
         segment::Segment,
-        traits::{YieldPoints, YieldPointsMut},
+        traits::*,
     },
     float_cmp::approx_eq,
     float_ord::FloatOrd,
     std::{
         cmp::{max, min, Ordering},
         f64::consts::*,
-        ops::RangeInclusive,
+        ops::*,
     },
 };
 
@@ -140,7 +138,7 @@ pub fn CurveArcs(ctr: Pt, sweep: RangeInclusive<f64>, radius: f64) -> Vec<CurveA
         .collect::<Vec<_>>()
 }
 
-impl std::ops::Add<Pt> for CurveArc {
+impl Add<Pt> for CurveArc {
     type Output = Self;
     fn add(self, rhs: Pt) -> Self::Output {
         CurveArc {
@@ -149,15 +147,47 @@ impl std::ops::Add<Pt> for CurveArc {
         }
     }
 }
-impl std::ops::AddAssign<Pt> for CurveArc {
+impl AddAssign<Pt> for CurveArc {
     fn add_assign(&mut self, rhs: Pt) {
         self.ctr += rhs;
     }
 }
-impl std::ops::MulAssign<f64> for CurveArc {
+impl Div<f64> for CurveArc {
+    type Output = CurveArc;
+    fn div(self, rhs: f64) -> Self::Output {
+        CurveArc(self.ctr / rhs, self.angle_range(), self.radius / rhs)
+    }
+}
+impl DivAssign<f64> for CurveArc {
+    fn div_assign(&mut self, rhs: f64) {
+        self.ctr /= rhs;
+        self.radius /= rhs;
+    }
+}
+impl Mul<f64> for CurveArc {
+    type Output = CurveArc;
+    fn mul(self, rhs: f64) -> Self::Output {
+        CurveArc(self.ctr * rhs, self.angle_range(), self.radius * rhs)
+    }
+}
+impl MulAssign<f64> for CurveArc {
     fn mul_assign(&mut self, rhs: f64) {
         self.ctr *= rhs;
         self.radius *= rhs;
+    }
+}
+impl Sub<Pt> for CurveArc {
+    type Output = Self;
+    fn sub(self, rhs: Pt) -> Self::Output {
+        CurveArc {
+            ctr: self.ctr - rhs,
+            ..self
+        }
+    }
+}
+impl SubAssign<Pt> for CurveArc {
+    fn sub_assign(&mut self, rhs: Pt) {
+        self.ctr -= rhs;
     }
 }
 
@@ -461,6 +491,8 @@ impl YieldPointsMut for CurveArc {
 }
 
 impl Mutable for CurveArc {}
+impl Translatable for CurveArc {}
+impl Scalable<f64> for CurveArc {}
 
 #[cfg(test)]
 mod test {

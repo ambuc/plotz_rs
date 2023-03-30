@@ -1,14 +1,10 @@
 use {
     crate::{
-        bounded::Bounded,
-        curve::CurveArc,
-        point::Pt,
-        polygon::Polygon,
-        segment::Segment,
-        traits::{Mutable, YieldPoints, YieldPointsMut},
+        bounded::Bounded, curve::CurveArc, point::Pt, polygon::Polygon, segment::Segment, traits::*,
     },
     crate::{char::Char, group::Group},
     derive_more::From,
+    std::ops::*,
 };
 
 /// Either a polygon or a segment.
@@ -104,3 +100,158 @@ impl Bounded for DrawObjInner {
         self.inner_impl_bounded().bottom_bound()
     }
 }
+
+impl Add<Pt> for DrawObjInner {
+    type Output = DrawObjInner;
+    fn add(self, rhs: Pt) -> Self::Output {
+        match self {
+            DrawObjInner::Point(p) => DrawObjInner::from(p + rhs),
+            DrawObjInner::Char(ch) => DrawObjInner::from(ch + rhs),
+            DrawObjInner::CurveArc(ca) => DrawObjInner::from(ca + rhs),
+            DrawObjInner::Group(g) => DrawObjInner::from(g + rhs),
+            DrawObjInner::Polygon(pg) => DrawObjInner::from(pg + rhs),
+            DrawObjInner::Segment(sg) => DrawObjInner::from(sg + rhs),
+        }
+    }
+}
+
+impl Sub<Pt> for DrawObjInner {
+    type Output = DrawObjInner;
+    fn sub(self, rhs: Pt) -> Self::Output {
+        match self {
+            DrawObjInner::Point(p) => DrawObjInner::from(p - rhs),
+            DrawObjInner::Char(ch) => DrawObjInner::from(ch - rhs),
+            DrawObjInner::CurveArc(ca) => DrawObjInner::from(ca - rhs),
+            DrawObjInner::Group(g) => DrawObjInner::from(g - rhs),
+            DrawObjInner::Polygon(pg) => DrawObjInner::from(pg - rhs),
+            DrawObjInner::Segment(sg) => DrawObjInner::from(sg - rhs),
+        }
+    }
+}
+impl Mul<f64> for DrawObjInner {
+    type Output = DrawObjInner;
+    fn mul(self, rhs: f64) -> Self::Output {
+        match self {
+            DrawObjInner::Point(p) => DrawObjInner::from(p * rhs),
+            DrawObjInner::Char(ch) => DrawObjInner::from(ch * rhs),
+            DrawObjInner::CurveArc(ca) => DrawObjInner::from(ca * rhs),
+            DrawObjInner::Group(g) => DrawObjInner::from(g * rhs),
+            DrawObjInner::Polygon(pg) => DrawObjInner::from(pg * rhs),
+            DrawObjInner::Segment(sg) => DrawObjInner::from(sg * rhs),
+        }
+    }
+}
+impl Div<f64> for DrawObjInner {
+    type Output = DrawObjInner;
+    fn div(self, rhs: f64) -> Self::Output {
+        match self {
+            DrawObjInner::Point(p) => DrawObjInner::from(p / rhs),
+            DrawObjInner::Char(ch) => DrawObjInner::from(ch / rhs),
+            DrawObjInner::CurveArc(ca) => DrawObjInner::from(ca / rhs),
+            DrawObjInner::Group(g) => DrawObjInner::from(g / rhs),
+            DrawObjInner::Polygon(pg) => DrawObjInner::from(pg / rhs),
+            DrawObjInner::Segment(sg) => DrawObjInner::from(sg / rhs),
+        }
+    }
+}
+impl AddAssign<Pt> for DrawObjInner {
+    fn add_assign(&mut self, rhs: Pt) {
+        match self {
+            DrawObjInner::Point(p) => {
+                *p += rhs;
+            }
+            DrawObjInner::Char(ch) => {
+                *ch += rhs;
+            }
+            DrawObjInner::CurveArc(ca) => {
+                *ca += rhs;
+            }
+            DrawObjInner::Group(g) => {
+                *g += rhs;
+            }
+            DrawObjInner::Polygon(pg) => {
+                *pg += rhs;
+            }
+            DrawObjInner::Segment(sg) => {
+                *sg += rhs;
+            }
+        }
+    }
+}
+impl SubAssign<Pt> for DrawObjInner {
+    fn sub_assign(&mut self, rhs: Pt) {
+        match self {
+            DrawObjInner::Point(p) => {
+                *p -= rhs;
+            }
+            DrawObjInner::Char(ch) => {
+                *ch -= rhs;
+            }
+            DrawObjInner::CurveArc(ca) => {
+                *ca -= rhs;
+            }
+            DrawObjInner::Group(g) => {
+                *g -= rhs;
+            }
+            DrawObjInner::Polygon(pg) => {
+                *pg -= rhs;
+            }
+            DrawObjInner::Segment(sg) => {
+                *sg -= rhs;
+            }
+        }
+    }
+}
+
+impl MulAssign<f64> for DrawObjInner {
+    fn mul_assign(&mut self, rhs: f64) {
+        match self {
+            DrawObjInner::Point(p) => {
+                *p *= rhs;
+            }
+            DrawObjInner::Char(ch) => {
+                *ch *= rhs;
+            }
+            DrawObjInner::CurveArc(ca) => {
+                *ca *= rhs;
+            }
+            DrawObjInner::Group(g) => {
+                *g *= rhs;
+            }
+            DrawObjInner::Polygon(pg) => {
+                *pg *= rhs;
+            }
+            DrawObjInner::Segment(sg) => {
+                *sg *= rhs;
+            }
+        }
+    }
+}
+
+impl DivAssign<f64> for DrawObjInner {
+    fn div_assign(&mut self, rhs: f64) {
+        match self {
+            DrawObjInner::Point(p) => {
+                *p /= rhs;
+            }
+            DrawObjInner::Char(ch) => {
+                *ch /= rhs;
+            }
+            DrawObjInner::CurveArc(ca) => {
+                *ca /= rhs;
+            }
+            DrawObjInner::Group(g) => {
+                *g /= rhs;
+            }
+            DrawObjInner::Polygon(pg) => {
+                *pg /= rhs;
+            }
+            DrawObjInner::Segment(sg) => {
+                *sg /= rhs;
+            }
+        }
+    }
+}
+
+impl Translatable for DrawObjInner {}
+impl Scalable<f64> for DrawObjInner {}

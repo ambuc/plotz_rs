@@ -6,15 +6,11 @@ use crate::{
     interpolate::interpolate_2d_checked,
     point::Pt,
     polygon::Polygon,
-    traits::{Mutable, YieldPoints, YieldPointsMut},
+    traits::*,
 };
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
-use std::{
-    cmp::PartialOrd,
-    fmt::Debug,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign},
-};
+use std::{cmp::PartialOrd, fmt::Debug, ops::*};
 
 #[allow(dead_code)]
 #[derive(Debug, PartialEq, Eq)]
@@ -215,59 +211,61 @@ impl Segment {
     }
 }
 
-/// An add operation between a segment and a point. This can be seen as
-/// transposition by |rhs|.
 impl Add<Pt> for Segment {
     type Output = Segment;
     fn add(self, rhs: Pt) -> Self::Output {
         Segment(self.i + rhs, self.f + rhs)
     }
 }
-
-/// An add-assign operation between a segment and a point. This can be seen as a
-/// transposition by |rhs|.
 impl AddAssign<Pt> for Segment {
     fn add_assign(&mut self, rhs: Pt) {
         *self = Segment(self.i + rhs, self.f + rhs);
     }
 }
-
-/// A division operation between a segment and a point. This can be seen as
-/// scaling by |rhs|.
+impl Div<Pt> for Segment {
+    type Output = Segment;
+    fn div(self, rhs: Pt) -> Self::Output {
+        Segment(self.i / rhs, self.f / rhs)
+    }
+}
 impl Div<f64> for Segment {
     type Output = Segment;
     fn div(self, rhs: f64) -> Self::Output {
         Segment(self.i / rhs, self.f / rhs)
     }
 }
-
-/// An division-assign operation between a segment and a point. This can be seen
-/// as a scaling by |rhs|.
+impl DivAssign<Pt> for Segment {
+    fn div_assign(&mut self, rhs: Pt) {
+        *self = Segment(self.i / rhs, self.f / rhs);
+    }
+}
 impl DivAssign<f64> for Segment {
     fn div_assign(&mut self, rhs: f64) {
         *self = Segment(self.i / rhs, self.f / rhs)
     }
 }
-
-/// A multiplication operation between a segment and a point. This can be seen
-/// as scaling by |rhs|.
+impl Mul<Pt> for Segment {
+    type Output = Segment;
+    fn mul(self, rhs: Pt) -> Self::Output {
+        Segment(self.i * rhs, self.f * rhs)
+    }
+}
 impl Mul<f64> for Segment {
     type Output = Segment;
     fn mul(self, rhs: f64) -> Self::Output {
         Segment(self.i * rhs, self.f * rhs)
     }
 }
-
-/// An multiplication-assign operation between a segment and a point. This can
-/// be seen as a scaling by |rhs|.
+impl MulAssign<Pt> for Segment {
+    fn mul_assign(&mut self, rhs: Pt) {
+        *self = Segment(self.i * rhs, self.f * rhs);
+    }
+}
 impl MulAssign<f64> for Segment {
     fn mul_assign(&mut self, rhs: f64) {
         *self = Segment(self.i * rhs, self.f * rhs);
     }
 }
-
-/// A subtraction operation between a segment and a point. This can be seen
-/// as translation by |rhs|.
 impl Sub<Pt> for Segment {
     type Output = Segment;
     fn sub(self, rhs: Pt) -> Self::Output {
@@ -277,9 +275,6 @@ impl Sub<Pt> for Segment {
         }
     }
 }
-
-/// An subtraction-assign operation between a segment and a point. This can
-/// be seen as translation by |rhs|.
 impl SubAssign<Pt> for Segment {
     fn sub_assign(&mut self, rhs: Pt) {
         *self = Segment(self.i - rhs, self.f - rhs);
@@ -386,6 +381,10 @@ impl Croppable for Segment {
         Ok(resultants)
     }
 }
+
+impl Translatable for Segment {}
+impl Scalable<Pt> for Segment {}
+impl Scalable<f64> for Segment {}
 
 #[cfg(test)]
 mod tests {

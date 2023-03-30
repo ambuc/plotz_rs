@@ -1,8 +1,7 @@
 //！ A character at a point.
-use crate::{
-    bounded::Bounded,
-    point::Pt,
-    traits::{Mutable, YieldPoints, YieldPointsMut},
+use {
+    crate::{bounded::Bounded, point::Pt, traits::*},
+    std::ops::*,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -41,4 +40,96 @@ impl YieldPointsMut for Char {
     }
 }
 
+impl Add<Pt> for Char {
+    type Output = Self;
+    fn add(self, rhs: Pt) -> Self::Output {
+        Self {
+            pt: self.pt + rhs,
+            ..self
+        }
+    }
+}
+impl Sub<Pt> for Char {
+    type Output = Self;
+    fn sub(self, rhs: Pt) -> Self::Output {
+        Self {
+            pt: self.pt - rhs,
+            ..self
+        }
+    }
+}
+
+impl AddAssign<Pt> for Char {
+    fn add_assign(&mut self, rhs: Pt) {
+        self.pt += rhs;
+    }
+}
+
+impl SubAssign<Pt> for Char {
+    fn sub_assign(&mut self, rhs: Pt) {
+        self.pt -= rhs;
+    }
+}
+
+impl Mul<Pt> for Char {
+    type Output = Self;
+    fn mul(self, rhs: Pt) -> Self::Output {
+        Self {
+            pt: self.pt * rhs,
+            ..self
+        }
+    }
+}
+impl Mul<f64> for Char {
+    type Output = Self;
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self {
+            pt: self.pt * rhs,
+            ..self
+        }
+    }
+}
+impl Div<Pt> for Char {
+    type Output = Self;
+    fn div(self, rhs: Pt) -> Self::Output {
+        Self {
+            pt: self.pt / rhs,
+            ..self
+        }
+    }
+}
+impl Div<f64> for Char {
+    type Output = Self;
+    fn div(self, rhs: f64) -> Self::Output {
+        Self {
+            pt: self.pt / rhs,
+            ..self
+        }
+    }
+}
+
+impl MulAssign<f64> for Char {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.pt *= rhs;
+    }
+}
+impl MulAssign<Pt> for Char {
+    fn mul_assign(&mut self, rhs: Pt) {
+        self.pt *= rhs;
+    }
+}
+impl DivAssign<f64> for Char {
+    fn div_assign(&mut self, rhs: f64) {
+        self.pt /= rhs;
+    }
+}
+impl DivAssign<Pt> for Char {
+    fn div_assign(&mut self, rhs: Pt) {
+        self.pt /= rhs;
+    }
+}
+
 impl Mutable for Char {}
+impl Translatable for Char {}
+impl Scalable<Pt> for Char {}
+impl Scalable<f64> for Char {}

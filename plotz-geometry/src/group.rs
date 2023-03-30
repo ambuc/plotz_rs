@@ -1,11 +1,8 @@
 use {
     crate::draw_obj_inner::DrawObjInner,
-    crate::{
-        bounded::Bounded,
-        point::Pt,
-        traits::{Mutable, YieldPoints, YieldPointsMut},
-    },
+    crate::{bounded::Bounded, point::Pt, traits::*},
     float_ord::FloatOrd,
+    std::ops::*,
 };
 
 #[derive(Debug, PartialEq, Clone)]
@@ -78,3 +75,65 @@ impl Bounded for Group {
             .0
     }
 }
+
+impl AddAssign<Pt> for Group {
+    fn add_assign(&mut self, rhs: Pt) {
+        self.0.iter_mut().for_each(|o| {
+            *o += rhs;
+        });
+    }
+}
+
+impl SubAssign<Pt> for Group {
+    fn sub_assign(&mut self, rhs: Pt) {
+        self.0.iter_mut().for_each(|o| {
+            *o -= rhs;
+        });
+    }
+}
+
+impl Add<Pt> for Group {
+    type Output = Self;
+    fn add(self, rhs: Pt) -> Self::Output {
+        Self::new(self.0.into_iter().map(|o| o + rhs))
+    }
+}
+impl Sub<Pt> for Group {
+    type Output = Self;
+    fn sub(self, rhs: Pt) -> Self::Output {
+        Self::new(self.0.into_iter().map(|o| o - rhs))
+    }
+}
+
+impl Mul<f64> for Group {
+    type Output = Self;
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self::new(self.0.into_iter().map(|o| o * rhs))
+    }
+}
+
+impl MulAssign<f64> for Group {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.0.iter_mut().for_each(|o| {
+            *o *= rhs;
+        })
+    }
+}
+
+impl Div<f64> for Group {
+    type Output = Self;
+    fn div(self, rhs: f64) -> Self::Output {
+        Self::new(self.0.into_iter().map(|o| o / rhs))
+    }
+}
+
+impl DivAssign<f64> for Group {
+    fn div_assign(&mut self, rhs: f64) {
+        self.0.iter_mut().for_each(|o| {
+            *o /= rhs;
+        })
+    }
+}
+
+impl Translatable for Group {}
+impl Scalable<f64> for Group {}

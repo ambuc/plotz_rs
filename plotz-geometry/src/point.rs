@@ -2,18 +2,10 @@
 
 use std::fmt::Debug;
 
-use crate::{
-    bounded::Bounded,
-    segment::Segment,
-    traits::{Mutable, YieldPoints, YieldPointsMut},
-};
+use crate::{bounded::Bounded, segment::Segment, traits::*};
 use {
     float_ord::FloatOrd,
-    std::{
-        convert::From,
-        hash::Hash,
-        ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Rem, Sub, SubAssign},
-    },
+    std::{convert::From, hash::Hash, ops::*},
 };
 
 /// A point in 2D space.
@@ -57,14 +49,12 @@ where
     }
 }
 
-/// An implicit constructor from tuples.
 impl From<(f64, f64)> for Pt {
     fn from((x, y): (f64, f64)) -> Pt {
         Pt(x, y)
     }
 }
 
-/// A modulo operator for rounding points.
 impl Rem<(f64, f64)> for Pt {
     type Output = Self;
 
@@ -73,24 +63,12 @@ impl Rem<(f64, f64)> for Pt {
     }
 }
 
-/// A div-assign operator for points.
-impl DivAssign<f64> for Pt {
-    fn div_assign(&mut self, rhs: f64) {
-        self.x.0 /= rhs;
-        self.y.0 /= rhs;
-    }
-}
-
-/// A addition operator for points.
-///
 impl Add<Pt> for Pt {
     type Output = Self;
     fn add(self, rhs: Pt) -> Self::Output {
         Pt(self.x.0 + rhs.x.0, self.y.0 + rhs.y.0)
     }
 }
-
-/// A add-assign operator for points.
 impl AddAssign<Pt> for Pt {
     fn add_assign(&mut self, other: Self) {
         *self = Self {
@@ -99,53 +77,66 @@ impl AddAssign<Pt> for Pt {
         };
     }
 }
-
-/// A subtraction operator for points.
-impl Sub<Pt> for Pt {
+impl Div<Pt> for Pt {
     type Output = Self;
-    fn sub(self, rhs: Pt) -> Self::Output {
-        Pt(self.x.0 - rhs.x.0, self.y.0 - rhs.y.0)
+    fn div(self, rhs: Pt) -> Self::Output {
+        Pt(self.x.0 / rhs.x.0, self.y.0 / rhs.y.0)
     }
 }
-
-/// A sub-assign operator for points.
-impl SubAssign<Pt> for Pt {
-    fn sub_assign(&mut self, other: Self) {
-        *self = Self {
-            x: FloatOrd(self.x.0 - other.x.0),
-            y: FloatOrd(self.y.0 - other.y.0),
-        };
-    }
-}
-
-/// A multiplication operator for points.
-impl Mul<f64> for Pt {
+impl Div<f64> for Pt {
     type Output = Self;
-    fn mul(self, rhs: f64) -> Self::Output {
-        Pt(self.x.0 * rhs, self.y.0 * rhs)
+    fn div(self, rhs: f64) -> Self::Output {
+        Pt(self.x.0 / rhs, self.y.0 / rhs)
     }
 }
-
+impl DivAssign<Pt> for Pt {
+    fn div_assign(&mut self, rhs: Pt) {
+        self.x.0 /= rhs.x.0;
+        self.y.0 /= rhs.y.0;
+    }
+}
+impl DivAssign<f64> for Pt {
+    fn div_assign(&mut self, rhs: f64) {
+        self.x.0 /= rhs;
+        self.y.0 /= rhs;
+    }
+}
 impl Mul<Pt> for Pt {
     type Output = Self;
     fn mul(self, rhs: Pt) -> Self::Output {
         Pt(self.x.0 * rhs.x.0, self.y.0 * rhs.y.0)
     }
 }
-
-/// A sub-assign operator for points.
+impl Mul<f64> for Pt {
+    type Output = Self;
+    fn mul(self, rhs: f64) -> Self::Output {
+        Pt(self.x.0 * rhs, self.y.0 * rhs)
+    }
+}
+impl MulAssign<Pt> for Pt {
+    fn mul_assign(&mut self, rhs: Pt) {
+        self.x.0 *= rhs.x.0;
+        self.y.0 *= rhs.y.0;
+    }
+}
 impl MulAssign<f64> for Pt {
     fn mul_assign(&mut self, rhs: f64) {
         self.x.0 *= rhs;
         self.y.0 *= rhs;
     }
 }
-
-/// A division operator for points.
-impl Div<f64> for Pt {
+impl Sub<Pt> for Pt {
     type Output = Self;
-    fn div(self, rhs: f64) -> Self::Output {
-        Pt(self.x.0 / rhs, self.y.0 / rhs)
+    fn sub(self, rhs: Pt) -> Self::Output {
+        Pt(self.x.0 - rhs.x.0, self.y.0 - rhs.y.0)
+    }
+}
+impl SubAssign<Pt> for Pt {
+    fn sub_assign(&mut self, other: Self) {
+        *self = Self {
+            x: FloatOrd(self.x.0 - other.x.0),
+            y: FloatOrd(self.y.0 - other.y.0),
+        };
     }
 }
 
@@ -198,6 +189,25 @@ impl YieldPointsMut for Pt {
     }
 }
 impl Mutable for Pt {}
+
+impl Bounded for Pt {
+    fn top_bound(&self) -> f64 {
+        self.y.0
+    }
+    fn bottom_bound(&self) -> f64 {
+        self.y.0
+    }
+    fn left_bound(&self) -> f64 {
+        self.x.0
+    }
+    fn right_bound(&self) -> f64 {
+        self.x.0
+    }
+}
+
+impl Translatable for Pt {}
+impl Scalable<Pt> for Pt {}
+impl Scalable<f64> for Pt {}
 
 #[cfg(test)]
 mod tests {
@@ -280,20 +290,5 @@ mod tests {
     #[test]
     fn test_div() {
         assert_eq!(Pt(1.0, 2.0) / 2.0, Pt(0.5, 1.0)); // floats
-    }
-}
-
-impl Bounded for Pt {
-    fn top_bound(&self) -> f64 {
-        self.y.0
-    }
-    fn bottom_bound(&self) -> f64 {
-        self.y.0
-    }
-    fn left_bound(&self) -> f64 {
-        self.x.0
-    }
-    fn right_bound(&self) -> f64 {
-        self.x.0
     }
 }
