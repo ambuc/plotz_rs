@@ -45,17 +45,13 @@ impl DrawObj {
 
 impl YieldPoints for DrawObj {
     fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
-        self.obj
-            .inner_impl_yield_points()
-            .and_then(|yp| yp.yield_pts())
+        self.obj.inner_impl_yield_points().yield_pts()
     }
 }
 
 impl YieldPointsMut for DrawObj {
     fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
-        self.obj
-            .inner_impl_yield_points_mut()
-            .and_then(|ypm| ypm.yield_pts_mut())
+        self.obj.inner_impl_yield_points_mut().yield_pts_mut()
     }
 }
 

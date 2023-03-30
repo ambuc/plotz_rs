@@ -3,15 +3,16 @@
 //! A crate for reading GeoJSON files and parsing them to plotz_geometry
 //! structs.
 
-use plotz_geometry::draw_obj_inner::DrawObjInner;
-
 use {
     plotz_geometry::{
+        curve::CurveArc,
+        draw_obj_inner::DrawObjInner,
         point::Pt,
         polygon::{Multiline, MultilineConstructorError, Polygon, PolygonConstructorError},
     },
     serde_json::Value,
     std::collections::HashMap,
+    std::f64::consts::*,
     thiserror::Error,
     tracing::*,
 };
@@ -171,15 +172,18 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<DrawObjInner>, GeoJsonCon
     .map(|v: Vec<Polygon>| v.into_iter().map(DrawObjInner::from).collect::<Vec<_>>())
 }
 
-fn parse_to_circle(_coords: &Value) -> Result<Vec<DrawObjInner>, GeoJsonConversionError> {
-    Ok(vec![])
-    // let array = &coords.as_array().expect("not array");
-    // if let Some(x) = array.get(0).and_then(|o| o.as_f64()) {
-    //     if let Some(y) = array.get(1).and_then(|o| o.as_f64()) {
-    //         return Ok(vec![DrawObjInner::from(CurveArc(Pt(x, y), 0.0..=TAU, 0.0))]);
-    //     }
-    // }
-    // Err(GeoJsonConversionError::CoordinatesNotArray)
+fn parse_to_circle(coords: &Value) -> Result<Vec<DrawObjInner>, GeoJsonConversionError> {
+    let array = &coords.as_array().expect("not array");
+    if let Some(x) = array.get(0).and_then(|o| o.as_f64()) {
+        if let Some(y) = array.get(1).and_then(|o| o.as_f64()) {
+            return Ok(vec![DrawObjInner::from(CurveArc(
+                Pt(x, y),
+                0.0..=TAU,
+                10.0,
+            ))]);
+        }
+    }
+    Err(GeoJsonConversionError::CoordinatesNotArray)
 }
 
 #[cfg(test)]

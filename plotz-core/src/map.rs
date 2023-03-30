@@ -262,7 +262,7 @@ impl Map {
         Ok(())
     }
 
-    fn apply_shading(&mut self) {
+    fn apply_shading_to_layers(&mut self) {
         for (bucket, layers) in self.layers.iter_mut() {
             if let Some((shade_and_outline, shade_config)) = SHADINGS.get(bucket) {
                 let mut v = vec![];
@@ -329,7 +329,21 @@ impl Map {
 
         let () = self.adjust(config.scale_factor, &config.size)?;
         let () = self.shift(config.shift_x, config.shift_y)?;
-        self.apply_shading();
+        self.apply_shading_to_layers();
+
+        for (_, layers) in &self.layers {
+            for obj in layers.iter() {
+                match obj.obj {
+                    DrawObjInner::CurveArc(ca) => {
+                        // bug here:  mutate() is no good. need translate and scale and maybe rotate, later.
+                        dbg!(&ca, &ca.bbox());
+                    }
+                    _ => {
+                        //
+                    }
+                }
+            }
+        }
 
         if config.draw_frame {
             info!("Adding frame.");
@@ -354,10 +368,10 @@ impl Map {
         }
 
         // write each layer individually.
-        for (idx, (bucket, polygons)) in self.layers.into_iter().enumerate() {
+        for (idx, (bucket, draw_objs)) in self.layers.into_iter().enumerate() {
             let path = config.output_directory.join(format!("{}.svg", idx + 1));
-            let num = write_layer_to_svg(config.size, &path, &polygons)?;
-            info!("Wrote {:>4?} polygons to {:?} for {:?}", num, path, bucket);
+            let num = write_layer_to_svg(config.size, &path, &draw_objs)?;
+            info!("Wrote {:>4?} objs to {:?} for {:?}", num, path, bucket);
         }
 
         Ok(())

@@ -32,7 +32,7 @@ impl YieldPoints for Group {
         Some(Box::new(
             self.0
                 .iter()
-                .flat_map(|doi| doi.inner_impl_yield_points().and_then(|yp| yp.yield_pts()))
+                .flat_map(|doi| doi.inner_impl_yield_points().yield_pts())
                 .flatten(),
         ))
     }
@@ -42,10 +42,7 @@ impl YieldPointsMut for Group {
         Some(Box::new(
             self.0
                 .iter_mut()
-                .flat_map(|doi| {
-                    doi.inner_impl_yield_points_mut()
-                        .and_then(|ypm| ypm.yield_pts_mut())
-                })
+                .flat_map(|doi| doi.inner_impl_yield_points_mut().yield_pts_mut())
                 .flatten(),
         ))
     }

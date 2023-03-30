@@ -51,38 +51,37 @@ impl DrawObjInner {
             DrawObjInner::Segment(s) => s,
         }
     }
-    pub fn inner_impl_yield_points(&self) -> Option<&dyn YieldPoints> {
+    pub fn inner_impl_yield_points(&self) -> &dyn YieldPoints {
         match self {
-            DrawObjInner::Point(p) => Some(p),
-            DrawObjInner::Char(ch) => Some(ch),
-            DrawObjInner::CurveArc(_) => None,
-            DrawObjInner::Group(g) => Some(g),
-            DrawObjInner::Polygon(pg) => Some(pg),
-            DrawObjInner::Segment(sg) => Some(sg),
+            DrawObjInner::Point(p) => p,
+            DrawObjInner::Char(ch) => ch,
+            DrawObjInner::CurveArc(ca) => ca,
+            DrawObjInner::Group(g) => g,
+            DrawObjInner::Polygon(pg) => pg,
+            DrawObjInner::Segment(sg) => sg,
         }
     }
-    pub fn inner_impl_yield_points_mut(&mut self) -> Option<&mut dyn YieldPointsMut> {
+    pub fn inner_impl_yield_points_mut(&mut self) -> &mut dyn YieldPointsMut {
         match self {
-            DrawObjInner::Point(p) => Some(p),
-            DrawObjInner::Char(ch) => Some(ch),
-            DrawObjInner::CurveArc(_) => None,
-            DrawObjInner::Group(g) => Some(g),
-            DrawObjInner::Polygon(pg) => Some(pg),
-            DrawObjInner::Segment(sg) => Some(sg),
+            DrawObjInner::Point(p) => p,
+            DrawObjInner::Char(ch) => ch,
+            DrawObjInner::CurveArc(ca) => ca,
+            DrawObjInner::Group(g) => g,
+            DrawObjInner::Polygon(pg) => pg,
+            DrawObjInner::Segment(sg) => sg,
         }
     }
 }
 
 impl YieldPoints for DrawObjInner {
     fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
-        self.inner_impl_yield_points().and_then(|yp| yp.yield_pts())
+        self.inner_impl_yield_points().yield_pts()
     }
 }
 
 impl YieldPointsMut for DrawObjInner {
     fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
-        self.inner_impl_yield_points_mut()
-            .and_then(|ypm| ypm.yield_pts_mut())
+        self.inner_impl_yield_points_mut().yield_pts_mut()
     }
 }
 

@@ -1,5 +1,7 @@
 #![allow(missing_docs)]
 
+use crate::traits::Mutable;
+
 use {
     crate::{
         bounded::Bounded,
@@ -8,6 +10,7 @@ use {
         point::{PolarPt, Pt},
         polygon::abp,
         segment::Segment,
+        traits::{YieldPoints, YieldPointsMut},
     },
     float_cmp::approx_eq,
     float_ord::FloatOrd,
@@ -445,6 +448,19 @@ impl Croppable for CurveArc {
         Ok(r)
     }
 }
+
+impl YieldPoints for CurveArc {
+    fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
+        Some(Box::new(std::iter::once(&self.ctr)))
+    }
+}
+impl YieldPointsMut for CurveArc {
+    fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
+        Some(Box::new(std::iter::once(&mut self.ctr)))
+    }
+}
+
+impl Mutable for CurveArc {}
 
 #[cfg(test)]
 mod test {
