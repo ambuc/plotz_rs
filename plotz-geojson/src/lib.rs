@@ -44,7 +44,30 @@ enum GeomType {
     Point,
 }
 
-/// Parses a GeoJSON file and returns a list of tagged polygons.
+fn add_tags(value: &Value, tagslist: &mut TagsList) {
+    if let Some(obj) = value.as_object() {
+        for (k, v) in obj {
+            match v {
+                Value::String(v) => {
+                    tagslist.push((k.to_string(), v.to_string()));
+                }
+                Value::Object(_obj) => {
+                    add_tags(v, tagslist);
+                }
+                Value::Array(arr) => {
+                    for v in arr {
+                        add_tags(v, tagslist);
+                    }
+                }
+                Value::Null | Value::Bool(_) | Value::Number(_) => {
+                    //
+                }
+            }
+        }
+    }
+}
+
+/// Parses aGeoJSON file and returns a list of tagged polygons.
 pub fn parse_geojson(
     geo_json: Value,
 ) -> Result<Vec<(DrawObjInner, TagsList)>, GeoJsonConversionError> {
@@ -56,13 +79,9 @@ pub fn parse_geojson(
     let mut stats = HashMap::<GeomType, usize>::new();
 
     for (_idx, feature) in features.iter().enumerate() {
-        let tags = feature["properties"]
-            .as_object()
-            .expect("not object")
-            .into_iter()
-            .filter(|(_k, v)| v.as_str().is_some())
-            .map(|(k, v)| (k.clone(), v.as_str().unwrap().to_string()))
-            .collect::<TagsList>();
+        let mut tags: TagsList = vec![];
+
+        add_tags(&feature["properties"], &mut tags);
 
         if tags.is_empty() {
             continue;
@@ -179,7 +198,7 @@ fn parse_to_circle(coords: &Value) -> Result<Vec<DrawObjInner>, GeoJsonConversio
             return Ok(vec![DrawObjInner::from(CurveArc(
                 Pt(x, y),
                 0.0..=TAU,
-                0.005,
+                0.0009,
             ))]);
         }
     }
