@@ -178,7 +178,7 @@ impl Polygon {
     /// A rotation operation, for rotating one polygon about a point. Accepts a
     /// |by| argument in radians.
     pub fn rotate(&mut self, about: &Pt, by: f64) {
-        self.pts.iter_mut().for_each(|pt| pt.rotate(about, by))
+        self.pts.iter_mut().for_each(|pt| pt.rotate_inplace(about, by))
     }
 
     /// Returns true if any line segment from this polygon intersects any line
@@ -687,6 +687,11 @@ impl Sub<Pt> for Polygon {
 impl SubAssign<Pt> for Polygon {
     fn sub_assign(&mut self, rhs: Pt) {
         self.pts.iter_mut().for_each(|p| *p -= rhs);
+    }
+}
+impl RemAssign<Pt> for Polygon {
+    fn rem_assign(&mut self, rhs: Pt) {
+        self.pts.iter_mut().for_each(|p| *p %= rhs);
     }
 }
 

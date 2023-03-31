@@ -39,19 +39,19 @@ impl Tile for T1 {
             {
                 let mut t = T1([ac2, bc2, *c, cd1]);
                 t.pts_iter_mut()
-                    .for_each(|pt| pt.rotate(c, -1.0 * PI / 5.0));
+                    .for_each(|pt| pt.rotate_inplace(c, -1.0 * PI / 5.0));
                 Box::new(t)
             },
             {
                 let mut t = T1([a_bc1, ab, *b, bc1]);
                 t.pts_iter_mut()
-                    .for_each(|pt| pt.rotate(b, -1.0 * PI / 5.0));
+                    .for_each(|pt| pt.rotate_inplace(b, -1.0 * PI / 5.0));
                 Box::new(t)
             },
             {
                 let mut t = T1([a_cd2, cd2, *d, ad]);
                 t.pts_iter_mut()
-                    .for_each(|pt| pt.rotate(d, -1.0 * PI / 5.0));
+                    .for_each(|pt| pt.rotate_inplace(d, -1.0 * PI / 5.0));
                 Box::new(t)
             },
             Box::new(T2([*a, ab, a_bc1, ac1])),
@@ -93,7 +93,7 @@ impl Tile for T2 {
             {
                 let mut t = T1([ac2, bc, *c, cd]);
                 t.pts_iter_mut()
-                    .for_each(|pt| pt.rotate(c, -1.0 * PI / 5.0));
+                    .for_each(|pt| pt.rotate_inplace(c, -1.0 * PI / 5.0));
                 Box::new(t)
             },
             {
@@ -140,13 +140,13 @@ impl Tile for T3 {
             {
                 let mut t = T1([ac2, bc, *c, cd1]);
                 t.pts_iter_mut()
-                    .for_each(|pt| pt.rotate(c, -1.0 * PI / 5.0));
+                    .for_each(|pt| pt.rotate_inplace(c, -1.0 * PI / 5.0));
                 Box::new(t)
             },
             {
                 let mut t = T1([a_cd2, cd2, *d, ad]);
                 t.pts_iter_mut()
-                    .for_each(|pt| pt.rotate(d, -1.0 * PI / 5.0));
+                    .for_each(|pt| pt.rotate_inplace(d, -1.0 * PI / 5.0));
                 Box::new(t)
             },
             Box::new(T2([*a, ac1, a_cd2, ad])),
@@ -194,20 +194,20 @@ impl Tile for T4 {
             {
                 let mut t = T1([ac2, cd1, *c, bc]);
                 t.pts_iter_mut()
-                    .for_each(|pt| pt.rotate(c, -1.0 * PI / 5.0));
+                    .for_each(|pt| pt.rotate_inplace(c, -1.0 * PI / 5.0));
                 Box::new(t)
             },
             {
                 let mut t = T1([a_cd2, ad, *d, cd2]);
                 t.pts_iter_mut()
-                    .for_each(|pt| pt.rotate(d, -1.0 * PI / 5.0));
+                    .for_each(|pt| pt.rotate_inplace(d, -1.0 * PI / 5.0));
                 Box::new(t)
             },
             Box::new(T2([*a, ad, a_cd2, ac1])),
             {
                 let mut t = T2([*a, ad, a_cd2, ac1]);
                 t.pts_iter_mut()
-                    .for_each(|pt| pt.rotate(a, -2.0 * PI / 5.0));
+                    .for_each(|pt| pt.rotate_inplace(a, -2.0 * PI / 5.0));
                 Box::new(t)
             },
             Box::new(T4([*b, bc, ac2, ab])),
@@ -258,7 +258,7 @@ pub fn make() -> Vec<DrawObj> {
         let d = c - Pt(1.0, 0.0);
         let mut t = T3([a, b, c, d]);
         t.pts_iter_mut()
-            .for_each(|pt| pt.rotate(&a, -1.0 * 3.0 * PI / 10.0));
+            .for_each(|pt| pt.rotate_inplace(&a, -1.0 * 3.0 * PI / 10.0));
         t
     };
 
@@ -269,7 +269,7 @@ pub fn make() -> Vec<DrawObj> {
         let d = c + Pt(1.0, 0.0);
         let mut t = T4([a, b, c, d]);
         t.pts_iter_mut()
-            .for_each(|pt| pt.rotate(&a, 1.0 * 3.0 * PI / 10.0));
+            .for_each(|pt| pt.rotate_inplace(&a, 1.0 * 3.0 * PI / 10.0));
         t
     };
 

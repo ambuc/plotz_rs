@@ -1,8 +1,11 @@
 //! An annotated object with color and thickness.
 
+use std::ops::{AddAssign, MulAssign, RemAssign, SubAssign};
+
 use {
     crate::draw_obj_inner::DrawObjInner,
     crate::{
+        bounded::Bounded,
         point::Pt,
         traits::{Mutable, YieldPoints, YieldPointsMut},
     },
@@ -56,3 +59,42 @@ impl YieldPointsMut for DrawObj {
 }
 
 impl Mutable for DrawObj {}
+
+impl Bounded for DrawObj {
+    fn right_bound(&self) -> f64 {
+        self.obj.right_bound()
+    }
+    fn left_bound(&self) -> f64 {
+        self.obj.left_bound()
+    }
+    fn top_bound(&self) -> f64 {
+        self.obj.top_bound()
+    }
+    fn bottom_bound(&self) -> f64 {
+        self.obj.bottom_bound()
+    }
+}
+
+impl RemAssign<Pt> for DrawObj {
+    fn rem_assign(&mut self, rhs: Pt) {
+        self.obj %= rhs;
+    }
+}
+
+impl MulAssign<f64> for DrawObj {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.obj *= rhs;
+    }
+}
+
+impl AddAssign<Pt> for DrawObj {
+    fn add_assign(&mut self, rhs: Pt) {
+        self.obj += rhs;
+    }
+}
+
+impl SubAssign<Pt> for DrawObj {
+    fn sub_assign(&mut self, rhs: Pt) {
+        self.obj -= rhs;
+    }
+}

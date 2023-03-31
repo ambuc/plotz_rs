@@ -135,5 +135,11 @@ impl DivAssign<f64> for Group {
     }
 }
 
+impl RemAssign<Pt> for Group {
+    fn rem_assign(&mut self, rhs: Pt) {
+        self.0.iter_mut().for_each(|o| *o %= rhs);
+    }
+}
+
 impl Translatable for Group {}
 impl Scalable<f64> for Group {}

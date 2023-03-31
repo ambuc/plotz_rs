@@ -13,6 +13,7 @@ members = [
     "mk-tilings",
     "mk-voronoi",
     "mk-wang",
+    "mk-wrapping",
     "orchestrator",
     "plotz-color",
     "plotz-core",

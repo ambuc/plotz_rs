@@ -190,6 +190,11 @@ impl SubAssign<Pt> for CurveArc {
         self.ctr -= rhs;
     }
 }
+impl RemAssign<Pt> for CurveArc {
+    fn rem_assign(&mut self, rhs: Pt) {
+        self.ctr %= rhs;
+    }
+}
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 enum SegmentLoc {

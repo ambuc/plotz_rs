@@ -101,6 +101,31 @@ impl Bounded for DrawObjInner {
     }
 }
 
+impl RemAssign<Pt> for DrawObjInner {
+    fn rem_assign(&mut self, rhs: Pt) {
+        match self {
+            DrawObjInner::Point(p) => {
+                *p %= rhs;
+            }
+            DrawObjInner::Char(ch) => {
+                *ch %= rhs;
+            }
+            DrawObjInner::CurveArc(ca) => {
+                *ca %= rhs;
+            }
+            DrawObjInner::Group(g) => {
+                *g %= rhs;
+            }
+            DrawObjInner::Polygon(pg) => {
+                *pg %= rhs;
+            }
+            DrawObjInner::Segment(sg) => {
+                *sg %= rhs;
+            }
+        }
+    }
+}
+
 impl Add<Pt> for DrawObjInner {
     type Output = DrawObjInner;
     fn add(self, rhs: Pt) -> Self::Output {

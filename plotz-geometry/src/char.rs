@@ -128,6 +128,12 @@ impl DivAssign<Pt> for Char {
         self.pt /= rhs;
     }
 }
+impl RemAssign<Pt> for Char {
+    fn rem_assign(&mut self, rhs: Pt) {
+        self.pt.x.0 %= rhs.x.0;
+        self.pt.y.0 %= rhs.y.0;
+    }
+}
 
 impl Mutable for Char {}
 impl Translatable for Char {}

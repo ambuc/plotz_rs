@@ -117,8 +117,8 @@ impl Segment {
     /// A rotation operation, for rotating a line segment about a point. Accepts
     /// a |by| argument in radians.
     pub fn rotate(&mut self, about: &Pt, by: f64) {
-        self.i.rotate(about, by);
-        self.f.rotate(about, by);
+        self.i.rotate_inplace(about, by);
+        self.f.rotate_inplace(about, by);
     }
 
     /// Returns true if this line segment has point |other| along it.
@@ -278,6 +278,12 @@ impl Sub<Pt> for Segment {
 impl SubAssign<Pt> for Segment {
     fn sub_assign(&mut self, rhs: Pt) {
         *self = Segment(self.i - rhs, self.f - rhs);
+    }
+}
+impl RemAssign<Pt> for Segment {
+    fn rem_assign(&mut self, rhs: Pt) {
+        self.i %= rhs;
+        self.f %= rhs;
     }
 }
 

@@ -1,0 +1,24 @@
+[package]
+name = "mk-wrapping"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "*"
+itertools = "*"
+argh = "*"
+clap = "*"
+console = "*"
+dialoguer = "*"
+exitcode = "*"
+glob = "*"
+indicatif = "*"
+lazy_static = "*"
+plotz-color = { path = "../plotz-color" }
+plotz-core = { path = "../plotz-core" }
+plotz-geometry = { path = "../plotz-geometry" }
+rand = { version = "0.8.5", features = ["alloc"] }
+regex = "*"
+typed-builder = "*"
+voronoice = "*"
+

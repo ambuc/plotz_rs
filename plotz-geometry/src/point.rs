@@ -1,21 +1,32 @@
 //! A 2D point.
 
-use std::fmt::Debug;
-
 use crate::{bounded::Bounded, segment::Segment, traits::*};
 use {
+    float_cmp::approx_eq,
     float_ord::FloatOrd,
-    std::{convert::From, hash::Hash, ops::*},
+    std::{convert::From, fmt::Debug, hash::Hash, ops::*},
 };
 
 /// A point in 2D space.
-#[derive(Hash, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Hash, Copy, Clone, PartialOrd, Ord)]
 pub struct Pt {
     /// The x-coordinate of the point.
     pub x: FloatOrd<f64>,
     /// The y-coordinate of the point.
     pub y: FloatOrd<f64>,
 }
+
+impl PartialEq<Pt> for Pt {
+    fn eq(&self, other: &Pt) -> bool {
+        approx_eq!(f64, self.x.0, other.x.0, epsilon = 0.0000003)
+            && approx_eq!(f64, self.y.0, other.y.0, epsilon = 0.0000003)
+    }
+    fn ne(&self, other: &Pt) -> bool {
+        !self.eq(&other)
+    }
+}
+
+impl Eq for Pt {}
 
 impl Debug for Pt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -125,6 +136,12 @@ impl MulAssign<f64> for Pt {
         self.y.0 *= rhs;
     }
 }
+impl RemAssign<Pt> for Pt {
+    fn rem_assign(&mut self, rhs: Pt) {
+        self.x.0 = self.x.0.rem_euclid(rhs.x.0);
+        self.y.0 = self.y.0.rem_euclid(rhs.y.0);
+    }
+}
 impl Sub<Pt> for Pt {
     type Output = Self;
     fn sub(self, rhs: Pt) -> Self::Output {
@@ -143,13 +160,21 @@ impl SubAssign<Pt> for Pt {
 impl Pt {
     /// A rotation operation, for rotating one point about another. Accepts a |by|
     /// argument in radians.
-    pub fn rotate(&mut self, about: &Pt, by: f64) {
+    pub fn rotate_inplace(&mut self, about: &Pt, by: f64) {
         *self -= *about;
         *self = Pt(
             (by.cos() * self.x.0) - (by.sin() * self.y.0),
             (by.sin() * self.x.0) + (by.cos() * self.y.0),
         );
         *self += *about;
+    }
+
+    /// rotate
+    #[must_use]
+    pub fn rotate(&self, about: &Pt, by: f64) -> Pt {
+        let mut n = self.clone();
+        n.rotate_inplace(about, by);
+        n
     }
 
     /// Dot prouduct of (origin, self) • (origin, other)
@@ -223,19 +248,19 @@ mod tests {
         let origin = Pt(0.0, 0.0);
         let mut p = Pt(1.0, 0.0);
 
-        p.rotate(/*about=*/ &origin, PI / 2.0);
+        p.rotate_inplace(/*about=*/ &origin, PI / 2.0);
         assert_float_eq!(p.x.0, 0.0, abs <= 0.000_1);
         assert_float_eq!(p.y.0, 1.0, abs <= 0.000_1);
 
-        p.rotate(/*about=*/ &origin, PI / 2.0);
+        p.rotate_inplace(/*about=*/ &origin, PI / 2.0);
         assert_float_eq!(p.x.0, -1.0, abs <= 0.000_1);
         assert_float_eq!(p.y.0, 0.0, abs <= 0.000_1);
 
-        p.rotate(/*about=*/ &origin, PI / 2.0);
+        p.rotate_inplace(/*about=*/ &origin, PI / 2.0);
         assert_float_eq!(p.x.0, 0.0, abs <= 0.000_1);
         assert_float_eq!(p.y.0, -1.0, abs <= 0.000_1);
 
-        p.rotate(/*about=*/ &origin, PI / 2.0);
+        p.rotate_inplace(/*about=*/ &origin, PI / 2.0);
         assert_float_eq!(p.x.0, 1.0, abs <= 0.000_1);
         assert_float_eq!(p.y.0, 0.0, abs <= 0.000_1);
     }

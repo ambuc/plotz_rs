@@ -1,8 +1,14 @@
 //! Many draw objs.
 
+use float_ord::FloatOrd;
+use plotz_geometry::{
+    bounded::{streaming_bbox, Bounded},
+    traits::Mutable,
+};
+
 use {
     crate::svg::{write_layer_to_svg, Size},
-    anyhow::Error,
+    anyhow::{anyhow, Error},
     itertools::Itertools,
     multimap::MultiMap,
     plotz_color::ColorRGB,
@@ -35,6 +41,37 @@ impl Canvas {
             frame: Some(frame),
             ..self
         }
+    }
+
+    /// returns true on success
+    pub fn scale_to_fit_frame(&mut self) -> Result<(), Error> {
+        {
+            let frame_bbox = self.frame.clone().ok_or(anyhow!("no frame"))?.bbox()?;
+            let inner_bbox = streaming_bbox(self.dos.iter())?;
+
+            let w_scale = frame_bbox.width() / inner_bbox.width();
+            let s_scale = frame_bbox.height() / inner_bbox.height();
+            let scale = std::cmp::min(FloatOrd(w_scale), FloatOrd(s_scale)).0;
+
+            self.dos.iter_mut().for_each(|draw_obj| {
+                *draw_obj *= scale;
+            });
+        }
+
+        {
+            let frame_bbox = self.frame.clone().ok_or(anyhow!("no frame"))?.bbox()?;
+            let inner_bbox = streaming_bbox(self.dos.iter())?;
+
+            let translate_diff = frame_bbox.bbox_center() - inner_bbox.bbox_center();
+
+            self.dos.iter_mut().for_each(|draw_obj| {
+                draw_obj.mutate(|pt: &mut Pt| {
+                    *pt += translate_diff;
+                });
+            });
+        }
+
+        Ok(())
     }
 
     /// Sorts and groups the internal draw objects by color.
