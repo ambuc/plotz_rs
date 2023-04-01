@@ -16,13 +16,11 @@ use {
     plotz_color::{subway::*, *},
     plotz_geojson::GeoJsonConversionError,
     plotz_geometry::{
-        bounded::{streaming_bbox, Bounded, BoundingBoxError},
+        bounded::{Bounded, BoundingBoxError},
         draw_obj::DrawObj,
         draw_obj_inner::DrawObjInner,
         point::Pt,
-        polygon::Polygon,
         shading_02::{shade_polygon, ShadeConfig},
-        traits::*,
     },
     rand::{thread_rng, Rng},
     std::{
@@ -218,55 +216,17 @@ impl Map {
         Ok(Map { canvas })
     }
 
-    fn objs_iter(&self) -> impl Iterator<Item = &DrawObjInner> {
-        self.canvas
-            .dos_by_bucket
-            .iter()
-            .flat_map(|(_bucket, dos)| dos)
-            .map(|d_o| &d_o.obj)
-    }
-
-    fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut DrawObjInner> {
-        self.canvas
-            .dos_by_bucket
-            .iter_mut()
-            .flat_map(|(_bucket, dos)| dos)
-            .map(|d_o| &mut d_o.obj)
-    }
-
-    fn mutate_all(&mut self, f: impl Fn(&mut Pt)) {
-        self.objs_iter_mut().for_each(|obj| {
-            obj.mutate(&f);
-        })
-    }
-
-    fn translate_all(&mut self, f: impl Fn(&mut dyn TranslatableAssign)) {
-        self.objs_iter_mut().for_each(|obj| {
-            f(obj);
-        });
-    }
-
-    fn scale_all(&mut self, f: impl Fn(&mut dyn ScalableAssign)) {
-        self.objs_iter_mut().for_each(|obj| {
-            f(obj);
-        });
-    }
-
-    fn get_bbox(&self) -> Result<Polygon, MapError> {
-        Ok(streaming_bbox(self.objs_iter())?)
-    }
-
     fn apply_bl_shift(&mut self) -> Result<(), MapError> {
-        let curr_bbox = self.get_bbox()?;
-        self.translate_all(|pt| {
+        let curr_bbox = self.canvas.get_bbox();
+        self.canvas.translate_all(|pt| {
             *pt -= curr_bbox.bl_bound();
         });
         Ok(())
     }
 
     fn apply_centering(&mut self, dest_size: &Size) -> Result<(), MapError> {
-        let curr_bbox = self.get_bbox()?;
-        self.translate_all(|pt| {
+        let curr_bbox = self.canvas.get_bbox();
+        self.canvas.translate_all(|pt| {
             *pt += Pt(
                 (dest_size.width as f64 - curr_bbox.right_bound()) / 2.0,
                 (dest_size.height as f64 - curr_bbox.top_bound()) / 2.0,
@@ -276,13 +236,13 @@ impl Map {
     }
 
     fn apply_scaling(&mut self, scale_factor: f64, dest_size: &Size) -> Result<(), MapError> {
-        let curr_bbox = self.get_bbox()?;
+        let curr_bbox = self.canvas.get_bbox();
         let scaling_factor = std::cmp::max(
             FloatOrd(dest_size.height as f64 / curr_bbox.height().abs()),
             FloatOrd(dest_size.width as f64 / curr_bbox.width().abs()),
         )
         .0 * scale_factor;
-        self.scale_all(|obj| *obj *= scaling_factor);
+        self.canvas.scale_all(|obj| *obj *= scaling_factor);
         Ok(())
     }
 
@@ -330,21 +290,13 @@ impl Map {
     /// Adjusts the map for scale/transform issues.
     pub fn adjust(&mut self, scale_factor: f64, dest_size: &Size) -> Result<(), MapError> {
         // first compute current bbox and shift everything positive.
-        self.mutate_all(|pt| {
+        self.canvas.mutate_all(|pt| {
             pt.flip_y();
             pt.y.0 = latitude_to_y(pt.y.0);
         });
         self.apply_bl_shift()?;
         self.apply_scaling(scale_factor, dest_size)?;
         self.apply_centering(dest_size)?;
-        Ok(())
-    }
-
-    /// Adjusts the map for manual transform correction issues.
-    pub fn shift(&mut self, shift_x: f64, shift_y: f64) -> Result<(), MapError> {
-        self.translate_all(|pt| {
-            *pt += (shift_x, shift_y).into();
-        });
         Ok(())
     }
 
@@ -367,7 +319,10 @@ impl Map {
         trace!(config = ?config.input_files);
 
         let () = self.adjust(config.scale_factor, &config.size)?;
-        let () = self.shift(config.shift_x, config.shift_y)?;
+
+        self.canvas.translate_all(|pt| {
+            *pt += (config.shift_x, config.shift_y).into();
+        });
         let () = self.randomize_circles();
         let () = self.apply_shading_to_drawobjs();
 

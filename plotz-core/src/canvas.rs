@@ -10,8 +10,10 @@ use {
     plotz_geometry::{
         bounded::{streaming_bbox, Bounded},
         draw_obj::DrawObj,
+        draw_obj_inner::DrawObjInner,
         point::Pt,
-        traits::Mutable,
+        polygon::Polygon,
+        traits::*,
     },
     std::collections::HashMap,
 };
@@ -50,6 +52,42 @@ impl Canvas {
             frame: Some(frame),
             ..self
         }
+    }
+
+    pub fn objs_iter(&self) -> impl Iterator<Item = &DrawObjInner> {
+        self.dos_by_bucket
+            .iter()
+            .flat_map(|(_bucket, dos)| dos)
+            .map(|d_o| &d_o.obj)
+    }
+
+    pub fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut DrawObjInner> {
+        self.dos_by_bucket
+            .iter_mut()
+            .flat_map(|(_bucket, dos)| dos)
+            .map(|d_o| &mut d_o.obj)
+    }
+
+    pub fn mutate_all(&mut self, f: impl Fn(&mut Pt)) {
+        self.objs_iter_mut().for_each(|obj| {
+            obj.mutate(&f);
+        })
+    }
+
+    pub fn translate_all(&mut self, f: impl Fn(&mut dyn TranslatableAssign)) {
+        self.objs_iter_mut().for_each(|obj| {
+            f(obj);
+        });
+    }
+
+    pub fn scale_all(&mut self, f: impl Fn(&mut dyn ScalableAssign)) {
+        self.objs_iter_mut().for_each(|obj| {
+            f(obj);
+        });
+    }
+
+    pub fn get_bbox(&self) -> Polygon {
+        streaming_bbox(self.objs_iter()).expect("bbox not found")
     }
 
     /// returns true on success
