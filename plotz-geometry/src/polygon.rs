@@ -178,7 +178,9 @@ impl Polygon {
     /// A rotation operation, for rotating one polygon about a point. Accepts a
     /// |by| argument in radians.
     pub fn rotate(&mut self, about: &Pt, by: f64) {
-        self.pts.iter_mut().for_each(|pt| pt.rotate_inplace(about, by))
+        self.pts
+            .iter_mut()
+            .for_each(|pt| pt.rotate_inplace(about, by))
     }
 
     /// Returns true if any line segment from this polygon intersects any line

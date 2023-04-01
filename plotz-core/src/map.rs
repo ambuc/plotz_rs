@@ -23,6 +23,7 @@ use {
         shading_02::{shade_polygon, ShadeConfig},
         traits::*,
     },
+    rand::{thread_rng, Rng},
     std::{
         collections::HashMap,
         fs::File,
@@ -183,20 +184,19 @@ impl Map {
                 )
                 .expect("parse")
                 .iter()
-                .filter_map(|(draw_obj_inner, tags)| {
-                    if let Ok(bucket) = bucketer.bucket(tags) {
-                        Some(AnnotatedDrawObj {
+                .flat_map(|(draw_obj_inner, tags)| {
+                    bucketer
+                        .bucket(tags)
+                        .into_iter()
+                        .map(|bucket| AnnotatedDrawObj {
                             draw_obj: DrawObj::new(draw_obj_inner.clone())
                                 .with_color(&DEFAULT_COLORING[&bucket])
                                 .with_thickness(*DEFAULT_THICKNESS),
                             bucket,
                             _tags: tags.clone(),
                         })
-                    } else {
-                        None
-                    }
                 })
-                .collect::<Vec<_>>()
+                .collect::<Vec<AnnotatedDrawObj>>()
             })
             .sorted_by(|ap_1, ap_2| std::cmp::Ord::cmp(&ap_1.bucket, &ap_2.bucket))
             .group_by(|ap| ap.bucket)
@@ -334,6 +334,21 @@ impl Map {
         Ok(())
     }
 
+    pub fn randomize_circles(&mut self) {
+        for (_bucket, layers) in self.layers.iter_mut() {
+            for layer in layers.iter_mut() {
+                if let DrawObjInner::CurveArc(ca) = &mut layer.obj {
+                    dbg!(&ca.ctr);
+                    ca.ctr += Pt(
+                        thread_rng().gen_range(-5.0..=5.0),
+                        thread_rng().gen_range(-5.0..=5.0),
+                    );
+                    dbg!(&ca.ctr);
+                }
+            }
+        }
+    }
+
     /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
     /// file(s).
     pub fn render(mut self, config: &MapConfig) -> Result<(), MapError> {
@@ -341,6 +356,7 @@ impl Map {
 
         let () = self.adjust(config.scale_factor, &config.size)?;
         let () = self.shift(config.shift_x, config.shift_y)?;
+        let () = self.randomize_circles();
         self.apply_shading_to_layers();
 
         if config.draw_frame {

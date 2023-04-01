@@ -98,7 +98,7 @@ impl Tile for T2 {
             },
             {
                 let mut td = *a + (ad - *a) / x * ell;
-                td.rotate(a, -1.0 * 2.0 * PI / 10.0);
+                td.rotate_inplace(a, -1.0 * 2.0 * PI / 10.0);
                 Box::new(T2([*a, ac1, ad, td]))
             },
             Box::new(T3([*b, bc, ac2, ab])),

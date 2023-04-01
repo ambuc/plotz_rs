@@ -8,6 +8,7 @@ tracing = "*"
 plotz-geometry = { path = "../plotz-geometry" }
 serde_json = "*"
 string-interner = "*"
+rand = "*"
 thiserror = "*"
 lazy_static = "*"
 

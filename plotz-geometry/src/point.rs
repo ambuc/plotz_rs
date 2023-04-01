@@ -17,12 +17,10 @@ pub struct Pt {
 }
 
 impl PartialEq<Pt> for Pt {
+    // TOPO(ambuc): derive_hash_xor_eq ???
     fn eq(&self, other: &Pt) -> bool {
         approx_eq!(f64, self.x.0, other.x.0, epsilon = 0.0000003)
             && approx_eq!(f64, self.y.0, other.y.0, epsilon = 0.0000003)
-    }
-    fn ne(&self, other: &Pt) -> bool {
-        !self.eq(&other)
     }
 }
 
@@ -172,7 +170,7 @@ impl Pt {
     /// rotate
     #[must_use]
     pub fn rotate(&self, about: &Pt, by: f64) -> Pt {
-        let mut n = self.clone();
+        let mut n = *self;
         n.rotate_inplace(about, by);
         n
     }
