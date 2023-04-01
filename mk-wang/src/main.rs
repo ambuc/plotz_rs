@@ -272,18 +272,20 @@ fn main() {
 
     let scale = image_width / 2.0 / (grid_cardinality as f64);
 
-    draw_objs.dos.iter_mut().for_each(|d_o| match &mut d_o.obj {
-        DrawObjInner::Polygon(p) => {
-            *p *= scale;
-            *p += Pt(margin, margin);
-        }
-        DrawObjInner::Segment(s) => {
-            *s *= scale;
-            *s += Pt(margin, margin);
-        }
-        _ => {
-            unimplemented!()
-        }
+    draw_objs.dos.iter_mut().for_each(|(_bucket, layers)| {
+        layers.iter_mut().for_each(|d_o| match &mut d_o.obj {
+            DrawObjInner::Polygon(p) => {
+                *p *= scale;
+                *p += Pt(margin, margin);
+            }
+            DrawObjInner::Segment(s) => {
+                *s *= scale;
+                *s += Pt(margin, margin);
+            }
+            _ => {
+                unimplemented!()
+            }
+        });
     });
 
     let () = draw_objs
