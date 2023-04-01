@@ -450,10 +450,10 @@ mod tests {
 
         {
             let mut rolling_bbox = BoundsCollector::default();
-            map.layers.iter().for_each(|(_, objs)| {
-                objs.iter().for_each(|colored_obj| {
-                    rolling_bbox.incorporate(&colored_obj.obj);
-                })
+            map.canvas.dos_by_bucket.iter().for_each(|(_bucket, dos)| {
+                dos.iter().for_each(|d_o| {
+                    rolling_bbox.incorporate(d_o);
+                });
             });
             assert_eq!(rolling_bbox.items_seen(), 4);
 
@@ -471,9 +471,9 @@ mod tests {
 
         {
             let mut rolling_bbox = BoundsCollector::default();
-            map.layers.iter().for_each(|(_, objs)| {
-                objs.iter().for_each(|colored_obj| {
-                    rolling_bbox.incorporate(&colored_obj.obj);
+            map.canvas.dos_by_bucket.iter().for_each(|(_bucket, dos)| {
+                dos.iter().for_each(|d_o| {
+                    rolling_bbox.incorporate(d_o);
                 })
             });
             assert_float_eq!(rolling_bbox.left_bound(), 51.200, abs <= 0.000_01);
@@ -508,19 +508,25 @@ mod tests {
         ] {
             let obj = DrawObjInner::Polygon(Polygon(initial).unwrap());
             let mut map = Map {
-                layers: vec![(
-                    Bucket::Area(Area::Beach),
-                    vec![DrawObj {
-                        obj: obj,
-                        color: &ALICEBLUE,
-                        thickness: 1.0,
-                    }],
-                )],
+                canvas: {
+                    let mut canvas = Canvas::new();
+                    canvas.dos_by_bucket.insert(
+                        Some(Bucket::Area(Area::Beach)),
+                        vec![DrawObj {
+                            obj: obj,
+                            color: &ALICEBLUE,
+                            thickness: 1.0,
+                        }],
+                    );
+                    canvas
+                },
             };
             map.apply_bl_shift().unwrap();
 
+            let mut x = map.canvas.dos_by_bucket.values();
+
             assert_eq!(
-                map.layers[0].1[0].obj,
+                x.next().unwrap()[0].obj,
                 DrawObjInner::Polygon(Polygon(expected).unwrap())
             );
         }
@@ -554,19 +560,25 @@ mod tests {
         ] {
             let obj = DrawObjInner::Polygon(Polygon(initial).unwrap());
             let mut map = Map {
-                layers: vec![(
-                    Bucket::Area(Area::Beach),
-                    vec![DrawObj {
-                        obj: obj,
-                        color: &ALICEBLUE,
-                        thickness: 1.0,
-                    }],
-                )],
+                canvas: {
+                    let mut canvas = Canvas::new();
+                    canvas.dos_by_bucket.insert(
+                        Some(Bucket::Area(Area::Beach)),
+                        vec![DrawObj {
+                            obj: obj,
+                            color: &ALICEBLUE,
+                            thickness: 1.0,
+                        }],
+                    );
+                    canvas
+                },
             };
             map.apply_scaling(scale_factor, &size).unwrap();
 
+            let mut x = map.canvas.dos_by_bucket.values();
+
             assert_eq!(
-                map.layers[0].1[0].obj,
+                x.next().unwrap()[0].obj,
                 DrawObjInner::Polygon(Polygon(expected).unwrap())
             );
         }
