@@ -1,15 +1,10 @@
 //! An annotated object with color and thickness.
 
-use std::ops::{AddAssign, MulAssign, RemAssign, SubAssign};
-
 use {
     crate::draw_obj_inner::DrawObjInner,
-    crate::{
-        bounded::Bounded,
-        point::Pt,
-        traits::{Mutable, YieldPoints, YieldPointsMut},
-    },
+    crate::{bounded::Bounded, point::Pt, traits::*},
     plotz_color::{ColorRGB, BLACK},
+    std::ops::*,
 };
 
 /// An object with a color and thickness.
@@ -87,6 +82,12 @@ impl MulAssign<f64> for DrawObj {
     }
 }
 
+impl DivAssign<f64> for DrawObj {
+    fn div_assign(&mut self, rhs: f64) {
+        self.obj /= rhs;
+    }
+}
+
 impl AddAssign<Pt> for DrawObj {
     fn add_assign(&mut self, rhs: Pt) {
         self.obj += rhs;
@@ -98,3 +99,45 @@ impl SubAssign<Pt> for DrawObj {
         self.obj -= rhs;
     }
 }
+
+impl Add<Pt> for DrawObj {
+    type Output = Self;
+    fn add(self, rhs: Pt) -> Self::Output {
+        Self {
+            obj: self.obj + rhs,
+            ..self
+        }
+    }
+}
+impl Sub<Pt> for DrawObj {
+    type Output = Self;
+    fn sub(self, rhs: Pt) -> Self::Output {
+        Self {
+            obj: self.obj - rhs,
+            ..self
+        }
+    }
+}
+impl Div<f64> for DrawObj {
+    type Output = Self;
+    fn div(self, rhs: f64) -> Self::Output {
+        Self {
+            obj: self.obj / rhs,
+            ..self
+        }
+    }
+}
+impl Mul<f64> for DrawObj {
+    type Output = Self;
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self {
+            obj: self.obj * rhs,
+            ..self
+        }
+    }
+}
+
+impl Translatable for DrawObj {}
+impl Scalable<f64> for DrawObj {}
+impl ScalableAssign for DrawObj {}
+impl TranslatableAssign for DrawObj {}

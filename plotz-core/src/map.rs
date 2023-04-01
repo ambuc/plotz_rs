@@ -338,12 +338,10 @@ impl Map {
         for (_bucket, layers) in self.layers.iter_mut() {
             for layer in layers.iter_mut() {
                 if let DrawObjInner::CurveArc(ca) = &mut layer.obj {
-                    dbg!(&ca.ctr);
                     ca.ctr += Pt(
-                        thread_rng().gen_range(-5.0..=5.0),
-                        thread_rng().gen_range(-5.0..=5.0),
+                        thread_rng().gen_range(-2.0..=2.0),
+                        thread_rng().gen_range(-2.0..=2.0),
                     );
-                    dbg!(&ca.ctr);
                 }
             }
         }
@@ -361,11 +359,16 @@ impl Map {
 
         if config.draw_frame {
             info!("Adding frame.");
+            let margin = 5.0;
             self.layers.push((
                 Bucket::Frame,
                 vec![make_frame(
-                    (config.size.width as f64, config.size.height as f64),
-                    Pt(0.0, 0.0),
+                    // yes these are backwards. oops
+                    (
+                        config.size.height as f64 - 2.0 * margin,
+                        config.size.width as f64 - 2.0 * margin,
+                    ),
+                    Pt(margin, margin),
                 )],
             ));
         }

@@ -1,9 +1,15 @@
+use plotz_geometry::draw_obj_inner::DrawObjInner;
+
 use {
     argh::FromArgs,
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        curve::CurveArc, draw_obj::DrawObj, point::Pt, polygon::Multiline, segment::Segment,
+        curve::CurveArc,
+        draw_obj::DrawObj,
+        point::Pt,
+        polygon::{Multiline, Rect},
+        segment::Segment,
     },
     rand::{distributions::Standard, prelude::Distribution, Rng},
     std::f64::consts::*,
@@ -16,26 +22,149 @@ struct Args {
     output_path_prefix: String,
 }
 
-#[derive(Debug, PartialEq)]
-enum LR {
-    Left,
-    Right,
+impl Distribution<Tile> for Standard {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Tile {
+        match rng.gen_range(0..=6) {
+            0 => Tile::Cross,
+            1 => Tile::OverUnder,
+            2 => Tile::Swerve,
+            3 => Tile::Clover,
+            4 => Tile::CloverIn,
+            5 => Tile::Clover3,
+            _ => Tile::Clover2,
+        }
+    }
 }
 
-#[derive(Debug, PartialEq)]
-enum Pipe {
-    Straight,
-    Bend(LR),
-    Zag,
+#[derive(Debug, Eq, PartialEq)]
+enum Tile {
+    Cross,
+    OverUnder,
+    Swerve,
+    Clover,
+    CloverIn,
+    Clover3,
+    Clover2,
 }
+impl Tile {
+    fn to_dos(&self) -> Vec<DrawObj> {
+        self.to_dois()
+            .into_iter()
+            .map(|doi| {
+                DrawObj::new(doi)
+                    .with_color(match self {
+                        Tile::Cross => &BLACK,
+                        Tile::OverUnder => &DARKGRAY,
+                        Tile::Swerve => &GRAY,
+                        Tile::Clover => &LIGHTGRAY,
+                        Tile::CloverIn => &DARKSLATEGRAY,
+                        Tile::Clover3 => &DIMGRAY,
+                        Tile::Clover2 => &LIGHTSLATEGRAY,
+                    })
+                    .with_thickness(match self {
+                        Tile::Cross => 1.0,
+                        Tile::OverUnder => 2.0,
+                        Tile::Swerve => 3.0,
+                        Tile::Clover => 4.0,
+                        Tile::CloverIn => 5.0,
+                        Tile::Clover3 => 6.0,
+                        Tile::Clover2 => 7.0,
+                    })
+            })
+            .collect::<Vec<_>>()
+    }
 
-impl Distribution<Pipe> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Pipe {
-        match rng.gen_range(0..=2) {
-            0 => Pipe::Straight,
-            1 => Pipe::Bend(LR::Right),
-            _ => Pipe::Bend(LR::Left),
-            //_ => Pipe::Zag,
+    // scaled to a unit square.
+    fn to_dois(&self) -> Vec<DrawObjInner> {
+        let a = Pt(0.0, 0.0);
+        let b = Pt(0.25, 0.0);
+        let c = Pt(0.5, 0.0);
+        let d = Pt(0.75, 0.0);
+        let e = Pt(1.0, 0.0);
+        let f = Pt(0.0, 0.25);
+        let g = Pt(0.25, 0.25);
+        let h = Pt(0.5, 0.25);
+        let i = Pt(0.75, 0.25);
+        let j = Pt(1.0, 0.25);
+        let k = Pt(0.0, 0.5);
+        let l = Pt(0.25, 0.5);
+        let m = Pt(0.5, 0.5);
+        let n = Pt(0.75, 0.5);
+        let o = Pt(1.0, 0.5);
+        let p = Pt(0.0, 0.75);
+        let q = Pt(0.25, 0.75);
+        let r = Pt(0.5, 0.75);
+        let s = Pt(0.75, 0.75);
+        let t = Pt(1.0, 0.75);
+        let u = Pt(0.0, 1.0);
+        let v = Pt(0.25, 1.0);
+        let w = Pt(0.5, 1.0);
+        let x = Pt(0.75, 1.0);
+        let y = Pt(1.0, 1.0);
+        match self {
+            Tile::Cross => {
+                vec![Segment(k, o).into(), Segment(c, w).into()]
+            }
+            Tile::OverUnder => {
+                vec![
+                    Segment(k, l).into(),
+                    Segment(n, o).into(),
+                    Segment(c, w).into(),
+                ]
+            }
+            Tile::Swerve => {
+                vec![
+                    Segment(k, l).into(),
+                    CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
+                    Segment(c, h).into(),
+                    Segment(n, o).into(),
+                    CurveArc(s, PI..=(3.0 * FRAC_PI_2), 0.25).into(),
+                    Segment(r, w).into(),
+                ]
+            }
+            Tile::Clover => {
+                vec![
+                    Segment(c, h).into(),
+                    Segment(k, l).into(),
+                    Segment(n, o).into(),
+                    Segment(r, w).into(),
+                    CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
+                    CurveArc(i, FRAC_PI_2..=PI, 0.25).into(),
+                    CurveArc(s, PI..=(3.0 * FRAC_PI_2), 0.25).into(),
+                    CurveArc(q, (3.0 * FRAC_PI_2)..=TAU, 0.25).into(),
+                ]
+                //
+            }
+            Tile::CloverIn => {
+                vec![
+                    //
+                    Segment(k, o).into(),
+                    Segment(c, h).into(),
+                    Segment(r, w).into(),
+                    CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
+                    CurveArc(q, (3.0 * FRAC_PI_2)..=TAU, 0.25).into(),
+                ]
+            }
+            Tile::Clover3 => {
+                vec![
+                    Segment(c, h).into(),
+                    Segment(k, l).into(),
+                    Segment(n, o).into(),
+                    Segment(r, w).into(),
+                    CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
+                    CurveArc(i, FRAC_PI_2..=PI, 0.25).into(),
+                    CurveArc(s, PI..=(3.0 * FRAC_PI_2), 0.25).into(),
+                ]
+            }
+            Tile::Clover2 => {
+                vec![
+                    Segment(c, w).into(),
+                    Segment(k, l).into(),
+                    Segment(n, o).into(),
+                    CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
+                    CurveArc(s, PI..=(3.0 * FRAC_PI_2), 0.25).into(),
+                ]
+            }
         }
     }
 }
@@ -48,85 +177,13 @@ fn main() {
 
     let mut draw_obj_vec: Vec<DrawObj> = vec![];
 
-    let mut xy: Pt = Pt(3.0, 3.0);
-    let mut dxdy: Pt = Pt(1.0, 0.0);
-
-    for _step in 0..=5 {
-        let pipe: Pipe = rand::random();
-
-        let (d_o, xy_, dxdy_) = match pipe {
-            Pipe::Straight => {
-                let xy_ = xy + dxdy;
-                (
-                    DrawObj::new(Segment(xy, xy_))
-                        .with_color(&BLACK)
-                        .with_thickness(5.0),
-                    xy_,
-                    dxdy,
-                )
-            }
-            Pipe::Bend(turn) => {
-                let dxdy_ = dxdy.rotate(
-                    &Pt(0.0, 0.0),
-                    match turn {
-                        LR::Left => FRAC_PI_2,
-                        LR::Right => -1.0 * FRAC_PI_2,
-                    },
-                );
-                let xy_ = xy + dxdy + dxdy_;
-
-                let ctr = xy + dxdy_;
-                let sweep = match (dxdy, dxdy_) {
-                    // right
-                    (a, b) if a == Pt(1.0, 0.0) && b == Pt(0.0, 1.0) => (3.0 * FRAC_PI_2)..=TAU,
-                    (a, b) if a == Pt(0.0, 1.0) && b == Pt(-1.0, 0.0) => (0.0)..=FRAC_PI_2,
-                    (a, b) if a == Pt(-1.0, 0.0) && b == Pt(0.0, -1.0) => (FRAC_PI_2)..=(PI),
-                    (a, b) if a == Pt(0.0, -1.0) && b == Pt(1.0, 0.0) => (PI)..=(3.0 * FRAC_PI_2),
-                    // left
-                    (a, b) if a == Pt(1.0, 0.0) && b == Pt(0.0, -1.0) => 0.0..=FRAC_PI_2,
-                    (a, b) if a == Pt(0.0, -1.0) && b == Pt(-1.0, 0.0) => 3.0 * FRAC_PI_2..=TAU,
-                    (a, b) if a == Pt(-1.0, 0.0) && b == Pt(0.0, 1.0) => PI..=(3.0 * FRAC_PI_2),
-                    (a, b) if a == Pt(0.0, 1.0) && b == Pt(1.0, 0.0) => FRAC_PI_2..=PI,
-                    (a, b) => {
-                        dbg!(a, b);
-                        unimplemented!("uhoh")
-                    }
-                };
-
-                (
-                    DrawObj::new(CurveArc(ctr, sweep, 1.0))
-                        .with_color(match turn {
-                            LR::Left => &BLACK,
-                            LR::Right => &BLACK,
-                        })
-                        .with_thickness(5.0),
-                    xy_,
-                    dxdy_,
-                )
-            }
-            Pipe::Zag => {
-                let xy_ = xy + dxdy;
-
-                let d_o = DrawObj::new(
-                    Multiline(vec![
-                        xy,
-                        xy + (dxdy) * 0.25,
-                        (xy + (dxdy * 0.5)).rotate(&xy, FRAC_PI_6),
-                        (xy + (dxdy * 0.5)).rotate(&(xy + dxdy), FRAC_PI_6),
-                        xy + dxdy * 0.75,
-                        xy + dxdy * 1.0,
-                    ])
-                    .unwrap(),
-                )
-                .with_color(&YELLOW)
-                .with_thickness(5.0);
-                (d_o, xy_, dxdy)
-            }
-        };
-
-        xy = xy_;
-        dxdy = dxdy_;
-        draw_obj_vec.push(d_o);
+    let width = 10;
+    let height = 10;
+    for dx in 0..=width {
+        for dy in 0..=height {
+            let tile: Tile = rand::random();
+            draw_obj_vec.extend(tile.to_dos().into_iter().map(|d_o| d_o + Pt(dx, dy) / 4.0));
+        }
     }
 
     let mut canvas = Canvas::from_objs(draw_obj_vec)
