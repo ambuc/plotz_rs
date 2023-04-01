@@ -5,7 +5,13 @@ use glob::glob;
 use indicatif::ProgressBar;
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{fs::canonicalize, path::PathBuf, process::Command, time::Duration};
+use std::{
+    fs::canonicalize,
+    io::{BufRead, BufReader},
+    path::PathBuf,
+    process::{Command, Stdio},
+    time::Duration,
+};
 
 #[derive(FromArgs)]
 #[argh(description = "...")]
@@ -34,7 +40,7 @@ fn hits_yes(s: &str) -> bool {
 }
 
 fn is_command_ok(c: &mut Command) -> Option<std::process::Output> {
-    match c.output() {
+    match c.spawn().unwrap().wait_with_output() {
         Ok(output) => {
             if output.status.success() {
                 if let Ok(stdout) = std::str::from_utf8(&output.stdout) {
@@ -62,18 +68,19 @@ fn is_command_ok(c: &mut Command) -> Option<std::process::Output> {
 
 fn make_default_axicli_args() -> Vec<&'static str> {
     vec![
-        "--pen_pos_down",
+        "--pen_pos_down", // https://axidraw.com/doc/cli_api/#pen_pos_down
         "10",
-        "--pen_pos_up",
+        "--pen_pos_up", // https://axidraw.com/doc/cli_api/#pen_pos_up
         "45",
-        "--speed_pendown",
+        "--speed_pendown", // https://axidraw.com/doc/cli_api/#speed_pendown
         "100",
-        "--speed_penup",
+        "--speed_penup", // https://axidraw.com/doc/cli_api/#speed_penup
         "100",
-        "--reordering",
+        "--reordering", // https://axidraw.com/doc/cli_api/#reordering
         "2",
-        "--model",
+        "--model", // https://axidraw.com/doc/cli_api/#model
         "2",
+        "--progress", // https://axidraw.com/doc/cli_api/#progress
     ]
 }
 
@@ -142,7 +149,8 @@ fn do_layer(s: &str, special_name: Option<&str>) {
                 .arg(&path)
                 .arg("--preview")
                 .arg("--report_time")
-                .args(make_default_axicli_args()),
+                .args(make_default_axicli_args())
+                .stdout(Stdio::piped()),
         ) {
             Some(output) => parse_prediction(std::str::from_utf8(&output.stderr).unwrap()),
             _ => None,
@@ -218,7 +226,8 @@ fn do_layer(s: &str, special_name: Option<&str>) {
             let _cmd = is_command_ok(
                 Command::new("axicli")
                     .arg(&p2)
-                    .args(make_default_axicli_args()),
+                    .args(make_default_axicli_args())
+                    .stdout(Stdio::piped()),
             );
         });
 
