@@ -16,21 +16,30 @@ use {
     std::collections::HashMap,
 };
 
+type CanvasMap = HashMap<Option<Bucket>, Vec<DrawObj>>;
+
 /// Many draw objs.
 #[derive(Debug, Clone)]
 pub struct Canvas {
     /// the objs.
-    pub dos: HashMap<Option<Bucket>, Vec<DrawObj>>,
+    pub dos_by_bucket: CanvasMap,
 
     /// the frame, maybe.
     pub frame: Option<DrawObj>,
 }
 
 impl Canvas {
+    pub fn new() -> Canvas {
+        Canvas {
+            dos_by_bucket: CanvasMap::new(),
+            frame: None,
+        }
+    }
+
     /// ctor from objs
     pub fn from_objs<O: IntoIterator<Item = DrawObj>>(objs: O) -> Canvas {
         Canvas {
-            dos: HashMap::from([(None, objs.into_iter().collect())]),
+            dos_by_bucket: CanvasMap::from([(None, objs.into_iter().collect())]),
             frame: None,
         }
     }
@@ -47,28 +56,32 @@ impl Canvas {
     pub fn scale_to_fit_frame(&mut self) -> Result<(), Error> {
         {
             let frame_bbox = self.frame.clone().ok_or(anyhow!("no frame"))?.bbox()?;
-            let inner_bbox =
-                streaming_bbox(self.dos.iter().map(|(_bucket, layers)| layers).flatten())?;
+            let inner_bbox = streaming_bbox(
+                self.dos_by_bucket
+                    .iter()
+                    .map(|(_bucket, dos)| dos)
+                    .flatten(),
+            )?;
 
             let w_scale = frame_bbox.width() / inner_bbox.width();
             let s_scale = frame_bbox.height() / inner_bbox.height();
             let scale = std::cmp::min(FloatOrd(w_scale), FloatOrd(s_scale)).0;
 
-            self.dos.iter_mut().for_each(|(_bucket, layers)| {
-                for layer in layers.iter_mut() {
-                    *layer *= scale;
+            self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
+                for d_o in dos.iter_mut() {
+                    *d_o *= scale;
                 }
             });
         }
 
         {
             let frame_bbox = self.frame.clone().ok_or(anyhow!("no frame"))?.bbox()?;
-            let inner_bbox = streaming_bbox(self.dos.values().flatten())?;
+            let inner_bbox = streaming_bbox(self.dos_by_bucket.values().flatten())?;
 
             let translate_diff = frame_bbox.bbox_center() - inner_bbox.bbox_center();
 
-            self.dos.iter_mut().for_each(|(_bucket, layers)| {
-                layers.iter_mut().for_each(|draw_obj| {
+            self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
+                dos.iter_mut().for_each(|draw_obj| {
                     draw_obj.mutate(|pt: &mut Pt| {
                         *pt += translate_diff;
                     });
@@ -88,8 +101,8 @@ impl Canvas {
             if let Some(frame) = self.frame.clone() {
                 all.push(frame);
             }
-            for layers in self.dos.values() {
-                all.extend(layers.clone());
+            for dos in self.dos_by_bucket.values() {
+                all.extend(dos.clone());
             }
             write_layer_to_svg(size, name, &all)?;
         }
@@ -101,10 +114,10 @@ impl Canvas {
             }
         }
 
-        // layers
+        // dos
         {
-            for (i, (_bucket, layers)) in self.dos.iter().enumerate() {
-                let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), layers)
+            for (i, (_bucket, dos)) in self.dos_by_bucket.iter().enumerate() {
+                let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), dos)
                     .expect("failed to write");
             }
         }

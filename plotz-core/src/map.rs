@@ -6,8 +6,9 @@ use {
     crate::{
         bucket::{Area, Bucket, Path as BucketPath, Subway as BucketSubway},
         bucketer::{Bucketer2, DefaultBucketer2},
-        frame::make_frame,
-        svg::{write_layer_to_svg, Size, SvgWriteError},
+        canvas::Canvas,
+        frame::make_frame_pg,
+        svg::{Size, SvgWriteError},
     },
     float_ord::FloatOrd,
     itertools::Itertools,
@@ -164,9 +165,9 @@ lazy_static! {
 }
 
 /// An unadjusted set of annotated polygons, ready to be printed to SVG.
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Map {
-    layers: Vec<(Bucket, Vec<DrawObj>)>,
+    canvas: Canvas,
 }
 impl Map {
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
@@ -174,7 +175,9 @@ impl Map {
     pub fn new(map_config: &MapConfig) -> Result<Map, MapError> {
         let bucketer = DefaultBucketer2 {};
 
-        let layers = map_config
+        let mut canvas = Canvas::new();
+
+        map_config
             .input_files
             .iter()
             .flat_map(|file| {
@@ -201,25 +204,34 @@ impl Map {
             .sorted_by(|ap_1, ap_2| std::cmp::Ord::cmp(&ap_1.bucket, &ap_2.bucket))
             .group_by(|ap| ap.bucket)
             .into_iter()
-            .map(|(k, v)| (k, v.map(|ap| ap.to_draw_obj()).collect()))
-            .collect::<Vec<(Bucket, Vec<DrawObj>)>>();
-        trace!("made {:?} layers", layers.len());
+            .map(|(k, v)| (Some(k), v.map(|ap| ap.to_draw_obj()).collect::<Vec<_>>()))
+            .for_each(|(b, a)| {
+                canvas
+                    .dos_by_bucket
+                    .entry(b)
+                    .or_default()
+                    .extend(a.into_iter());
+            });
 
-        Ok(Map { layers })
+        trace!("made {:?} layers", canvas.dos_by_bucket.len());
+
+        Ok(Map { canvas })
     }
 
     fn objs_iter(&self) -> impl Iterator<Item = &DrawObjInner> {
-        self.layers
+        self.canvas
+            .dos_by_bucket
             .iter()
-            .flat_map(|(_b, vec)| vec)
-            .map(|co| &co.obj)
+            .flat_map(|(_bucket, dos)| dos)
+            .map(|d_o| &d_o.obj)
     }
 
     fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut DrawObjInner> {
-        self.layers
+        self.canvas
+            .dos_by_bucket
             .iter_mut()
-            .flat_map(|(_b, vec)| vec)
-            .map(|co| &mut co.obj)
+            .flat_map(|(_bucket, dos)| dos)
+            .map(|d_o| &mut d_o.obj)
     }
 
     fn mutate_all(&mut self, f: impl Fn(&mut Pt)) {
@@ -274,41 +286,43 @@ impl Map {
         Ok(())
     }
 
-    fn apply_shading_to_layers(&mut self) {
-        for (bucket, layers) in self.layers.iter_mut() {
-            if let Some((shade_and_outline, shade_config)) = SHADINGS.get(bucket) {
-                let mut v = vec![];
-                // keep the frame, add the crosshatchings.
-                let crosshatchings: Vec<DrawObj> = layers
-                    .iter()
-                    .filter_map(|co| match &co.obj {
-                        DrawObjInner::Polygon(p) => match shade_polygon(shade_config, p) {
-                            Err(_) => None,
-                            Ok(segments) => Some(
-                                segments
-                                    .into_iter()
-                                    .map(|s| DrawObj {
-                                        obj: DrawObjInner::Segment(s),
-                                        color: co.color,
-                                        thickness: shade_config.thickness,
-                                    })
-                                    .collect::<Vec<_>>(),
-                            ),
-                        },
-                        _ => None,
-                    })
-                    .flatten()
-                    .collect();
-                match shade_and_outline {
-                    ShadeAndOutline::JustShade => {
-                        v.extend(crosshatchings);
+    fn apply_shading_to_drawobjs(&mut self) {
+        for (bucket, layers) in self.canvas.dos_by_bucket.iter_mut() {
+            if let Some(bucket) = bucket {
+                if let Some((shade_and_outline, shade_config)) = SHADINGS.get(bucket) {
+                    let mut v = vec![];
+                    // keep the frame, add the crosshatchings.
+                    let crosshatchings: Vec<DrawObj> = layers
+                        .iter()
+                        .filter_map(|co| match &co.obj {
+                            DrawObjInner::Polygon(p) => match shade_polygon(shade_config, &p) {
+                                Err(_) => None,
+                                Ok(segments) => Some(
+                                    segments
+                                        .into_iter()
+                                        .map(|s| DrawObj {
+                                            obj: DrawObjInner::Segment(s),
+                                            color: co.color,
+                                            thickness: shade_config.thickness,
+                                        })
+                                        .collect::<Vec<_>>(),
+                                ),
+                            },
+                            _ => None,
+                        })
+                        .flatten()
+                        .collect();
+                    match shade_and_outline {
+                        ShadeAndOutline::JustShade => {
+                            v.extend(crosshatchings);
+                        }
+                        ShadeAndOutline::Both => {
+                            v.extend(crosshatchings);
+                            v.extend(layers.clone());
+                        }
                     }
-                    ShadeAndOutline::Both => {
-                        v.extend(crosshatchings);
-                        v.extend(layers.clone());
-                    }
+                    *layers = v;
                 }
-                *layers = v;
             }
         }
     }
@@ -335,9 +349,9 @@ impl Map {
     }
 
     pub fn randomize_circles(&mut self) {
-        for (_bucket, layers) in self.layers.iter_mut() {
-            for layer in layers.iter_mut() {
-                if let DrawObjInner::CurveArc(ca) = &mut layer.obj {
+        for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
+            for d_o in dos.iter_mut() {
+                if let DrawObjInner::CurveArc(ca) = &mut d_o.obj {
                     ca.ctr += Pt(
                         thread_rng().gen_range(-2.0..=2.0),
                         thread_rng().gen_range(-2.0..=2.0),
@@ -355,41 +369,30 @@ impl Map {
         let () = self.adjust(config.scale_factor, &config.size)?;
         let () = self.shift(config.shift_x, config.shift_y)?;
         let () = self.randomize_circles();
-        self.apply_shading_to_layers();
+        let () = self.apply_shading_to_drawobjs();
 
         if config.draw_frame {
             info!("Adding frame.");
             let margin = 5.0;
-            self.layers.push((
-                Bucket::Frame,
-                vec![make_frame(
-                    // yes these are backwards. oops
-                    (
-                        config.size.height as f64 - 2.0 * margin,
-                        config.size.width as f64 - 2.0 * margin,
-                    ),
-                    Pt(margin, margin),
-                )],
-            ));
+            let frame = make_frame_pg(
+                // yes these are backwards. oops
+                (
+                    config.size.height as f64 - 2.0 * margin,
+                    config.size.width as f64 - 2.0 * margin,
+                ),
+                Pt(margin, margin),
+            );
+            self.canvas.frame = Some(
+                DrawObj::new(frame.clone())
+                    .with_color(&BLACK)
+                    .with_thickness(5.0),
+            );
         }
 
-        // write layer 0 with all.
-        {
-            let path_0 = config.output_directory.join("0.svg");
-            let num = write_layer_to_svg(
-                config.size,
-                &path_0,
-                self.layers.iter().flat_map(|(_bucket, vec)| vec),
-            )?;
-            trace!("Wrote {:>4?} polygons to {:?} for _all_", num, path_0);
-        }
-
-        // write each layer individually.
-        for (idx, (bucket, draw_objs)) in self.layers.into_iter().enumerate() {
-            let path = config.output_directory.join(format!("{}.svg", idx + 1));
-            let num = write_layer_to_svg(config.size, &path, &draw_objs)?;
-            info!("Wrote {:>4?} objs to {:?} for {:?}", num, path, bucket);
-        }
+        let () = self
+            .canvas
+            .write_to_svg(config.size, config.output_directory.to_str().unwrap())
+            .expect("failed to write");
 
         Ok(())
     }
