@@ -1,6 +1,12 @@
 use {
-    crate::draw_obj_inner::DrawObjInner,
-    crate::{bounded::Bounded, point::Pt, traits::*},
+    crate::{
+        bounded::Bounded,
+        crop::{CropToPolygonError, Croppable},
+        draw_obj_inner::DrawObjInner,
+        point::Pt,
+        polygon::Polygon,
+        traits::*,
+    },
     float_ord::FloatOrd,
     std::ops::*,
 };
@@ -143,3 +149,16 @@ impl RemAssign<Pt> for Group {
 
 impl Translatable for Group {}
 impl Scalable<f64> for Group {}
+
+impl Croppable for Group {
+    type Output = Group;
+    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
+        Ok(vec![Group::new(
+            self.0
+                .iter()
+                .flat_map(|d_o| d_o.crop_to(frame))
+                .flatten()
+                .collect::<Vec<_>>(),
+        )])
+    }
+}

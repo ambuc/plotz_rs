@@ -1,8 +1,14 @@
 //! An annotated object with color and thickness.
 
 use {
-    crate::draw_obj_inner::DrawObjInner,
-    crate::{bounded::Bounded, point::Pt, traits::*},
+    crate::{
+        bounded::Bounded,
+        crop::{CropToPolygonError, Croppable},
+        draw_obj_inner::DrawObjInner,
+        point::Pt,
+        polygon::Polygon,
+        traits::*,
+    },
     plotz_color::{ColorRGB, BLACK},
     std::ops::*,
 };
@@ -141,3 +147,15 @@ impl Translatable for DrawObj {}
 impl Scalable<f64> for DrawObj {}
 impl ScalableAssign for DrawObj {}
 impl TranslatableAssign for DrawObj {}
+
+impl Croppable for DrawObj {
+    type Output = DrawObj;
+    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
+        Ok(self
+            .obj
+            .crop_to(&frame)?
+            .into_iter()
+            .map(|doi| DrawObj { obj: doi, ..(*self) })
+            .collect())
+    }
+}

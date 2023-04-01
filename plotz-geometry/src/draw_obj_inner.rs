@@ -1,3 +1,5 @@
+use crate::crop::{CropToPolygonError, Croppable, PointLoc};
+
 use {
     crate::{
         bounded::Bounded, curve::CurveArc, point::Pt, polygon::Polygon, segment::Segment, traits::*,
@@ -282,3 +284,47 @@ impl Translatable for DrawObjInner {}
 impl Scalable<f64> for DrawObjInner {}
 impl ScalableAssign for DrawObjInner {}
 impl TranslatableAssign for DrawObjInner {}
+
+impl Croppable for DrawObjInner {
+    type Output = DrawObjInner;
+    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
+        Ok(match &self {
+            DrawObjInner::Point(pt) => {
+                if !matches!(frame.contains_pt(pt), Ok(PointLoc::Outside)) {
+                    vec![self.clone()]
+                } else {
+                    vec![]
+                }
+            }
+            DrawObjInner::Polygon(pg) => pg
+                .to_segments()
+                .into_iter()
+                .map(|sg| sg.crop_to(&frame).expect("crop segment to frame failed"))
+                .flatten()
+                .map(DrawObjInner::from)
+                .collect::<Vec<_>>(),
+            DrawObjInner::Segment(sg) => sg
+                .crop_to(frame)?
+                .into_iter()
+                .map(DrawObjInner::from)
+                .collect::<Vec<_>>(),
+            DrawObjInner::CurveArc(ca) => ca
+                .crop_to(frame)?
+                .into_iter()
+                .map(DrawObjInner::from)
+                .collect::<Vec<_>>(),
+            DrawObjInner::Char(ch) => {
+                if !matches!(frame.contains_pt(&ch.pt), Ok(PointLoc::Outside)) {
+                    vec![self.clone()]
+                } else {
+                    vec![]
+                }
+            }
+            DrawObjInner::Group(g) => g
+                .crop_to(frame)?
+                .into_iter()
+                .map(DrawObjInner::from)
+                .collect::<Vec<_>>(),
+        })
+    }
+}

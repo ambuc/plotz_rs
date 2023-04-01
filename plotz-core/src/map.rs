@@ -2,6 +2,8 @@
 
 #![allow(clippy::let_unit_value)]
 
+use plotz_geometry::crop::Croppable;
+
 use {
     crate::{
         bucket::{Area, Bucket, Path as BucketPath, Subway as BucketSubway},
@@ -20,10 +22,12 @@ use {
         draw_obj::DrawObj,
         draw_obj_inner::DrawObjInner,
         point::Pt,
+        polygon::Polygon,
         shading_02::{shade_polygon, ShadeConfig},
     },
     rand::{thread_rng, Rng},
     std::{
+        cmp::Ord,
         collections::HashMap,
         fs::File,
         io::BufReader,
@@ -199,16 +203,15 @@ impl Map {
                 })
                 .collect::<Vec<AnnotatedDrawObj>>()
             })
-            .sorted_by(|ap_1, ap_2| std::cmp::Ord::cmp(&ap_1.bucket, &ap_2.bucket))
+            .sorted_by(|ap_1, ap_2| Ord::cmp(&ap_1.bucket, &ap_2.bucket))
             .group_by(|ap| ap.bucket)
             .into_iter()
-            .map(|(k, v)| (Some(k), v.map(|ap| ap.to_draw_obj()).collect::<Vec<_>>()))
-            .for_each(|(b, a)| {
+            .for_each(|(bucket, v)| {
                 canvas
                     .dos_by_bucket
-                    .entry(b)
+                    .entry(Some(bucket))
                     .or_default()
-                    .extend(a.into_iter());
+                    .extend(v.into_iter().map(|v| v.to_draw_obj()));
             });
 
         trace!("made {:?} layers", canvas.dos_by_bucket.len());
@@ -313,6 +316,16 @@ impl Map {
         }
     }
 
+    pub fn crop_to_frame(&mut self, frame: &Polygon) {
+        for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
+            *dos = dos
+                .into_iter()
+                .map(|d_o| d_o.crop_to(&frame).unwrap_or(vec![]))
+                .flatten()
+                .collect();
+        }
+    }
+
     /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
     /// file(s).
     pub fn render(mut self, config: &MapConfig) -> Result<(), MapError> {
@@ -323,12 +336,13 @@ impl Map {
         self.canvas.translate_all(|pt| {
             *pt += (config.shift_x, config.shift_y).into();
         });
+
         let () = self.randomize_circles();
         let () = self.apply_shading_to_drawobjs();
 
         if config.draw_frame {
             info!("Adding frame.");
-            let margin = 5.0;
+            let margin = 20.0;
             let frame = make_frame_pg(
                 // yes these are backwards. oops
                 (
@@ -342,6 +356,7 @@ impl Map {
                     .with_color(&BLACK)
                     .with_thickness(5.0),
             );
+            let () = self.crop_to_frame(&frame);
         }
 
         let () = self
