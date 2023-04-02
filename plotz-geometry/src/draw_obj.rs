@@ -32,7 +32,7 @@ impl DrawObj {
         DrawObj {
             obj: obj.into(),
             color: &BLACK,
-            thickness: 1.0,
+            thickness: 0.1,
         }
     }
 
@@ -153,9 +153,12 @@ impl Croppable for DrawObj {
     fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
         Ok(self
             .obj
-            .crop_to(&frame)?
+            .crop_to(frame)?
             .into_iter()
-            .map(|doi| DrawObj { obj: doi, ..(*self) })
+            .map(|doi| DrawObj {
+                obj: doi,
+                ..(*self)
+            })
             .collect())
     }
 }

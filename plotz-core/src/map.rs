@@ -2,7 +2,9 @@
 
 #![allow(clippy::let_unit_value)]
 
-use plotz_geometry::crop::Croppable;
+use std::collections::HashSet;
+
+use plotz_geometry::{crop::Croppable, segment::Segment};
 
 use {
     crate::{
@@ -24,6 +26,7 @@ use {
         point::Pt,
         polygon::Polygon,
         shading_02::{shade_polygon, ShadeConfig},
+        traits::*,
     },
     rand::{thread_rng, Rng},
     std::{
@@ -163,7 +166,7 @@ lazy_static! {
     ].into();
 
     /// How thick the default line is.
-    pub static ref DEFAULT_THICKNESS: f64 = 1.0;
+    pub static ref DEFAULT_THICKNESS: f64 = 0.1;
 }
 
 /// An unadjusted set of annotated polygons, ready to be printed to SVG.
@@ -317,12 +320,77 @@ impl Map {
     }
 
     pub fn crop_to_frame(&mut self, frame: &Polygon) {
+        trace!("Cropping all to frame.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             *dos = dos
                 .into_iter()
                 .map(|d_o| d_o.crop_to(&frame).unwrap_or(vec![]))
                 .flatten()
                 .collect();
+        }
+    }
+
+    pub fn polygons_to_segments(&mut self) {
+        trace!("Turning polygons into segments.");
+        for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
+            *dos = dos
+                .into_iter()
+                .flat_map(|d_o| {
+                    match d_o.obj.clone() {
+                        DrawObjInner::Polygon(pg) => pg
+                            .to_segments()
+                            .into_iter()
+                            .map(DrawObjInner::from)
+                            .collect(),
+                        x => vec![x],
+                    }
+                    .into_iter()
+                    .map(|doi| DrawObj { obj: doi, ..*d_o })
+                })
+                .collect();
+        }
+    }
+
+    pub fn quantize_layers(&mut self) {
+        trace!("Quantizing layers.");
+        for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
+            let q = 0.5;
+            for d_o in dos.iter_mut() {
+                match &mut d_o.obj {
+                    DrawObjInner::Segment(sg) => {
+                        sg.round_to_nearest(q);
+                    }
+                    DrawObjInner::Polygon(pg) => {
+                        pg.round_to_nearest(q);
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
+    pub fn simplify_layers(&mut self) {
+        trace!("Simplifying layers.");
+        self.polygons_to_segments(); // prereq
+
+        self.quantize_layers(); // prereq
+
+        for (bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
+            // at this point there are no polygons, only segments.
+            let color = bucket
+                .map(|bucket| &DEFAULT_COLORING[&bucket])
+                .unwrap_or(&BLACK);
+            let mut hs = HashSet::<Segment>::new();
+            for d_o in dos.iter() {
+                if let DrawObjInner::Segment(sg) = d_o.obj {
+                    hs.insert(sg);
+                    // TODO(ambuc): really, deduplicate this way but then store and restore the original.
+                }
+            }
+            *dos = hs
+                .into_iter()
+                .map(|sg| DrawObj::new(sg).with_color(color))
+                .collect::<Vec<_>>();
         }
     }
 
@@ -339,6 +407,8 @@ impl Map {
 
         let () = self.randomize_circles();
         let () = self.apply_shading_to_drawobjs();
+
+        // self.simplify_layers();
 
         if config.draw_frame {
             info!("Adding frame.");

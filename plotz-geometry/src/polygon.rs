@@ -726,6 +726,12 @@ impl Translatable for Polygon {}
 impl Scalable<Pt> for Polygon {}
 impl Scalable<f64> for Polygon {}
 
+impl Roundable for Polygon {
+    fn round_to_nearest(&mut self, f: f64) {
+        self.pts.iter_mut().for_each(|pt| pt.round_to_nearest(f));
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

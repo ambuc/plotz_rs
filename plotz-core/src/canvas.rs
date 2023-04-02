@@ -1,6 +1,7 @@
 //! Many draw objs.
 
 use {
+    tracing::trace,
     crate::{
         bucket::Bucket,
         svg::{write_layer_to_svg, Size},
@@ -133,6 +134,7 @@ impl Canvas {
     /// writes out to a set of SVGs at a prefix.
     pub fn write_to_svg(self, size: Size, prefix: &str) -> Result<(), Error> {
         // all
+        trace!("Writing to canvas.");
         {
             let name = format!("{}_all.svg", prefix);
             let mut all: Vec<DrawObj> = vec![];

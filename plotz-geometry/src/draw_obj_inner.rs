@@ -299,8 +299,7 @@ impl Croppable for DrawObjInner {
             DrawObjInner::Polygon(pg) => pg
                 .to_segments()
                 .into_iter()
-                .map(|sg| sg.crop_to(&frame).expect("crop segment to frame failed"))
-                .flatten()
+                .flat_map(|sg| sg.crop_to(frame).expect("crop segment to frame failed"))
                 .map(DrawObjInner::from)
                 .collect::<Vec<_>>(),
             DrawObjInner::Segment(sg) => sg

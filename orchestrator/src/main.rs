@@ -7,7 +7,6 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::{
     fs::canonicalize,
-    io::{BufRead, BufReader},
     path::PathBuf,
     process::{Command, Stdio},
     time::Duration,

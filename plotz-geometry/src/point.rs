@@ -232,6 +232,13 @@ impl Translatable for Pt {}
 impl Scalable<Pt> for Pt {}
 impl Scalable<f64> for Pt {}
 
+impl Roundable for Pt {
+    fn round_to_nearest(&mut self, f: f64) {
+        self.x.0 -= self.x.0 % f;
+        self.y.0 -= self.y.0 % f;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use float_eq::assert_float_eq;

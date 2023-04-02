@@ -73,7 +73,7 @@ pub enum IntersectionOutcome {
 }
 
 /// A segment in 2D space, with initial and final points.
-#[derive(Debug, Clone, Copy, Eq)]
+#[derive(Debug, Clone, Copy, Eq, Hash)]
 pub struct Segment {
     /// The initial point of the segment.
     pub i: Pt,
@@ -391,6 +391,13 @@ impl Croppable for Segment {
 impl Translatable for Segment {}
 impl Scalable<Pt> for Segment {}
 impl Scalable<f64> for Segment {}
+
+impl Roundable for Segment {
+    fn round_to_nearest(&mut self, f: f64) {
+        self.i.round_to_nearest(f);
+        self.f.round_to_nearest(f);
+    }
+}
 
 #[cfg(test)]
 mod tests {
