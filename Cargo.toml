@@ -29,6 +29,7 @@ argh = "*"
 glob = "*"
 multimap = "0.8.3"
 plotz-core = { path = "plotz-core" }
+plotz-geometry = { path = "plotz-geometry" }
 pretty_env_logger = "*"
 thiserror = "*"
 tracing = "*"

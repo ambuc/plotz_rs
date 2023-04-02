@@ -90,7 +90,7 @@ pub fn parse_geojson(
 
         let coords = &feature["geometry"]["coordinates"];
 
-        if let Ok(draw_obj_inner_s) = match geom_type {
+        let result: Result<Vec<DrawObjInner>, GeoJsonConversionError> = match geom_type {
             "LineString" => parse_to_linestring(coords).map(|v| {
                 stats
                     .entry(GeomType::LineString)
@@ -129,13 +129,16 @@ pub fn parse_geojson(
             other => {
                 unimplemented!("other: {:?}", other);
             }
-        } {
+        };
+
+        if let Ok(draw_obj_inner_s) = result {
             for draw_obj_inner in draw_obj_inner_s {
                 lines.push((draw_obj_inner, tags.clone()));
             }
-        } else {
-            error!("geojson parse failure");
         }
+        // else {
+        //     error!("geojson parse failure: {:?}", result);
+        // }
     }
 
     trace!("stats: {:?}", stats);

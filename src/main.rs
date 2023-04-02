@@ -8,6 +8,7 @@ use plotz_core::{
     map::{Map, MapConfig},
     svg::Size,
 };
+use plotz_geometry::point::Pt;
 use tracing::*;
 use tracing_subscriber::FmtSubscriber;
 
@@ -26,10 +27,11 @@ struct Args {
     draw_frame: bool,
     #[argh(option, description = "scale factor", default = "0.9")]
     scale_factor: f64,
-    #[argh(option, description = "shift x", default = "0.0")]
-    shift_x: f64,
-    #[argh(option, description = "shift y", default = "0.0")]
-    shift_y: f64,
+
+    #[argh(option, description = "center lat")]
+    center_lat: Option<f64>,
+    #[argh(option, description = "center lng")]
+    center_lng: Option<f64>,
 }
 
 fn main() {
@@ -60,11 +62,16 @@ fn main_inner(args: Args) {
         })
         .draw_frame(args.draw_frame)
         .scale_factor(args.scale_factor)
-        .shift_x(args.shift_x)
-        .shift_y(args.shift_y)
         .build();
 
-    let map = Map::new(&map_config).expect("failed to create map");
+    let map = Map::new(
+        &map_config,
+        match (args.center_lat, args.center_lng) {
+            (Some(x), Some(y)) => Some(Pt(y, x)),
+            _ => None,
+        },
+    )
+    .expect("failed to create map");
 
     let () = map.render(&map_config).expect("failed to render map");
 }
@@ -107,8 +114,8 @@ mod test_super {
             height: size.height,
             draw_frame: true,
             scale_factor: 0.9,
-            shift_x: 0.0,
-            shift_y: 0.0,
+            center_lat: None,
+            center_lng: None,
         });
 
         let output_svg = std::fs::read_to_string(tmp_dir.path().join("0.svg")).expect("foo");

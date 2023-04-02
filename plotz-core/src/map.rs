@@ -173,11 +173,14 @@ lazy_static! {
 #[derive(Debug)]
 pub struct Map {
     canvas: Canvas,
+
+    // user-configurable, there might be a desired pt to put at the center of the output.
+    center: Option<Pt>,
 }
 impl Map {
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
     /// unadjusted Map instance.
-    pub fn new(map_config: &MapConfig) -> Result<Map, MapError> {
+    pub fn new(map_config: &MapConfig, center: Option<Pt>) -> Result<Map, MapError> {
         let bucketer = DefaultBucketer2 {};
 
         let mut canvas = Canvas::new();
@@ -219,7 +222,7 @@ impl Map {
 
         trace!("made {:?} layers", canvas.dos_by_bucket.len());
 
-        Ok(Map { canvas })
+        Ok(Map { canvas, center })
     }
 
     fn apply_bl_shift(&mut self) -> Result<(), MapError> {
@@ -227,17 +230,27 @@ impl Map {
         self.canvas.translate_all(|pt| {
             *pt -= curr_bbox.bl_bound();
         });
+        if let Some(center) = &mut self.center {
+            *center -= curr_bbox.bl_bound();
+        }
         Ok(())
     }
 
     fn apply_centering(&mut self, dest_size: &Size) -> Result<(), MapError> {
-        let curr_bbox = self.canvas.get_bbox();
-        self.canvas.translate_all(|pt| {
-            *pt += Pt(
-                (dest_size.width as f64 - curr_bbox.right_bound()) / 2.0,
-                (dest_size.height as f64 - curr_bbox.top_bound()) / 2.0,
-            );
-        });
+        let shift = match self.center {
+            Some(desired_center) => Pt(
+                dest_size.width as f64 / 2.0 - desired_center.x.0,
+                dest_size.height as f64 / 2.0 - desired_center.y.0,
+            ),
+            None => {
+                let curr_bbox = self.canvas.get_bbox();
+                Pt(
+                    (dest_size.width as f64 - curr_bbox.right_bound()) / 2.0,
+                    (dest_size.height as f64 - curr_bbox.top_bound()) / 2.0,
+                )
+            }
+        };
+        self.canvas.translate_all(|pt| *pt += shift);
         Ok(())
     }
 
@@ -248,7 +261,15 @@ impl Map {
             FloatOrd(dest_size.width as f64 / curr_bbox.width().abs()),
         )
         .0 * scale_factor;
-        self.canvas.scale_all(|obj| *obj *= scaling_factor);
+        self.canvas.scale_all(|obj| {
+            *obj *= scaling_factor;
+        });
+
+        if let Some(center) = &mut self.center {
+            // something about lat long encoding here vs. there. oops
+            *center *= scaling_factor;
+        }
+
         Ok(())
     }
 
@@ -296,10 +317,24 @@ impl Map {
     /// Adjusts the map for scale/transform issues.
     pub fn adjust(&mut self, scale_factor: f64, dest_size: &Size) -> Result<(), MapError> {
         // first compute current bbox and shift everything positive.
+
+        // flip all points across the y axis.
         self.canvas.mutate_all(|pt| {
             pt.flip_y();
+        });
+
+        if let Some(center) = &mut self.center {
+            center.flip_y();
+        }
+
+        // adjust all point y values according to latitude transform
+        self.canvas.mutate_all(|pt| {
             pt.y.0 = latitude_to_y(pt.y.0);
         });
+        if let Some(center) = &mut self.center {
+            center.y.0 = latitude_to_y(center.y.0);
+        }
+
         self.apply_bl_shift()?;
         self.apply_scaling(scale_factor, dest_size)?;
         self.apply_centering(dest_size)?;
@@ -401,9 +436,9 @@ impl Map {
 
         let () = self.adjust(config.scale_factor, &config.size)?;
 
-        self.canvas.translate_all(|pt| {
-            *pt += (config.shift_x, config.shift_y).into();
-        });
+        // self.canvas.translate_all(|pt| {
+        //     *pt += (config.shift_x, config.shift_y).into();
+        // });
 
         // let () = self.randomize_circles();
         let () = self.apply_shading_to_drawobjs();
@@ -448,8 +483,6 @@ pub struct MapConfig {
     size: Size,
     draw_frame: bool,
     scale_factor: f64,
-    shift_x: f64,
-    shift_y: f64,
 }
 
 /// Helper fn for transforming filepaths to files.
@@ -482,11 +515,9 @@ mod tests {
             })
             .draw_frame(false)
             .scale_factor(0.9)
-            .shift_x(0.0)
-            .shift_y(0.0)
             .build();
 
-        let mut map = Map::new(&map_config).unwrap();
+        let mut map = Map::new(&map_config, None).unwrap();
 
         {
             let mut rolling_bbox = BoundsCollector::default();
@@ -560,6 +591,7 @@ mod tests {
                     );
                     canvas
                 },
+                center: None,
             };
             map.apply_bl_shift().unwrap();
 
@@ -600,6 +632,7 @@ mod tests {
         ] {
             let obj = DrawObjInner::Polygon(Polygon(initial).unwrap());
             let mut map = Map {
+                center: None,
                 canvas: {
                     let mut canvas = Canvas::new();
                     canvas.dos_by_bucket.insert(
