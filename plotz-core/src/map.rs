@@ -166,7 +166,7 @@ lazy_static! {
     ].into();
 
     /// How thick the default line is.
-    pub static ref DEFAULT_THICKNESS: f64 = 0.1;
+    pub static ref DEFAULT_THICKNESS: f64 = 1.0;
 }
 
 /// An unadjusted set of annotated polygons, ready to be printed to SVG.
@@ -225,7 +225,28 @@ impl Map {
         Ok(Map { canvas, center })
     }
 
-    fn apply_bl_shift(&mut self) -> Result<(), MapError> {
+    fn adjust_flip_y(&mut self) {
+        // flip all points across the y axis.
+        self.canvas.mutate_all(|pt| {
+            pt.flip_y();
+        });
+
+        if let Some(center) = &mut self.center {
+            center.flip_y();
+        }
+    }
+
+    fn adjust_latitude_transform(&mut self) {
+        // adjust all point y values according to latitude transform
+        self.canvas.mutate_all(|pt| {
+            pt.y.0 = latitude_to_y(pt.y.0);
+        });
+        if let Some(center) = &mut self.center {
+            center.y.0 = latitude_to_y(center.y.0);
+        }
+    }
+
+    fn adjust_bl_shift(&mut self) -> Result<(), MapError> {
         let curr_bbox = self.canvas.get_bbox();
         self.canvas.translate_all(|pt| {
             *pt -= curr_bbox.bl_bound();
@@ -236,7 +257,7 @@ impl Map {
         Ok(())
     }
 
-    fn apply_centering(&mut self, dest_size: &Size) -> Result<(), MapError> {
+    fn adjust_centering(&mut self, dest_size: &Size) -> Result<(), MapError> {
         let shift = match self.center {
             Some(desired_center) => Pt(
                 dest_size.width as f64 / 2.0 - desired_center.x.0,
@@ -254,7 +275,7 @@ impl Map {
         Ok(())
     }
 
-    fn apply_scaling(&mut self, scale_factor: f64, dest_size: &Size) -> Result<(), MapError> {
+    fn adjust_scaling(&mut self, scale_factor: f64, dest_size: &Size) -> Result<(), MapError> {
         let curr_bbox = self.canvas.get_bbox();
         let scaling_factor = std::cmp::max(
             FloatOrd(dest_size.height as f64 / curr_bbox.height().abs()),
@@ -315,29 +336,16 @@ impl Map {
     }
 
     /// Adjusts the map for scale/transform issues.
-    pub fn adjust(&mut self, scale_factor: f64, dest_size: &Size) -> Result<(), MapError> {
-        // first compute current bbox and shift everything positive.
-
-        // flip all points across the y axis.
-        self.canvas.mutate_all(|pt| {
-            pt.flip_y();
-        });
-
-        if let Some(center) = &mut self.center {
-            center.flip_y();
-        }
-
-        // adjust all point y values according to latitude transform
-        self.canvas.mutate_all(|pt| {
-            pt.y.0 = latitude_to_y(pt.y.0);
-        });
-        if let Some(center) = &mut self.center {
-            center.y.0 = latitude_to_y(center.y.0);
-        }
-
-        self.apply_bl_shift()?;
-        self.apply_scaling(scale_factor, dest_size)?;
-        self.apply_centering(dest_size)?;
+    pub fn do_all_adjustments(
+        &mut self,
+        scale_factor: f64,
+        dest_size: &Size,
+    ) -> Result<(), MapError> {
+        self.adjust_flip_y();
+        self.adjust_latitude_transform();
+        self.adjust_bl_shift()?;
+        self.adjust_scaling(scale_factor, dest_size)?;
+        self.adjust_centering(dest_size)?;
         Ok(())
     }
 
@@ -434,11 +442,7 @@ impl Map {
     pub fn render(mut self, config: &MapConfig) -> Result<(), MapError> {
         trace!(config = ?config.input_files);
 
-        let () = self.adjust(config.scale_factor, &config.size)?;
-
-        // self.canvas.translate_all(|pt| {
-        //     *pt += (config.shift_x, config.shift_y).into();
-        // });
+        let () = self.do_all_adjustments(config.scale_factor, &config.size)?;
 
         // let () = self.randomize_circles();
         let () = self.apply_shading_to_drawobjs();
@@ -538,7 +542,7 @@ mod tests {
             assert_eq!(rolling_bbox.right_bound(), 3.0);
         }
 
-        let () = map.adjust(0.9, &map_config.size).unwrap();
+        let () = map.do_all_adjustments(0.9, &map_config.size).unwrap();
 
         {
             let mut rolling_bbox = BoundsCollector::default();
@@ -593,7 +597,7 @@ mod tests {
                 },
                 center: None,
             };
-            map.apply_bl_shift().unwrap();
+            map.adjust_bl_shift().unwrap();
 
             let mut x = map.canvas.dos_by_bucket.values();
 
@@ -646,7 +650,7 @@ mod tests {
                     canvas
                 },
             };
-            map.apply_scaling(scale_factor, &size).unwrap();
+            map.adjust_scaling(scale_factor, &size).unwrap();
 
             let mut x = map.canvas.dos_by_bucket.values();
 
