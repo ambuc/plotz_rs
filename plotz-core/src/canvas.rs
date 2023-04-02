@@ -1,7 +1,6 @@
 //! Many draw objs.
 
 use {
-    tracing::trace,
     crate::{
         bucket::Bucket,
         svg::{write_layer_to_svg, Size},
@@ -17,6 +16,7 @@ use {
         traits::*,
     },
     std::collections::HashMap,
+    tracing::trace,
 };
 
 type CanvasMap = HashMap<Option<Bucket>, Vec<DrawObj>>;

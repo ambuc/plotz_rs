@@ -93,18 +93,18 @@ lazy_static! {
     /// Which areas get shaded, and how much.
     pub static ref DEFAULT_COLORING: HashMap<Bucket, ColorRGB> =
             HashMap::from([
-                (Bucket::Path(BucketPath::Highway1), BLACK),
-                (Bucket::Path(BucketPath::Highway2), DARKGRAY),
-                (Bucket::Path(BucketPath::Highway3), GRAY),
-                (Bucket::Path(BucketPath::Highway4), LIGHTGRAY),
-                (Bucket::Path(BucketPath::Cycleway), DARKGRAY),
-                (Bucket::Path(BucketPath::Pedestrian), DARKGRAY),
-                (Bucket::Path(BucketPath::Rail), DARKGRAY),
-                (Bucket::Path(BucketPath::Boundary), DARKGRAY),
+                (Bucket::Path(BucketPath::Highway1), RED),
+                (Bucket::Path(BucketPath::Highway2), ORANGE),
+                (Bucket::Path(BucketPath::Highway3), YELLOW),
+                (Bucket::Path(BucketPath::Highway4), GREEN),
+                (Bucket::Path(BucketPath::Cycleway), BLUE),
+                (Bucket::Path(BucketPath::Pedestrian), LIGHTGRAY),
+                (Bucket::Path(BucketPath::Rail), BROWN),
+                (Bucket::Path(BucketPath::Boundary), LIMEGREEN),
                 (Bucket::Area(Area::Beach), TAN),
                 (Bucket::Area(Area::Building), DARKGREY),
                 (Bucket::Area(Area::Business), DARKGREY),
-                (Bucket::Area(Area::Fun), DARKGREEN),
+                (Bucket::Area(Area::Fun), GREENYELLOW),
                 (Bucket::Area(Area::NaturalRock), DARKGRAY),
                 (Bucket::Area(Area::Park), GREEN),
                 (Bucket::Area(Area::Rail), ORANGE),
@@ -127,42 +127,42 @@ lazy_static! {
     pub static ref SHADINGS: HashMap<Bucket, (ShadeAndOutline, ShadeConfig)> = [
         // TODO(jbuckland): Some of these scale poorly or fail to render. Can I
         // somehow autoderive this density?
-        (
-            Bucket::Area(Area::Park),
-            (
-                ShadeAndOutline::Both,
-                ShadeConfig {
-                    gap: 2.0,
-                    slope: 1.0,
-                    thickness: 1.0,
-                    switchback: false,
-                }
-            )
-        ),
-        (
-            Bucket::Area(Area::Fun),
-            (
-                ShadeAndOutline::Both,
-                ShadeConfig {
-                    gap: 1.0,
-                    slope: 1.0,
-                    thickness: 1.0,
-                    switchback: false,
-                }
-            )
-        ),
-        (
-            Bucket::Area(Area::Water),
-            (
-                ShadeAndOutline::Both,
-                ShadeConfig {
-                    gap: 2.0,
-                    slope: 0.0,
-                    thickness: 1.0,
-                    switchback: false,
-                }
-            )
-        ),
+        // (
+        //     Bucket::Area(Area::Park),
+        //     (
+        //         ShadeAndOutline::JustShade,
+        //         ShadeConfig {
+        //             gap: 3.5,
+        //             slope: 1.0,
+        //             thickness: 1.0,
+        //             switchback: false,
+        //         }
+        //     )
+        // ),
+        // (
+        //     Bucket::Area(Area::Fun),
+        //     (
+        //         ShadeAndOutline::Both,
+        //         ShadeConfig {
+        //             gap: 3.0,
+        //             slope: 1.0,
+        //             thickness: 1.0,
+        //             switchback: false,
+        //         }
+        //     )
+        // ),
+        // (
+        //     Bucket::Area(Area::Water),
+        //     (
+        //         ShadeAndOutline::JustShade,
+        //         ShadeConfig {
+        //             gap: 2.0,
+        //             slope: 0.0,
+        //             thickness: 1.0,
+        //             switchback: false,
+        //         }
+        //     )
+        // ),
     ].into();
 
     /// How thick the default line is.
