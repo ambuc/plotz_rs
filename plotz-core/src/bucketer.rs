@@ -17,254 +17,152 @@ pub trait Bucketer2 {
     fn bucket(&self, tags: &[Self::Tag]) -> Self::Bucket;
 }
 
-#[derive(Debug, PartialEq, Eq)]
-enum Seq {
-    AnyOf(Vec<(&'static str, &'static str)>),
-    AllOf(Vec<(&'static str, &'static str)>),
-}
-
 pub struct DefaultBucketer2 {}
+
+macro_rules! contains {
+    // NB: stolen from matches! impl
+    ($ls:expr, $(|)? $( $pattern:pat_param )|+ $( if $guard: expr )? $(,)?) => {
+        $ls.iter()
+            .any(|(a, b)|
+            match (a.as_str(), b.as_str()) {
+                $( $pattern )|+ $( if $guard )? => true,
+                _ => false
+            }
+        )
+    };
+}
 
 impl Bucketer2 for DefaultBucketer2 {
     type Tag = (String, String);
     type Bucket = Vec<Bucket>;
     fn bucket(&self, tags: &[Self::Tag]) -> Self::Bucket {
         let mut v = vec![];
-        if tags
-            .iter()
-            .any(|(k, v)| matches!((k.as_str(), v.as_str()), ("natural", "beach" | "sand")))
-        {
+
+        if contains!(tags, ("natural", "beach" | "sand")) {
             v.push(Bucket::Area(Area::Beach));
         }
-        if tags.iter().any(|(k, v)| {
-            matches!(
-                (k.as_str(), v.as_str()),
-                ("building", "apartments" | "garages" | "yes")
-                    | ("landuse", "commercial" | "construction" | "industrial")
-            )
-        }) {
+
+        if contains!(
+            tags,
+            ("building", "apartments" | "garages" | "yes")
+                | ("landuse", "commercial" | "construction" | "industrial")
+        ) {
             v.push(Bucket::Area(Area::Building));
         }
-        if tags.iter().any(|(k, v)| {
-            matches!(
-                (k.as_str(), v.as_str()),
-                ("amenity", "school")
-                    | ("fitness_station", "box")
-                    | ("leisure", "pitch" | "playground" | "swimming_pool")
-            )
-        }) {
+        if contains!(
+            tags,
+            ("amenity", "school")
+                | ("fitness_station", "box")
+                | ("leisure", "pitch" | "playground" | "swimming_pool")
+        ) {
             v.push(Bucket::Area(Area::Fun));
         }
-        if tags.iter().any(|(k, v)| {
-            matches!(
-                (k.as_str(), v.as_str()),
-                (
-                    "landuse",
-                    "brownfield" | "cemetery" | "grass" | "greenfield" | "meadow"
-                ) | ("leisure", "garden" | "park")
-                    | ("natural", "scrub")
-            )
-        }) {
+        if contains!(
+            tags,
+            (
+                "landuse",
+                "brownfield" | "cemetery" | "grass" | "greenfield" | "meadow"
+            ) | ("leisure", "garden" | "park")
+                | ("natural", "scrub")
+        ) {
             v.push(Bucket::Area(Area::Park));
         }
-        if tags
-            .iter()
-            .any(|(k, v)| matches!((k.as_str(), v.as_str()), ("natural", "bare_rock")))
-        {
+        if contains!(tags, ("natural", "bare_rock")) {
             v.push(Bucket::Area(Area::NaturalRock));
         }
-        if tags
-            .iter()
-            .any(|(k, v)| matches!((k.as_str(), v.as_str()), ("landuse", "railway")))
-        {
+        if contains!(tags, ("landuse", "railway")) {
             v.push(Bucket::Area(Area::Rail));
         }
-        if tags
-            .iter()
-            .any(|(k, v)| matches!((k.as_str(), v.as_str()), ("natural", "tree")))
-        {
+        if contains!(tags, ("natural", "tree")) {
             v.push(Bucket::Area(Area::Tree));
         }
-        if tags.iter().any(|(k, v)| {
-            matches!(
-                (k.as_str(), v.as_str()),
-                ("natural", "bay" | "coastline" | "water")
-            )
-        }) {
+        if contains!(tags, ("natural", "bay" | "coastline" | "water")) {
             v.push(Bucket::Area(Area::Water));
         }
-        if tags
-            .iter()
-            .any(|(k, v)| matches!((k.as_str(), v.as_str()), ("boundary", "administrative")))
-        {
+        if contains!(tags, ("boundary", "administrative")) {
             v.push(Bucket::Path(Path::Boundary));
         }
-        if tags
-            .iter()
-            .any(|(k, v)| matches!((k.as_str(), v.as_str()), ("highway", "cycleway")))
-        {
+        if contains!(tags, ("highway", "cycleway")) {
             v.push(Bucket::Path(Path::Cycleway));
         }
-        if tags
-            .iter()
-            .any(|(k, v)| matches!((k.as_str(), v.as_str()), ("highway", "primary")))
-        {
+        if contains!(tags, ("highway", "primary")) {
             v.push(Bucket::Path(Path::Highway1));
         }
-        if tags
-            .iter()
-            .any(|(k, v)| matches!((k.as_str(), v.as_str()), ("highway", "secondary")))
-        {
+        if contains!(tags, ("highway", "secondary")) {
             v.push(Bucket::Path(Path::Highway2));
         }
-        if tags
-            .iter()
-            .any(|(k, v)| matches!((k.as_str(), v.as_str()), ("highway", "tertiary")))
-        {
+        if contains!(tags, ("highway", "tertiary")) {
             v.push(Bucket::Path(Path::Highway3));
         }
-        if tags.iter().any(|(k, v)| {
-            matches!(
-                (k.as_str(), v.as_str()),
-                ("highway", "primary_link" | "secondary_link" | "service")
-            )
-        }) {
+        if contains!(
+            tags,
+            ("highway", "primary_link" | "secondary_link" | "service")
+        ) {
             v.push(Bucket::Path(Path::Highway4));
         }
-        if tags.iter().any(|(k, v)| {
-            matches!(
-                (k.as_str(), v.as_str()),
-                (
-                    "highway",
-                    "footway" | "pedestrian" | "residential" | "steps"
-                )
+        if contains!(
+            tags,
+            (
+                "highway",
+                "footway" | "pedestrian" | "residential" | "steps"
             )
-        }) {
+        ) {
             v.push(Bucket::Path(Path::Pedestrian));
         }
 
-        for (seq, b) in [
-            //
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "A")]),
-                Bucket::Path(Path::Subway(Subway::_ACE)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "C")]),
-                Bucket::Path(Path::Subway(Subway::_ACE)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "E")]),
-                Bucket::Path(Path::Subway(Subway::_ACE)),
-            ),
-            //
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "B")]),
-                Bucket::Path(Path::Subway(Subway::_BDFM)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "D")]),
-                Bucket::Path(Path::Subway(Subway::_BDFM)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "F")]),
-                Bucket::Path(Path::Subway(Subway::_BDFM)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "M")]),
-                Bucket::Path(Path::Subway(Subway::_BDFM)),
-            ),
-            //
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "G")]),
-                Bucket::Path(Path::Subway(Subway::_G)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "L")]),
-                Bucket::Path(Path::Subway(Subway::_L)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "J")]),
-                Bucket::Path(Path::Subway(Subway::_JZ)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "Z")]),
-                Bucket::Path(Path::Subway(Subway::_JZ)),
-            ),
-            //
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "N")]),
-                Bucket::Path(Path::Subway(Subway::_NQRW)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "Q")]),
-                Bucket::Path(Path::Subway(Subway::_NQRW)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "R")]),
-                Bucket::Path(Path::Subway(Subway::_NQRW)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "W")]),
-                Bucket::Path(Path::Subway(Subway::_NQRW)),
-            ),
-            //
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "1")]),
-                Bucket::Path(Path::Subway(Subway::_123)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "2")]),
-                Bucket::Path(Path::Subway(Subway::_123)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "3")]),
-                Bucket::Path(Path::Subway(Subway::_123)),
-            ),
-            //
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "4")]),
-                Bucket::Path(Path::Subway(Subway::_456)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "5")]),
-                Bucket::Path(Path::Subway(Subway::_456)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "6")]),
-                Bucket::Path(Path::Subway(Subway::_456)),
-            ),
-            //
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "7")]),
-                Bucket::Path(Path::Subway(Subway::_7)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "T")]),
-                Bucket::Path(Path::Subway(Subway::_T)),
-            ),
-            (
-                Seq::AllOf(vec![("route", "subway"), ("ref", "S")]),
-                Bucket::Path(Path::Subway(Subway::_S)),
-            ),
-            (
-                Seq::AnyOf(vec![("railway", "rail"), ("route", "subway")]),
-                Bucket::Path(Path::Rail),
-            ),
-        ] {
-            if match seq {
-                Seq::AllOf(seq) => seq.iter().all(|tag| {
-                    tags.iter()
-                        .any(|found| found.0 == tag.0 && found.1 == tag.1)
-                }),
-                Seq::AnyOf(seq) => seq.iter().any(|tag| {
-                    tags.iter()
-                        .any(|found| found.0 == tag.0 && found.1 == tag.1)
-                }),
-            } {
-                v.push(b);
+        if contains!(tags, ("route", "subway")) {
+            if let Some((_, name)) = tags.iter().find(|(k, _v)| k == "name") {
+                if !name.contains("weekends")
+                    && !name.contains("am rush")
+                    && !name.contains("pm rush")
+                    && !name.contains("late nights")
+                {
+                    if contains!(tags, ("ref", "A" | "C" | "E")) {
+                        v.push(Bucket::Path(Path::Subway(Subway::_ACE)))
+                    }
+                    if contains!(tags, ("ref", "B" | "D" | "F" | "M")) {
+                        v.push(Bucket::Path(Path::Subway(Subway::_BDFM)))
+                    }
+                    if contains!(tags, ("ref", "G")) {
+                        v.push(Bucket::Path(Path::Subway(Subway::_G)))
+                    }
+                    if contains!(tags, ("ref", "L")) {
+                        v.push(Bucket::Path(Path::Subway(Subway::_L)))
+                    }
+                    if contains!(tags, ("ref", "J" | "Z")) {
+                        v.push(Bucket::Path(Path::Subway(Subway::_JZ)))
+                    }
+                    if contains!(tags, ("ref", "N" | "Q" | "R" | "W")) {
+                        v.push(Bucket::Path(Path::Subway(Subway::_NQRW)))
+                    }
+                    if contains!(tags, ("ref", "1" | "2" | "3")) {
+                        v.push(Bucket::Path(Path::Subway(Subway::_123)))
+                    }
+                    if contains!(tags, ("ref", "4" | "5" | "6")) {
+                        v.push(Bucket::Path(Path::Subway(Subway::_456)))
+                    }
+                    if contains!(tags, ("ref", "7")) {
+                        v.push(Bucket::Path(Path::Subway(Subway::_7)))
+                    }
+                    if contains!(tags, ("ref", "T")) {
+                        v.push(Bucket::Path(Path::Subway(Subway::_T)))
+                    }
+                    if contains!(tags, ("ref", "S")) {
+                        v.push(Bucket::Path(Path::Subway(Subway::_S)))
+                    }
+                    if contains!(tags, ("railway", "rail")) {
+                        v.push(Bucket::Path(Path::Rail));
+                    }
+                }
             }
         }
+
+        if !v.is_empty() {
+            if contains!(tags, ("route", "subway")) && !contains!(tags, ("role", "stop")) {
+                println!("{:?}, {:?}", tags, v);
+            }
+        }
+
         v
     }
 }

@@ -56,6 +56,7 @@ fn add_tags(value: &Value, tagslist: &mut TagsList) {
                 }
                 Value::Array(arr) => {
                     for v in arr {
+                        // BUG: this should be parsing as separate objects.
                         add_tags(v, tagslist);
                     }
                 }
