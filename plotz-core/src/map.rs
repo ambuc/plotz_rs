@@ -405,7 +405,7 @@ impl Map {
             *pt += (config.shift_x, config.shift_y).into();
         });
 
-        let () = self.randomize_circles();
+        // let () = self.randomize_circles();
         let () = self.apply_shading_to_drawobjs();
 
         // self.simplify_layers();

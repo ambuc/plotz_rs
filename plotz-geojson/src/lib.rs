@@ -5,14 +5,12 @@
 
 use {
     plotz_geometry::{
-        curve::CurveArc,
         draw_obj_inner::DrawObjInner,
         point::Pt,
         polygon::{Multiline, MultilineConstructorError, Polygon, PolygonConstructorError},
     },
     serde_json::Value,
     std::collections::HashMap,
-    std::f64::consts::*,
     thiserror::Error,
     tracing::*,
 };
@@ -48,9 +46,7 @@ fn add_tags(value: &Value, tagslist: &mut TagsList) {
     if let Some(obj) = value.as_object() {
         for (k, v) in obj {
             match v {
-                Value::String(v) => {
-                    tagslist.push((k.to_string(), v.to_string()));
-                }
+                Value::String(v) => tagslist.push((k.to_string(), v.to_string())),
                 Value::Object(_obj) => {
                     add_tags(v, tagslist);
                 }
@@ -192,18 +188,20 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<DrawObjInner>, GeoJsonCon
     .map(|v: Vec<Polygon>| v.into_iter().map(DrawObjInner::from).collect::<Vec<_>>())
 }
 
-fn parse_to_circle(coords: &Value) -> Result<Vec<DrawObjInner>, GeoJsonConversionError> {
-    let array = &coords.as_array().expect("not array");
-    if let Some(x) = array.get(0).and_then(|o| o.as_f64()) {
-        if let Some(y) = array.get(1).and_then(|o| o.as_f64()) {
-            return Ok(vec![DrawObjInner::from(CurveArc(
-                Pt(x, y),
-                0.0..=TAU,
-                0.001,
-            ))]);
-        }
-    }
-    Err(GeoJsonConversionError::CoordinatesNotArray)
+fn parse_to_circle(_coords: &Value) -> Result<Vec<DrawObjInner>, GeoJsonConversionError> {
+    // For now, don't print circles at all.
+    Ok(vec![])
+    // let array = &coords.as_array().expect("not array");
+    // if let Some(x) = array.get(0).and_then(|o| o.as_f64()) {
+    //     if let Some(y) = array.get(1).and_then(|o| o.as_f64()) {
+    //         return Ok(vec![DrawObjInner::from(CurveArc(
+    //             Pt(x, y),
+    //             0.0..=TAU,
+    //             0.0001,
+    //         ))]);
+    //     }
+    // }
+    // Err(GeoJsonConversionError::CoordinatesNotArray)
 }
 
 #[cfg(test)]

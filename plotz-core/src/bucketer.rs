@@ -1,6 +1,4 @@
-use crate::bucket::Subway;
-
-use crate::bucket::{Area, Bucket, Path};
+use crate::bucket::{Area, Bucket, Path, Subway};
 
 pub trait Bucketer {
     type Tag;
@@ -154,12 +152,6 @@ impl Bucketer2 for DefaultBucketer2 {
                         v.push(Bucket::Path(Path::Rail));
                     }
                 }
-            }
-        }
-
-        if !v.is_empty() {
-            if contains!(tags, ("route", "subway")) && !contains!(tags, ("role", "stop")) {
-                println!("{:?}, {:?}", tags, v);
             }
         }
 
