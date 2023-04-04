@@ -51,27 +51,7 @@ impl Tile {
     fn to_dos(&self) -> Vec<DrawObj> {
         self.to_dois()
             .into_iter()
-            .map(|doi| {
-                DrawObj::new(doi)
-                    .with_color(match self {
-                        Tile::Cross => &BLACK,
-                        Tile::OverUnder => &DARKGRAY,
-                        Tile::Swerve => &GRAY,
-                        Tile::Clover => &LIGHTGRAY,
-                        Tile::CloverIn => &DARKSLATEGRAY,
-                        Tile::Clover3 => &DIMGRAY,
-                        Tile::Clover2 => &LIGHTSLATEGRAY,
-                    })
-                    .with_thickness(match self {
-                        Tile::Cross => 1.0,
-                        Tile::OverUnder => 2.0,
-                        Tile::Swerve => 3.0,
-                        Tile::Clover => 4.0,
-                        Tile::CloverIn => 5.0,
-                        Tile::Clover3 => 6.0,
-                        Tile::Clover2 => 7.0,
-                    })
-            })
+            .map(|doi| DrawObj::new(doi).with_color(&BLACK).with_thickness(2.0))
             .collect::<Vec<_>>()
     }
 
@@ -183,11 +163,11 @@ fn main() {
     for dx in 0..=width {
         for dy in 0..=height {
             let tile: Tile = rand::random();
-            draw_obj_vec.extend(tile.to_dos().into_iter().map(|d_o| d_o + Pt(dx, dy) / 4.0));
+            draw_obj_vec.extend(tile.to_dos().into_iter().map(|d_o| d_o + Pt(dx, dy)));
         }
     }
 
-    let mut canvas = Canvas::from_objs(draw_obj_vec)
+    let mut canvas = Canvas::from_objs(draw_obj_vec, /*autobucket=*/ false)
         .with_frame(make_frame((image_width, image_width), Pt(margin, margin)));
 
     canvas.scale_to_fit_frame().unwrap();

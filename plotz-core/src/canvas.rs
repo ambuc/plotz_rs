@@ -1,5 +1,7 @@
 //! Many draw objs.
 
+use itertools::Itertools;
+
 use {
     crate::{
         bucket::Bucket,
@@ -40,10 +42,21 @@ impl Canvas {
     }
 
     /// ctor from objs
-    pub fn from_objs<O: IntoIterator<Item = DrawObj>>(objs: O) -> Canvas {
-        Canvas {
-            dos_by_bucket: CanvasMap::from([(None, objs.into_iter().collect())]),
-            frame: None,
+    pub fn from_objs<O: IntoIterator<Item = DrawObj>>(objs: O, autobucket: bool) -> Canvas {
+        if autobucket {
+            let mut c = Canvas::new();
+            for (b, objs) in &objs.into_iter().group_by(|d_o| d_o.color) {
+                c.dos_by_bucket
+                    .entry(Some(Bucket::Color(*b)))
+                    .or_default()
+                    .extend(objs);
+            }
+            c
+        } else {
+            Canvas {
+                dos_by_bucket: CanvasMap::from([(None, objs.into_iter().collect())]),
+                frame: None,
+            }
         }
     }
 

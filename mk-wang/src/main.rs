@@ -267,7 +267,7 @@ fn main() {
         }
     }
 
-    let mut draw_objs = Canvas::from_objs(draw_obj_vec)
+    let mut draw_objs = Canvas::from_objs(draw_obj_vec, /*autobucket=*/ false)
         .with_frame(make_frame((image_width, image_width), Pt(margin, margin)));
 
     let scale = image_width / 2.0 / (grid_cardinality as f64);

@@ -57,7 +57,7 @@ fn main() {
         }
     }
 
-    let draw_objs = Canvas::from_objs(dos).with_frame(frame);
+    let draw_objs = Canvas::from_objs(dos, /*autobucket=*/ false).with_frame(frame);
 
     let () = draw_objs
         .write_to_svg(

@@ -1,3 +1,5 @@
+use plotz_color::ColorRGB;
+
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub enum Area {
     Beach,
@@ -44,4 +46,5 @@ pub enum Bucket {
     Frame,
     Area(Area),
     Path(Path),
+    Color(ColorRGB),
 }

@@ -1,9 +1,8 @@
 use {
     argh::FromArgs,
-    plotz_color::{take_random_colors, ColorRGB},
+    plotz_color::{ColorRGB, *},
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        bounded::Bounded,
         draw_obj::DrawObj,
         point::Pt,
         polygon::Polygon,
@@ -13,7 +12,7 @@ use {
     std::f64::consts::*,
 };
 
-static DIM: f64 = 600.0;
+static DIM: f64 = 750.0;
 
 #[derive(FromArgs)]
 #[argh(description = "...")]
@@ -23,38 +22,23 @@ struct Args {
 }
 
 #[derive(Debug, Clone)]
-enum Style {
-    Shade(ShadeConfig, &'static ColorRGB, bool),
-    Nested(Vec<f64>, &'static ColorRGB),
-    None,
+struct Shade {
+    config: ShadeConfig,
+    color: &'static ColorRGB,
 }
 
-impl Style {
-    fn rand(palette: &Vec<&'static ColorRGB>) -> Style {
+impl Shade {
+    fn rand(palette: &Vec<&'static ColorRGB>) -> Shade {
         let mut rng = rand::thread_rng();
 
-        [
-            (
-                Style::Shade(
-                    ShadeConfig::builder()
-                        .gap(4.0)
-                        .slope((rng.gen_range(0.0_f64..360.0_f64)).tan())
-                        .build(),
-                    palette.choose(&mut rng).expect("color"),
-                    rand::random(),
-                ),
-                3,
-            ),
-            (
-                Style::Nested(vec![0.9], palette.choose(&mut rng).expect("color")),
-                1,
-            ),
-            (Style::None, 1),
-        ]
-        .choose_weighted(&mut rng, |item| item.1)
-        .unwrap()
-        .0
-        .clone()
+        Shade {
+            config: ShadeConfig::builder()
+                .gap(3.0)
+                .switchback(true)
+                .slope((rng.gen_range(0.0_f64..360.0_f64)).tan())
+                .build(),
+            color: palette.choose(&mut rng).expect("color"),
+        }
     }
 }
 
@@ -62,9 +46,21 @@ fn main() {
     let args: Args = argh::from_env();
 
     let mut rng = rand::thread_rng();
-    let palette: Vec<&ColorRGB> = take_random_colors(20);
 
-    let sites: Vec<voronoice::Point> = (1..200)
+    let palette: Vec<&ColorRGB> = vec![
+        &RED,
+        &YELLOW,
+        &BLUE,
+        &GREEN,
+        &ORANGE,
+        &ORANGERED,
+        &YELLOWGREEN,
+        &BLUEVIOLET,
+        // &VIOLET,
+        // &PINK,
+    ];
+
+    let sites: Vec<voronoice::Point> = (1..150)
         .step_by(1)
         .map(|_| {
             let r: f64 = rng.gen_range(0.0..0.5);
@@ -94,42 +90,48 @@ fn main() {
             Polygon(cell.iter_vertices().map(|vertex| Pt(vertex.x, vertex.y)))
                 .expect("valid polygon")
                 * DIM
-                + Pt(50.0, 50.0)
+                + Pt(20.0, 20.0)
         })
         .collect();
 
-    let draw_objs = Canvas::from_objs(polygons.iter().flat_map(|p| {
-        match Style::rand(&palette) {
-            Style::Shade(shade_config, color, draw_border) => std::iter::once(if draw_border {
-                Some(DrawObj::new(p.clone()).with_color(color))
-            } else {
-                None
-            })
-            .flatten()
-            .chain(
-                shade_polygon(&shade_config, p)
-                    .expect("failed to shade")
-                    .iter()
-                    .map(|segment| DrawObj::new(*segment).with_color(color)),
-            )
-            .collect::<Vec<_>>(),
-            Style::Nested(fs, color) => fs
-                .into_iter()
-                .map(|f| {
-                    let del = p.bbox_center();
-                    DrawObj::new(((p.clone() - del) * f) + del).with_color(color)
-                })
-                .collect::<Vec<_>>(),
-            Style::None => vec![],
-        }
-    }))
-    .with_frame(make_frame((DIM, DIM), Pt(50.0, 50.0)));
+    let mut dos = vec![];
 
-    let () = draw_objs
+    // dos.extend(polygons.iter().map(|pg| {
+    //     DrawObj::new(pg.clone())
+    //         .with_color(&BLACK)
+    //         .with_thickness(2.0)
+    // }));
+
+    dos.extend(polygons.iter().flat_map(|p| {
+        (0..=1).flat_map(|_| {
+            let shade = Shade::rand(&palette);
+            shade_polygon(&shade.config, p)
+                .expect("failed to shade")
+                .iter()
+                .map(|sg| {
+                    DrawObj::new(*sg)
+                        .with_color(shade.color)
+                        .with_thickness(1.0)
+                })
+                .collect::<Vec<_>>()
+        })
+    }));
+
+    // TODO(ambuc): split by group color before printing
+    // TODO(ambuc): split by group color before printing
+    // TODO(ambuc): split by group color before printing
+    // TODO(ambuc): split by group color before printing
+    // TODO(ambuc): split by group color before printing
+    // TODO(ambuc): split by group color before printing
+
+    let canvas = Canvas::from_objs(dos, /*autobucket=*/ true)
+        .with_frame(make_frame((DIM, DIM), Pt(20.0, 20.0)));
+
+    let () = canvas
         .write_to_svg(
             Size {
-                width: 750,
-                height: 750,
+                width: 800,
+                height: 1000,
             },
             &args.output_path_prefix,
         )
