@@ -7,7 +7,6 @@ use {
         curve::CurveArc,
         draw_obj::DrawObj,
         point::Pt,
-        polygon::{Multiline, Rect},
         segment::Segment,
     },
     rand::{distributions::Standard, prelude::Distribution, Rng},

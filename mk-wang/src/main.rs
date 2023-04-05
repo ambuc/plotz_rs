@@ -1,18 +1,16 @@
-use plotz_color::*;
-use std::f64::consts::{FRAC_PI_2, FRAC_PI_8, PI};
 use {
     argh::FromArgs,
-    plotz_color::{take_random_colors, ColorRGB},
+    plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        bounded::Bounded,
         draw_obj::DrawObj,
         draw_obj_inner::DrawObjInner,
         point::Pt,
         polygon::{Multiline, Polygon},
         shading_02::{shade_polygon, ShadeConfig},
     },
-    rand::{prelude::SliceRandom, Rng},
+    rand::prelude::SliceRandom,
+    std::f64::consts::*,
 };
 
 #[derive(FromArgs)]
@@ -84,13 +82,13 @@ fn try_step(
 ) -> bool {
     assert!(grid[i][j].is_none());
 
-    let constraint_west = if (i > 0 && (0..x).contains(&(i - 1))) {
+    let constraint_west = if i > 0 && (0..x).contains(&(i - 1)) {
         Some(grid[i - 1][j].unwrap().e())
     } else {
         None
     };
 
-    let constraint_north = if (j > 0 && (0..y).contains(&(j - 1))) {
+    let constraint_north = if j > 0 && (0..y).contains(&(j - 1)) {
         Some(grid[i][j - 1].unwrap().s())
     } else {
         None
@@ -154,12 +152,7 @@ fn fill_grid(x: usize, y: usize) -> Vec<Vec<Tile>> {
         .collect()
 }
 
-fn draw_tile(
-    cell: Tile,
-    grid_cardinality: usize,
-    (row_idx, col_idx): (usize, usize),
-    palette: &[&'static ColorRGB],
-) -> Vec<DrawObj> {
+fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<DrawObj> {
     [
         (cell.id(), cell.n(), 0.0 * FRAC_PI_2),
         (cell.id(), cell.w(), -1.0 * FRAC_PI_2),
@@ -221,7 +214,7 @@ fn draw_tile(
             })
             .collect::<Vec<_>>()
         });
-        ret.iter_mut().for_each(|mut d_o| match &mut d_o.obj {
+        ret.iter_mut().for_each(|d_o| match &mut d_o.obj {
             DrawObjInner::Polygon(pg) => {
                 *pg *= 2.0;
                 pg.rotate(&Pt(1.0, 1.0), rot);
@@ -250,18 +243,11 @@ fn main() {
 
     let grid: Vec<Vec<Tile>> = fill_grid(grid_cardinality, grid_cardinality);
 
-    let palette: Vec<&'static ColorRGB> = vec![&RED, &YELLOW, &GREEN, &BLUE];
-
     let mut draw_obj_vec = vec![];
 
     for (row_idx, row) in grid.iter().enumerate() {
         for (col_idx, cell) in row.iter().enumerate() {
-            draw_obj_vec.extend(draw_tile(
-                *cell,
-                grid_cardinality,
-                (row_idx, col_idx),
-                &palette,
-            ));
+            draw_obj_vec.extend(draw_tile(*cell, (row_idx, col_idx)));
         }
     }
 
