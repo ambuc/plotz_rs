@@ -1,5 +1,7 @@
 //! A curve.
 
+use crate::bounded::Bounds;
+
 use {
     crate::{
         bounded::Bounded,
@@ -45,41 +47,37 @@ impl CurveArc {
 }
 
 impl Bounded for CurveArc {
-    fn right_bound(&self) -> f64 {
-        self.ctr.x.0
-            + self.radius
-                * if self.angle_range().contains(&TAU) {
-                    1.0
-                } else {
-                    max(FloatOrd(self.angle_i.cos()), FloatOrd(self.angle_f.cos())).0
-                }
-    }
-    fn left_bound(&self) -> f64 {
-        self.ctr.x.0
-            + self.radius
-                * if self.angle_range().contains(&PI) {
-                    -1.0
-                } else {
-                    min(FloatOrd(self.angle_i.cos()), FloatOrd(self.angle_f.cos())).0
-                }
-    }
-    fn top_bound(&self) -> f64 {
-        self.ctr.y.0
-            + self.radius
-                * if self.angle_range().contains(&FRAC_PI_2) {
-                    1.0
-                } else {
-                    max(FloatOrd(self.angle_i.sin()), FloatOrd(self.angle_f.sin())).0
-                }
-    }
-    fn bottom_bound(&self) -> f64 {
-        self.ctr.y.0
-            + self.radius
-                * if self.angle_range().contains(&(3.0 * FRAC_PI_2)) {
-                    -1.0
-                } else {
-                    min(FloatOrd(self.angle_i.sin()), FloatOrd(self.angle_f.sin())).0
-                }
+    fn bounds(&self) -> crate::bounded::Bounds {
+        Bounds {
+            top_bound: self.ctr.y.0
+                + self.radius
+                    * if self.angle_range().contains(&FRAC_PI_2) {
+                        1.0
+                    } else {
+                        max(FloatOrd(self.angle_i.sin()), FloatOrd(self.angle_f.sin())).0
+                    },
+            bottom_bound: self.ctr.y.0
+                + self.radius
+                    * if self.angle_range().contains(&(3.0 * FRAC_PI_2)) {
+                        -1.0
+                    } else {
+                        min(FloatOrd(self.angle_i.sin()), FloatOrd(self.angle_f.sin())).0
+                    },
+            left_bound: self.ctr.x.0
+                + self.radius
+                    * if self.angle_range().contains(&PI) {
+                        -1.0
+                    } else {
+                        min(FloatOrd(self.angle_i.cos()), FloatOrd(self.angle_f.cos())).0
+                    },
+            right_bound: self.ctr.x.0
+                + self.radius
+                    * if self.angle_range().contains(&TAU) {
+                        1.0
+                    } else {
+                        max(FloatOrd(self.angle_i.cos()), FloatOrd(self.angle_f.cos())).0
+                    },
+        }
     }
 }
 

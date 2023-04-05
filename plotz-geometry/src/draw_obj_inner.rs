@@ -1,12 +1,17 @@
 //! The inner value of a DrawObj, i.e. the enum which holds some geometric thingy.
 
-use crate::crop::{CropToPolygonError, Croppable, PointLoc};
-
 use {
     crate::{
-        bounded::Bounded, curve::CurveArc, point::Pt, polygon::Polygon, segment::Segment, traits::*,
+        bounded::Bounded,
+        char::Char,
+        crop::{CropToPolygonError, Croppable, PointLoc},
+        curve::CurveArc,
+        group::Group,
+        point::Pt,
+        polygon::Polygon,
+        segment::Segment,
+        traits::*,
     },
-    crate::{char::Char, group::Group},
     derive_more::From,
     std::ops::*,
 };
@@ -93,20 +98,8 @@ impl YieldPointsMut for DrawObjInner {
 impl Mutable for DrawObjInner {}
 
 impl Bounded for DrawObjInner {
-    fn right_bound(&self) -> f64 {
-        self.inner_impl_bounded().right_bound()
-    }
-
-    fn left_bound(&self) -> f64 {
-        self.inner_impl_bounded().left_bound()
-    }
-
-    fn top_bound(&self) -> f64 {
-        self.inner_impl_bounded().top_bound()
-    }
-
-    fn bottom_bound(&self) -> f64 {
-        self.inner_impl_bounded().bottom_bound()
+    fn bounds(&self) -> crate::bounded::Bounds {
+        self.inner_impl_bounded().bounds()
     }
 }
 

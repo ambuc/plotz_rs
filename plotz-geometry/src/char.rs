@@ -15,17 +15,8 @@ pub struct Char {
 }
 
 impl Bounded for Char {
-    fn right_bound(&self) -> f64 {
-        self.pt.right_bound()
-    }
-    fn left_bound(&self) -> f64 {
-        self.pt.left_bound()
-    }
-    fn bottom_bound(&self) -> f64 {
-        self.pt.bottom_bound()
-    }
-    fn top_bound(&self) -> f64 {
-        self.pt.top_bound()
+    fn bounds(&self) -> crate::bounded::Bounds {
+        self.pt.bounds()
     }
 }
 

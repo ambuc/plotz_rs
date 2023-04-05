@@ -1,6 +1,6 @@
 //! A 2D segment.
 use crate::{
-    bounded::Bounded,
+    bounded::{Bounded, Bounds},
     crop::{CropToPolygonError, Croppable, PointLoc},
     interpolate,
     interpolate::interpolate_2d_checked,
@@ -287,17 +287,13 @@ impl RemAssign<Pt> for Segment {
 }
 
 impl Bounded for Segment {
-    fn top_bound(&self) -> f64 {
-        std::cmp::max(self.i.y, self.f.y).0
-    }
-    fn bottom_bound(&self) -> f64 {
-        std::cmp::min(self.i.y, self.f.y).0
-    }
-    fn left_bound(&self) -> f64 {
-        std::cmp::min(self.i.x, self.f.x).0
-    }
-    fn right_bound(&self) -> f64 {
-        std::cmp::max(self.i.x, self.f.x).0
+    fn bounds(&self) -> Bounds {
+        Bounds {
+            top_bound: std::cmp::max(self.i.y, self.f.y).0,
+            bottom_bound: std::cmp::min(self.i.y, self.f.y).0,
+            left_bound: std::cmp::min(self.i.x, self.f.x).0,
+            right_bound: std::cmp::max(self.i.x, self.f.x).0,
+        }
     }
 }
 
@@ -759,7 +755,6 @@ mod tests {
 
     #[test]
     fn test_bounded_segment() {
-        use crate::polygon::Polygon;
         let s = Segment(Pt(0, 1), Pt(1, 2));
         assert_eq!(s.bottom_bound(), 1.0);
         assert_eq!(s.top_bound(), 2.0);
@@ -769,9 +764,5 @@ mod tests {
         assert_eq!(s.tl_bound(), Pt(0, 2));
         assert_eq!(s.br_bound(), Pt(1, 1));
         assert_eq!(s.tr_bound(), Pt(1, 2));
-        assert_eq!(
-            s.bbox(),
-            Ok(Polygon([Pt(0, 1), Pt(0, 2), Pt(1, 2), Pt(1, 1)]).unwrap())
-        );
     }
 }

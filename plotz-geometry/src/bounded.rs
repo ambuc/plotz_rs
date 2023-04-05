@@ -1,8 +1,5 @@
 //! A trait representing the bounds and bounding box for an object.
-use crate::{
-    point::Pt,
-    polygon::{Polygon, PolygonConstructorError},
-};
+use crate::{point::Pt, polygon::PolygonConstructorError};
 use float_ord::FloatOrd;
 
 /// A general error arising from trying to derive the bounding box for a thing.
@@ -17,6 +14,25 @@ pub enum BoundingBoxError {
     NoItemsSeen,
 }
 
+/// The bounds of a geometric object.
+#[derive(Debug, Copy, Clone)]
+pub struct Bounds {
+    /// Top bound.
+    pub top_bound: f64,
+    /// Bottom bound.
+    pub bottom_bound: f64,
+    /// Left bound.
+    pub left_bound: f64,
+    /// Right bound.
+    pub right_bound: f64,
+}
+
+impl Bounded for Bounds {
+    fn bounds(&self) -> Bounds {
+        *self
+    }
+}
+
 /// An object which is Bounded implements four cardinal bounds; the trait allows
 /// a caller to discover the width, height, four corners, bounding box, and
 /// center of that object.
@@ -24,13 +40,21 @@ pub enum BoundingBoxError {
 /// Unlike most graphics systems, we assume that (0,0) is in the bottom-left.
 pub trait Bounded {
     /// The right bound of an object.
-    fn right_bound(&self) -> f64;
+    fn right_bound(&self) -> f64 {
+        self.bounds().right_bound
+    }
     /// The left bound of an object.
-    fn left_bound(&self) -> f64;
+    fn left_bound(&self) -> f64 {
+        self.bounds().left_bound
+    }
     /// The top bound of an object.
-    fn top_bound(&self) -> f64;
+    fn top_bound(&self) -> f64 {
+        self.bounds().top_bound
+    }
     /// The bottom bound of an object.
-    fn bottom_bound(&self) -> f64;
+    fn bottom_bound(&self) -> f64 {
+        self.bounds().bottom_bound
+    }
     /// The width of an object.
     fn width(&self) -> f64 {
         self.right_bound() - self.left_bound()
@@ -55,16 +79,7 @@ pub trait Bounded {
     fn br_bound(&self) -> Pt {
         Pt(self.right_bound(), self.bottom_bound())
     }
-    /// The [bounding box](https://en.wikipedia.org/wiki/Minimum_bounding_box)
-    /// for an object.
-    fn bbox(&self) -> Result<Polygon, BoundingBoxError> {
-        Ok(Polygon([
-            self.tl_bound(),
-            self.tr_bound(),
-            self.br_bound(),
-            self.bl_bound(),
-        ])?)
-    }
+
     /// The center of the bounding box of an object.
     fn bbox_center(&self) -> Pt {
         Pt(
@@ -72,6 +87,9 @@ pub trait Bounded {
             self.top_bound() + (self.height() / 2.0),
         )
     }
+
+    /// Internal use only.
+    fn bounds(&self) -> Bounds;
 }
 
 /// A handy struct for collecting the outer bounds of a streaming iterator of
@@ -130,17 +148,13 @@ impl BoundsCollector {
 }
 
 impl Bounded for BoundsCollector {
-    fn top_bound(&self) -> f64 {
-        self.bound_t.expect("top bound should be present").0
-    }
-    fn bottom_bound(&self) -> f64 {
-        self.bound_b.expect("bottom bound should be present").0
-    }
-    fn left_bound(&self) -> f64 {
-        self.bound_l.expect("left bound should be present").0
-    }
-    fn right_bound(&self) -> f64 {
-        self.bound_r.expect("right bound should be present").0
+    fn bounds(&self) -> Bounds {
+        Bounds {
+            top_bound: self.bound_t.expect("").0,
+            bottom_bound: self.bound_b.expect("").0,
+            left_bound: self.bound_l.expect("").0,
+            right_bound: self.bound_r.expect("").0,
+        }
     }
 }
 
@@ -148,7 +162,7 @@ impl Bounded for BoundsCollector {
 /// collection.
 pub fn streaming_bbox<'a, T: 'a + Bounded>(
     it: impl IntoIterator<Item = &'a T>,
-) -> Result<Polygon, BoundingBoxError> {
+) -> Result<Bounds, BoundingBoxError> {
     let mut bc = BoundsCollector::default();
     for i in it {
         bc.incorporate(i);
@@ -156,12 +170,13 @@ pub fn streaming_bbox<'a, T: 'a + Bounded>(
     if bc.items_seen == 0 {
         return Err(BoundingBoxError::NoItemsSeen);
     }
-    bc.bbox()
+    Ok(bc.bounds())
 }
 
 #[cfg(test)]
 mod test_super {
     use super::*;
+    use crate::polygon::Polygon;
 
     #[test]
     fn test_streaming_bbox() {
@@ -170,9 +185,10 @@ mod test_super {
             Polygon([Pt(2, 0), Pt(3, 0), Pt(3, 1)]).unwrap(),
             Polygon([Pt(0, 2), Pt(1, 2), Pt(1, 3)]).unwrap(),
         ];
-        assert_eq!(
-            streaming_bbox(&polygons).unwrap(),
-            Polygon([Pt(0, 0), Pt(0, 3), Pt(3, 3), Pt(3, 0)]).unwrap()
-        );
+        let bounds = streaming_bbox(&polygons).unwrap();
+        assert_eq!(bounds.bl_bound(), Pt(0, 0));
+        assert_eq!(bounds.tl_bound(), Pt(0, 3));
+        assert_eq!(bounds.tr_bound(), Pt(3, 3));
+        assert_eq!(bounds.br_bound(), Pt(3, 0));
     }
 }

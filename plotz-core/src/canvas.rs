@@ -10,11 +10,10 @@ use {
     anyhow::{anyhow, Error},
     float_ord::FloatOrd,
     plotz_geometry::{
-        bounded::{streaming_bbox, Bounded},
+        bounded::{Bounds, streaming_bbox, Bounded},
         draw_obj::DrawObj,
         draw_obj_inner::DrawObjInner,
         point::Pt,
-        polygon::Polygon,
         traits::*,
     },
     std::collections::HashMap,
@@ -106,24 +105,20 @@ impl Canvas {
         });
     }
 
-    /// Returns the bounding box for all objects within the canvas.
-    pub fn get_bbox(&self) -> Polygon {
-        streaming_bbox(self.objs_iter()).expect("bbox not found")
-    }
 
     /// returns true on success
     pub fn scale_to_fit_frame(&mut self) -> Result<(), Error> {
         {
-            let frame_bbox = self.frame.clone().ok_or(anyhow!("no frame"))?.bbox()?;
-            let inner_bbox = streaming_bbox(
+            let frame_bounds = self.frame.clone().ok_or(anyhow!("no frame"))?.bounds();
+            let inner_bounds = streaming_bbox(
                 self.dos_by_bucket
                     .iter()
                     .map(|(_bucket, dos)| dos)
                     .flatten(),
             )?;
 
-            let w_scale = frame_bbox.width() / inner_bbox.width();
-            let s_scale = frame_bbox.height() / inner_bbox.height();
+            let w_scale = frame_bounds.width() / inner_bounds.width();
+            let s_scale = frame_bounds.height() / inner_bounds.height();
             let scale = std::cmp::min(FloatOrd(w_scale), FloatOrd(s_scale)).0;
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
@@ -134,10 +129,10 @@ impl Canvas {
         }
 
         {
-            let frame_bbox = self.frame.clone().ok_or(anyhow!("no frame"))?.bbox()?;
-            let inner_bbox = streaming_bbox(self.dos_by_bucket.values().flatten())?;
+            let frame_bounds = self.frame.clone().ok_or(anyhow!("no frame"))?.bounds();
+            let inner_bounds = streaming_bbox(self.dos_by_bucket.values().flatten())?;
 
-            let translate_diff = frame_bbox.bbox_center() - inner_bbox.bbox_center();
+            let translate_diff = frame_bounds.bbox_center() - inner_bounds.bbox_center();
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
                 dos.iter_mut().for_each(|draw_obj| {
@@ -183,5 +178,11 @@ impl Canvas {
         }
 
         Ok(())
+    }
+}
+
+impl Bounded for Canvas {
+    fn bounds(&self) -> Bounds {
+        streaming_bbox(self.objs_iter()).expect("bbox not found")
     }
 }

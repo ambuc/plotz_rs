@@ -43,18 +43,18 @@ pub fn shade_polygon(
     }
 
     let epsilon = Pt(0.000_001_f64, 0.000_001_f64);
-    let bbox = polygon.bbox()?;
+    let polygon_bounds = polygon.bounds();
     let mut segments: Vec<Segment> = vec![];
 
-    let mut slope_height = bbox.width() / config.slope;
+    let mut slope_height = polygon_bounds.width() / config.slope;
     if config.slope < 0.0 {
         slope_height *= -1.0;
     }
 
-    let mut i: Pt = bbox.bl_bound() - Pt(0.0, slope_height) - epsilon;
-    let mut f: Pt = bbox.br_bound() + epsilon;
+    let mut i: Pt = polygon_bounds.bl_bound() - Pt(0.0, slope_height) - epsilon;
+    let mut f: Pt = polygon_bounds.br_bound() + epsilon;
 
-    while [i, f].iter().any(|p| p.y.0 <= bbox.top_bound()) {
+    while [i, f].iter().any(|p| p.y.0 <= polygon_bounds.top_bound()) {
         let full_stroke = Segment(i, f);
         let cropped_strokes = full_stroke.crop_to(polygon)?;
         segments.extend(cropped_strokes.iter());

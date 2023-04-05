@@ -62,17 +62,8 @@ impl YieldPointsMut for DrawObj {
 impl Mutable for DrawObj {}
 
 impl Bounded for DrawObj {
-    fn right_bound(&self) -> f64 {
-        self.obj.right_bound()
-    }
-    fn left_bound(&self) -> f64 {
-        self.obj.left_bound()
-    }
-    fn top_bound(&self) -> f64 {
-        self.obj.top_bound()
-    }
-    fn bottom_bound(&self) -> f64 {
-        self.obj.bottom_bound()
+    fn bounds(&self) -> crate::bounded::Bounds {
+        self.obj.bounds()
     }
 }
 

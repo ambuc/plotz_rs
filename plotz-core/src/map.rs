@@ -250,12 +250,12 @@ impl Map {
     }
 
     fn adjust_bl_shift(&mut self) -> Result<(), MapError> {
-        let curr_bbox = self.canvas.get_bbox();
+        let canvas_bounds = self.canvas.bounds();
         self.canvas.translate_all(|pt| {
-            *pt -= curr_bbox.bl_bound();
+            *pt -= canvas_bounds.bl_bound();
         });
         if let Some(center) = &mut self.center {
-            *center -= curr_bbox.bl_bound();
+            *center -= canvas_bounds.bl_bound();
         }
         Ok(())
     }
@@ -267,10 +267,10 @@ impl Map {
                 dest_size.height as f64 / 2.0 - desired_center.y.0,
             ),
             None => {
-                let curr_bbox = self.canvas.get_bbox();
+                let canvas_bounds = self.canvas.bounds();
                 Pt(
-                    (dest_size.width as f64 - curr_bbox.right_bound()) / 2.0,
-                    (dest_size.height as f64 - curr_bbox.top_bound()) / 2.0,
+                    (dest_size.width as f64 - canvas_bounds.right_bound()) / 2.0,
+                    (dest_size.height as f64 - canvas_bounds.top_bound()) / 2.0,
                 )
             }
         };
@@ -279,10 +279,10 @@ impl Map {
     }
 
     fn adjust_scaling(&mut self, scale_factor: f64, dest_size: &Size) -> Result<(), MapError> {
-        let curr_bbox = self.canvas.get_bbox();
+        let canvas_bounds = self.canvas.bounds();
         let scaling_factor = std::cmp::max(
-            FloatOrd(dest_size.height as f64 / curr_bbox.height().abs()),
-            FloatOrd(dest_size.width as f64 / curr_bbox.width().abs()),
+            FloatOrd(dest_size.height as f64 / canvas_bounds.height().abs()),
+            FloatOrd(dest_size.width as f64 / canvas_bounds.width().abs()),
         )
         .0 * scale_factor;
         self.canvas.scale_all(|obj| {

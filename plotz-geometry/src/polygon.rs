@@ -2,6 +2,8 @@
 
 use std::ops::DivAssign;
 
+use crate::bounded::Bounds;
+
 use {
     crate::{
         bounded::Bounded,
@@ -244,7 +246,7 @@ impl Polygon {
 
     /// Which curve orientation a polygon has. Curve orientation refers to
     /// whether or not the points in the polygon are stored in clockwise or
-    /// counterclockwise order. 
+    /// counterclockwise order.
     pub fn get_curve_orientation(&self) -> CurveOrientation {
         if self
             .to_segments()
@@ -702,17 +704,13 @@ impl RemAssign<Pt> for Polygon {
 }
 
 impl Bounded for Polygon {
-    fn top_bound(&self) -> f64 {
-        self.pts.iter().map(|p| p.y).max().expect("not empty").0
-    }
-    fn bottom_bound(&self) -> f64 {
-        self.pts.iter().map(|p| p.y).min().expect("not empty").0
-    }
-    fn left_bound(&self) -> f64 {
-        self.pts.iter().map(|p| p.x).min().expect("not empty").0
-    }
-    fn right_bound(&self) -> f64 {
-        self.pts.iter().map(|p| p.x).max().expect("not empty").0
+    fn bounds(&self) -> crate::bounded::Bounds {
+        Bounds {
+            top_bound: self.pts.iter().map(|p| p.y).max().expect("not empty").0,
+            bottom_bound: self.pts.iter().map(|p| p.y).min().expect("not empty").0,
+            left_bound: self.pts.iter().map(|p| p.x).min().expect("not empty").0,
+            right_bound: self.pts.iter().map(|p| p.x).max().expect("not empty").0,
+        }
     }
 }
 impl YieldPoints for Polygon {
@@ -1389,10 +1387,6 @@ mod tests {
         assert_eq!(p.bl_bound(), Pt(0, 0));
         assert_eq!(p.tr_bound(), Pt(2, 2));
         assert_eq!(p.br_bound(), Pt(2, 0));
-        assert_eq!(
-            p.bbox(),
-            Ok(Polygon([Pt(0, 2), Pt(2, 2), Pt(2, 0), Pt(0, 0)]).unwrap())
-        );
     }
 
     #[test]

@@ -47,27 +47,27 @@ pub fn shade_polygon(
         return Err(ShadePolygonError::PolygonIsOpen);
     }
 
-    let bbox = polygon.bbox()?;
+    let bounds = polygon.bounds();
     let mut segments: Vec<Segment> = vec![];
 
     let xnudge = Pt(1.0, -1.0);
     let ynudge = Pt(-1.0, 1.0);
     let mut line = if config.slope > 0.0 {
         Segment(
-            bbox.tl_bound() - xnudge,
-            bbox.tl_bound() + Pt(bbox.width(), bbox.width() * config.slope) + xnudge,
+            bounds.tl_bound() - xnudge,
+            bounds.tl_bound() + Pt(bounds.width(), bounds.width() * config.slope) + xnudge,
         )
     } else {
         Segment(
-            bbox.tr_bound() - ynudge,
-            bbox.tr_bound() + Pt(-1.0 * bbox.width(), -1.0 * bbox.width() * config.slope) + ynudge,
+            bounds.tr_bound() - ynudge,
+            bounds.tr_bound() + Pt(-1.0 * bounds.width(), -1.0 * bounds.width() * config.slope) + ynudge,
         )
     };
 
     let step = compute_vertical_step(config.gap, config.slope);
 
-    while line.i.y > float_ord::FloatOrd(bbox.bottom_bound())
-        || line.f.y > float_ord::FloatOrd(bbox.bottom_bound())
+    while line.i.y > float_ord::FloatOrd(bounds.bottom_bound())
+        || line.f.y > float_ord::FloatOrd(bounds.bottom_bound())
     {
         let cropped_strokes = line.crop_to(polygon)?;
         segments.extend(cropped_strokes.iter());

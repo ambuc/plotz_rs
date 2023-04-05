@@ -1,5 +1,7 @@
 //! A group of objects.
 
+use crate::bounded::Bounds;
+
 use {
     crate::{
         bounded::Bounded,
@@ -59,33 +61,33 @@ impl YieldPointsMut for Group {
 }
 
 impl Bounded for Group {
-    fn right_bound(&self) -> f64 {
-        self.iter_dois()
-            .map(|doi| FloatOrd(doi.right_bound()))
-            .max()
-            .unwrap()
-            .0
-    }
-    fn left_bound(&self) -> f64 {
-        self.iter_dois()
-            .map(|doi| FloatOrd(doi.left_bound()))
-            .min()
-            .unwrap()
-            .0
-    }
-    fn bottom_bound(&self) -> f64 {
-        self.iter_dois()
-            .map(|doi| FloatOrd(doi.bottom_bound()))
-            .max()
-            .unwrap()
-            .0
-    }
-    fn top_bound(&self) -> f64 {
-        self.iter_dois()
-            .map(|doi| FloatOrd(doi.top_bound()))
-            .min()
-            .unwrap()
-            .0
+    fn bounds(&self) -> crate::bounded::Bounds {
+        Bounds {
+            top_bound: self
+                .iter_dois()
+                .map(|doi| FloatOrd(doi.top_bound()))
+                .min()
+                .unwrap()
+                .0,
+            bottom_bound: self
+                .iter_dois()
+                .map(|doi| FloatOrd(doi.bottom_bound()))
+                .max()
+                .unwrap()
+                .0,
+            left_bound: self
+                .iter_dois()
+                .map(|doi| FloatOrd(doi.left_bound()))
+                .min()
+                .unwrap()
+                .0,
+            right_bound: self
+                .iter_dois()
+                .map(|doi| FloatOrd(doi.right_bound()))
+                .max()
+                .unwrap()
+                .0,
+        }
     }
 }
 

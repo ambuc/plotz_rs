@@ -1,6 +1,10 @@
 //! A 2D point.
 
-use crate::{bounded::Bounded, segment::Segment, traits::*};
+use crate::{
+    bounded::{Bounded, Bounds},
+    segment::Segment,
+    traits::*,
+};
 use {
     float_cmp::approx_eq,
     float_ord::FloatOrd,
@@ -214,17 +218,13 @@ impl YieldPointsMut for Pt {
 impl Mutable for Pt {}
 
 impl Bounded for Pt {
-    fn top_bound(&self) -> f64 {
-        self.y.0
-    }
-    fn bottom_bound(&self) -> f64 {
-        self.y.0
-    }
-    fn left_bound(&self) -> f64 {
-        self.x.0
-    }
-    fn right_bound(&self) -> f64 {
-        self.x.0
+    fn bounds(&self) -> crate::bounded::Bounds {
+        Bounds {
+            top_bound: self.y.0,
+            bottom_bound: self.y.0,
+            left_bound: self.x.0,
+            right_bound: self.x.0,
+        }
     }
 }
 
