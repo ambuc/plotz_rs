@@ -1,3 +1,5 @@
+//! The inner value of a DrawObj, i.e. the enum which holds some geometric thingy.
+
 use crate::crop::{CropToPolygonError, Croppable, PointLoc};
 
 use {
@@ -39,6 +41,7 @@ impl DrawObjInner {
         }
     }
 
+    /// Casts each inner value to something which implements Bounded.
     pub fn inner_impl_bounded(&self) -> &dyn Bounded {
         match self {
             DrawObjInner::Char(ch) => ch,
@@ -49,6 +52,8 @@ impl DrawObjInner {
             DrawObjInner::Segment(s) => s,
         }
     }
+
+    /// Casts each inner value to something which implements YieldPoints.
     pub fn inner_impl_yield_points(&self) -> &dyn YieldPoints {
         match self {
             DrawObjInner::Point(p) => p,
@@ -59,6 +64,8 @@ impl DrawObjInner {
             DrawObjInner::Segment(sg) => sg,
         }
     }
+
+    /// Casts each inner value to something which implements YieldPointsMut.
     pub fn inner_impl_yield_points_mut(&mut self) -> &mut dyn YieldPointsMut {
         match self {
             DrawObjInner::Point(p) => p,

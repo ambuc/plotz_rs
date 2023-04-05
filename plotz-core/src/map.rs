@@ -84,8 +84,11 @@ fn latitude_to_y(latitude: f64) -> f64 {
 }
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Whether to render the inner shading and/or the outer edge of a thing.
 pub enum ShadeAndOutline {
+    /// Just the inner shading.
     JustShade,
+    /// Both the inner shading and the outer edge.
     Both,
 }
 
@@ -349,6 +352,8 @@ impl Map {
         Ok(())
     }
 
+    /// For every circle in every layer, jog it by a random bit. Not sure this
+    /// should stay.
     pub fn randomize_circles(&mut self) {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             for d_o in dos.iter_mut() {
@@ -362,6 +367,8 @@ impl Map {
         }
     }
 
+    /// Crop everything everywhere to the frame polygon. (Passed in here for
+    /// Flexibility.)
     pub fn crop_to_frame(&mut self, frame: &Polygon) {
         trace!("Cropping all to frame.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
@@ -373,6 +380,9 @@ impl Map {
         }
     }
 
+    /// For every polygon in every layer, replace it with segments with the same
+    /// color. Useful for simplification. I think axicli can stitch these back
+    /// together for fast plotting but I'm not sure.
     pub fn polygons_to_segments(&mut self) {
         trace!("Turning polygons into segments.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
@@ -394,6 +404,8 @@ impl Map {
         }
     }
 
+    /// For every object in every layer, round its points to the nearest |q|.
+    /// |q| is 0.5 for now.
     pub fn quantize_layers(&mut self) {
         trace!("Quantizing layers.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
@@ -412,6 +424,10 @@ impl Map {
         }
     }
 
+    /// Simplifies the inner layers for faster, less repetitive plotting.
+    /// Innards of this are subject to change. For now I think we want to
+    /// segmentify things, quantize them, dedup them, ...? magic ..? and then
+    /// restore one copy of the original unquantized version.
     pub fn simplify_layers(&mut self) {
         trace!("Simplifying layers.");
         self.polygons_to_segments(); // prereq

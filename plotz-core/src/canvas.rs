@@ -34,6 +34,7 @@ pub struct Canvas {
 }
 
 impl Canvas {
+    /// Create a new Canvas.
     pub fn new() -> Canvas {
         Canvas {
             dos_by_bucket: CanvasMap::new(),
@@ -68,6 +69,7 @@ impl Canvas {
         }
     }
 
+    /// Returns an iterator of DrawObjInners.
     pub fn objs_iter(&self) -> impl Iterator<Item = &DrawObjInner> {
         self.dos_by_bucket
             .iter()
@@ -75,6 +77,7 @@ impl Canvas {
             .map(|d_o| &d_o.obj)
     }
 
+    /// Returns an iterator of mutable DrawObjInners.
     pub fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut DrawObjInner> {
         self.dos_by_bucket
             .iter_mut()
@@ -82,24 +85,28 @@ impl Canvas {
             .map(|d_o| &mut d_o.obj)
     }
 
+    /// Mutates every object in the canvas according to some |f|.
     pub fn mutate_all(&mut self, f: impl Fn(&mut Pt)) {
         self.objs_iter_mut().for_each(|obj| {
             obj.mutate(&f);
         })
     }
 
+    /// Translates every object in the canvas according to some |f|.
     pub fn translate_all(&mut self, f: impl Fn(&mut dyn TranslatableAssign)) {
         self.objs_iter_mut().for_each(|obj| {
             f(obj);
         });
     }
 
+    /// Scales every object in the canvas according to some |f|.
     pub fn scale_all(&mut self, f: impl Fn(&mut dyn ScalableAssign)) {
         self.objs_iter_mut().for_each(|obj| {
             f(obj);
         });
     }
 
+    /// Returns the bounding box for all objects within the canvas.
     pub fn get_bbox(&self) -> Polygon {
         streaming_bbox(self.objs_iter()).expect("bbox not found")
     }

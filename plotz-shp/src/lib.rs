@@ -1,9 +1,8 @@
-#![allow(missing_docs)]
-#![allow(dead_code)]
-#![allow(unused_variables)]
-
 //! A crate for reading shp files and parsing them to plotz_geometry
 //! structs.
+
+#![allow(missing_docs)]
+#![allow(unused)]
 
 use {
     plotz_geometry::polygon::Polygon,

@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use plotz_color::*;
 use std::f64::consts::{FRAC_PI_2, FRAC_PI_8, PI};
 use {

@@ -1,6 +1,6 @@
-#![deny(missing_docs)]
-
 //! The point of entry for plotz. Call this executable to parse geojson to svg.
+
+#![deny(missing_docs)]
 
 use argh::FromArgs;
 use glob::glob;

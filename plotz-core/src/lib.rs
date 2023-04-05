@@ -1,5 +1,7 @@
 //! The core mapping logic of plotz, including coloring and bucketing.
 
+#![deny(missing_docs)]
+
 pub mod canvas;
 pub mod frame;
 pub mod map;

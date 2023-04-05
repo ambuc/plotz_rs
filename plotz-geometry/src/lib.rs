@@ -1,6 +1,6 @@
-#![allow(missing_docs)]
-
 //! A general-purpose 2D geometry library.
+
+#![deny(missing_docs)]
 
 pub mod bounded;
 pub mod char;

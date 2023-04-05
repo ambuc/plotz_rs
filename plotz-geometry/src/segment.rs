@@ -12,12 +12,11 @@ use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::{cmp::PartialOrd, fmt::Debug, ops::*};
 
-#[allow(dead_code)]
 #[derive(Debug, PartialEq, Eq)]
-enum Orientation {
-    Colinear,
-    Clockwise,
-    CounterClockwise,
+enum _Orientation {
+    _Colinear,
+    _Clockwise,
+    _CounterClockwise,
 }
 
 /// Whether a line segment contains a point, and if so where.
@@ -95,16 +94,16 @@ pub fn Segment(i: Pt, f: Pt) -> Segment {
 
 impl Segment {
     // Internal helper function; see https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/.
-    fn _ccw(&self, other: &Pt) -> Orientation {
+    fn _ccw(&self, other: &Pt) -> _Orientation {
         use std::cmp::Ordering;
         match PartialOrd::partial_cmp(
             &((other.y.0 - self.i.y.0) * (self.f.x.0 - self.i.x.0)
                 - (self.f.y.0 - self.i.y.0) * (other.x.0 - self.i.x.0)),
             &0_f64,
         ) {
-            Some(Ordering::Equal) => Orientation::Colinear,
-            Some(Ordering::Greater) => Orientation::Clockwise,
-            Some(Ordering::Less) => Orientation::CounterClockwise,
+            Some(Ordering::Equal) => _Orientation::_Colinear,
+            Some(Ordering::Greater) => _Orientation::_Clockwise,
+            Some(Ordering::Less) => _Orientation::_CounterClockwise,
             None => panic!("!"),
         }
     }

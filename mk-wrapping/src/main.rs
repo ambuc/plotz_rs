@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use plotz_geometry::draw_obj_inner::DrawObjInner;
 use {
     argh::FromArgs,

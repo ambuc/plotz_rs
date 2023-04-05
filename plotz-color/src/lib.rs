@@ -1,11 +1,19 @@
+//! Easily addressable web safe colors. (Not that this gets used with the web...
+//! they're just well-named colors. Just normal colors.)
+#![deny(missing_docs)]
+
 use float_ord::FloatOrd;
 use rand::prelude::SliceRandom;
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Copy, Clone)]
+/// A color, articulated in the [RGB color model](https://en.wikipedia.org/wiki/RGB_color_model).
 pub struct ColorRGB {
+    /// How much red (0.0 <= r <= 1.0).
     pub r: f64,
+    /// How much green (0.0 <= g <= 1.0).
     pub g: f64,
+    /// How much blue (0.0 <= b <= 1.0).
     pub b: f64,
 }
 
@@ -16,6 +24,7 @@ const fn ColorRGB(r: f64, g: f64, b: f64) -> ColorRGB {
 
 macro_rules! color {
     ($name:ident, $r:expr, $g:expr, $b:expr) => {
+        /// A color named $ident.
         pub const $name: ColorRGB = ColorRGB($r, $g, $b);
     };
 }
@@ -682,7 +691,9 @@ color!(
     0.196_078_431_372_549
 );
 
+
 pub mod subway {
+    //! Colors used only in plotting the NYC subway.
     use super::*;
 
     color!(BLUE_ACE, 0.0, 0.22, 0.6);
@@ -698,6 +709,7 @@ pub mod subway {
     color!(GRAY_S, 0.5, 0.51, 0.51);
 }
 
+/// All known colors.
 pub static COLORS: [&ColorRGB; 141] = [
     &ALICEBLUE,
     &ANTIQUEWHITE,
@@ -842,6 +854,7 @@ pub static COLORS: [&ColorRGB; 141] = [
     &YELLOWGREEN,
 ];
 
+/// Returns a vector of |limit| random colors.
 pub fn take_random_colors(limit: usize) -> Vec<&'static ColorRGB> {
     let mut colors = COLORS;
 

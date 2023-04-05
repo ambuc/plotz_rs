@@ -1,5 +1,3 @@
-#![allow(missing_docs)]
-
 //! Crop
 use {
     crate::polygon::{Polygon, PolygonConstructorError},
@@ -57,6 +55,9 @@ pub enum PointLoc {
 
 /// Crops
 pub trait Croppable {
+    /// The output type of cropping this thingy. Why is this an associated type?
+    /// Simple: I'm not 100% sure that the output type of cropping T is always
+    /// Vec<T>. What if it's not! What then!?
     type Output;
 
     /// Crop to an outer frame

@@ -1,3 +1,5 @@
+//! A group of objects.
+
 use {
     crate::{
         bounded::Bounded,
@@ -12,17 +14,22 @@ use {
 };
 
 #[derive(Debug, PartialEq, Clone)]
+/// A group of objects.
 pub struct Group(Vec<DrawObjInner>);
 
 impl Group {
+    /// Creates a new group.
     pub fn new(dois: impl IntoIterator<Item = DrawObjInner>) -> Group {
         Group(dois.into_iter().collect::<Vec<_>>())
     }
 
+    /// Returns a boxed iterator of immutable DrawObjInners, the members of this
+    /// group.
     pub fn iter_dois(&self) -> Box<dyn Iterator<Item = &DrawObjInner> + '_> {
         Box::new(self.0.iter())
     }
 
+    /// Mutates each point in each object in the group. See |Mutable|.
     pub fn mutate(&mut self, f: impl Fn(&mut Pt)) {
         for doi in &mut self.0 {
             doi.mutate(&f);

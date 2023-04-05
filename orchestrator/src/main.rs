@@ -1,3 +1,11 @@
+//! Run this with:
+//!     cargo run --release -- --output-directory "/tmp/whatever"
+//!         --input-glob "/path/to/your/svg/files*.svg" --draw-frame
+//!         --width 800 --height 1000 --center-lat 123.45 --center-lng 234.56
+//!         --scale-factor 1.1
+
+#![deny(missing_docs)]
+
 use argh::FromArgs;
 use console::style;
 use dialoguer::Confirm;

@@ -242,6 +242,9 @@ impl Polygon {
         })
     }
 
+    /// Which curve orientation a polygon has. Curve orientation refers to
+    /// whether or not the points in the polygon are stored in clockwise or
+    /// counterclockwise order. 
     pub fn get_curve_orientation(&self) -> CurveOrientation {
         if self
             .to_segments()
@@ -255,13 +258,15 @@ impl Polygon {
         CurveOrientation::Positive
     }
 
+    /// Orients a polygon in-place such that it has a positive orientation.
     pub fn orient_curve(&mut self) {
         if self.get_curve_orientation() == CurveOrientation::Negative {
             self.pts.reverse();
         }
     }
 
-    /// avg pt
+    /// Returns the average point across all points in the polygon. NB: Not the
+    /// same as the center or centroid or whatever.
     pub fn average(&self) -> Pt {
         let num: f64 = self.pts.len() as f64;
         let sum_x: f64 = self.pts.iter().map(|pt| pt.x.0).sum();

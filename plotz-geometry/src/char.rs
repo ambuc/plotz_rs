@@ -1,4 +1,5 @@
-//！ A character at a point.
+//! A character at a point.
+
 use {
     crate::{bounded::Bounded, point::Pt, traits::*},
     std::ops::*,

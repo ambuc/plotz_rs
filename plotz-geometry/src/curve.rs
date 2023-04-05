@@ -1,4 +1,4 @@
-#![allow(missing_docs)]
+//! A curve.
 
 use {
     crate::{
@@ -20,10 +20,15 @@ use {
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+/// A single curvearc, i.e. some section of a circle.
 pub struct CurveArc {
+    /// The center of the circle.
     pub ctr: Pt,
+    /// The initial angle of the circle. 0 <= a <= TAU, angle_i <= angle_f.
     pub angle_i: f64,
+    /// The final angle of the circle. 0 <= a <= TAU, angle_i <= angle_f.
     pub angle_f: f64,
+    /// The radius of the circle.
     pub radius: f64,
 }
 
@@ -79,6 +84,7 @@ impl Bounded for CurveArc {
 }
 
 #[allow(non_snake_case)]
+/// A single curvearc, i.e. some section of a circle.
 pub fn CurveArc(ctr: Pt, sweep: RangeInclusive<f64>, radius: f64) -> CurveArc {
     assert!(sweep.start() <= sweep.end(), "sweep: {:?}", sweep);
     assert!(
@@ -131,6 +137,11 @@ fn split_range(
 }
 
 #[allow(non_snake_case)]
+/// Creates a new vector of CurveArcs. Why use this over |CurveArc(..)|? Simple:
+/// If you ask for a CurveArc which circles more than once, it complains.
+/// |CurveArcs(..)| will happily do the arithmetic and return a set of
+/// |CurveArc| objects which circle the center the correct fractional number of
+/// times. This is nice on a pen plotter.
 pub fn CurveArcs(ctr: Pt, sweep: RangeInclusive<f64>, radius: f64) -> Vec<CurveArc> {
     split_range(sweep, 0.0..=TAU)
         .into_iter()

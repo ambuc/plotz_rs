@@ -13,6 +13,7 @@ pub fn make_frame_pg((w, h): (f64, f64), offset: Pt) -> Polygon {
     p
 }
 
+/// Makes a frame given (width, height) and (x,y) offset.
 pub fn make_frame(wh: (f64, f64), offset: Pt) -> DrawObj {
     DrawObj::new(make_frame_pg(wh, offset))
         .with_color(&BLACK)

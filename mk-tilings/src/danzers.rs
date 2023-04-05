@@ -28,7 +28,6 @@ lazy_static! {
     static ref T2: Isosceles = Isosceles::from_base_vertex(2.0 * PI / 7.0, 3.0 * PI / 7.0);
 }
 
-#[allow(dead_code)]
 struct Scalene {
     angle_sm_rad: f64,
     angle_md_rad: f64,
