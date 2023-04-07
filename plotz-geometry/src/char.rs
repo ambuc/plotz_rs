@@ -131,3 +131,9 @@ impl Mutable for Char {}
 impl Translatable for Char {}
 impl Scalable<Pt> for Char {}
 impl Scalable<f64> for Char {}
+
+impl Nullable for Char {
+    fn is_empty(&self) -> bool {
+        false
+    }
+}

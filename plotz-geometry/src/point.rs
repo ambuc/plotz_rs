@@ -239,6 +239,12 @@ impl Roundable for Pt {
     }
 }
 
+impl Nullable for Pt {
+    fn is_empty(&self) -> bool {
+        false
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use float_eq::assert_float_eq;

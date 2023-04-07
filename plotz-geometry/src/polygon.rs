@@ -735,6 +735,12 @@ impl Roundable for Polygon {
     }
 }
 
+impl Nullable for Polygon {
+    fn is_empty(&self) -> bool {
+        self.pts.is_empty()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

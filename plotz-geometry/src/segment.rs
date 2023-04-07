@@ -394,6 +394,12 @@ impl Roundable for Segment {
     }
 }
 
+impl Nullable for Segment {
+    fn is_empty(&self) -> bool {
+        false
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

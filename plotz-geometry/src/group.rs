@@ -171,3 +171,9 @@ impl Croppable for Group {
         )])
     }
 }
+
+impl Nullable for Group {
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}

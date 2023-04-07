@@ -37,12 +37,12 @@ impl DrawObjInner {
     /// Returns true if the object is empty (i.e. zero points)
     pub fn is_empty(&self) -> bool {
         match self {
-            DrawObjInner::Polygon(p) => p.pts.is_empty(),
-            DrawObjInner::Group(dois) => dois.iter_dois().all(|doi| doi.is_empty()),
-            DrawObjInner::Point(_)
-            | DrawObjInner::Segment(_)
-            | DrawObjInner::Char(_)
-            | DrawObjInner::CurveArc(_) => false,
+            DrawObjInner::Polygon(p) => p.is_empty(),
+            DrawObjInner::Group(dois) => dois.is_empty(),
+            DrawObjInner::Point(pt) => pt.is_empty(),
+            DrawObjInner::Segment(sg) => sg.is_empty(),
+            DrawObjInner::Char(ch) => ch.is_empty(),
+            DrawObjInner::CurveArc(ca) => ca.is_empty(),
         }
     }
 

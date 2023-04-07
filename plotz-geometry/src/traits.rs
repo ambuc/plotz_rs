@@ -46,3 +46,10 @@ pub trait Roundable {
     /// Example: 0.351.round_to_nearest(0.1) => 0.3.
     fn round_to_nearest(&mut self, f: f64);
 }
+
+
+/// A geometric figure which can be empty. Most can't.
+pub trait Nullable {
+    /// Is it empty?
+    fn is_empty(&self) -> bool;
+}
