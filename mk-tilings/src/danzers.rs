@@ -8,7 +8,7 @@ use {
         draw_obj::DrawObj,
         point::{PolarPt, Pt},
         polygon::Polygon,
-        shading_02::{shade_polygon, ShadeConfig},
+        shading::{shade_polygon, ShadeConfig},
     },
     std::f64::consts::PI,
 };

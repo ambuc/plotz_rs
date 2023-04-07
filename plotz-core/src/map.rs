@@ -25,7 +25,7 @@ use {
         draw_obj_inner::DrawObjInner,
         point::Pt,
         polygon::Polygon,
-        shading_02::{shade_polygon, ShadeConfig},
+        shading::{shade_polygon, ShadeConfig},
         traits::*,
     },
     rand::{thread_rng, Rng},

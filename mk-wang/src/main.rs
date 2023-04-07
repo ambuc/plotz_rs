@@ -7,7 +7,7 @@ use {
         draw_obj_inner::DrawObjInner,
         point::Pt,
         polygon::{Multiline, Polygon},
-        shading_02::{shade_polygon, ShadeConfig},
+        shading::{shade_polygon, ShadeConfig},
     },
     rand::prelude::SliceRandom,
     std::f64::consts::*,
