@@ -1,0 +1,27 @@
+[package]
+name = "mk-lewitt"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+anyhow = "*"
+argh = "*"
+cached = "*"
+clap = "*"
+console = "*"
+dialoguer = "*"
+exitcode = "*"
+float-cmp = "*"
+float-ord = "*"
+glob = "*"
+indicatif = "*"
+itertools = "*"
+lazy_static = "*"
+plotz-color = { path = "../plotz-color" }
+plotz-core = { path = "../plotz-core" }
+plotz-geometry = { path = "../plotz-geometry" }
+rand = { version = "0.8.5", features = ["alloc"] }
+regex = "*"
+typed-builder = "*"
+

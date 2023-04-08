@@ -9,6 +9,7 @@ pub mod curve;
 pub mod draw_obj;
 pub mod draw_obj_inner;
 pub mod grid;
+pub mod grid_layout;
 pub mod group;
 pub mod interpolate;
 pub mod point;

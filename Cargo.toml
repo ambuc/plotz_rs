@@ -10,6 +10,7 @@ edition = "2021"
 [workspace]
 members = [
     "mk-arcs",
+    "mk-lewitt",
     "mk-tilings",
     "mk-voronoi",
     "mk-wang",

@@ -1,6 +1,9 @@
 //! Crop
 use {
-    crate::polygon::{Polygon, PolygonConstructorError},
+    crate::{
+        bounded::Bounds,
+        polygon::{Polygon, PolygonConstructorError},
+    },
     thiserror::Error,
 };
 
@@ -64,4 +67,12 @@ pub trait Croppable {
     fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
     where
         Self: Sized;
+
+    /// Crop to outer bounds.
+    fn crop_to_bounds(&self, bounds: Bounds) -> Result<Vec<Self::Output>, CropToPolygonError>
+    where
+        Self: Sized,
+    {
+        self.crop_to(&bounds.to_polygon())
+    }
 }

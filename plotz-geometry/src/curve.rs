@@ -285,14 +285,14 @@ fn intersections_of_line_and_curvearc(
             let isxn =
                 curve_arc.ctr + PolarPt(curve_arc.radius, segment.slope().atan() + FRAC_PI_2);
 
-            if let Some(segment_loc) = SegmentLoc::from_f64(
-                interpolate_2d_checked(segment.i, segment.f, isxn).expect("interpolation failed"),
-            ) {
-                if let Some(curve_loc) = CurveLoc::from_f64(
-                    abp(&curve_arc.ctr, &isxn, &curve_arc.pt_i())
-                        / abp(&curve_arc.ctr, &curve_arc.pt_f(), &curve_arc.pt_i()),
-                ) {
-                    return IntersectionResult::One(PtLoc(isxn, segment_loc, curve_loc));
+            if let Ok(f) = interpolate_2d_checked(segment.i, segment.f, isxn) {
+                if let Some(segment_loc) = SegmentLoc::from_f64(f) {
+                    if let Some(curve_loc) = CurveLoc::from_f64(
+                        abp(&curve_arc.ctr, &isxn, &curve_arc.pt_i())
+                            / abp(&curve_arc.ctr, &curve_arc.pt_f(), &curve_arc.pt_i()),
+                    ) {
+                        return IntersectionResult::One(PtLoc(isxn, segment_loc, curve_loc));
+                    }
                 }
             }
             IntersectionResult::None

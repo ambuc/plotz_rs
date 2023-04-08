@@ -1,5 +1,8 @@
 //! A trait representing the bounds and bounding box for an object.
-use crate::{point::Pt, polygon::PolygonConstructorError};
+use crate::{
+    point::Pt,
+    polygon::{Polygon, PolygonConstructorError},
+};
 use float_ord::FloatOrd;
 
 /// A general error arising from trying to derive the bounding box for a thing.
@@ -25,6 +28,20 @@ pub struct Bounds {
     pub left_bound: f64,
     /// Right bound.
     pub right_bound: f64,
+}
+
+impl Bounds {
+    /// Creates a frame, suitable for cropping.
+    pub fn to_polygon(&self) -> Polygon {
+        Polygon([
+            self.tl_bound(),
+            self.tr_bound(),
+            self.br_bound(),
+            self.bl_bound(),
+            self.tl_bound(),
+        ])
+        .expect("failed to create polygon")
+    }
 }
 
 impl Bounded for Bounds {
