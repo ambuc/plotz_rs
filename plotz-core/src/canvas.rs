@@ -10,7 +10,7 @@ use {
     anyhow::{anyhow, Error},
     float_ord::FloatOrd,
     plotz_geometry::{
-        bounded::{Bounds, streaming_bbox, Bounded},
+        bounded::{streaming_bbox, Bounded, Bounds},
         draw_obj::DrawObj,
         draw_obj_inner::DrawObjInner,
         point::Pt,
@@ -104,7 +104,6 @@ impl Canvas {
             f(obj);
         });
     }
-
 
     /// returns true on success
     pub fn scale_to_fit_frame(&mut self) -> Result<(), Error> {

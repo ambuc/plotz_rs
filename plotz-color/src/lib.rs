@@ -691,7 +691,6 @@ color!(
     0.196_078_431_372_549
 );
 
-
 pub mod subway {
     //! Colors used only in plotting the NYC subway.
     use super::*;

@@ -42,11 +42,10 @@ pub trait ScalableAssign: MulAssign<f64> + DivAssign<f64> {}
 /// A geometric figure made of points with floating-point xy components which
 /// can be modified in-place to snap to the nearest interval.
 pub trait Roundable {
-    /// Rounds the points of a floating-point geometric figure to the nearest interval |f|. 
+    /// Rounds the points of a floating-point geometric figure to the nearest interval |f|.
     /// Example: 0.351.round_to_nearest(0.1) => 0.3.
     fn round_to_nearest(&mut self, f: f64);
 }
-
 
 /// A geometric figure which can be empty. Most can't.
 pub trait Nullable {

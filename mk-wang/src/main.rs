@@ -163,7 +163,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<DrawObj> {
     .flat_map(|(cell_id, cell, rot)| {
         let mut ret = vec![];
         ret.push({
-            let  shape = match cell {
+            let shape = match cell {
                 Fill::Blue => Multiline([Pt(0.25, 0.0), Pt(0.5, 0.25), Pt(0.75, 0.0)]).unwrap(),
                 Fill::Green => {
                     Multiline([Pt(0.25, 0.0), Pt(0.25, 0.25), Pt(0.75, 0.25), Pt(0.75, 0.0)])

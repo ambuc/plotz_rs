@@ -3,12 +3,7 @@ use {
     argh::FromArgs,
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{
-        curve::CurveArc,
-        draw_obj::DrawObj,
-        point::Pt,
-        segment::Segment,
-    },
+    plotz_geometry::{curve::CurveArc, draw_obj::DrawObj, point::Pt, segment::Segment},
     rand::{distributions::Standard, prelude::Distribution, Rng},
     std::f64::consts::*,
 };

@@ -2,7 +2,7 @@
 
 use crate::{
     bounded::{Bounded, BoundingBoxError},
-    crop::{Croppable, CropToPolygonError},
+    crop::{CropToPolygonError, Croppable},
     point::Pt,
     polygon::{Polygon, PolygonKind},
     segment::Segment,
