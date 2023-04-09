@@ -1,5 +1,6 @@
 //! A trait representing the bounds and bounding box for an object.
 use crate::{
+    crop::{ContainsPointError, PointLoc},
     point::Pt,
     polygon::{Polygon, PolygonConstructorError},
 };
@@ -41,6 +42,10 @@ impl Bounds {
             self.tl_bound(),
         ])
         .expect("failed to create polygon")
+    }
+    /// Whether or not bounds contain a point.
+    pub fn contains_pt(&self, pt: Pt) -> Result<PointLoc, ContainsPointError> {
+        self.to_polygon().contains_pt(&pt)
     }
 }
 

@@ -708,6 +708,9 @@ pub mod subway {
     color!(GRAY_S, 0.5, 0.51, 0.51);
 }
 
+/// Greyscale colors.
+pub static GREYSCALE: [&ColorRGB; 5] = [&BLACK, &GRAY, &DIMGRAY, &DARKGRAY, &LIGHTGRAY];
+
 /// All known colors.
 pub static COLORS: [&ColorRGB; 141] = [
     &ALICEBLUE,

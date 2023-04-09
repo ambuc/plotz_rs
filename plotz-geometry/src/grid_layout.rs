@@ -10,24 +10,15 @@ use {
 #[derive(Debug, TypedBuilder, Copy, Clone)]
 /// Settings struct.
 pub struct GridLayoutSettings {
-    /// x coordinate of top-left of grid.
-    #[builder(default = 0)]
-    x_init: u64,
-    /// y coordinate of top-left of grid.
-    #[builder(default = 0)]
-    y_init: u64,
-    /// total width of grid.
-    total_width: u64,
-    /// total height of grid.
-    total_height: u64,
-    /// the number of width divisions.
-    x_divisions: usize,
-    /// the number of height divisions.
-    y_divisions: usize,
-    /// the x margin around each object.
-    object_margin_x: u64,
-    /// the y margin around each object.
-    object_margin_y: u64,
+    /// coordinates of top-left of grid.
+    #[builder(default = (0,0))]
+    init: (u64, u64),
+    /// total (width, height) of grid.
+    dims: (u64, u64),
+    /// the number of (x,y) divisions.
+    divisions: (usize, usize),
+    /// the (x,y) margin around each object.
+    object_margin: (u64, u64),
 }
 
 #[derive(Debug)]
@@ -42,56 +33,56 @@ pub struct GridLayout {
 impl GridLayout {
     /// Creates a new GridLayout.
     pub fn new(settings: GridLayoutSettings) -> GridLayout {
+        let (x_divisions, y_divisions) = settings.divisions;
         GridLayout {
             settings,
             objs: vec![
                 // row
-                vec![vec![]]
-                    .into_iter()
-                    .cycle()
-                    .take(settings.y_divisions)
-                    .collect::<_>(),
+                vec![
+                    // inner
+                    vec![],
+                ]
+                .into_iter()
+                .cycle()
+                .take(y_divisions)
+                .collect::<_>(),
             ]
             .into_iter()
             .cycle()
-            .take(settings.x_divisions)
+            .take(x_divisions)
             .collect::<_>(),
         }
     }
 
     /// Number of horizontal cubby divisions.
     pub fn num_cubbys_x(&self) -> usize {
-        self.settings.x_divisions
+        self.settings.divisions.0
     }
     /// Number of vertical cubby divisions.
     pub fn num_cubbys_y(&self) -> usize {
-        self.settings.y_divisions
+        self.settings.divisions.1
     }
 
     /// Get the bounds of a cubby at (i,j).
     pub fn get_cubby_bounds(&self, (i, j): (usize, usize)) -> Bounds {
-        let cubby_width: f64 =
-            (self.settings.total_width / (self.settings.x_divisions as u64)) as f64;
-        let cubby_height: f64 =
-            (self.settings.total_height / (self.settings.y_divisions as u64)) as f64;
+        let (x_divisions, y_divisions) = self.settings.divisions;
+        let (total_width, total_height) = self.settings.dims;
+        let cubby_width: f64 = (total_width / (x_divisions as u64)) as f64;
+        let cubby_height: f64 = (total_height / (y_divisions as u64)) as f64;
+        let (object_margin_x, object_margin_y) = self.settings.object_margin;
+        let (x_init, y_init) = self.settings.init;
+
         Bounds {
-            top_bound: self.settings.y_init as f64 + (j + 1) as f64 * cubby_height
-                - self.settings.object_margin_y as f64,
-            bottom_bound: self.settings.y_init as f64
-                + j as f64 * cubby_height
-                + self.settings.object_margin_y as f64,
-            left_bound: self.settings.x_init as f64
-                + i as f64 * cubby_width
-                + self.settings.object_margin_x as f64,
-            right_bound: self.settings.x_init as f64 + (i + 1) as f64 * cubby_width
-                - self.settings.object_margin_y as f64,
+            top_bound: y_init as f64 + (j + 1) as f64 * cubby_height - object_margin_y as f64,
+            bottom_bound: y_init as f64 + j as f64 * cubby_height + object_margin_y as f64,
+            left_bound: x_init as f64 + i as f64 * cubby_width + object_margin_x as f64,
+            right_bound: x_init as f64 + (i + 1) as f64 * cubby_width - object_margin_x as f64,
         }
     }
 
     /// Returns the center of the cubby.
     pub fn cubby_ctr(&self, (i, j): (usize, usize)) -> Pt {
-        let bounds = self.get_cubby_bounds((i, j));
-        bounds.bbox_center()
+        self.get_cubby_bounds((i, j)).bbox_center()
     }
 
     /// Returns a list of all inner objects.
