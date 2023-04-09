@@ -42,8 +42,15 @@ impl Canvas {
     }
 
     /// ctor from objs
-    pub fn from_objs<O: IntoIterator<Item = DrawObj>>(objs: O, autobucket: bool) -> Canvas {
+    pub fn from_objs<O: IntoIterator<Item = DrawObj> + ExactSizeIterator>(
+        objs: O,
+        autobucket: bool,
+    ) -> Canvas {
         if autobucket {
+            trace!(
+                "Creating Canvas(autobucket=true) from {:?} objects",
+                objs.len()
+            );
             let mut c = Canvas::new();
             for (b, objs) in &objs.into_iter().group_by(|d_o| d_o.color) {
                 c.dos_by_bucket
@@ -53,6 +60,10 @@ impl Canvas {
             }
             c
         } else {
+            trace!(
+                "Creating Canvas(autobucket=false) from {:?} objects",
+                objs.len()
+            );
             Canvas {
                 dos_by_bucket: CanvasMap::from([(None, objs.into_iter().collect())]),
                 frame: None,
@@ -148,8 +159,8 @@ impl Canvas {
     /// writes out to a set of SVGs at a prefix.
     pub fn write_to_svg(self, size: Size, prefix: &str) -> Result<(), Error> {
         // all
-        trace!("Writing to canvas.");
         {
+            trace!("Writing to all.");
             let name = format!("{}_all.svg", prefix);
             let mut all: Vec<DrawObj> = vec![];
             if let Some(frame) = self.frame.clone() {
@@ -163,6 +174,7 @@ impl Canvas {
 
         // frame
         {
+            trace!("Writing frame.");
             if let Some(frame) = self.frame.clone() {
                 let _ = write_layer_to_svg(size, format!("{}_{}.svg", prefix, "frame"), &[frame]);
             }
@@ -171,6 +183,7 @@ impl Canvas {
         // dos
         {
             for (i, (_bucket, dos)) in self.dos_by_bucket.iter().enumerate() {
+                trace!("Writing layer: {:?}", i);
                 let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), dos)
                     .expect("failed to write");
             }
