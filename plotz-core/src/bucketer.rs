@@ -42,16 +42,47 @@ impl Bucketer2 for DefaultBucketer2 {
 
         if contains!(
             tags,
-            ("building", "apartments" | "garages" | "yes")
-                | ("landuse", "commercial" | "construction" | "industrial")
+            ("building", _)
+                | (
+                    "landuse",
+                    "allotments"
+                        | "commercial"
+                        | "construction"
+                        | "industrial"
+                        | "residential"
+                        | "religious"
+                )
+                | ("power", _)
+                | ("building:part", _)
+                | ("man_made", _)
+                | (
+                    "amenity",
+                    "college" | "school" | "fuel" | "shelter" | "hospital" | "university"
+                )
         ) {
             v.push(Bucket::Area(Area::Building));
         }
         if contains!(
             tags,
-            ("amenity", "school")
+            ("amenity", "bench")
                 | ("fitness_station", "box")
-                | ("leisure", "pitch" | "playground" | "swimming_pool")
+                | (
+                    "leisure",
+                    "pitch"
+                        | "playground"
+                        | "stadium"
+                        | "swimming_pool"
+                        | "golf_course"
+                        | "track"
+                        | "bleachers"
+                        | "schoolyard"
+                        | "dog_park"
+                        | "sports_centre"
+                )
+                | ("tourism", "picnic_site")
+                | ("golf", "hole")
+                | ("playground", _)
+                | ("shop", _)
         ) {
             v.push(Bucket::Area(Area::Fun));
         }
@@ -59,11 +90,32 @@ impl Bucketer2 for DefaultBucketer2 {
             tags,
             (
                 "landuse",
-                "brownfield" | "cemetery" | "grass" | "greenfield" | "meadow"
-            ) | ("leisure", "garden" | "park")
-                | ("natural", "scrub")
+                "forest"
+                    | "brownfield"
+                    | "cemetery"
+                    | "grass"
+                    | "greenfield"
+                    | "meadow"
+                    | "recreation_ground"
+            ) | ("leisure", "garden" | "park" | "nature_reserve")
+                | (
+                    "natural",
+                    "scree"
+                        | "scrub"
+                        | "tree_row"
+                        | "cliff"
+                        | "wood"
+                        | "wetland"
+                        | "heath"
+                        | "shingle"
+                )
+                | ("traffic_calming", _)
+                | ("indoor", "area")
         ) {
             v.push(Bucket::Area(Area::Park));
+        }
+        if contains!(tags, ("amenity", "parking" | "parking_space")) {
+            v.push(Bucket::Area(Area::Parking));
         }
         if contains!(tags, ("natural", "bare_rock")) {
             v.push(Bucket::Area(Area::NaturalRock));
@@ -74,13 +126,19 @@ impl Bucketer2 for DefaultBucketer2 {
         if contains!(tags, ("natural", "tree")) {
             v.push(Bucket::Area(Area::Tree));
         }
-        if contains!(tags, ("natural", "bay" | "coastline" | "water")) {
+        if contains!(
+            tags,
+            ("natural", "bay" | "coastline" | "water") | ("waterway", _) | ("leisure", "marina")
+        ) {
             v.push(Bucket::Area(Area::Water));
         }
-        if contains!(tags, ("boundary", "administrative")) {
+        if contains!(
+            tags,
+            ("boundary", "place" | "administrative") | ("place", "neighborhood")
+        ) {
             v.push(Bucket::Path(Path::Boundary));
         }
-        if contains!(tags, ("highway", "cycleway")) {
+        if contains!(tags, ("highway", "cycleway") | ("route", "bicycle")) {
             v.push(Bucket::Path(Path::Cycleway));
         }
         if contains!(tags, ("highway", "primary")) {
@@ -89,23 +147,26 @@ impl Bucketer2 for DefaultBucketer2 {
         if contains!(tags, ("highway", "secondary")) {
             v.push(Bucket::Path(Path::Highway2));
         }
-        if contains!(tags, ("highway", "tertiary")) {
-            v.push(Bucket::Path(Path::Highway3));
-        }
         if contains!(
             tags,
-            ("highway", "primary_link" | "secondary_link" | "service")
+            ("highway", "tertiary") | ("route", "road") | ("road_marking", _) | ("type", "route")
         ) {
-            v.push(Bucket::Path(Path::Highway4));
+            v.push(Bucket::Path(Path::Highway3));
+        }
+        if contains!(tags, ("bridge:support", _) | ("bridge", _)) {
+            v.push(Bucket::Path(Path::Bridge));
         }
         if contains!(
             tags,
             (
                 "highway",
                 "footway" | "pedestrian" | "residential" | "steps"
-            )
+            ) | ("route", "hiking")
         ) {
             v.push(Bucket::Path(Path::Pedestrian));
+        }
+        if contains!(tags, ("highway", _)) {
+            v.push(Bucket::Path(Path::Highway4));
         }
 
         if contains!(tags, ("route", "subway")) {
@@ -148,11 +209,45 @@ impl Bucketer2 for DefaultBucketer2 {
                     if contains!(tags, ("ref", "S")) {
                         v.push(Bucket::Path(Path::Subway(Subway::_S)))
                     }
-                    if contains!(tags, ("railway", "rail")) {
-                        v.push(Bucket::Path(Path::Rail));
-                    }
+                } else {
+                    v.push(Bucket::Path(Path::Subway(Subway::Other)));
                 }
+            } else {
+                v.push(Bucket::Path(Path::Subway(Subway::Other)));
             }
+        }
+
+        if contains!(
+            tags,
+            ("railway", "subway") | ("abandoned:railway", _) | ("disused:railway", _)
+        ) {
+            v.push(Bucket::Path(Path::Subway(Subway::Other)));
+        }
+
+        if contains!(tags, ("route", "bus")) {
+            v.push(Bucket::Path(Path::Bus));
+        }
+
+        if contains!(
+            tags,
+            ("railway", "rail")
+                | ("route", "railway" | "train")
+                | ("railway:historic", _)
+                | ("train", "yes")
+        ) {
+            v.push(Bucket::Path(Path::Rail));
+        }
+
+        if contains!(tags, ("barrier", _)) {
+            v.push(Bucket::Path(Path::Barrier));
+        }
+
+        if contains!(tags, ("cables", _) | ("power", "cable")) {
+            v.push(Bucket::Path(Path::Cable));
+        }
+
+        if v.is_empty() {
+            println!("{:?}", tags);
         }
 
         v

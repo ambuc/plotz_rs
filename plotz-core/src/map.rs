@@ -2,10 +2,6 @@
 
 #![allow(clippy::let_unit_value)]
 
-use std::collections::HashSet;
-
-use plotz_geometry::{crop::Croppable, segment::Segment};
-
 use {
     crate::{
         bucket::{Area, Bucket, Path as BucketPath, Subway as BucketSubway},
@@ -21,17 +17,19 @@ use {
     plotz_geojson::GeoJsonConversionError,
     plotz_geometry::{
         bounded::{Bounded, BoundingBoxError},
+        crop::Croppable,
         draw_obj::DrawObj,
         draw_obj_inner::DrawObjInner,
         point::Pt,
         polygon::Polygon,
+        segment::Segment,
         shading::{shade_polygon, ShadeConfig},
         traits::*,
     },
     rand::{thread_rng, Rng},
     std::{
         cmp::Ord,
-        collections::HashMap,
+        collections::{HashMap, HashSet},
         fs::File,
         io::BufReader,
         path::{Path, PathBuf},
@@ -96,34 +94,40 @@ lazy_static! {
     /// Which areas get shaded, and how much.
     pub static ref DEFAULT_COLORING: HashMap<Bucket, ColorRGB> =
             HashMap::from([
-                (Bucket::Path(BucketPath::Highway1), RED),
-                (Bucket::Path(BucketPath::Highway2), ORANGE),
-                (Bucket::Path(BucketPath::Highway3), YELLOW),
-                (Bucket::Path(BucketPath::Highway4), GREEN),
-                (Bucket::Path(BucketPath::Cycleway), BLUE),
-                (Bucket::Path(BucketPath::Pedestrian), LIGHTGRAY),
-                (Bucket::Path(BucketPath::Rail), BROWN),
-                (Bucket::Path(BucketPath::Boundary), LIMEGREEN),
                 (Bucket::Area(Area::Beach), TAN),
                 (Bucket::Area(Area::Building), DARKGREY),
                 (Bucket::Area(Area::Business), DARKGREY),
                 (Bucket::Area(Area::Fun), GREENYELLOW),
                 (Bucket::Area(Area::NaturalRock), DARKGRAY),
                 (Bucket::Area(Area::Park), GREEN),
+                (Bucket::Area(Area::Parking), DARKGREEN),
                 (Bucket::Area(Area::Rail), ORANGE),
                 (Bucket::Area(Area::Tree), BROWN),
                 (Bucket::Area(Area::Water), LIGHTBLUE),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_ACE)), BLUE_ACE),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_BDFM)), ORANGE_BDFM),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_G)), LIME_G),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_L)), GREY_L),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_JZ)), BROWN_JZ),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_NQRW)), YELLOW_NQRW),
+                (Bucket::Path(BucketPath::Barrier), LEMONCHIFFON),
+                (Bucket::Path(BucketPath::Boundary), LIMEGREEN),
+                (Bucket::Path(BucketPath::Bridge), RED),
+                (Bucket::Path(BucketPath::Bus), PINK),
+                (Bucket::Path(BucketPath::Cable), ORANGE),
+                (Bucket::Path(BucketPath::Cycleway), BLUE),
+                (Bucket::Path(BucketPath::Highway1), RED),
+                (Bucket::Path(BucketPath::Highway2), ORANGE),
+                (Bucket::Path(BucketPath::Highway3), YELLOW),
+                (Bucket::Path(BucketPath::Highway4), GREEN),
+                (Bucket::Path(BucketPath::Pedestrian), LIGHTGRAY),
+                (Bucket::Path(BucketPath::Rail), BROWN),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::Other)), BLACK),
                 (Bucket::Path(BucketPath::Subway(BucketSubway::_123)), RED_123),
                 (Bucket::Path(BucketPath::Subway(BucketSubway::_456)), GREEN_456),
                 (Bucket::Path(BucketPath::Subway(BucketSubway::_7)), PURPLE_7),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_T)), TEAL_T),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_ACE)), BLUE_ACE),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_BDFM)), ORANGE_BDFM),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_G)), LIME_G),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_JZ)), BROWN_JZ),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_L)), GREY_L),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_NQRW)), YELLOW_NQRW),
                 (Bucket::Path(BucketPath::Subway(BucketSubway::_S)), GRAY_S),
+                (Bucket::Path(BucketPath::Subway(BucketSubway::_T)), TEAL_T),
             ]);
 
     /// Which areas get shaded, and how much.
@@ -135,7 +139,19 @@ lazy_static! {
         //     (
         //         ShadeAndOutline::JustShade,
         //         ShadeConfig {
-        //             gap: 3.5,
+        //             gap: 7.0,
+        //             slope: 1.0,
+        //             thickness: 1.0,
+        //             switchback: false,
+        //         }
+        //     )
+        // ),
+        // (
+        //     Bucket::Area(Area::Park),
+        //     (
+        //         ShadeAndOutline::JustShade,
+        //         ShadeConfig {
+        //             gap: 6.0,
         //             slope: 1.0,
         //             thickness: 1.0,
         //             switchback: false,
@@ -154,18 +170,18 @@ lazy_static! {
         //         }
         //     )
         // ),
-        // (
-        //     Bucket::Area(Area::Water),
-        //     (
-        //         ShadeAndOutline::JustShade,
-        //         ShadeConfig {
-        //             gap: 2.0,
-        //             slope: 0.0,
-        //             thickness: 1.0,
-        //             switchback: false,
-        //         }
-        //     )
-        // ),
+         (
+             Bucket::Area(Area::Water),
+             (
+                 ShadeAndOutline::JustShade,
+                 ShadeConfig {
+                     gap: 2.0,
+                     slope: 0.0,
+                     thickness: 1.0,
+                     switchback: false,
+                 }
+             )
+         ),
     ].into();
 
     /// How thick the default line is.

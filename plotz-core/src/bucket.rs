@@ -8,6 +8,7 @@ pub enum Area {
     Fun,
     NaturalRock,
     Park,
+    Parking,
     Rail,
     Tree,
     Water,
@@ -15,19 +16,24 @@ pub enum Area {
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub enum Path {
+    Barrier,
+    Boundary,
+    Bridge,
+    Bus,
+    Cable,
+    Cycleway,
     Highway1,
     Highway2,
     Highway3,
     Highway4,
-    Cycleway,
     Pedestrian,
     Rail,
     Subway(Subway),
-    Boundary,
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
 pub enum Subway {
+    Other,
     _ACE,
     _BDFM,
     _G,
