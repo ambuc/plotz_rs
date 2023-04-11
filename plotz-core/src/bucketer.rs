@@ -1,4 +1,4 @@
-use crate::bucket::{Area, Bucket, Path, Subway};
+use crate::bucket::{Area, Bucket, Highway, Path, Subway};
 
 pub trait Bucketer {
     type Tag;
@@ -43,15 +43,6 @@ impl Bucketer2 for DefaultBucketer2 {
         if contains!(
             tags,
             ("building", _)
-                | (
-                    "landuse",
-                    "allotments"
-                        | "commercial"
-                        | "construction"
-                        | "industrial"
-                        | "residential"
-                        | "religious"
-                )
                 | ("power", _)
                 | ("building:part", _)
                 | ("man_made", _)
@@ -61,6 +52,20 @@ impl Bucketer2 for DefaultBucketer2 {
                 )
         ) {
             v.push(Bucket::Area(Area::Building));
+        }
+        if contains!(
+            tags,
+            (
+                "landuse",
+                "allotments"
+                    | "commercial"
+                    | "construction"
+                    | "industrial"
+                    | "residential"
+                    | "religious"
+            )
+        ) {
+            v.push(Bucket::Area(Area::Land));
         }
         if contains!(
             tags,
@@ -141,18 +146,53 @@ impl Bucketer2 for DefaultBucketer2 {
         if contains!(tags, ("highway", "cycleway") | ("route", "bicycle")) {
             v.push(Bucket::Path(Path::Cycleway));
         }
+
+        if contains!(tags, ("highway", "elevator")) {
+            v.push(Bucket::Path(Path::Highway(Highway::Elevator)));
+        }
+        if contains!(tags, ("highway", "motorway_link")) {
+            v.push(Bucket::Path(Path::Highway(Highway::MotorwayLink)));
+        }
+        if contains!(tags, ("highway", "path")) {
+            v.push(Bucket::Path(Path::Highway(Highway::Path)));
+        }
+        if contains!(tags, ("highway", "platform")) {
+            v.push(Bucket::Path(Path::Highway(Highway::Platform)));
+        }
         if contains!(tags, ("highway", "primary")) {
-            v.push(Bucket::Path(Path::Highway1));
+            v.push(Bucket::Path(Path::Highway(Highway::Primary)));
+        }
+        if contains!(tags, ("highway", "primary_link")) {
+            v.push(Bucket::Path(Path::Highway(Highway::PrimaryLink)));
         }
         if contains!(tags, ("highway", "secondary")) {
-            v.push(Bucket::Path(Path::Highway2));
+            v.push(Bucket::Path(Path::Highway(Highway::Secondary)));
         }
-        if contains!(
-            tags,
-            ("highway", "tertiary") | ("route", "road") | ("road_marking", _) | ("type", "route")
-        ) {
-            v.push(Bucket::Path(Path::Highway3));
+        if contains!(tags, ("highway", "secondary_link")) {
+            v.push(Bucket::Path(Path::Highway(Highway::SecondaryLink)));
         }
+        if contains!(tags, ("highway", "service")) {
+            v.push(Bucket::Path(Path::Highway(Highway::Service)));
+        }
+        if contains!(tags, ("highway", "tertiary")) {
+            v.push(Bucket::Path(Path::Highway(Highway::Tertiary)));
+        }
+        if contains!(tags, ("highway", "tertiary_link")) {
+            v.push(Bucket::Path(Path::Highway(Highway::TertiaryLink)));
+        }
+        if contains!(tags, ("highway", "track")) {
+            v.push(Bucket::Path(Path::Highway(Highway::Track)));
+        }
+        if contains!(tags, ("highway", "unclassified")) {
+            v.push(Bucket::Path(Path::Highway(Highway::Unclassified)));
+        }
+        if contains!(tags, ("road_marking", _)) {
+            v.push(Bucket::Path(Path::Highway(Highway::RoadMarking)));
+        }
+        if contains!(tags, ("route", "road")) {
+            v.push(Bucket::Path(Path::Highway(Highway::Road)));
+        }
+
         if contains!(tags, ("bridge:support", _) | ("bridge", _)) {
             v.push(Bucket::Path(Path::Bridge));
         }
@@ -164,9 +204,6 @@ impl Bucketer2 for DefaultBucketer2 {
             ) | ("route", "hiking")
         ) {
             v.push(Bucket::Path(Path::Pedestrian));
-        }
-        if contains!(tags, ("highway", _)) {
-            v.push(Bucket::Path(Path::Highway4));
         }
 
         if contains!(tags, ("route", "subway")) {

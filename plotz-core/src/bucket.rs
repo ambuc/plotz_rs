@@ -4,7 +4,7 @@ use plotz_color::ColorRGB;
 pub enum Area {
     Beach,
     Building,
-    Business,
+    Land,
     Fun,
     NaturalRock,
     Park,
@@ -22,13 +22,29 @@ pub enum Path {
     Bus,
     Cable,
     Cycleway,
-    Highway1,
-    Highway2,
-    Highway3,
-    Highway4,
+    Highway(Highway),
     Pedestrian,
     Rail,
     Subway(Subway),
+}
+
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
+pub enum Highway {
+    Elevator,
+    MotorwayLink,
+    Path,
+    Platform,
+    Primary,
+    PrimaryLink,
+    Road,
+    RoadMarking,
+    Secondary,
+    SecondaryLink,
+    Service,
+    Tertiary,
+    TertiaryLink,
+    Track,
+    Unclassified,
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash, PartialOrd, Ord)]
@@ -52,5 +68,5 @@ pub enum Bucket {
     Frame,
     Area(Area),
     Path(Path),
-    Color(ColorRGB),
+    Color(&'static ColorRGB),
 }

@@ -4,7 +4,7 @@
 
 use {
     crate::{
-        bucket::{Area, Bucket, Path as BucketPath, Subway as BucketSubway},
+        bucket::{Area, Bucket, Highway, Path as BucketPath, Subway},
         bucketer::{Bucketer2, DefaultBucketer2},
         canvas::Canvas,
         frame::make_frame_pg,
@@ -29,7 +29,7 @@ use {
     rand::{thread_rng, Rng},
     std::{
         cmp::Ord,
-        collections::{HashMap, HashSet},
+        collections::HashSet,
         fs::File,
         io::BufReader,
         path::{Path, PathBuf},
@@ -90,100 +90,98 @@ pub enum ShadeAndOutline {
     Both,
 }
 
+fn map_bucket_to_color(bucket: &Bucket) -> Option<&'static ColorRGB> {
+    match bucket {
+        Bucket::Frame => Some(&BLACK),
+
+        Bucket::Color(c) => Some(&c),
+
+        Bucket::Area(area) => match area {
+            Area::Beach => Some(&TAN),
+            Area::Fun => Some(&LIGHTCYAN),
+            Area::NaturalRock => Some(&DARKGRAY),
+            Area::Land => Some(&PINK),
+            Area::Park => Some(&GREEN),
+            Area::Parking => Some(&LIGHTCORAL),
+            Area::Water => Some(&LIGHTBLUE),
+            Area::Building => Some(&LIGHTGRAY),
+            Area::Rail | Area::Tree => Some(&LIGHTPINK),
+        },
+
+        Bucket::Path(path) => match path {
+            BucketPath::Subway(subway) => match subway {
+                Subway::_123 => Some(&RED_123),
+                Subway::_456 => Some(&GREEN_456),
+                Subway::_7 => Some(&PURPLE_7),
+                Subway::_ACE => Some(&BLUE_ACE),
+                Subway::_BDFM => Some(&ORANGE_BDFM),
+                Subway::_G => Some(&LIME_G),
+                Subway::_JZ => Some(&BROWN_JZ),
+                Subway::_L => Some(&GREY_L),
+                Subway::_NQRW => Some(&YELLOW_NQRW),
+                Subway::_S => Some(&GRAY_S),
+                Subway::_T => Some(&TEAL_T),
+                Subway::Other => None,
+            },
+            BucketPath::Highway(highway) => match highway {
+                Highway::Primary | Highway::PrimaryLink => Some(&ORANGE),
+                Highway::Secondary
+                | Highway::SecondaryLink
+                | Highway::Tertiary
+                | Highway::TertiaryLink => Some(&ORANGE),
+                Highway::Elevator | Highway::MotorwayLink => Some(&ORANGERED),
+                Highway::Track | Highway::Unclassified => Some(&LIGHTGOLDENROD),
+                Highway::RoadMarking => Some(&LIGHTSALMON),
+                Highway::Service => Some(&LIGHTPINK),
+                Highway::Road | Highway::Path | Highway::Platform => Some(&LIGHTSTEELBLUE),
+            },
+
+            BucketPath::Bridge => Some(&AQUAMARINE),
+            BucketPath::Pedestrian => Some(&LIGHTGRAY),
+
+            BucketPath::Bus => Some(&WHEAT),
+            BucketPath::Barrier => Some(&PINK),
+            BucketPath::Cycleway => Some(&LIGHTGREEN),
+            BucketPath::Rail => Some(&LIGHTYELLOW),
+            BucketPath::Cable => Some(&LIMEGREEN),
+            //
+            BucketPath::Boundary => None,
+        },
+    }
+}
+
+fn map_bucket_to_shadeconfig(bucket: &Bucket) -> Option<(ShadeAndOutline, ShadeConfig)> {
+    let gap = 4.0;
+    match bucket {
+        Bucket::Area(Area::Land) => Some((
+            ShadeAndOutline::JustShade,
+            ShadeConfig::builder().gap(gap).slope(-2.0).build(),
+        )),
+        Bucket::Area(Area::Building) => Some((
+            ShadeAndOutline::JustShade,
+            ShadeConfig::builder().gap(3.0).slope(1.0).build(),
+        )),
+        Bucket::Area(Area::Parking) => Some((
+            ShadeAndOutline::JustShade,
+            ShadeConfig::builder().gap(gap).slope(-1.0).build(),
+        )),
+        Bucket::Area(Area::Park) => Some((
+            ShadeAndOutline::JustShade,
+            ShadeConfig::builder().gap(gap).slope(2.0).build(),
+        )),
+        Bucket::Area(Area::Water) => Some((
+            ShadeAndOutline::JustShade,
+            ShadeConfig::builder().gap(1.5).slope(0.0).build(),
+        )),
+        Bucket::Area(Area::Fun) => Some((
+            ShadeAndOutline::JustShade,
+            ShadeConfig::builder().gap(gap).slope(3.0).build(),
+        )),
+        _ => None,
+    }
+}
+
 lazy_static! {
-    /// Which areas get shaded, and how much.
-    pub static ref DEFAULT_COLORING: HashMap<Bucket, ColorRGB> =
-            HashMap::from([
-                (Bucket::Area(Area::Beach), TAN),
-                (Bucket::Area(Area::Building), DARKGREY),
-                (Bucket::Area(Area::Business), DARKGREY),
-                (Bucket::Area(Area::Fun), GREENYELLOW),
-                (Bucket::Area(Area::NaturalRock), DARKGRAY),
-                (Bucket::Area(Area::Park), GREEN),
-                (Bucket::Area(Area::Parking), DARKGREEN),
-                (Bucket::Area(Area::Rail), ORANGE),
-                (Bucket::Area(Area::Tree), BROWN),
-                (Bucket::Area(Area::Water), LIGHTBLUE),
-                (Bucket::Path(BucketPath::Barrier), LEMONCHIFFON),
-                (Bucket::Path(BucketPath::Boundary), LIMEGREEN),
-                (Bucket::Path(BucketPath::Bridge), RED),
-                (Bucket::Path(BucketPath::Bus), PINK),
-                (Bucket::Path(BucketPath::Cable), ORANGE),
-                (Bucket::Path(BucketPath::Cycleway), BLUE),
-                (Bucket::Path(BucketPath::Highway1), RED),
-                (Bucket::Path(BucketPath::Highway2), ORANGE),
-                (Bucket::Path(BucketPath::Highway3), YELLOW),
-                (Bucket::Path(BucketPath::Highway4), GREEN),
-                (Bucket::Path(BucketPath::Pedestrian), LIGHTGRAY),
-                (Bucket::Path(BucketPath::Rail), BROWN),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::Other)), BLACK),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_123)), RED_123),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_456)), GREEN_456),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_7)), PURPLE_7),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_ACE)), BLUE_ACE),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_BDFM)), ORANGE_BDFM),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_G)), LIME_G),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_JZ)), BROWN_JZ),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_L)), GREY_L),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_NQRW)), YELLOW_NQRW),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_S)), GRAY_S),
-                (Bucket::Path(BucketPath::Subway(BucketSubway::_T)), TEAL_T),
-            ]);
-
-    /// Which areas get shaded, and how much.
-    pub static ref SHADINGS: HashMap<Bucket, (ShadeAndOutline, ShadeConfig)> = [
-        // TODO(jbuckland): Some of these scale poorly or fail to render. Can I
-        // somehow autoderive this density?
-        // (
-        //     Bucket::Area(Area::Park),
-        //     (
-        //         ShadeAndOutline::JustShade,
-        //         ShadeConfig {
-        //             gap: 7.0,
-        //             slope: 1.0,
-        //             thickness: 1.0,
-        //             switchback: false,
-        //         }
-        //     )
-        // ),
-        // (
-        //     Bucket::Area(Area::Park),
-        //     (
-        //         ShadeAndOutline::JustShade,
-        //         ShadeConfig {
-        //             gap: 6.0,
-        //             slope: 1.0,
-        //             thickness: 1.0,
-        //             switchback: false,
-        //         }
-        //     )
-        // ),
-        // (
-        //     Bucket::Area(Area::Fun),
-        //     (
-        //         ShadeAndOutline::Both,
-        //         ShadeConfig {
-        //             gap: 3.0,
-        //             slope: 1.0,
-        //             thickness: 1.0,
-        //             switchback: false,
-        //         }
-        //     )
-        // ),
-         (
-             Bucket::Area(Area::Water),
-             (
-                 ShadeAndOutline::JustShade,
-                 ShadeConfig {
-                     gap: 2.0,
-                     slope: 0.0,
-                     thickness: 1.0,
-                     switchback: false,
-                 }
-             )
-         ),
-    ].into();
-
     /// How thick the default line is.
     pub static ref DEFAULT_THICKNESS: f64 = 1.0;
 }
@@ -215,16 +213,19 @@ impl Map {
                 .expect("parse")
                 .iter()
                 .flat_map(|(draw_obj_inner, tags)| {
-                    bucketer
-                        .bucket(tags)
-                        .into_iter()
-                        .map(|bucket| AnnotatedDrawObj {
-                            draw_obj: DrawObj::new(draw_obj_inner.clone())
-                                .with_color(&DEFAULT_COLORING[&bucket])
-                                .with_thickness(*DEFAULT_THICKNESS),
-                            bucket,
-                            _tags: tags.clone(),
-                        })
+                    bucketer.bucket(tags).into_iter().flat_map(|bucket| {
+                        if let Some(color) = map_bucket_to_color(&bucket) {
+                            Some(AnnotatedDrawObj {
+                                draw_obj: DrawObj::new(draw_obj_inner.clone())
+                                    .with_color(color)
+                                    .with_thickness(*DEFAULT_THICKNESS),
+                                bucket,
+                                _tags: tags.clone(),
+                            })
+                        } else {
+                            None
+                        }
+                    })
                 })
                 .collect::<Vec<AnnotatedDrawObj>>()
             })
@@ -316,7 +317,9 @@ impl Map {
     fn apply_shading_to_drawobjs(&mut self) {
         for (bucket, layers) in self.canvas.dos_by_bucket.iter_mut() {
             if let Some(bucket) = bucket {
-                if let Some((shade_and_outline, shade_config)) = SHADINGS.get(bucket) {
+                if let Some((shade_and_outline, ref shade_config)) =
+                    map_bucket_to_shadeconfig(bucket)
+                {
                     let mut v = vec![];
                     // keep the frame, add the crosshatchings.
                     let crosshatchings: Vec<DrawObj> = layers
@@ -453,8 +456,9 @@ impl Map {
         for (bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             // at this point there are no polygons, only segments.
             let color = bucket
-                .map(|bucket| &DEFAULT_COLORING[&bucket])
-                .unwrap_or(&BLACK);
+                .map(|bucket| map_bucket_to_color(&bucket))
+                .unwrap_or(Some(&BLACK))
+                .unwrap();
             let mut hs = HashSet::<Segment>::new();
             for d_o in dos.iter() {
                 if let DrawObjInner::Segment(sg) = d_o.obj {
