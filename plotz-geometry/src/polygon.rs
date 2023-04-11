@@ -2,11 +2,9 @@
 
 use std::ops::DivAssign;
 
-use crate::bounded::Bounds;
-
 use {
     crate::{
-        bounded::Bounded,
+        bounded::{Bounds, Bounded},
         crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
         interpolate,
         point::Pt,
