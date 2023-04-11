@@ -45,8 +45,8 @@ fn main() {
             GridLayoutSettings::builder()
                 .init((25, 25))
                 .dims((750, 950))
-                .divisions((10, 12))
-                .object_margin((1, 1))
+                .divisions((4, 5))
+                .object_margin((5, 5))
                 .build(),
         );
 
@@ -55,7 +55,7 @@ fn main() {
             for j in 0..grid_layout.num_cubbys_y() {
                 let cubby = (i, j);
                 let bounds = grid_layout.get_cubby_bounds(cubby);
-                for color in COLORS.choose_multiple(&mut rng, 5) {
+                for color in COLORS[0..3].choose_multiple(&mut rng, 3) {
                     let curve_arc_ctr: Pt = || -> Pt {
                         loop {
                             let cand = Pt(rng.gen_range(0.0..800.0), rng.gen_range(0.0..1000.0));
@@ -64,7 +64,7 @@ fn main() {
                             }
                         }
                     }();
-                    let rstep = rng.gen_range(5..10);
+                    let rstep = rng.gen_range(10..20);
                     for r in (0..2000).step_by(rstep) {
                         let ca = CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64);
                         let d_o = DrawObj::new(ca).with_thickness(1.0).with_color(color);
@@ -77,7 +77,7 @@ fn main() {
         dos.extend(grid_layout.to_draw_obj());
     }
 
-    let draw_objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
+    let draw_objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true).with_frame(frame);
 
     let () = draw_objs
         .write_to_svg(

@@ -151,7 +151,7 @@ fn map_bucket_to_color(bucket: &Bucket) -> Option<&'static ColorRGB> {
 }
 
 fn map_bucket_to_shadeconfig(bucket: &Bucket) -> Option<(ShadeAndOutline, ShadeConfig)> {
-    let gap = 4.0;
+    let gap = 2.0;
     match bucket {
         Bucket::Area(Area::Land) => Some((
             ShadeAndOutline::JustShade,
