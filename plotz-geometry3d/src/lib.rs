@@ -2,6 +2,11 @@
 
 #![deny(missing_docs)]
 
+pub mod camera;
+pub mod object;
+pub mod object_inner;
 pub mod point3d;
-pub mod segment3d;
 pub mod polygon3d;
+pub mod scene;
+pub mod segment3d;
+pub mod style;

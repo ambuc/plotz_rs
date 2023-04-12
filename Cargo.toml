@@ -15,6 +15,7 @@ members = [
     "mk-voronoi",
     "mk-wang",
     "mk-wrapping",
+    "mk-3dtest",
     "orchestrator",
     "plotz-color",
     "plotz-core",

@@ -138,5 +138,8 @@ impl SubAssign<Pt3d> for Pt3d {
 }
 
 impl Pt3d {
-    //
+    /// https://en.wikipedia.org/wiki/Dot_product
+    pub fn dot(&self, other: &Pt3d) -> f64 {
+        (self.x.0 * other.x.0) + (self.y.0 * other.y.0) + (self.z.0 * other.z.0)
+    }
 }
