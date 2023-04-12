@@ -159,7 +159,7 @@ fn main() {
         }
     }
 
-    let mut canvas = Canvas::from_objs(draw_obj_vec, /*autobucket=*/ false)
+    let mut canvas = Canvas::from_objs(draw_obj_vec.into_iter(), /*autobucket=*/ false)
         .with_frame(make_frame((image_width, image_width), Pt(margin, margin)));
 
     canvas.scale_to_fit_frame().unwrap();

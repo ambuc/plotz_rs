@@ -124,7 +124,7 @@ fn main() {
     // TODO(ambuc): split by group color before printing
     // TODO(ambuc): split by group color before printing
 
-    let canvas = Canvas::from_objs(dos, /*autobucket=*/ true)
+    let canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true)
         .with_frame(make_frame((DIM, DIM), Pt(20.0, 20.0)));
 
     let () = canvas
