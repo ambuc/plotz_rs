@@ -1,7 +1,6 @@
 //! A camera.
 
-use crate::point3d::Pt3d;
-use plotz_geometry::point::Pt;
+use {crate::point3d::Pt3d, plotz_geometry::point::Pt};
 
 ////////////
 

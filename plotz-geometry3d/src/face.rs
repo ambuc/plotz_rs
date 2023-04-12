@@ -1,9 +1,11 @@
 //! A filled polygon without edges.
 
-use crate::point3d::Pt3d;
-use derive_more::From;
-
-use {crate::polygon3d::Polygon3d, std::ops::*};
+use {
+    crate::{camera::Oblique, point3d::Pt3d, polygon3d::Polygon3d},
+    derive_more::From,
+    plotz_geometry::polygon::Polygon,
+    std::ops::*,
+};
 
 /// A Face is a polygon which is opaque, i.e. the face of the polygon rather
 /// than its edges.
@@ -11,6 +13,13 @@ use {crate::polygon3d::Polygon3d, std::ops::*};
 pub struct Face {
     /// The polygon.
     pub pg3d: Polygon3d,
+}
+
+impl Face {
+    /// Project oblique
+    pub fn project_oblique(&self, oblique_projection: &Oblique) -> Polygon {
+        self.pg3d.project_oblique(oblique_projection)
+    }
 }
 
 impl Add<Pt3d> for &Face {

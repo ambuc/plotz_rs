@@ -1,12 +1,29 @@
 //! A polygon in 3d.
 
-use {crate::point3d::Pt3d, std::ops::*};
+use {
+    crate::{camera::Oblique, point3d::Pt3d},
+    plotz_geometry::polygon::Polygon,
+    std::ops::*,
+};
 
 /// A multiline is a list of points rendered with connecting line segments.
 #[derive(Debug, Clone)]
 pub struct Polygon3d {
     /// The points which describe a polygon or multiline.
     pub pts: Vec<Pt3d>,
+}
+
+impl Polygon3d {
+    /// Project oblique
+    pub fn project_oblique(&self, oblique_projection: &Oblique) -> Polygon {
+        Polygon(
+            self.pts
+                .iter()
+                .map(|pt3d| oblique_projection.project(&pt3d))
+                .collect::<Vec<_>>(),
+        )
+        .expect("polygon construction failed")
+    }
 }
 
 /// Constructor for multilines, which are by definition open. The first and last

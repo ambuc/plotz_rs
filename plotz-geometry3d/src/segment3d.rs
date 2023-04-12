@@ -1,6 +1,9 @@
 //! A segment in 3d.
-use crate::point3d::Pt3d;
-use std::{fmt::Debug, ops::*};
+use {
+    crate::{camera::Oblique, point3d::Pt3d},
+    plotz_geometry::segment::Segment,
+    std::{fmt::Debug, ops::*},
+};
 
 /// A segment in 3d space, with initial and final points.
 #[derive(Debug, Clone, Copy, Eq, Hash)]
@@ -32,6 +35,14 @@ impl Segment3d {
             + (self.f.y.0 - self.i.y.0).powf(two)
             + (self.f.z.0 - self.i.z.0).powf(two))
         .sqrt()
+    }
+
+    /// Project oblique
+    pub fn project_oblique(&self, oblique_projection: &Oblique) -> Segment {
+        Segment(
+            oblique_projection.project(&self.i),
+            oblique_projection.project(&self.f),
+        )
     }
 }
 

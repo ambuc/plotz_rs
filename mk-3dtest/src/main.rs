@@ -1,5 +1,3 @@
-use plotz_geometry3d::cube3d::Cube;
-
 use {
     argh::FromArgs,
     plotz_color::*,
@@ -7,6 +5,7 @@ use {
     plotz_geometry::{draw_obj::DrawObj, point::Pt},
     plotz_geometry3d::{
         camera::{Oblique, Projection},
+        cube3d::Cube,
         object::Object,
         point3d::Pt3d,
         polygon3d::Polygon3d,
@@ -83,7 +82,11 @@ fn main() {
 
         let projection = Projection::Oblique(Oblique::standard());
 
-        scene.project_with(projection)
+        let dos = scene.project_with(projection);
+
+        // deduplicate here ?
+
+        dos
     };
 
     let mut canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);

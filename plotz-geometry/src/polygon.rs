@@ -4,7 +4,7 @@ use std::ops::DivAssign;
 
 use {
     crate::{
-        bounded::{Bounds, Bounded},
+        bounded::{Bounded, Bounds},
         crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
         interpolate,
         point::Pt,
