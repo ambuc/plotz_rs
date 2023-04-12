@@ -1,13 +1,10 @@
 //! A scene, i.e. a holder for 3d objects ready to be projected down onto a 2d
 //! plane.
 
+use crate::{polygon3d::Polygon3d, face::Face};
+
 use {
-    crate::{
-        camera::{Camera, Projection},
-        object::Object,
-        object_inner::ObjectInner,
-        style::Style,
-    },
+    crate::{camera::Projection, object::Object, object_inner::ObjectInner, style::Style},
     plotz_geometry::{draw_obj::DrawObj, polygon::Polygon, segment::Segment},
 };
 
@@ -43,13 +40,13 @@ impl Scene {
     }
 
     /// Projects the scene onto a camera, renders to 2d, and returns a vector of drawobjects.
-    pub fn project_onto(&self, camera: &Camera, projection: Projection) -> Vec<DrawObj> {
+    pub fn project_with(&self, projection: Projection) -> Vec<DrawObj> {
         match projection {
             Projection::Oblique(oblique_projection) => {
                 let mut v: Vec<DrawObj> = vec![];
                 //
                 for Object { inner, style } in self.objects.iter() {
-                    let mut d_o = match inner {
+                    let mut dos = match inner {
                         ObjectInner::Polygon3d(pg3d) => {
                             let d_o = DrawObj::new(
                                 Polygon(
@@ -60,7 +57,7 @@ impl Scene {
                                 )
                                 .expect("polygon construction failed"),
                             );
-                            d_o
+                            vec![d_o]
                             //
                         }
                         ObjectInner::Segment3d(sg3d) => {
@@ -68,14 +65,34 @@ impl Scene {
                                 oblique_projection.project(&sg3d.i),
                                 oblique_projection.project(&sg3d.f),
                             ));
-                            d_o
+                            vec![d_o]
                             //
+                        }
+                        ObjectInner::GroupOfFaces(group_of_faces) => {
+                            let mut dos = vec![];
+                            for Face {
+                                pg3d: Polygon3d { pts },
+                            } in group_of_faces.items.iter()
+                            {
+                                dos.push(DrawObj::new(
+                                    Polygon(
+                                        pts.iter()
+                                            .map(|pt3d| oblique_projection.project(&pt3d))
+                                            .collect::<Vec<_>>(),
+                                    )
+                                    .expect("polyugon construction failed"),
+                                ));
+                            }
+                            dos
                         }
                     };
                     if let Some(Style { color, thickness }) = style {
-                        d_o = d_o.with_color(color).with_thickness(*thickness);
+                        dos = dos
+                            .into_iter()
+                            .map(|d_o| d_o.with_color(color).with_thickness(*thickness))
+                            .collect();
                     }
-                    v.push(d_o);
+                    v.extend(dos);
                 }
                 //
                 v

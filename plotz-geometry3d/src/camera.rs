@@ -1,27 +1,9 @@
 //! A camera.
 
-#![allow(unused)]
-
+use crate::point3d::Pt3d;
 use plotz_geometry::point::Pt;
-use {crate::point3d::Pt3d, typed_builder::TypedBuilder};
 
-#[derive(Debug, Clone, TypedBuilder)]
-/// A camera.
-pub struct Camera {
-    /// At a location.
-    at: Pt3d,
-    /// Facing a direction.
-    towards: Pt3d,
-    /// Which direction is 'up' for the camera: controls the roll. This is
-    /// really a Vec3d relative to [at].
-    up: Pt3d,
-}
-
-impl Camera {
-    // For now, no frustrum culling: if the thing is in the scene, project it
-    // and render it.
-    //
-}
+////////////
 
 /// Any oblique projection.
 /// https://en.wikipedia.org/wiki/3D_projection#Oblique_projection
@@ -43,8 +25,8 @@ impl Oblique {
             u_src: Pt3d(1.0, 0.0, 0.0),
             v_src: Pt3d(0.0, 1.0, 0.0),
             w_src: Pt3d(0.0, 0.0, 1.0),
-            u_dst: Pt(-1.0, 1.0),
-            v_dst: Pt(1.0, 1.0),
+            u_dst: Pt(-1.0, 0.6),
+            v_dst: Pt(1.0, 0.6),
             w_dst: Pt(0.0, -1.0),
         }
     }

@@ -1,5 +1,7 @@
 //! An inner object.
 
+use crate::{group::Group, face::Face};
+
 use {
     crate::{polygon3d::Polygon3d, segment3d::Segment3d},
     derive_more::From,
@@ -12,5 +14,7 @@ pub enum ObjectInner {
     Polygon3d(Polygon3d),
     /// A 3d line segment.
     Segment3d(Segment3d),
+    /// A group of like objects.
+    GroupOfFaces(Group<Face>),
     // others?
 }

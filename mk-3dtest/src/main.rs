@@ -1,13 +1,14 @@
+use plotz_geometry3d::cube3d::Cube;
+
 use {
     argh::FromArgs,
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{draw_obj::DrawObj, point::Pt},
     plotz_geometry3d::{
-        camera::{Camera, Oblique, Projection},
+        camera::{Oblique, Projection},
         object::Object,
         point3d::Pt3d,
-        polygon3d::Fill,
         polygon3d::Polygon3d,
         scene::Scene,
         segment3d::Segment3d,
@@ -35,44 +36,54 @@ fn main() {
     let dos: Vec<DrawObj> = {
         let origin_3d = Pt3d(0.0, 0.0, 0.0);
 
-        let mut objects = vec![];
+        let mut objects: Vec<Object> = vec![];
 
-        let axes: Vec<Object> = vec![
-            (Pt3d(1.0, 0.0, 0.0), &RED),
-            (Pt3d(0.0, 1.0, 0.0), &BLUE),
-            (Pt3d(0.0, 0.0, 1.0), &GREEN),
-        ]
-        .iter()
-        .map(|(diff, color)| {
-            Object::new(Segment3d(origin_3d, origin_3d + *diff))
-                .with_style(Style::builder().color(color).thickness(2.0).build())
-        })
-        .collect();
+        {
+            let axes: Vec<Object> = vec![
+                (Pt3d(1.0, 0.0, 0.0), &RED),
+                (Pt3d(0.0, 1.0, 0.0), &BLUE),
+                (Pt3d(0.0, 0.0, 1.0), &GREEN),
+            ]
+            .iter()
+            .map(|(diff, color)| {
+                Object::new(Segment3d(origin_3d, origin_3d + *diff))
+                    .with_style(Style::builder().color(color).thickness(2.0).build())
+            })
+            .collect();
 
-        objects.extend(axes);
+            objects.extend(axes);
+        }
 
-        objects.push(
-            Object::new(Polygon3d(
-                [
+        {
+            for i in 0..3 {
+                for j in 0..3 {
+                    let cube = Cube(Pt3d(i as f64, j as f64, 0.0), (0.75, 0.75, 0.75));
+                    objects.push(
+                        Object::new(cube)
+                            .with_style(Style::builder().color(&PINK).thickness(1.0).build()),
+                    );
+                }
+            }
+        }
+
+        {
+            // Triangle.
+            objects.push(
+                Object::new(Polygon3d([
                     origin_3d + Pt3d(0.5, 0.0, 0.0),
                     origin_3d + Pt3d(0.0, 0.5, 0.0),
                     origin_3d + Pt3d(0.0, 0.0, 0.5),
                     origin_3d + Pt3d(0.5, 0.0, 0.0),
-                ],
-                Fill::Opaque,
-            ))
-            .with_style(Style::builder().color(&POWDERBLUE).thickness(2.0).build()),
-        );
+                ]))
+                .with_style(Style::builder().color(&POWDERBLUE).thickness(2.0).build()),
+            );
+        }
 
         let scene = Scene::from(objects);
 
-        let camera = Camera::builder()
-            .at(origin_3d + Pt3d(1.0, 1.0, 1.0))
-            .towards(origin_3d)
-            .up(Pt3d(0.0, 0.0, 1.0))
-            .build();
+        let projection = Projection::Oblique(Oblique::standard());
 
-        scene.project_onto(&camera, Projection::Oblique(Oblique::standard()))
+        scene.project_with(projection)
     };
 
     let mut canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);

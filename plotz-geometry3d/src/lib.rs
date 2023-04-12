@@ -3,6 +3,9 @@
 #![deny(missing_docs)]
 
 pub mod camera;
+pub mod cube3d;
+pub mod face;
+pub mod group;
 pub mod object;
 pub mod object_inner;
 pub mod point3d;

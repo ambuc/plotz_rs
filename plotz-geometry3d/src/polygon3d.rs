@@ -1,71 +1,29 @@
 //! A polygon in 3d.
 
-use {
-    crate::{point3d::Pt3d, segment3d::Segment3d},
-    itertools::zip,
-    std::ops::*,
-};
-
-/// Whether this polygon is open or closed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Kind {
-    /// A polygon is open, i.e. a multiline. No fill is possible.
-    Open,
-    /// A polygon is closed.
-    Closed(Fill),
-}
-
-/// Whether this polygon should be opaque or transparent.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Fill {
-    /// A polygon is opaque.
-    Opaque,
-    /// A polygon is transparent.
-    Transparent,
-}
+use {crate::point3d::Pt3d, std::ops::*};
 
 /// A multiline is a list of points rendered with connecting line segments.
-/// If constructed with Kind::Open, this is a multiline (unshaded).
-/// If constructed with Kind::Closed, this is a closed, shaded polygon.
 #[derive(Debug, Clone)]
 pub struct Polygon3d {
     /// The points which describe a polygon or multiline.
     pub pts: Vec<Pt3d>,
-    /// Whether this polygon is open or closed.
-    pub kind: Kind,
 }
 
-/// Constructor for multilines, which are by definition open.
+/// Constructor for multilines, which are by definition open. The first and last
+/// points must not be the same.
 #[allow(non_snake_case)]
 pub fn Multiline3d(a: impl IntoIterator<Item = Pt3d>) -> Polygon3d {
-    Polygon3d {
-        pts: a.into_iter().collect(),
-        kind: Kind::Open,
-    }
+    let pts: Vec<Pt3d> = a.into_iter().collect();
+    assert_ne!(pts[0], pts[pts.len() - 1]);
+    Polygon3d { pts }
 }
 
-/// Constructor for polygons which are closed but may/may not be opaque or
-/// transparent.
+/// Constructor for polygons which are closed. The first and last points must be the same.
 #[allow(non_snake_case)]
-pub fn Polygon3d(a: impl IntoIterator<Item = Pt3d>, fill: Fill) -> Polygon3d {
-    Polygon3d {
-        pts: a.into_iter().collect(),
-        kind: Kind::Closed(fill),
-    }
-}
-
-impl Polygon3d {
-    /// Turns a polygon3d into a vector of segment3ds.
-    pub fn to_segments(&self) -> Vec<Segment3d> {
-        match self.kind {
-            Kind::Open => zip(self.pts.iter(), self.pts.iter().skip(1))
-                .map(|(i, f)| Segment3d(*i, *f))
-                .collect(),
-            Kind::Closed(_) => zip(self.pts.iter(), self.pts.iter().cycle().skip(1))
-                .map(|(i, f)| Segment3d(*i, *f))
-                .collect(),
-        }
-    }
+pub fn Polygon3d(a: impl IntoIterator<Item = Pt3d>) -> Polygon3d {
+    let pts: Vec<Pt3d> = a.into_iter().collect();
+    assert_eq!(pts[0], pts[pts.len() - 1]);
+    Polygon3d { pts }
 }
 
 impl Add<Pt3d> for &Polygon3d {

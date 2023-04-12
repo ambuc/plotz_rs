@@ -1,6 +1,6 @@
 //! A 3d object.
 
-use crate::{style::Style, object_inner::ObjectInner};
+use crate::{object_inner::ObjectInner, style::Style};
 
 /// A 3d object and some styling information for its 2d representation.
 #[derive(Debug, Clone)]
@@ -20,7 +20,7 @@ impl Object {
         }
     }
     /// Constructor with style.
-    pub fn with_style(mut self, a: Style) -> Object {
+    pub fn with_style(self, a: Style) -> Object {
         Object {
             style: Some(a),
             ..self
