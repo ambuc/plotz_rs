@@ -1,3 +1,6 @@
+use itertools::iproduct;
+use plotz_geometry3d::camera::Occlusion;
+
 use {
     argh::FromArgs,
     plotz_color::*,
@@ -37,56 +40,43 @@ fn main() {
 
         let mut objects: Vec<Object> = vec![];
 
-        {
-            let axes: Vec<Object> = vec![
-                (Pt3d(1.0, 0.0, 0.0), &RED),
-                (Pt3d(0.0, 1.0, 0.0), &BLUE),
-                (Pt3d(0.0, 0.0, 1.0), &GREEN),
-            ]
-            .iter()
-            .map(|(diff, color)| {
-                Object::new(Segment3d(origin_3d, origin_3d + *diff))
-                    .with_style(Style::builder().color(color).thickness(2.0).build())
-            })
-            .collect();
+        let axes: Vec<Object> = vec![
+            (Pt3d(1.0, 0.0, 0.0), &RED),
+            (Pt3d(0.0, 1.0, 0.0), &BLUE),
+            (Pt3d(0.0, 0.0, 1.0), &GREEN),
+        ]
+        .iter()
+        .map(|(diff, color)| {
+            Object::new(Segment3d(origin_3d, origin_3d + *diff))
+                .with_style(Style::builder().color(color).thickness(2.0).build())
+        })
+        .collect();
 
-            objects.extend(axes);
-        }
+        objects.extend(axes);
 
-        {
-            for i in 0..3 {
-                for j in 0..3 {
-                    let cube = Cube(Pt3d(i as f64, j as f64, 0.0), (0.75, 0.75, 0.75));
-                    objects.push(
-                        Object::new(cube)
-                            .with_style(Style::builder().color(&PINK).thickness(1.0).build()),
-                    );
-                }
-            }
-        }
-
-        {
-            // Triangle.
-            objects.push(
-                Object::new(Polygon3d([
-                    origin_3d + Pt3d(0.5, 0.0, 0.0),
-                    origin_3d + Pt3d(0.0, 0.5, 0.0),
-                    origin_3d + Pt3d(0.0, 0.0, 0.5),
-                    origin_3d + Pt3d(0.5, 0.0, 0.0),
-                ]))
-                .with_style(Style::builder().color(&POWDERBLUE).thickness(2.0).build()),
+        for (i, j) in iproduct!(0..2, 0..2) {
+            objects.extend(
+                Cube(Pt3d(i as f64, j as f64, 0.0), (0.75, 0.75, 0.75))
+                    .items
+                    .into_iter()
+                    .map(|face| {
+                        Object::new(face)
+                            .with_style(Style::builder().color(&PINK).thickness(1.0).build())
+                    }),
             );
         }
+        // Triangle.
+        objects.push(
+            Object::new(Polygon3d([
+                origin_3d + Pt3d(0.5, 0.0, 0.0),
+                origin_3d + Pt3d(0.0, 0.5, 0.0),
+                origin_3d + Pt3d(0.0, 0.0, 0.5),
+                origin_3d + Pt3d(0.5, 0.0, 0.0),
+            ]))
+            .with_style(Style::builder().color(&POWDERBLUE).thickness(2.0).build()),
+        );
 
-        let scene = Scene::from(objects);
-
-        let projection = Projection::Oblique(Oblique::standard());
-
-        let dos = scene.project_with(projection);
-
-        // deduplicate here ?
-
-        dos
+        Scene::from(objects).project_with(Projection::Oblique(Oblique::standard()), Occlusion::True)
     };
 
     let mut canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);

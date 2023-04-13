@@ -2,7 +2,16 @@
 //! plane.
 
 use {
-    crate::{camera::Projection, object::Object, object_inner::ObjectInner, style::Style},
+    crate::{
+        camera::{Occlusion, Projection},
+        object::Object,
+        object_inner::ObjectInner,
+        occluder::Occluder,
+        point3d::Pt3d,
+        style::Style,
+    },
+    float_ord::FloatOrd,
+    itertools::Itertools,
     plotz_geometry::draw_obj::DrawObj,
 };
 
@@ -38,13 +47,32 @@ impl Scene {
     }
 
     /// Projects the scene onto a camera, renders to 2d, and returns a vector of drawobjects.
-    pub fn project_with(&self, projection: Projection) -> Vec<DrawObj> {
-        match projection {
-            Projection::Oblique(oblique_projection) => self
+    pub fn project_with(&self, projection: Projection, occlusion: Occlusion) -> Vec<DrawObj> {
+        match (projection, occlusion) {
+            //
+            (Projection::Oblique(obl), Occlusion::False) => self
                 .objects
                 .iter()
-                .flat_map(|obj| obj.project_oblique(&oblique_projection))
+                .map(|obj| obj.project_oblique(&obl))
                 .collect::<Vec<_>>(),
+            //
+            (Projection::Oblique(obl), Occlusion::True) => {
+                let view_vector = Pt3d(-1.0, -1.0, -1.0);
+
+                let mut occ = Occluder::new();
+
+                for obj3 in self.objects.iter().sorted_by(|o1, o2| {
+                    Ord::cmp(
+                        &FloatOrd(o1.dist_along(&view_vector)),
+                        &FloatOrd(o2.dist_along(&view_vector)),
+                    )
+                }) {
+                    let obj2 = obj3.project_oblique(&obl);
+                    occ.add(obj2.obj, obj3.inner.clone(), obj3.style.clone());
+                }
+
+                occ.export()
+            }
         }
     }
 }

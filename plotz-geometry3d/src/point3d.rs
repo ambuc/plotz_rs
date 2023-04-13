@@ -142,4 +142,11 @@ impl Pt3d {
     pub fn dot(&self, other: &Pt3d) -> f64 {
         (self.x.0 * other.x.0) + (self.y.0 * other.y.0) + (self.z.0 * other.z.0)
     }
+    /// average of two points.
+    pub fn avg(&self, other: &Pt3d) -> Pt3d {
+        let avg_x = (self.x.0 + other.x.0) / 2.0;
+        let avg_y = (self.y.0 + other.y.0) / 2.0;
+        let avg_z = (self.z.0 + other.z.0) / 2.0;
+        Pt3d(avg_x, avg_y, avg_z)
+    }
 }

@@ -24,6 +24,20 @@ impl Polygon3d {
         )
         .expect("polygon construction failed")
     }
+
+    /// The average point of the polygon.
+    pub fn average_pt(&self) -> Pt3d {
+        let num: f64 = self.pts.len() as f64;
+        let sum_x: f64 = self.pts.iter().map(|pt| pt.x.0).sum();
+        let sum_y: f64 = self.pts.iter().map(|pt| pt.y.0).sum();
+        let sum_z: f64 = self.pts.iter().map(|pt| pt.z.0).sum();
+        Pt3d(sum_x / num, sum_y / num, sum_z / num)
+    }
+
+    /// The center of the object, projected along the view vector.
+    pub fn dist_along(&self, view_vector: &Pt3d) -> f64 {
+        view_vector.dot(&self.average_pt())
+    }
 }
 
 /// Constructor for multilines, which are by definition open. The first and last

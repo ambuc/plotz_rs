@@ -44,6 +44,16 @@ impl Segment3d {
             oblique_projection.project(&self.f),
         )
     }
+
+    /// The average point of the polygon.
+    pub fn average_pt(&self) -> Pt3d {
+        self.i.avg(&self.f)
+    }
+
+    /// The center of the object, projected along the view vector.
+    pub fn dist_along(&self, view_vector: &Pt3d) -> f64 {
+        self.average_pt().dot(view_vector)
+    }
 }
 
 impl Add<Pt3d> for Segment3d {

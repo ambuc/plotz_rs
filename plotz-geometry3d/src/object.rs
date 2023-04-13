@@ -1,5 +1,7 @@
 //! A 3d object.
 
+use crate::point3d::Pt3d;
+
 use {
     crate::{camera::Oblique, object_inner::ObjectInner, style::Style},
     plotz_geometry::draw_obj::DrawObj,
@@ -31,20 +33,17 @@ impl Object {
     }
 
     /// Project oblique.
-    pub fn project_oblique(&self, oblique_projection: &Oblique) -> Vec<DrawObj> {
-        let mut dos = self
-            .inner
-            .project_oblique(oblique_projection)
-            .into_iter()
-            .map(|doi| DrawObj::new(doi))
-            .collect::<Vec<_>>();
+    pub fn project_oblique(&self, oblique_projection: &Oblique) -> DrawObj {
+        let mut d_o = DrawObj::new(self.inner.project_oblique(oblique_projection));
 
         if let Some(Style { color, thickness }) = self.style {
-            dos = dos
-                .into_iter()
-                .map(|d_o| d_o.clone().with_color(color).with_thickness(thickness))
-                .collect();
+            d_o = d_o.with_color(color).with_thickness(thickness);
         }
-        dos
+        d_o
+    }
+
+    /// The center of the object, projected along the view vector.
+    pub fn dist_along(&self, view_vector: &Pt3d) -> f64 {
+        self.inner.dist_along(view_vector)
     }
 }

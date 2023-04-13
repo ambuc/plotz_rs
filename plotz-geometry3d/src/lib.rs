@@ -9,6 +9,7 @@ pub mod group;
 pub mod object;
 pub mod object_inner;
 pub mod point3d;
+pub mod occluder;
 pub mod polygon3d;
 pub mod scene;
 pub mod segment3d;

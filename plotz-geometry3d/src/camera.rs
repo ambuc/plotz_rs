@@ -44,3 +44,11 @@ pub enum Projection {
     Oblique(Oblique),
     // More to come
 }
+
+/// Whether or not to occlude.
+pub enum Occlusion {
+    /// false
+    False,
+    /// true
+    True,
+}
