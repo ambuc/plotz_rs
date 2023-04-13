@@ -1,11 +1,13 @@
 //! A 2D polygon (or multi&line).
 
+use crate::isxn::Which;
+
 use self::crop_logic::Position;
 
 mod crop_logic;
 
 use {
-    self::crop_logic::{AnnotatedIsxn, Cursor, OnPolygon, WhichPolygon},
+    self::crop_logic::{AnnotatedIsxn, Cursor, OnPolygon},
     crate::{
         bounded::{Bounded, Bounds},
         crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
@@ -346,17 +348,14 @@ impl Croppable for Polygon {
 
         let mut curr = Cursor {
             position: Position::OnPolygon(OnPolygon {
-                on_polygon: WhichPolygon::A,
+                on_polygon: Which::A,
                 at_point_index: 0,
             }),
-            facing_along: WhichPolygon::A,
+            facing_along: Which::A,
             facing_along_segment_idx: 0_usize,
             //
             a_pts: &a_pts,
-            a_pts_len: &a_pts.len(),
             b_pts: &b_pts,
-            b_pts_len: &b_pts.len(),
-            a_segments: &a_segments,
         };
 
         'outer: loop {
@@ -383,8 +382,8 @@ impl Croppable for Polygon {
                 })
                 .filter(|(a_idx, b_idx, _isxn)| {
                     **(match curr.facing_along {
-                        WhichPolygon::A => a_idx,
-                        WhichPolygon::B => b_idx,
+                        Which::A => a_idx,
+                        Which::B => b_idx,
                     }) == curr.facing_along_segment_idx
                 })
                 .map(|(a_idx, b_idx, intersection)| AnnotatedIsxn {
@@ -396,44 +395,24 @@ impl Croppable for Polygon {
                 .collect();
 
             relevant_isxns.sort_by(|a: &AnnotatedIsxn, b: &AnnotatedIsxn| {
-                match &curr.facing_along {
-                    WhichPolygon::A => a
-                        .intersection
-                        .percent_along_a()
-                        .partial_cmp(&b.intersection.percent_along_a())
-                        .unwrap(),
-                    WhichPolygon::B => a
-                        .intersection
-                        .percent_along_b()
-                        .partial_cmp(&b.intersection.percent_along_b())
-                        .unwrap(),
-                }
+                a.intersection
+                    .percent_along(curr.facing_along)
+                    .partial_cmp(&b.intersection.percent_along(curr.facing_along))
+                    .unwrap()
             });
 
             match curr.position {
                 Position::OnPolygon(_) => {
-                    let (_drained, v) =
-                        relevant_isxns
-                            .into_iter()
-                            .partition(|isxn| match curr.facing_along {
-                                WhichPolygon::A => isxn.intersection.percent_along_a().0 == 0.0,
-                                WhichPolygon::B => isxn.intersection.percent_along_b().0 == 0.0,
-                            });
+                    let (_drained, v) = relevant_isxns.into_iter().partition(|isxn| {
+                        isxn.intersection.percent_along(curr.facing_along).0 == 0.0
+                    });
                     relevant_isxns = v;
                 }
                 Position::OnIsxn(this_isxn) => {
-                    let (_drained, v) = relevant_isxns.into_iter().partition(
-                        |AnnotatedIsxn { intersection, .. }| match curr.facing_along {
-                            WhichPolygon::A => {
-                                intersection.percent_along_a()
-                                    <= this_isxn.intersection.percent_along_a()
-                            }
-                            WhichPolygon::B => {
-                                intersection.percent_along_b()
-                                    <= this_isxn.intersection.percent_along_b()
-                            }
-                        },
-                    );
+                    let (_drained, v) = relevant_isxns.into_iter().partition(|other_isxn| {
+                        other_isxn.intersection.percent_along(curr.facing_along)
+                            <= this_isxn.intersection.percent_along(curr.facing_along)
+                    });
                     relevant_isxns = v;
                 }
             }

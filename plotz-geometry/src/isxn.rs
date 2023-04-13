@@ -35,6 +35,24 @@ impl Pct {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+/// Which one?
+pub enum Which {
+    /// A?
+    A,
+    /// or B?
+    B,
+}
+impl Which {
+    /// Flip it.
+    pub fn flip(&self) -> Which {
+        match self {
+            Which::A => Which::B,
+            Which::B => Which::A,
+        }
+    }
+}
+
 /// A struct representing an intersection between two line segments.
 /// Two values:
 ///    the first is the % of the way along line A at which the intersection
@@ -72,6 +90,14 @@ impl Intersection {
     /// The percent of the way along line B at which the intersection occurs.
     pub fn percent_along_b(&self) -> FloatOrd<f64> {
         FloatOrd(self.b_pct.to_f64())
+    }
+
+    /// The percent of the way along line |N| at which the intersection occurs.
+    pub fn percent_along(&self, which: Which) -> FloatOrd<f64> {
+        match which {
+            Which::A => self.percent_along_a(),
+            Which::B => self.percent_along_b(),
+        }
     }
 
     /// Returns true if the intersection occurs at the head or tail of either
