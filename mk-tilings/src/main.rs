@@ -32,7 +32,7 @@ fn main() {
     };
 
     let frame: Object2d = make_frame((720.0, 720.0 * 1.3), /*offset=*/ Pt(20.0, 20.0));
-    let frame_polygon = match frame.obj {
+    let frame_polygon = match frame.inner {
         Object2dInner::Polygon(ref pg) => pg.clone(),
         _ => unimplemented!(),
     };

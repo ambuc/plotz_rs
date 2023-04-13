@@ -30,12 +30,12 @@ fn main() {
         /*offset=*/ Pt(mgn, mgn),
     );
     {
-        let frame_polygon = match frame.obj {
+        let frame_polygon = match frame.inner {
             Object2dInner::Polygon(ref pg) => pg.clone(),
             _ => unimplemented!(),
         };
 
-        let frame_ctr = frame.obj.bbox_center();
+        let frame_ctr = frame.inner.bbox_center();
 
         for i in 1..200 {
             let i: f64 = i as f64;

@@ -17,7 +17,7 @@ use {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Object2d {
     /// The object.
-    pub obj: Object2dInner,
+    pub inner: Object2dInner,
 
     /// The color.
     pub color: &'static ColorRGB,
@@ -30,7 +30,7 @@ impl Object2d {
     /// from an object.
     pub fn new(obj: impl Into<Object2dInner>) -> Object2d {
         Object2d {
-            obj: obj.into(),
+            inner: obj.into(),
             color: &BLACK,
             thickness: 0.1,
         }
@@ -49,13 +49,13 @@ impl Object2d {
 
 impl YieldPoints for Object2d {
     fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
-        self.obj.inner_impl_yield_points().yield_pts()
+        self.inner.inner_impl_yield_points().yield_pts()
     }
 }
 
 impl YieldPointsMut for Object2d {
     fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
-        self.obj.inner_impl_yield_points_mut().yield_pts_mut()
+        self.inner.inner_impl_yield_points_mut().yield_pts_mut()
     }
 }
 
@@ -63,37 +63,37 @@ impl Mutable for Object2d {}
 
 impl Bounded for Object2d {
     fn bounds(&self) -> crate::bounded::Bounds {
-        self.obj.bounds()
+        self.inner.bounds()
     }
 }
 
 impl RemAssign<Pt> for Object2d {
     fn rem_assign(&mut self, rhs: Pt) {
-        self.obj %= rhs;
+        self.inner %= rhs;
     }
 }
 
 impl MulAssign<f64> for Object2d {
     fn mul_assign(&mut self, rhs: f64) {
-        self.obj *= rhs;
+        self.inner *= rhs;
     }
 }
 
 impl DivAssign<f64> for Object2d {
     fn div_assign(&mut self, rhs: f64) {
-        self.obj /= rhs;
+        self.inner /= rhs;
     }
 }
 
 impl AddAssign<Pt> for Object2d {
     fn add_assign(&mut self, rhs: Pt) {
-        self.obj += rhs;
+        self.inner += rhs;
     }
 }
 
 impl SubAssign<Pt> for Object2d {
     fn sub_assign(&mut self, rhs: Pt) {
-        self.obj -= rhs;
+        self.inner -= rhs;
     }
 }
 
@@ -101,7 +101,7 @@ impl Add<Pt> for Object2d {
     type Output = Self;
     fn add(self, rhs: Pt) -> Self::Output {
         Self {
-            obj: self.obj + rhs,
+            inner: self.inner + rhs,
             ..self
         }
     }
@@ -110,7 +110,7 @@ impl Sub<Pt> for Object2d {
     type Output = Self;
     fn sub(self, rhs: Pt) -> Self::Output {
         Self {
-            obj: self.obj - rhs,
+            inner: self.inner - rhs,
             ..self
         }
     }
@@ -119,7 +119,7 @@ impl Div<f64> for Object2d {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
         Self {
-            obj: self.obj / rhs,
+            inner: self.inner / rhs,
             ..self
         }
     }
@@ -128,7 +128,7 @@ impl Mul<f64> for Object2d {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
         Self {
-            obj: self.obj * rhs,
+            inner: self.inner * rhs,
             ..self
         }
     }
@@ -143,11 +143,11 @@ impl Croppable for Object2d {
     type Output = Object2d;
     fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
         Ok(self
-            .obj
+            .inner
             .crop_to(frame)?
             .into_iter()
             .map(|doi| Object2d {
-                obj: doi,
+                inner: doi,
                 ..(*self)
             })
             .collect())

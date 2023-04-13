@@ -83,11 +83,11 @@ fn write_doi_to_context(
 }
 
 fn write_obj_to_context(co: &Object2d, context: &mut cairo::Context) -> Result<(), SvgWriteError> {
-    if co.obj.is_empty() {
+    if co.inner.is_empty() {
         return Ok(());
     }
 
-    write_doi_to_context(&co.obj, context)?;
+    write_doi_to_context(&co.inner, context)?;
 
     context.set_source_rgb(co.color.r, co.color.g, co.color.b);
     context.set_line_width(co.thickness);
@@ -165,7 +165,7 @@ mod test_super {
             path.to_str().unwrap(),
             vec![&Object2d {
                 color: &BLACK,
-                obj: Object2dInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
+                inner: Object2dInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
                 thickness: 1.0,
             }],
         )
@@ -192,12 +192,12 @@ mod test_super {
             vec![
                 &Object2d {
                     color: &BLACK,
-                    obj: Object2dInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
+                    inner: Object2dInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
                     thickness: 1.0,
                 },
                 &Object2d {
                     color: &BLACK,
-                    obj: Object2dInner::Polygon(Polygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)]).unwrap()),
+                    inner: Object2dInner::Polygon(Polygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)]).unwrap()),
                     thickness: 1.0,
                 },
             ],

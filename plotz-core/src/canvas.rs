@@ -84,7 +84,7 @@ impl Canvas {
         self.dos_by_bucket
             .iter()
             .flat_map(|(_bucket, dos)| dos)
-            .map(|d_o| &d_o.obj)
+            .map(|d_o| &d_o.inner)
     }
 
     /// Returns an iterator of mutable Object2dInner.
@@ -92,7 +92,7 @@ impl Canvas {
         self.dos_by_bucket
             .iter_mut()
             .flat_map(|(_bucket, dos)| dos)
-            .map(|d_o| &mut d_o.obj)
+            .map(|d_o| &mut d_o.inner)
     }
 
     /// Mutates every object in the canvas according to some |f|.

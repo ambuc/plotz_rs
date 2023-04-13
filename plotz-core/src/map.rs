@@ -324,14 +324,14 @@ impl Map {
                     // keep the frame, add the crosshatchings.
                     let crosshatchings: Vec<Object2d> = layers
                         .iter()
-                        .filter_map(|co| match &co.obj {
+                        .filter_map(|co| match &co.inner {
                             Object2dInner::Polygon(p) => match shade_polygon(shade_config, &p) {
                                 Err(_) => None,
                                 Ok(segments) => Some(
                                     segments
                                         .into_iter()
                                         .map(|s| Object2d {
-                                            obj: Object2dInner::Segment(s),
+                                            inner: Object2dInner::Segment(s),
                                             color: co.color,
                                             thickness: shade_config.thickness,
                                         })
@@ -376,7 +376,7 @@ impl Map {
     pub fn randomize_circles(&mut self) {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             for d_o in dos.iter_mut() {
-                if let Object2dInner::CurveArc(ca) = &mut d_o.obj {
+                if let Object2dInner::CurveArc(ca) = &mut d_o.inner {
                     ca.ctr += Pt(
                         thread_rng().gen_range(-2.0..=2.0),
                         thread_rng().gen_range(-2.0..=2.0),
@@ -408,7 +408,7 @@ impl Map {
             *dos = dos
                 .into_iter()
                 .flat_map(|d_o| {
-                    match d_o.obj.clone() {
+                    match d_o.inner.clone() {
                         Object2dInner::Polygon(pg) => pg
                             .to_segments()
                             .into_iter()
@@ -417,7 +417,7 @@ impl Map {
                         x => vec![x],
                     }
                     .into_iter()
-                    .map(|doi| Object2d { obj: doi, ..*d_o })
+                    .map(|doi| Object2d { inner: doi, ..*d_o })
                 })
                 .collect();
         }
@@ -430,7 +430,7 @@ impl Map {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             let q = 0.5;
             for d_o in dos.iter_mut() {
-                match &mut d_o.obj {
+                match &mut d_o.inner {
                     Object2dInner::Segment(sg) => {
                         sg.round_to_nearest(q);
                     }
@@ -461,7 +461,7 @@ impl Map {
                 .unwrap();
             let mut hs = HashSet::<Segment>::new();
             for d_o in dos.iter() {
-                if let Object2dInner::Segment(sg) = d_o.obj {
+                if let Object2dInner::Segment(sg) = d_o.inner {
                     hs.insert(sg);
                     // TODO(ambuc): really, deduplicate this way but then store and restore the original.
                 }
@@ -624,7 +624,7 @@ mod tests {
                     canvas.dos_by_bucket.insert(
                         Some(Bucket::Area(Area::Beach)),
                         vec![Object2d {
-                            obj: obj,
+                            inner: obj,
                             color: &ALICEBLUE,
                             thickness: 1.0,
                         }],
@@ -638,7 +638,7 @@ mod tests {
             let mut x = map.canvas.dos_by_bucket.values();
 
             assert_eq!(
-                x.next().unwrap()[0].obj,
+                x.next().unwrap()[0].inner,
                 Object2dInner::Polygon(Polygon(expected).unwrap())
             );
         }
@@ -678,7 +678,7 @@ mod tests {
                     canvas.dos_by_bucket.insert(
                         Some(Bucket::Area(Area::Beach)),
                         vec![Object2d {
-                            obj: obj,
+                            inner: obj,
                             color: &ALICEBLUE,
                             thickness: 1.0,
                         }],
@@ -691,7 +691,7 @@ mod tests {
             let mut x = map.canvas.dos_by_bucket.values();
 
             assert_eq!(
-                x.next().unwrap()[0].obj,
+                x.next().unwrap()[0].inner,
                 Object2dInner::Polygon(Polygon(expected).unwrap())
             );
         }

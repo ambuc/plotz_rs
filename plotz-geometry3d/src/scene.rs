@@ -68,7 +68,7 @@ impl Scene {
                     )
                 }) {
                     let obj2 = obj3.project_oblique(&obl);
-                    occ.add(obj2.obj, obj3.inner.clone(), obj3.style.clone());
+                    occ.add(obj2.inner, obj3.inner.clone(), obj3.style.clone());
                 }
 
                 occ.export()

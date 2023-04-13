@@ -214,7 +214,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<Object2d> {
             })
             .collect::<Vec<_>>()
         });
-        ret.iter_mut().for_each(|d_o| match &mut d_o.obj {
+        ret.iter_mut().for_each(|d_o| match &mut d_o.inner {
             Object2dInner::Polygon(pg) => {
                 *pg *= 2.0;
                 pg.rotate(&Pt(1.0, 1.0), rot);
@@ -257,7 +257,7 @@ fn main() {
     let scale = image_width / 2.0 / (grid_cardinality as f64);
 
     objs.dos_by_bucket.iter_mut().for_each(|(_bucket, layers)| {
-        layers.iter_mut().for_each(|d_o| match &mut d_o.obj {
+        layers.iter_mut().for_each(|d_o| match &mut d_o.inner {
             Object2dInner::Polygon(p) => {
                 *p *= scale;
                 *p += Pt(margin, margin);
