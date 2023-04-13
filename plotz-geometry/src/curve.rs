@@ -1,10 +1,10 @@
 //! A curve.
 
-use crate::bounded::Bounds;
+use crate::polygon::Polygon;
 
 use {
     crate::{
-        bounded::Bounded,
+        bounded::{Bounds, Bounded},
         crop::{CropToPolygonError, Croppable, PointLoc},
         interpolate::interpolate_2d_checked,
         point::{PolarPt, Pt},
@@ -417,7 +417,7 @@ impl Croppable for CurveArc {
     type Output = CurveArc;
     fn crop_to(
         &self,
-        frame: &crate::polygon::Polygon,
+        frame: &Polygon,
     ) -> Result<Vec<Self::Output>, CropToPolygonError>
     where
         Self: Sized,

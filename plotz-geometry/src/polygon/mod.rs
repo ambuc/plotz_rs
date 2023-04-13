@@ -1,17 +1,18 @@
 //! A 2D polygon (or multi&line).
 
+use self::crop_logic::Isxn;
 use std::ops::DivAssign;
+
+mod crop_logic;
 
 use {
     crate::{
         bounded::{Bounded, Bounds},
         crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
-        interpolate,
         point::Pt,
-        segment::{Contains, Intersection, IntersectionOutcome, Segment},
+        segment::{Contains, IntersectionOutcome, Segment},
         traits::*,
     },
-    derivative::Derivative,
     either::Either,
     float_cmp::approx_eq,
     itertools::{all, iproduct, zip},
@@ -276,127 +277,6 @@ impl Polygon {
     }
 }
 
-#[derive(Debug)]
-struct IsxnOutcome {
-    frame_segment_idx: usize,
-    inner_segment_idx: usize,
-    outcome: IntersectionOutcome,
-}
-
-impl IsxnOutcome {
-    pub fn to_isxn(&self) -> Option<Isxn> {
-        match self.outcome {
-            IntersectionOutcome::Yes(i) => Some(Isxn {
-                frame_segment_idx: self.frame_segment_idx,
-                inner_segment_idx: self.inner_segment_idx,
-                intersection: i,
-            }),
-            _ => None,
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-struct Isxn {
-    pub frame_segment_idx: usize,
-    pub inner_segment_idx: usize,
-    pub intersection: Intersection,
-}
-impl Isxn {
-    pub fn pt_given_self_segs(&self, self_segs: &[(usize, Segment)]) -> Pt {
-        let (_, seg) = self_segs[self.inner_segment_idx];
-        interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_inner().0)
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-enum On {
-    OnInner,
-    OnFrame,
-}
-impl On {
-    pub fn flip(&self) -> On {
-        match self {
-            On::OnInner => On::OnFrame,
-            On::OnFrame => On::OnInner,
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-struct OnePolygon {
-    on_polygon: On,
-    at_point_index: usize,
-}
-
-#[derive(Derivative)]
-#[derivative(Debug)]
-struct Cursor<'a> {
-    // current position
-    position: Either<OnePolygon, Isxn>,
-    facing_along: On,
-    facing_along_segment_idx: usize, // segment index
-    // context
-    #[derivative(Debug = "ignore")]
-    inner_pts: &'a Vec<(usize, &'a Pt)>,
-    #[derivative(Debug = "ignore")]
-    inner_pts_len: &'a usize,
-    #[derivative(Debug = "ignore")]
-    frame_pts: &'a Vec<(usize, &'a Pt)>,
-    #[derivative(Debug = "ignore")]
-    frame_pts_len: &'a usize,
-    #[derivative(Debug = "ignore")]
-    inner_segments: &'a Vec<(usize, Segment)>,
-}
-impl<'a> Cursor<'a> {
-    fn pt(&self) -> Pt {
-        match &self.position {
-            Either::Left(one_polygon) => match one_polygon.on_polygon {
-                On::OnInner => *self.inner_pts[one_polygon.at_point_index].1,
-                On::OnFrame => *self.frame_pts[one_polygon.at_point_index].1,
-            },
-            Either::Right(isxn) => isxn.pt_given_self_segs(self.inner_segments),
-        }
-    }
-    fn pts_len(&self, on: On) -> usize {
-        match on {
-            On::OnInner => *self.inner_pts_len,
-            On::OnFrame => *self.frame_pts_len,
-        }
-    }
-    fn march_to_next_point(&mut self) {
-        let v = (match self.position {
-            Either::Left(one_polygon) => one_polygon.at_point_index,
-            Either::Right(isxn) => match self.facing_along {
-                On::OnInner => isxn.inner_segment_idx,
-                On::OnFrame => isxn.frame_segment_idx,
-            },
-        } + 1)
-            % self.pts_len(self.facing_along);
-        self.position = Either::Left(OnePolygon {
-            on_polygon: self.facing_along,
-            at_point_index: v,
-        });
-        self.facing_along_segment_idx = v;
-    }
-
-    fn march_to_isxn(&mut self, next_isxn: Isxn, should_flip: bool) {
-        let new_position: Either<_, Isxn> = Either::Right(next_isxn);
-        let new_facing_along = if should_flip {
-            self.facing_along.flip()
-        } else {
-            self.facing_along
-        };
-        let new_facing_along_segment_idx = match new_facing_along {
-            On::OnFrame => next_isxn.frame_segment_idx,
-            On::OnInner => next_isxn.inner_segment_idx,
-        };
-        self.position = new_position;
-        self.facing_along = new_facing_along;
-        self.facing_along_segment_idx = new_facing_along_segment_idx;
-    }
-}
-
 impl Croppable for Polygon {
     type Output = Polygon;
     /// Crop this polygon to some frame. Returns a list of resultant polygons.
@@ -423,15 +303,18 @@ impl Croppable for Polygon {
         let inner_segments: Vec<_> = self.to_segments().into_iter().enumerate().collect();
         let frame_segments: Vec<_> = frame.to_segments().into_iter().enumerate().collect();
 
-        let isxn_outcomes: Vec<IsxnOutcome> = iproduct!(&inner_segments, &frame_segments)
-            .filter_map(|((inner_idx, i_seg), (frame_idx, f_seg))| {
-                i_seg.intersects(f_seg).map(|outcome| IsxnOutcome {
-                    frame_segment_idx: *frame_idx,
-                    inner_segment_idx: *inner_idx,
-                    outcome,
+        let isxn_outcomes: Vec<crop_logic::IsxnOutcome> =
+            iproduct!(&inner_segments, &frame_segments)
+                .filter_map(|((inner_idx, i_seg), (frame_idx, f_seg))| {
+                    i_seg
+                        .intersects(f_seg)
+                        .map(|outcome| crop_logic::IsxnOutcome {
+                            frame_segment_idx: *frame_idx,
+                            inner_segment_idx: *inner_idx,
+                            outcome,
+                        })
                 })
-            })
-            .collect();
+                .collect();
 
         // If there are no intersections,
         if isxn_outcomes.is_empty() {
@@ -476,12 +359,12 @@ impl Croppable for Polygon {
 
         let mut visited_pts = HashSet::<Pt>::new();
 
-        let mut curr = Cursor {
-            position: Either::Left(OnePolygon {
-                on_polygon: On::OnInner,
+        let mut curr = crop_logic::Cursor {
+            position: Either::Left(crop_logic::OnePolygon {
+                on_polygon: crop_logic::On::OnInner,
                 at_point_index: 0,
             }),
-            facing_along: On::OnInner,
+            facing_along: crop_logic::On::OnInner,
             facing_along_segment_idx: 0_usize,
             //
             inner_pts: &inner_pts,
@@ -512,24 +395,26 @@ impl Croppable for Polygon {
                 .filter_map(|isxn_outcome| isxn_outcome.to_isxn())
                 .filter(|isxn| {
                     (match curr.facing_along {
-                        On::OnInner => isxn.inner_segment_idx,
-                        On::OnFrame => isxn.frame_segment_idx,
+                        crop_logic::On::OnInner => isxn.inner_segment_idx,
+                        crop_logic::On::OnFrame => isxn.frame_segment_idx,
                     }) == curr.facing_along_segment_idx
                 })
                 // then collect them.
                 .collect();
 
-            relevant_isxns.sort_by(|a: &Isxn, b: &Isxn| match &curr.facing_along {
-                On::OnInner => a
-                    .intersection
-                    .percent_along_inner()
-                    .partial_cmp(&b.intersection.percent_along_inner())
-                    .unwrap(),
-                On::OnFrame => a
-                    .intersection
-                    .percent_along_frame()
-                    .partial_cmp(&b.intersection.percent_along_frame())
-                    .unwrap(),
+            relevant_isxns.sort_by(|a: &crop_logic::Isxn, b: &crop_logic::Isxn| {
+                match &curr.facing_along {
+                    crop_logic::On::OnInner => a
+                        .intersection
+                        .percent_along_inner()
+                        .partial_cmp(&b.intersection.percent_along_inner())
+                        .unwrap(),
+                    crop_logic::On::OnFrame => a
+                        .intersection
+                        .percent_along_frame()
+                        .partial_cmp(&b.intersection.percent_along_frame())
+                        .unwrap(),
+                }
             });
 
             match curr.position {
@@ -538,8 +423,12 @@ impl Croppable for Polygon {
                         relevant_isxns
                             .into_iter()
                             .partition(|isxn| match curr.facing_along {
-                                On::OnInner => isxn.intersection.percent_along_inner().0 == 0.0,
-                                On::OnFrame => isxn.intersection.percent_along_frame().0 == 0.0,
+                                crop_logic::On::OnInner => {
+                                    isxn.intersection.percent_along_inner().0 == 0.0
+                                }
+                                crop_logic::On::OnFrame => {
+                                    isxn.intersection.percent_along_frame().0 == 0.0
+                                }
                             });
                     relevant_isxns = v;
                 }
@@ -548,11 +437,11 @@ impl Croppable for Polygon {
                         relevant_isxns
                             .into_iter()
                             .partition(|isxn| match curr.facing_along {
-                                On::OnInner => {
+                                crop_logic::On::OnInner => {
                                     isxn.intersection.percent_along_inner()
                                         <= this_isxn.intersection.percent_along_inner()
                                 }
-                                On::OnFrame => {
+                                crop_logic::On::OnFrame => {
                                     isxn.intersection.percent_along_frame()
                                         <= this_isxn.intersection.percent_along_frame()
                                 }
