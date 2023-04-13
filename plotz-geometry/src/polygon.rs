@@ -186,14 +186,15 @@ impl Polygon {
     /// Returns true if any line segment from this polygon intersects any line
     /// segment from the other polygon.
     pub fn intersects(&self, other: &Polygon) -> bool {
-        for l1 in self.to_segments() {
-            for l2 in other.to_segments() {
-                if l1.intersects(&l2).is_some() {
-                    return true;
-                }
-            }
-        }
-        false
+        !self.intersects_detailed(other).is_empty()
+    }
+
+    /// Returns the detailed set of intersection outcomes between this polygon's
+    /// segments and another polygon's segments.
+    pub fn intersects_detailed(&self, other: &Polygon) -> Vec<IntersectionOutcome> {
+        iproduct!(self.to_segments(), other.to_segments())
+            .flat_map(|(l1, l2)| l1.intersects(&l2))
+            .collect::<Vec<_>>()
     }
 
     /// Returns true if any line segment from this polygon intersects other.
@@ -304,7 +305,7 @@ struct Isxn {
 impl Isxn {
     pub fn pt_given_self_segs(&self, self_segs: &[(usize, Segment)]) -> Pt {
         let (_, seg) = self_segs[self.inner_segment_idx];
-        interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_inner.0)
+        interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_inner().0)
     }
 }
 
@@ -521,13 +522,13 @@ impl Croppable for Polygon {
             relevant_isxns.sort_by(|a: &Isxn, b: &Isxn| match &curr.facing_along {
                 On::OnInner => a
                     .intersection
-                    .percent_along_inner
-                    .partial_cmp(&b.intersection.percent_along_inner)
+                    .percent_along_inner()
+                    .partial_cmp(&b.intersection.percent_along_inner())
                     .unwrap(),
                 On::OnFrame => a
                     .intersection
-                    .percent_along_frame
-                    .partial_cmp(&b.intersection.percent_along_frame)
+                    .percent_along_frame()
+                    .partial_cmp(&b.intersection.percent_along_frame())
                     .unwrap(),
             });
 
@@ -537,8 +538,8 @@ impl Croppable for Polygon {
                         relevant_isxns
                             .into_iter()
                             .partition(|isxn| match curr.facing_along {
-                                On::OnInner => isxn.intersection.percent_along_inner.0 == 0.0,
-                                On::OnFrame => isxn.intersection.percent_along_frame.0 == 0.0,
+                                On::OnInner => isxn.intersection.percent_along_inner().0 == 0.0,
+                                On::OnFrame => isxn.intersection.percent_along_frame().0 == 0.0,
                             });
                     relevant_isxns = v;
                 }
@@ -548,12 +549,12 @@ impl Croppable for Polygon {
                             .into_iter()
                             .partition(|isxn| match curr.facing_along {
                                 On::OnInner => {
-                                    isxn.intersection.percent_along_inner
-                                        <= this_isxn.intersection.percent_along_inner
+                                    isxn.intersection.percent_along_inner()
+                                        <= this_isxn.intersection.percent_along_inner()
                                 }
                                 On::OnFrame => {
-                                    isxn.intersection.percent_along_frame
-                                        <= this_isxn.intersection.percent_along_frame
+                                    isxn.intersection.percent_along_frame()
+                                        <= this_isxn.intersection.percent_along_frame()
                                 }
                             });
                     relevant_isxns = v;

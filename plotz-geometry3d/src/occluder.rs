@@ -8,7 +8,7 @@ use crate::{object3d_inner::Object3dInner, style::Style3d};
 
 /// Occludes.
 pub struct Occluder {
-    /// Incorporated objects. 
+    /// Incorporated objects.
     objects: Vec<(Object2dInner, Object3dInner, Option<Style3d>)>,
 }
 
@@ -23,53 +23,51 @@ impl Occluder {
         &mut self,
         incoming_obj2: Object2dInner,
         incoming_obj3: Object3dInner,
-        style: Option<Style3d>,
+        style3d: Option<Style3d>,
     ) {
-        // let is_collision = self.objects.iter().any(|(existing_obj2, _, _)| -> bool {
-        //     // check collision
-        //     match (&incoming_obj2, &existing_obj2) {
-        //         // TODO
-        //         (DrawObjInner::Polygon(pg1), DrawObjInner::Polygon(pg2)) => {
-        //             pg1.intersects(&pg2)
-        //         }
-        //         (DrawObjInner::Polygon(pg), DrawObjInner::Segment(sg))
-        //         | (DrawObjInner::Segment(sg), DrawObjInner::Polygon(pg)) => {
-        //             pg.intersects_segment(&sg)
-        //         }
-        //         (DrawObjInner::Segment(sg1), DrawObjInner::Segment(sg2)) => {
-        //             match sg1.intersects(&sg2) {
-        //                 Some(IntersectionOutcome::LineSegmentsAreColinear) => false,
-        //                 Some(IntersectionOutcome::LineSegmentsAreTheSame) => false,
-        //                 Some(IntersectionOutcome::LineSegmentsAreTheSameButReversed) => false,
-        //                 Some(IntersectionOutcome::Yes(_)) => false,
-        //                 None => false,
-        //             }
-        //         }
+        dbg!(&incoming_obj2);
 
-        //         // points cannot collide :)
-        //         (DrawObjInner::Point(_), _)
-        //         | (_, DrawObjInner::Point(_))
-        //         | (DrawObjInner::Char(_), _)
-        //         | (_, DrawObjInner::Char(_)) => false,
+        let is_collision = self.objects.iter().any(|(existing_obj2, _, _)| -> bool {
+            // check collision
+            match (&incoming_obj2, &existing_obj2) {
+                // TODO
+                (Object2dInner::Polygon(pg1), Object2dInner::Polygon(pg2)) => {
+                    let is = pg1.intersects_detailed(&pg2);
+                    dbg!(&is);
+                    !is.is_empty()
+                }
+                (Object2dInner::Polygon(pg), Object2dInner::Segment(sg))
+                | (Object2dInner::Segment(sg), Object2dInner::Polygon(pg)) => {
+                    pg.intersects_segment(&sg)
+                }
+                (Object2dInner::Segment(sg1), Object2dInner::Segment(sg2)) => {
+                    sg1.intersects(&sg2).is_some()
+                }
 
-        //         // group collision and curve collision are "too hard" for me
-        //         (DrawObjInner::Group(_), _) | (_, DrawObjInner::Group(_)) => {
-        //             todo!("group collision not yet implemented.")
-        //         }
-        //         (DrawObjInner::CurveArc(_), _) | (_, DrawObjInner::CurveArc(_)) => {
-        //             todo!("curvearc collision not yet implemented.")
-        //         }
-        //     }
-        // });
+                // points cannot collide :)
+                (Object2dInner::Point(_), _)
+                | (_, Object2dInner::Point(_))
+                | (Object2dInner::Char(_), _)
+                | (_, Object2dInner::Char(_)) => false,
 
-        // match is_collision {
-        //     true => {
-        //         // do a crop
-        //     }
-        //     false => {
-        self.objects.push((incoming_obj2, incoming_obj3, style));
-        //     }
-        // }
+                // group collision and curve collision are "too hard" for me
+                (Object2dInner::Group(_), _) | (_, Object2dInner::Group(_)) => {
+                    todo!("group collision not yet implemented.")
+                }
+                (Object2dInner::CurveArc(_), _) | (_, Object2dInner::CurveArc(_)) => {
+                    todo!("curvearc collision not yet implemented.")
+                }
+            }
+        });
+
+        match is_collision {
+            true => {
+                // do a crop
+            }
+            false => {
+                self.objects.push((incoming_obj2, incoming_obj3, style3d));
+            }
+        }
     }
 
     /// Exports the occluded 2d objects.

@@ -52,9 +52,9 @@ fn main() {
         })
         .collect();
 
-        objects.extend(axes);
+        // objects.extend(axes);
 
-        for (i, j) in iproduct!(0..2, 0..2) {
+        for (i, j) in iproduct!(0..1, 0..1) {
             objects.extend(
                 Cube(Pt3d(i as f64, j as f64, 0.0), (0.75, 0.75, 0.75))
                     .items
@@ -65,16 +65,17 @@ fn main() {
                     }),
             );
         }
-        // Triangle.
-        objects.push(
-            Object3d::new(Polygon3d([
-                origin_3d + Pt3d(0.5, 0.0, 0.0),
-                origin_3d + Pt3d(0.0, 0.5, 0.0),
-                origin_3d + Pt3d(0.0, 0.0, 0.5),
-                origin_3d + Pt3d(0.5, 0.0, 0.0),
-            ]))
-            .with_style(Style3d::builder().color(&POWDERBLUE).thickness(2.0).build()),
-        );
+
+        // // Triangle.
+        // objects.push(
+        //     Object3d::new(Polygon3d([
+        //         origin_3d + Pt3d(0.5, 0.0, 0.0),
+        //         origin_3d + Pt3d(0.0, 0.5, 0.0),
+        //         origin_3d + Pt3d(0.0, 0.0, 0.5),
+        //         origin_3d + Pt3d(0.5, 0.0, 0.0),
+        //     ]))
+        //     .with_style(Style3d::builder().color(&POWDERBLUE).thickness(2.0).build()),
+        // );
 
         Scene::from(objects).project_with(Projection::Oblique(Oblique::standard()), Occlusion::True)
     };

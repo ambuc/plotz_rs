@@ -30,25 +30,56 @@ pub enum Contains {
     AtEnd,
 }
 
-/// A struct representing an intersection between two line segments.
 #[derive(Debug, PartialEq, Copy, Clone, Eq, Hash)]
-pub struct Intersection {
-    /// At which % of the way from self_i to self_f the intersection occurs. Will always be between 0.0 and 1.0.
-    /// If this value is 0.0, the intersection is at self_i.
-    /// If this value is 1.0, the intersection is at self_f.
-    pub percent_along_inner: FloatOrd<f64>,
-    /// At which % of the way from other_i to other_f the intersection occurs. Will always be between 0.0 and 1.0.
-    /// If this value is 0.0, the intersection is at other_i.
-    /// If this value is 1.0, the intersection is at other_f.
-    pub percent_along_frame: FloatOrd<f64>,
+/// Guaranteed to be 0.0 <= f <= 1.0. Witness type.
+pub struct NormF {
+    /// NOT PUB
+    val: FloatOrd<f64>,
+}
+impl NormF {
+    /// new normf.
+    pub fn new(f: f64) -> Option<NormF> {
+        if (0.0..=1.0).contains(&f) {
+            Some(NormF { val: FloatOrd(f) })
+        } else {
+            None
+        }
+    }
 }
 
+/// A struct representing an intersection between two line segments.
+/// Two values:
+///    the first is the % of the way along line A at which the intersection
+///    occurs. Guaranteed to be 0.0<=x<=1.0.
+//       If this value is 0.0, the intersection is at self_i.
+//       If this value is 1.0, the intersection is at self_f.
+///    the second is the % of the way along line B at which the intersection
+///    occurs. Guaranteed to be 0.0<=x<=1.0.
+#[derive(Debug, PartialEq, Copy, Clone, Eq, Hash)]
+pub struct Intersection(NormF, NormF);
+
 impl Intersection {
+    /// A new intersection value, witnessed.
+    pub fn new(a: f64, b: f64) -> Option<Intersection> {
+        let na = NormF::new(a)?;
+        let nb = NormF::new(b)?;
+        Some(Intersection(na, nb))
+    }
+
+    /// The percent of the way along line A at which the intersection occurs.
+    pub fn percent_along_inner(&self) -> FloatOrd<f64> {
+        self.0.val
+    }
+    /// The percent of the way along line B at which the intersection occurs.
+    pub fn percent_along_frame(&self) -> FloatOrd<f64> {
+        self.1.val
+    }
+
     fn on_points_of_self(&self) -> bool {
-        self.percent_along_inner.0 == 0.0 || self.percent_along_inner.0 == 1.0
+        self.percent_along_inner().0 == 0.0 || self.percent_along_inner().0 == 1.0
     }
     fn on_points_of_other(&self) -> bool {
-        self.percent_along_frame.0 == 0.0 || self.percent_along_frame.0 == 1.0
+        self.percent_along_frame().0 == 0.0 || self.percent_along_frame().0 == 1.0
     }
     /// Returns true if the intersection occurs at the head or tail of either
     /// intersecting segment.
@@ -159,10 +190,13 @@ impl Segment {
             (other.i.x.0, other.i.y.0),
             (other.f.x.0, other.f.y.0),
         ) {
-            return Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_inner: FloatOrd(interpolate_2d_checked(self.i, self.f, pt).ok()?),
-                percent_along_frame: FloatOrd(interpolate_2d_checked(other.i, other.f, pt).ok()?),
-            }));
+            return Some(IntersectionOutcome::Yes(
+                Intersection::new(
+                    interpolate_2d_checked(self.i, self.f, pt).ok()?,
+                    interpolate_2d_checked(other.i, other.f, pt).ok()?,
+                )
+                .expect("valid intersection"),
+            ));
         }
         None
     }
@@ -340,9 +374,9 @@ impl Croppable for Segment {
                     _ => None,
                 })
                 .collect::<Vec<Intersection>>();
-            isxns.sort_by(|i, j| i.percent_along_inner.cmp(&j.percent_along_inner));
+            isxns.sort_by(|i, j| i.percent_along_inner().cmp(&j.percent_along_inner()));
             let (_, vs) = isxns.into_iter().partition(|i| {
-                i.percent_along_inner.0
+                i.percent_along_inner().0
                     <= interpolate::interpolate_2d_checked(self.i, self.f, curr_pt).unwrap_or_else(
                         |_| {
                             panic!(
@@ -359,7 +393,7 @@ impl Croppable for Segment {
                     let new_pt = interpolate::extrapolate_2d(
                         self.i,
                         self.f,
-                        intersection.percent_along_inner.0,
+                        intersection.percent_along_inner().0,
                     );
 
                     // Not sure why. But escape the loop.
@@ -591,70 +625,61 @@ mod tests {
         // (s,w), (e,w), (w,s), (w,e)
         assert_eq!(
             Segment(e, i).intersects(&Segment(c, g)),
-            Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_inner: FloatOrd(0.0),
-                percent_along_frame: FloatOrd(0.5)
-            }))
+            Some(IntersectionOutcome::Yes(
+                Intersection::new(0.0, 0.5).unwrap()
+            ))
         );
         assert_eq!(
             Segment(a, e).intersects(&Segment(c, g)),
-            Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_inner: FloatOrd(1.0),
-                percent_along_frame: FloatOrd(0.5)
-            }))
+            Some(IntersectionOutcome::Yes(
+                Intersection::new(1.0, 0.5).unwrap()
+            ))
         );
         assert_eq!(
             Segment(c, g).intersects(&Segment(e, i)),
-            Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_inner: FloatOrd(0.5),
-                percent_along_frame: FloatOrd(0.0)
-            }))
+            Some(IntersectionOutcome::Yes(
+                Intersection::new(0.5, 0.0).unwrap()
+            ))
         );
         assert_eq!(
             Segment(c, g).intersects(&Segment(a, e)),
-            Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_inner: FloatOrd(0.5),
-                percent_along_frame: FloatOrd(1.0)
-            }))
+            Some(IntersectionOutcome::Yes(
+                Intersection::new(0.5, 1.0).unwrap()
+            ))
         );
 
         // // (s,s), (s,e), (e,s), (e,e)
         assert_eq!(
             Segment(a, c).intersects(&Segment(c, i)),
-            Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_inner: FloatOrd(1.0),
-                percent_along_frame: FloatOrd(-0.0)
-            }))
+            Some(IntersectionOutcome::Yes(
+                Intersection::new(1.0, -0.0).unwrap()
+            ))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(i, c)),
-            Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_inner: FloatOrd(1.0),
-                percent_along_frame: FloatOrd(1.0)
-            }))
+            Some(IntersectionOutcome::Yes(
+                Intersection::new(1.0, 1.0).unwrap()
+            ))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(g, a)),
-            Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_inner: FloatOrd(0.0),
-                percent_along_frame: FloatOrd(1.0)
-            }))
+            Some(IntersectionOutcome::Yes(
+                Intersection::new(0.0, 1.0).unwrap()
+            )),
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(a, g)),
-            Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_inner: FloatOrd(0.0),
-                percent_along_frame: FloatOrd(-0.0)
-            }))
+            Some(IntersectionOutcome::Yes(
+                Intersection::new(0.0, -0.0).unwrap()
+            ))
         );
 
         // // (w,w)
         assert_eq!(
             Segment(a, i).intersects(&Segment(c, g)),
-            Some(IntersectionOutcome::Yes(Intersection {
-                percent_along_inner: FloatOrd(0.5),
-                percent_along_frame: FloatOrd(0.5)
-            }))
+            Some(IntersectionOutcome::Yes(
+                Intersection::new(0.5, 0.5).unwrap()
+            ))
         );
     }
 
