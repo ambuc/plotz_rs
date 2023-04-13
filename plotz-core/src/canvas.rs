@@ -1,4 +1,4 @@
-//! Many draw objs.
+//! Many objects.
 
 use itertools::Itertools;
 
@@ -11,8 +11,8 @@ use {
     float_ord::FloatOrd,
     plotz_geometry::{
         bounded::{streaming_bbox, Bounded, Bounds},
-        draw_obj::DrawObj,
-        draw_obj_inner::DrawObjInner,
+        object2d::Object2d,
+        object2d_inner::Object2dInner,
         point::Pt,
         traits::*,
     },
@@ -20,16 +20,16 @@ use {
     tracing::trace,
 };
 
-type CanvasMap = HashMap<Option<Bucket>, Vec<DrawObj>>;
+type CanvasMap = HashMap<Option<Bucket>, Vec<Object2d>>;
 
-/// Many draw objs.
+/// Many objects.
 #[derive(Debug, Clone)]
 pub struct Canvas {
     /// the objs.
     pub dos_by_bucket: CanvasMap,
 
     /// the frame, maybe.
-    pub frame: Option<DrawObj>,
+    pub frame: Option<Object2d>,
 }
 
 impl Canvas {
@@ -42,7 +42,7 @@ impl Canvas {
     }
 
     /// ctor from objs
-    pub fn from_objs<O: IntoIterator<Item = DrawObj> + ExactSizeIterator>(
+    pub fn from_objs<O: IntoIterator<Item = Object2d> + ExactSizeIterator>(
         objs: O,
         autobucket: bool,
     ) -> Canvas {
@@ -72,23 +72,23 @@ impl Canvas {
     }
 
     /// with a frame
-    pub fn with_frame(self, frame: DrawObj) -> Canvas {
+    pub fn with_frame(self, frame: Object2d) -> Canvas {
         Canvas {
             frame: Some(frame),
             ..self
         }
     }
 
-    /// Returns an iterator of DrawObjInners.
-    pub fn objs_iter(&self) -> impl Iterator<Item = &DrawObjInner> {
+    /// Returns an iterator of Object2dInner.
+    pub fn objs_iter(&self) -> impl Iterator<Item = &Object2dInner> {
         self.dos_by_bucket
             .iter()
             .flat_map(|(_bucket, dos)| dos)
             .map(|d_o| &d_o.obj)
     }
 
-    /// Returns an iterator of mutable DrawObjInners.
-    pub fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut DrawObjInner> {
+    /// Returns an iterator of mutable Object2dInner.
+    pub fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut Object2dInner> {
         self.dos_by_bucket
             .iter_mut()
             .flat_map(|(_bucket, dos)| dos)
@@ -145,8 +145,8 @@ impl Canvas {
             let translate_diff = frame_bounds.bbox_center() - inner_bounds.bbox_center();
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
-                dos.iter_mut().for_each(|draw_obj| {
-                    draw_obj.mutate(|pt: &mut Pt| {
+                dos.iter_mut().for_each(|obj| {
+                    obj.mutate(|pt: &mut Pt| {
                         *pt += translate_diff;
                     });
                 });
@@ -162,7 +162,7 @@ impl Canvas {
         {
             trace!("Writing to all.");
             let name = format!("{}_all.svg", prefix);
-            let mut all: Vec<DrawObj> = vec![];
+            let mut all: Vec<Object2d> = vec![];
             if let Some(frame) = self.frame.clone() {
                 all.push(frame);
             }

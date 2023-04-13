@@ -3,7 +3,7 @@
 use {
     plotz_color::BLACK,
     plotz_geometry::polygon::PolygonKind,
-    plotz_geometry::{char::Char, draw_obj::DrawObj, draw_obj_inner::DrawObjInner},
+    plotz_geometry::{char::Char, object2d::Object2d, object2d_inner::Object2dInner},
     std::fmt::Debug,
     thiserror::Error,
 };
@@ -36,15 +36,15 @@ pub enum SvgWriteError {
 }
 
 fn write_doi_to_context(
-    doi: &DrawObjInner,
+    doi: &Object2dInner,
     context: &mut cairo::Context,
 ) -> Result<(), SvgWriteError> {
     match &doi {
-        DrawObjInner::Point(p) => {
+        Object2dInner::Point(p) => {
             context.line_to(p.x.0, p.y.0);
             context.line_to(p.x.0 + 1.0, p.y.0 + 1.0);
         }
-        DrawObjInner::Polygon(polygon) => {
+        Object2dInner::Polygon(polygon) => {
             //
             for p in &polygon.pts {
                 context.line_to(p.x.0, p.y.0);
@@ -53,23 +53,23 @@ fn write_doi_to_context(
                 context.line_to(polygon.pts[0].x.0, polygon.pts[0].y.0);
             }
         }
-        DrawObjInner::Segment(segment) => {
+        Object2dInner::Segment(segment) => {
             context.line_to(segment.i.x.0, segment.i.y.0);
             context.line_to(segment.f.x.0, segment.f.y.0);
         }
-        DrawObjInner::Char(Char { pt, chr }) => {
+        Object2dInner::Char(Char { pt, chr }) => {
             context.select_font_face("serif", cairo::FontSlant::Normal, cairo::FontWeight::Bold);
             context.set_font_size(12.0);
 
             context.move_to(pt.x.0, pt.y.0);
             context.show_text(&chr.to_string()).expect("show text");
         }
-        DrawObjInner::Group(dois) => {
+        Object2dInner::Group(dois) => {
             for doi in dois.iter_dois() {
                 write_doi_to_context(doi, context).expect("write");
             }
         }
-        DrawObjInner::CurveArc(arc) => {
+        Object2dInner::CurveArc(arc) => {
             context.arc(
                 arc.ctr.x.0,
                 arc.ctr.y.0,
@@ -82,7 +82,7 @@ fn write_doi_to_context(
     Ok(())
 }
 
-fn write_obj_to_context(co: &DrawObj, context: &mut cairo::Context) -> Result<(), SvgWriteError> {
+fn write_obj_to_context(co: &Object2d, context: &mut cairo::Context) -> Result<(), SvgWriteError> {
     if co.obj.is_empty() {
         return Ok(());
     }
@@ -100,7 +100,7 @@ fn write_obj_to_context(co: &DrawObj, context: &mut cairo::Context) -> Result<()
 pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     path: P,
-    polygons: impl IntoIterator<Item = &'a DrawObj>,
+    polygons: impl IntoIterator<Item = &'a Object2d>,
 ) -> Result<usize, SvgWriteError> {
     let svg_surface = cairo::SvgSurface::new(size.width as f64, size.height as f64, Some(path))?;
     let mut ctx = cairo::Context::new(&svg_surface)?;
@@ -115,7 +115,7 @@ pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
 fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     paths: impl IntoIterator<Item = P>,
-    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a DrawObj>>,
+    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a Object2d>>,
 ) -> Result<(), SvgWriteError> {
     for (path, polygons) in paths.into_iter().zip(polygon_layers.into_iter()) {
         write_layer_to_svg(size, path, polygons)?;
@@ -126,7 +126,7 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use plotz_geometry::draw_obj::DrawObj;
+    use plotz_geometry::object2d::Object2d;
     use plotz_geometry::{point::Pt, polygon::Polygon};
     use tempdir::TempDir;
 
@@ -163,9 +163,9 @@ mod test_super {
                 height: 1024,
             },
             path.to_str().unwrap(),
-            vec![&DrawObj {
+            vec![&Object2d {
                 color: &BLACK,
-                obj: DrawObjInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
+                obj: Object2dInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
                 thickness: 1.0,
             }],
         )
@@ -190,14 +190,14 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![
-                &DrawObj {
+                &Object2d {
                     color: &BLACK,
-                    obj: DrawObjInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
+                    obj: Object2dInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
                     thickness: 1.0,
                 },
-                &DrawObj {
+                &Object2d {
                     color: &BLACK,
-                    obj: DrawObjInner::Polygon(Polygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)]).unwrap()),
+                    obj: Object2dInner::Polygon(Polygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)]).unwrap()),
                     thickness: 1.0,
                 },
             ],

@@ -4,7 +4,7 @@ use {
     crate::{
         bounded::Bounded,
         crop::{CropToPolygonError, Croppable},
-        draw_obj_inner::DrawObjInner,
+        object2d_inner::Object2dInner,
         point::Pt,
         polygon::Polygon,
         traits::*,
@@ -15,9 +15,9 @@ use {
 
 /// An object with a color and thickness.
 #[derive(Debug, PartialEq, Clone)]
-pub struct DrawObj {
+pub struct Object2d {
     /// The object.
-    pub obj: DrawObjInner,
+    pub obj: Object2dInner,
 
     /// The color.
     pub color: &'static ColorRGB,
@@ -26,10 +26,10 @@ pub struct DrawObj {
     pub thickness: f64,
 }
 
-impl DrawObj {
+impl Object2d {
     /// from an object.
-    pub fn new(obj: impl Into<DrawObjInner>) -> DrawObj {
-        DrawObj {
+    pub fn new(obj: impl Into<Object2dInner>) -> Object2d {
+        Object2d {
             obj: obj.into(),
             color: &BLACK,
             thickness: 0.1,
@@ -37,67 +37,67 @@ impl DrawObj {
     }
 
     /// with a color.
-    pub fn with_color(self, color: &'static ColorRGB) -> DrawObj {
-        DrawObj { color, ..self }
+    pub fn with_color(self, color: &'static ColorRGB) -> Object2d {
+        Object2d { color, ..self }
     }
 
     /// with a thickness.
-    pub fn with_thickness(self, thickness: f64) -> DrawObj {
-        DrawObj { thickness, ..self }
+    pub fn with_thickness(self, thickness: f64) -> Object2d {
+        Object2d { thickness, ..self }
     }
 }
 
-impl YieldPoints for DrawObj {
+impl YieldPoints for Object2d {
     fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
         self.obj.inner_impl_yield_points().yield_pts()
     }
 }
 
-impl YieldPointsMut for DrawObj {
+impl YieldPointsMut for Object2d {
     fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
         self.obj.inner_impl_yield_points_mut().yield_pts_mut()
     }
 }
 
-impl Mutable for DrawObj {}
+impl Mutable for Object2d {}
 
-impl Bounded for DrawObj {
+impl Bounded for Object2d {
     fn bounds(&self) -> crate::bounded::Bounds {
         self.obj.bounds()
     }
 }
 
-impl RemAssign<Pt> for DrawObj {
+impl RemAssign<Pt> for Object2d {
     fn rem_assign(&mut self, rhs: Pt) {
         self.obj %= rhs;
     }
 }
 
-impl MulAssign<f64> for DrawObj {
+impl MulAssign<f64> for Object2d {
     fn mul_assign(&mut self, rhs: f64) {
         self.obj *= rhs;
     }
 }
 
-impl DivAssign<f64> for DrawObj {
+impl DivAssign<f64> for Object2d {
     fn div_assign(&mut self, rhs: f64) {
         self.obj /= rhs;
     }
 }
 
-impl AddAssign<Pt> for DrawObj {
+impl AddAssign<Pt> for Object2d {
     fn add_assign(&mut self, rhs: Pt) {
         self.obj += rhs;
     }
 }
 
-impl SubAssign<Pt> for DrawObj {
+impl SubAssign<Pt> for Object2d {
     fn sub_assign(&mut self, rhs: Pt) {
         self.obj -= rhs;
     }
 }
 
-impl Add<Pt> for DrawObj {
+impl Add<Pt> for Object2d {
     type Output = Self;
     fn add(self, rhs: Pt) -> Self::Output {
         Self {
@@ -106,7 +106,7 @@ impl Add<Pt> for DrawObj {
         }
     }
 }
-impl Sub<Pt> for DrawObj {
+impl Sub<Pt> for Object2d {
     type Output = Self;
     fn sub(self, rhs: Pt) -> Self::Output {
         Self {
@@ -115,7 +115,7 @@ impl Sub<Pt> for DrawObj {
         }
     }
 }
-impl Div<f64> for DrawObj {
+impl Div<f64> for Object2d {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
         Self {
@@ -124,7 +124,7 @@ impl Div<f64> for DrawObj {
         }
     }
 }
-impl Mul<f64> for DrawObj {
+impl Mul<f64> for Object2d {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
         Self {
@@ -134,19 +134,19 @@ impl Mul<f64> for DrawObj {
     }
 }
 
-impl Translatable for DrawObj {}
-impl Scalable<f64> for DrawObj {}
-impl ScalableAssign for DrawObj {}
-impl TranslatableAssign for DrawObj {}
+impl Translatable for Object2d {}
+impl Scalable<f64> for Object2d {}
+impl ScalableAssign for Object2d {}
+impl TranslatableAssign for Object2d {}
 
-impl Croppable for DrawObj {
-    type Output = DrawObj;
+impl Croppable for Object2d {
+    type Output = Object2d;
     fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
         Ok(self
             .obj
             .crop_to(frame)?
             .into_iter()
-            .map(|doi| DrawObj {
+            .map(|doi| Object2d {
                 obj: doi,
                 ..(*self)
             })

@@ -3,8 +3,8 @@ use {
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        bounded::Bounded, crop::Croppable, curve::CurveArcs, draw_obj::DrawObj,
-        draw_obj_inner::DrawObjInner, grid::Grid, point::Pt,
+        bounded::Bounded, crop::Croppable, curve::CurveArcs, object2d::Object2d,
+        object2d_inner::Object2dInner, grid::Grid, point::Pt,
     },
     rand::Rng,
     std::f64::consts::*,
@@ -25,13 +25,13 @@ fn main() {
 
     let mut rng = rand::thread_rng();
 
-    let frame: DrawObj = make_frame(
+    let frame: Object2d = make_frame(
         (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
         /*offset=*/ Pt(mgn, mgn),
     );
     {
         let frame_polygon = match frame.obj {
-            DrawObjInner::Polygon(ref pg) => pg.clone(),
+            Object2dInner::Polygon(ref pg) => pg.clone(),
             _ => unimplemented!(),
         };
 
@@ -54,7 +54,7 @@ fn main() {
                 cas.iter()
                     .flat_map(|ca| ca.crop_to(&frame_polygon).unwrap())
                     .into_iter()
-                    .map(|ca| DrawObj::new(ca).with_color(&GREEN).with_thickness(0.30))
+                    .map(|ca| Object2d::new(ca).with_color(&GREEN).with_thickness(0.30))
                     .into_iter(),
             );
         }
@@ -68,9 +68,9 @@ fn main() {
         );
     }
 
-    let draw_objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
+    let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
 
-    let () = draw_objs
+    let () = objs
         .write_to_svg(
             Size {
                 width: 800,

@@ -3,7 +3,7 @@ use {
     plotz_color::{ColorRGB, *},
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        draw_obj::DrawObj,
+        object2d::Object2d,
         point::Pt,
         polygon::Polygon,
         shading::{shade_polygon, ShadeConfig},
@@ -96,12 +96,6 @@ fn main() {
 
     let mut dos = vec![];
 
-    // dos.extend(polygons.iter().map(|pg| {
-    //     DrawObj::new(pg.clone())
-    //         .with_color(&BLACK)
-    //         .with_thickness(2.0)
-    // }));
-
     dos.extend(polygons.iter().flat_map(|p| {
         (0..=1).flat_map(|_| {
             let shade = Shade::rand(&palette);
@@ -109,7 +103,7 @@ fn main() {
                 .expect("failed to shade")
                 .iter()
                 .map(|sg| {
-                    DrawObj::new(*sg)
+                    Object2d::new(*sg)
                         .with_color(shade.color)
                         .with_thickness(1.0)
                 })

@@ -5,7 +5,7 @@
 
 use {
     plotz_geometry::{
-        draw_obj_inner::DrawObjInner,
+        object2d_inner::Object2dInner,
         point::Pt,
         polygon::{Multiline, MultilineConstructorError, Polygon, PolygonConstructorError},
     },
@@ -67,11 +67,11 @@ fn add_tags(value: &Value, tagslist: &mut TagsList) {
 /// Parses aGeoJSON file and returns a list of tagged polygons.
 pub fn parse_geojson(
     geo_json: Value,
-) -> Result<Vec<(DrawObjInner, TagsList)>, GeoJsonConversionError> {
+) -> Result<Vec<(Object2dInner, TagsList)>, GeoJsonConversionError> {
     let features = geo_json["features"].as_array().expect("features not array");
 
     info!("Parsing geojson file with {:?} features.", features.len());
-    let mut lines: Vec<(DrawObjInner, TagsList)> = vec![];
+    let mut lines: Vec<(Object2dInner, TagsList)> = vec![];
 
     let mut stats = HashMap::<GeomType, usize>::new();
 
@@ -90,7 +90,7 @@ pub fn parse_geojson(
 
         let coords = &feature["geometry"]["coordinates"];
 
-        let result: Result<Vec<DrawObjInner>, GeoJsonConversionError> = match geom_type {
+        let result: Result<Vec<Object2dInner>, GeoJsonConversionError> = match geom_type {
             "LineString" => parse_to_linestring(coords).map(|v| {
                 stats
                     .entry(GeomType::LineString)
@@ -131,9 +131,9 @@ pub fn parse_geojson(
             }
         };
 
-        if let Ok(draw_obj_inner_s) = result {
-            for draw_obj_inner in draw_obj_inner_s {
-                lines.push((draw_obj_inner, tags.clone()));
+        if let Ok(obj_inner_s) = result {
+            for obj_inner in obj_inner_s {
+                lines.push((obj_inner, tags.clone()));
             }
         }
         // else {
@@ -145,8 +145,8 @@ pub fn parse_geojson(
     Ok(lines)
 }
 
-fn parse_to_linestring(coordinates: &Value) -> Result<Vec<DrawObjInner>, GeoJsonConversionError> {
-    Ok(vec![DrawObjInner::from(Multiline(
+fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Object2dInner>, GeoJsonConversionError> {
+    Ok(vec![Object2dInner::from(Multiline(
         coordinates.as_array().expect("not array").iter().map(|p| {
             Pt(
                 p[0].as_f64().expect("value not f64"),
@@ -158,15 +158,17 @@ fn parse_to_linestring(coordinates: &Value) -> Result<Vec<DrawObjInner>, GeoJson
 
 fn parse_to_multilinestring(
     coordinates: &Value,
-) -> Result<Vec<DrawObjInner>, GeoJsonConversionError> {
-    let mut lines: Vec<DrawObjInner> = vec![];
+) -> Result<Vec<Object2dInner>, GeoJsonConversionError> {
+    let mut lines: Vec<Object2dInner> = vec![];
     for linestring in coordinates.as_array().expect("not array").iter() {
         lines.append(&mut parse_to_linestring(linestring)?);
     }
     Ok(lines)
 }
 
-fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<DrawObjInner>, GeoJsonConversionError> {
+fn parse_to_multipolygon(
+    coordinates: &Value,
+) -> Result<Vec<Object2dInner>, GeoJsonConversionError> {
     let mut lines: Vec<_> = vec![];
     for coordinates in coordinates.as_array().expect("not array") {
         lines.extend(parse_to_polygon(coordinates)?);
@@ -174,7 +176,7 @@ fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<DrawObjInner>, GeoJs
     Ok(lines)
 }
 
-fn parse_to_polygon(coordinates: &Value) -> Result<Vec<DrawObjInner>, GeoJsonConversionError> {
+fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Object2dInner>, GeoJsonConversionError> {
     Ok(coordinates
         .as_array()
         .expect("not array")
@@ -188,16 +190,16 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<DrawObjInner>, GeoJsonCon
             }))
         })
         .collect::<Result<_, _>>()?)
-    .map(|v: Vec<Polygon>| v.into_iter().map(DrawObjInner::from).collect::<Vec<_>>())
+    .map(|v: Vec<Polygon>| v.into_iter().map(Object2dInner::from).collect::<Vec<_>>())
 }
 
-fn parse_to_circle(_coords: &Value) -> Result<Vec<DrawObjInner>, GeoJsonConversionError> {
+fn parse_to_circle(_coords: &Value) -> Result<Vec<Object2dInner>, GeoJsonConversionError> {
     // For now, don't print circles at all.
     Ok(vec![])
     // let array = &coords.as_array().expect("not array");
     // if let Some(x) = array.get(0).and_then(|o| o.as_f64()) {
     //     if let Some(y) = array.get(1).and_then(|o| o.as_f64()) {
-    //         return Ok(vec![DrawObjInner::from(CurveArc(
+    //         return Ok(vec![Object2d::from(CurveArc(
     //             Pt(x, y),
     //             0.0..=TAU,
     //             0.0001,
@@ -237,7 +239,7 @@ mod tests {
         ]]);
         assert_eq!(
             parse_to_polygon(&geojson).unwrap(),
-            vec![DrawObjInner::from(
+            vec![Object2dInner::from(
                 Polygon([
                     Pt(-74.015_651_1, 40.721_544_6),
                     Pt(-74.015_493_9, 40.721_526_2),
@@ -261,7 +263,7 @@ mod tests {
         ]);
         assert_eq!(
             parse_to_linestring(&geojson).unwrap(),
-            vec![DrawObjInner::from(
+            vec![Object2dInner::from(
                 Multiline([
                     Pt(-74.015_651_1, 40.721_544_6),
                     Pt(-74.015_493_9, 40.721_526_2),
@@ -284,7 +286,7 @@ mod tests {
         assert_eq!(polygons.len(), 4);
         assert_eq!(
             polygons[0].0,
-            DrawObjInner::from(Polygon([Pt(0, 0), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
+            Object2dInner::from(Polygon([Pt(0, 0), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
         );
 
         // assert_symbol_tuple_list(
@@ -298,7 +300,7 @@ mod tests {
 
         assert_eq!(
             polygons[1].0,
-            DrawObjInner::from(Multiline([Pt(1, 1), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
+            Object2dInner::from(Multiline([Pt(1, 1), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
         );
         // assert_symbol_tuple_list(
         //     polygons[1].1.clone(),
@@ -314,12 +316,12 @@ mod tests {
 
         assert_eq!(
             polygons[2].0,
-            DrawObjInner::from(Polygon([Pt(2, 2), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
+            Object2dInner::from(Polygon([Pt(2, 2), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
         );
 
         assert_eq!(
             polygons[3].0,
-            DrawObjInner::from(Polygon([Pt(3, 3), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
+            Object2dInner::from(Polygon([Pt(3, 3), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
         );
     }
 }

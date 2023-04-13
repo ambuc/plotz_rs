@@ -5,7 +5,7 @@ use {
     plotz_geometry::{
         crop::PointLoc,
         curve::CurveArc,
-        draw_obj::DrawObj,
+        object2d::Object2d,
         grid_layout::{GridLayout, GridLayoutSettings},
         point::Pt,
     },
@@ -35,7 +35,7 @@ fn main() {
     let mut dos = vec![];
     let mgn = 25.0;
 
-    let frame: DrawObj = make_frame(
+    let frame: Object2d = make_frame(
         (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
         /*offset=*/ Pt(mgn, mgn),
     );
@@ -67,19 +67,19 @@ fn main() {
                     let rstep = rng.gen_range(10..20);
                     for r in (0..2000).step_by(rstep) {
                         let ca = CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64);
-                        let d_o = DrawObj::new(ca).with_thickness(1.0).with_color(color);
+                        let d_o = Object2d::new(ca).with_thickness(1.0).with_color(color);
                         grid_layout.insert_and_crop_to_cubby(cubby, d_o);
                     }
                 }
             }
         }
 
-        dos.extend(grid_layout.to_draw_obj());
+        dos.extend(grid_layout.to_object2ds());
     }
 
-    let draw_objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true).with_frame(frame);
+    let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true).with_frame(frame);
 
-    let () = draw_objs
+    let () = objs
         .write_to_svg(
             Size {
                 width: 800,

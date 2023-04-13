@@ -3,7 +3,7 @@
 use {
     plotz_color::*,
     plotz_geometry::{
-        draw_obj::DrawObj,
+        object2d::Object2d,
         point::Pt,
         polygon::Polygon,
         shading::{shade_polygon, ShadeConfig},
@@ -110,7 +110,7 @@ trait Tile {
     fn slope(&self) -> f64;
 }
 
-pub fn make() -> Vec<DrawObj> {
+pub fn make() -> Vec<Object2d> {
     let origin = Pt(0.1, 0.1);
 
     let sq2: f64 = 2.0_f64.sqrt();
@@ -140,7 +140,7 @@ pub fn make() -> Vec<DrawObj> {
         all_tiles = next_layer;
     }
 
-    let dos: Vec<DrawObj> = all_tiles
+    let dos: Vec<Object2d> = all_tiles
         .into_iter()
         .flat_map(|tile| {
             let color = tile.color();
@@ -157,11 +157,10 @@ pub fn make() -> Vec<DrawObj> {
             let segments = shade_polygon(&config, &p).unwrap();
 
             std::iter::empty()
-                // std::iter::once(DrawObj::from_polygon(p).with_color(&BLACK))
                 .chain(
                     segments
                         .into_iter()
-                        .map(|s| DrawObj::new(s).with_color(color)),
+                        .map(|s| Object2d::new(s).with_color(color)),
                 )
         })
         .collect();

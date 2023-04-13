@@ -1,7 +1,7 @@
 //! Grid (for debugging, mostly)
 
 use {
-    crate::{draw_obj::DrawObj, point::Pt, segment::Segment},
+    crate::{object2d::Object2d, point::Pt, segment::Segment},
     num::range_step,
     plotz_color::*,
     typed_builder::TypedBuilder,
@@ -38,8 +38,8 @@ pub struct Grid {
 }
 
 impl Grid {
-    /// Renders the grid to a set of drawobjects for plotting.
-    pub fn to_segments(&self) -> Vec<DrawObj> {
+    /// Renders the grid to a set of object2ds for plotting.
+    pub fn to_segments(&self) -> Vec<Object2d> {
         let h = self.height as f64;
         let w = self.width as f64;
 
@@ -48,7 +48,7 @@ impl Grid {
             let i = Pt((self.x_init + x) as f64, (self.y_init) as f64);
             let f = i + Pt(0.0, h);
             v.push(
-                DrawObj::new(Segment(i, f))
+                Object2d::new(Segment(i, f))
                     .with_color(self.minor_color)
                     .with_thickness(self.minor_thickness),
             );
@@ -57,7 +57,7 @@ impl Grid {
             let i = Pt((self.x_init + x) as f64, (self.y_init) as f64);
             let f = i + Pt(0.0, h);
             v.push(
-                DrawObj::new(Segment(i, f))
+                Object2d::new(Segment(i, f))
                     .with_color(self.major_color)
                     .with_thickness(self.major_thickness),
             );
@@ -66,7 +66,7 @@ impl Grid {
             let i = Pt((self.x_init) as f64, (self.y_init + y) as f64);
             let f = i + Pt(w, 0.0);
             v.push(
-                DrawObj::new(Segment(i, f))
+                Object2d::new(Segment(i, f))
                     .with_color(self.minor_color)
                     .with_thickness(self.minor_thickness),
             )
@@ -75,7 +75,7 @@ impl Grid {
             let i = Pt((self.x_init) as f64, (self.y_init + y) as f64);
             let f = i + Pt(w, 0.0);
             v.push(
-                DrawObj::new(Segment(i, f))
+                Object2d::new(Segment(i, f))
                     .with_color(self.major_color)
                     .with_thickness(self.major_thickness),
             )

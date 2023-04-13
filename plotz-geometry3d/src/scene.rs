@@ -4,22 +4,22 @@
 use {
     crate::{
         camera::{Occlusion, Projection},
-        object::Object,
-        object_inner::ObjectInner,
+        object3d::Object3d,
+        object3d_inner::Object3dInner,
         occluder::Occluder,
         point3d::Pt3d,
-        style::Style,
+        style::Style3d,
     },
     float_ord::FloatOrd,
     itertools::Itertools,
-    plotz_geometry::draw_obj::DrawObj,
+    plotz_geometry::object2d::Object2d,
 };
 
 /// A scene of 3d objects ready to be projected down to a 2d plane.
 #[derive(Debug, Clone)]
 pub struct Scene {
     /// Some objects.
-    pub objects: Vec<Object>,
+    pub objects: Vec<Object3d>,
 }
 
 impl Scene {
@@ -28,26 +28,26 @@ impl Scene {
         Scene { objects: vec![] }
     }
     /// Make a scene from some objects.
-    pub fn from(a: impl IntoIterator<Item = Object>) -> Scene {
+    pub fn from(a: impl IntoIterator<Item = Object3d>) -> Scene {
         Scene {
             objects: a.into_iter().collect(),
         }
     }
     /// Make a scene from some objects
     pub fn from_objects_with_style(
-        a: impl IntoIterator<Item = ObjectInner>,
-        style: Style,
+        a: impl IntoIterator<Item = Object3dInner>,
+        style: Style3d,
     ) -> Scene {
         Scene {
             objects: a
                 .into_iter()
-                .map(|a| Object::new(a).with_style(style.clone()))
+                .map(|a| Object3d::new(a).with_style(style.clone()))
                 .collect(),
         }
     }
 
-    /// Projects the scene onto a camera, renders to 2d, and returns a vector of drawobjects.
-    pub fn project_with(&self, projection: Projection, occlusion: Occlusion) -> Vec<DrawObj> {
+    /// Projects the scene onto a camera, renders to 2d, and returns a vector of object2ds.
+    pub fn project_with(&self, projection: Projection, occlusion: Occlusion) -> Vec<Object2d> {
         match (projection, occlusion) {
             //
             (Projection::Oblique(obl), Occlusion::False) => self

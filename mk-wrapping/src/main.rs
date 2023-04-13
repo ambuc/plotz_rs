@@ -1,9 +1,9 @@
-use plotz_geometry::draw_obj_inner::DrawObjInner;
+use plotz_geometry::object2d_inner::Object2dInner;
 use {
     argh::FromArgs,
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{curve::CurveArc, draw_obj::DrawObj, point::Pt, segment::Segment},
+    plotz_geometry::{curve::CurveArc, object2d::Object2d, point::Pt, segment::Segment},
     rand::{distributions::Standard, prelude::Distribution, Rng},
     std::f64::consts::*,
 };
@@ -40,15 +40,15 @@ enum Tile {
     Clover2,
 }
 impl Tile {
-    fn to_dos(&self) -> Vec<DrawObj> {
+    fn to_dos(&self) -> Vec<Object2d> {
         self.to_dois()
             .into_iter()
-            .map(|doi| DrawObj::new(doi).with_color(&BLACK).with_thickness(2.0))
+            .map(|doi| Object2d::new(doi).with_color(&BLACK).with_thickness(2.0))
             .collect::<Vec<_>>()
     }
 
     // scaled to a unit square.
-    fn to_dois(&self) -> Vec<DrawObjInner> {
+    fn to_dois(&self) -> Vec<Object2dInner> {
         let a = Pt(0.0, 0.0);
         let b = Pt(0.25, 0.0);
         let c = Pt(0.5, 0.0);
@@ -148,18 +148,18 @@ fn main() {
     let image_width: f64 = 500.0;
     let margin = 10.0;
 
-    let mut draw_obj_vec: Vec<DrawObj> = vec![];
+    let mut obj_vec: Vec<Object2d> = vec![];
 
     let width = 10;
     let height = 10;
     for dx in 0..=width {
         for dy in 0..=height {
             let tile: Tile = rand::random();
-            draw_obj_vec.extend(tile.to_dos().into_iter().map(|d_o| d_o + Pt(dx, dy)));
+            obj_vec.extend(tile.to_dos().into_iter().map(|d_o| d_o + Pt(dx, dy)));
         }
     }
 
-    let mut canvas = Canvas::from_objs(draw_obj_vec.into_iter(), /*autobucket=*/ false)
+    let mut canvas = Canvas::from_objs(obj_vec.into_iter(), /*autobucket=*/ false)
         .with_frame(make_frame((image_width, image_width), Pt(margin, margin)));
 
     canvas.scale_to_fit_frame().unwrap();

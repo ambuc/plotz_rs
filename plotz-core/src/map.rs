@@ -18,8 +18,8 @@ use {
     plotz_geometry::{
         bounded::{Bounded, BoundingBoxError},
         crop::Croppable,
-        draw_obj::DrawObj,
-        draw_obj_inner::DrawObjInner,
+        object2d::Object2d,
+        object2d_inner::Object2dInner,
         point::Pt,
         polygon::Polygon,
         segment::Segment,
@@ -64,15 +64,15 @@ pub enum MapError {
 
 #[derive(Debug)]
 /// A polygon with some annotations (bucket, color, tags, etc.).
-pub struct AnnotatedDrawObj {
-    draw_obj: DrawObj,
+pub struct AnnotatedObject2d {
+    object_2d: Object2d,
     bucket: Bucket,
     _tags: Vec<(String, String)>,
 }
-impl AnnotatedDrawObj {
+impl AnnotatedObject2d {
     /// Consumes an AnnotatedPolygon and casts down to a ColoredPolygon.
-    pub fn to_draw_obj(self) -> DrawObj {
-        self.draw_obj
+    pub fn to_object2d(self) -> Object2d {
+        self.object_2d
     }
 }
 
@@ -212,11 +212,11 @@ impl Map {
                 )
                 .expect("parse")
                 .iter()
-                .flat_map(|(draw_obj_inner, tags)| {
+                .flat_map(|(obj_inner, tags)| {
                     bucketer.bucket(tags).into_iter().flat_map(|bucket| {
                         if let Some(color) = map_bucket_to_color(&bucket) {
-                            Some(AnnotatedDrawObj {
-                                draw_obj: DrawObj::new(draw_obj_inner.clone())
+                            Some(AnnotatedObject2d {
+                                object_2d: Object2d::new(obj_inner.clone())
                                     .with_color(color)
                                     .with_thickness(*DEFAULT_THICKNESS),
                                 bucket,
@@ -227,7 +227,7 @@ impl Map {
                         }
                     })
                 })
-                .collect::<Vec<AnnotatedDrawObj>>()
+                .collect::<Vec<AnnotatedObject2d>>()
             })
             .sorted_by(|ap_1, ap_2| Ord::cmp(&ap_1.bucket, &ap_2.bucket))
             .group_by(|ap| ap.bucket)
@@ -237,7 +237,7 @@ impl Map {
                     .dos_by_bucket
                     .entry(Some(bucket))
                     .or_default()
-                    .extend(v.into_iter().map(|v| v.to_draw_obj()));
+                    .extend(v.into_iter().map(|v| v.to_object2d()));
             });
 
         trace!("made {:?} layers", canvas.dos_by_bucket.len());
@@ -314,7 +314,7 @@ impl Map {
         Ok(())
     }
 
-    fn apply_shading_to_drawobjs(&mut self) {
+    fn apply_shading_to_objects(&mut self) {
         for (bucket, layers) in self.canvas.dos_by_bucket.iter_mut() {
             if let Some(bucket) = bucket {
                 if let Some((shade_and_outline, ref shade_config)) =
@@ -322,16 +322,16 @@ impl Map {
                 {
                     let mut v = vec![];
                     // keep the frame, add the crosshatchings.
-                    let crosshatchings: Vec<DrawObj> = layers
+                    let crosshatchings: Vec<Object2d> = layers
                         .iter()
                         .filter_map(|co| match &co.obj {
-                            DrawObjInner::Polygon(p) => match shade_polygon(shade_config, &p) {
+                            Object2dInner::Polygon(p) => match shade_polygon(shade_config, &p) {
                                 Err(_) => None,
                                 Ok(segments) => Some(
                                     segments
                                         .into_iter()
-                                        .map(|s| DrawObj {
-                                            obj: DrawObjInner::Segment(s),
+                                        .map(|s| Object2d {
+                                            obj: Object2dInner::Segment(s),
                                             color: co.color,
                                             thickness: shade_config.thickness,
                                         })
@@ -376,7 +376,7 @@ impl Map {
     pub fn randomize_circles(&mut self) {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             for d_o in dos.iter_mut() {
-                if let DrawObjInner::CurveArc(ca) = &mut d_o.obj {
+                if let Object2dInner::CurveArc(ca) = &mut d_o.obj {
                     ca.ctr += Pt(
                         thread_rng().gen_range(-2.0..=2.0),
                         thread_rng().gen_range(-2.0..=2.0),
@@ -409,15 +409,15 @@ impl Map {
                 .into_iter()
                 .flat_map(|d_o| {
                     match d_o.obj.clone() {
-                        DrawObjInner::Polygon(pg) => pg
+                        Object2dInner::Polygon(pg) => pg
                             .to_segments()
                             .into_iter()
-                            .map(DrawObjInner::from)
+                            .map(Object2dInner::from)
                             .collect(),
                         x => vec![x],
                     }
                     .into_iter()
-                    .map(|doi| DrawObj { obj: doi, ..*d_o })
+                    .map(|doi| Object2d { obj: doi, ..*d_o })
                 })
                 .collect();
         }
@@ -431,10 +431,10 @@ impl Map {
             let q = 0.5;
             for d_o in dos.iter_mut() {
                 match &mut d_o.obj {
-                    DrawObjInner::Segment(sg) => {
+                    Object2dInner::Segment(sg) => {
                         sg.round_to_nearest(q);
                     }
-                    DrawObjInner::Polygon(pg) => {
+                    Object2dInner::Polygon(pg) => {
                         pg.round_to_nearest(q);
                     }
                     _ => {}
@@ -461,14 +461,14 @@ impl Map {
                 .unwrap();
             let mut hs = HashSet::<Segment>::new();
             for d_o in dos.iter() {
-                if let DrawObjInner::Segment(sg) = d_o.obj {
+                if let Object2dInner::Segment(sg) = d_o.obj {
                     hs.insert(sg);
                     // TODO(ambuc): really, deduplicate this way but then store and restore the original.
                 }
             }
             *dos = hs
                 .into_iter()
-                .map(|sg| DrawObj::new(sg).with_color(color))
+                .map(|sg| Object2d::new(sg).with_color(color))
                 .collect::<Vec<_>>();
         }
     }
@@ -481,7 +481,7 @@ impl Map {
         let () = self.do_all_adjustments(config.scale_factor, &config.size)?;
 
         // let () = self.randomize_circles();
-        let () = self.apply_shading_to_drawobjs();
+        let () = self.apply_shading_to_objects();
 
         // self.simplify_layers();
 
@@ -497,7 +497,7 @@ impl Map {
                 Pt(margin, margin),
             );
             self.canvas.frame = Some(
-                DrawObj::new(frame.clone())
+                Object2d::new(frame.clone())
                     .with_color(&BLACK)
                     .with_thickness(5.0),
             );
@@ -617,13 +617,13 @@ mod tests {
                 [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
             ),
         ] {
-            let obj = DrawObjInner::Polygon(Polygon(initial).unwrap());
+            let obj = Object2dInner::Polygon(Polygon(initial).unwrap());
             let mut map = Map {
                 canvas: {
                     let mut canvas = Canvas::new();
                     canvas.dos_by_bucket.insert(
                         Some(Bucket::Area(Area::Beach)),
-                        vec![DrawObj {
+                        vec![Object2d {
                             obj: obj,
                             color: &ALICEBLUE,
                             thickness: 1.0,
@@ -639,7 +639,7 @@ mod tests {
 
             assert_eq!(
                 x.next().unwrap()[0].obj,
-                DrawObjInner::Polygon(Polygon(expected).unwrap())
+                Object2dInner::Polygon(Polygon(expected).unwrap())
             );
         }
     }
@@ -670,14 +670,14 @@ mod tests {
                 [Pt(0.0, 0.0), Pt(0.0, 900.0), Pt(900.0, 0.0)],
             ),
         ] {
-            let obj = DrawObjInner::Polygon(Polygon(initial).unwrap());
+            let obj = Object2dInner::Polygon(Polygon(initial).unwrap());
             let mut map = Map {
                 center: None,
                 canvas: {
                     let mut canvas = Canvas::new();
                     canvas.dos_by_bucket.insert(
                         Some(Bucket::Area(Area::Beach)),
-                        vec![DrawObj {
+                        vec![Object2d {
                             obj: obj,
                             color: &ALICEBLUE,
                             thickness: 1.0,
@@ -692,7 +692,7 @@ mod tests {
 
             assert_eq!(
                 x.next().unwrap()[0].obj,
-                DrawObjInner::Polygon(Polygon(expected).unwrap())
+                Object2dInner::Polygon(Polygon(expected).unwrap())
             );
         }
     }

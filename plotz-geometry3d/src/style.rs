@@ -4,7 +4,7 @@ use {plotz_color::*, typed_builder::TypedBuilder};
 
 /// Styling information for the 3d representation.
 #[derive(Debug, Clone, TypedBuilder)]
-pub struct Style {
+pub struct Style3d {
     /// A color.
     #[builder(default=&BLACK)]
     pub color: &'static ColorRGB,

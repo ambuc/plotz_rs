@@ -5,7 +5,7 @@ use {
     lazy_static::lazy_static,
     plotz_color::*,
     plotz_geometry::{
-        draw_obj::DrawObj,
+        object2d::Object2d,
         point::{PolarPt, Pt},
         polygon::Polygon,
         shading::{shade_polygon, ShadeConfig},
@@ -183,7 +183,7 @@ fn expand_tile(tile: &Tile) -> Vec<Tile> {
     }
 }
 
-pub fn make() -> Vec<DrawObj> {
+pub fn make() -> Vec<Object2d> {
     let origin = Pt(0.1, 0.1);
 
     let t0 = Tile(
@@ -243,7 +243,7 @@ pub fn make() -> Vec<DrawObj> {
         }
     }
 
-    let dos: Vec<DrawObj> = all_tiles
+    let dos: Vec<Object2d> = all_tiles
         .into_iter()
         .flat_map(|tile| {
             let color = tile.kind.color();
@@ -258,11 +258,11 @@ pub fn make() -> Vec<DrawObj> {
             let segments = shade_polygon(&config, &p).unwrap();
 
             let mut ret = vec![];
-            ret.push(DrawObj::new(p));
+            ret.push(Object2d::new(p));
             ret.extend(
                 segments
                     .into_iter()
-                    .map(|s| DrawObj::new(s).with_color(color)),
+                    .map(|s| Object2d::new(s).with_color(color)),
             );
 
             ret

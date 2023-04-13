@@ -2,7 +2,7 @@ use {
     argh::FromArgs,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        crop::PointLoc, draw_obj::DrawObj, draw_obj_inner::DrawObjInner, point::Pt,
+        crop::PointLoc, object2d::Object2d, object2d_inner::Object2dInner, point::Pt,
         traits::YieldPoints,
     },
 };
@@ -31,9 +31,9 @@ fn main() {
         _ => vec![],
     };
 
-    let frame: DrawObj = make_frame((720.0, 720.0 * 1.3), /*offset=*/ Pt(20.0, 20.0));
+    let frame: Object2d = make_frame((720.0, 720.0 * 1.3), /*offset=*/ Pt(20.0, 20.0));
     let frame_polygon = match frame.obj {
-        DrawObjInner::Polygon(ref pg) => pg.clone(),
+        Object2dInner::Polygon(ref pg) => pg.clone(),
         _ => unimplemented!(),
     };
 
@@ -47,11 +47,11 @@ fn main() {
         }
     });
 
-    let draw_objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
+    let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
 
-    //draw_objs.join_adjacent_segments();
+    //objs.join_adjacent_segments();
 
-    let () = draw_objs
+    let () = objs
         .write_to_svg(
             Size {
                 width: (750.0 * 1.3) as usize,

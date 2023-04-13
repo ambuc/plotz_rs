@@ -3,8 +3,8 @@ use {
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        draw_obj::DrawObj,
-        draw_obj_inner::DrawObjInner,
+        object2d::Object2d,
+        object2d_inner::Object2dInner,
         point::Pt,
         polygon::{Multiline, Polygon},
         shading::{shade_polygon, ShadeConfig},
@@ -152,7 +152,7 @@ fn fill_grid(x: usize, y: usize) -> Vec<Vec<Tile>> {
         .collect()
 }
 
-fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<DrawObj> {
+fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<Object2d> {
     [
         (cell.id(), cell.n(), 0.0 * FRAC_PI_2),
         (cell.id(), cell.w(), -1.0 * FRAC_PI_2),
@@ -186,7 +186,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<DrawObj> {
                 ])
                 .unwrap(),
             };
-            DrawObj::new(shape).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
+            Object2d::new(shape).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
         });
         ret.extend({
             shade_polygon(
@@ -196,7 +196,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<DrawObj> {
             .unwrap()
             .iter()
             .map(|sg| {
-                DrawObj::new(*sg).with_color(
+                Object2d::new(*sg).with_color(
                     [
                         &ALICEBLUE,      // 1
                         &BLUEVIOLET,     // 2
@@ -215,12 +215,12 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<DrawObj> {
             .collect::<Vec<_>>()
         });
         ret.iter_mut().for_each(|d_o| match &mut d_o.obj {
-            DrawObjInner::Polygon(pg) => {
+            Object2dInner::Polygon(pg) => {
                 *pg *= 2.0;
                 pg.rotate(&Pt(1.0, 1.0), rot);
                 *pg += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
             }
-            DrawObjInner::Segment(sg) => {
+            Object2dInner::Segment(sg) => {
                 *sg *= 2.0;
                 sg.rotate(&Pt(1.0, 1.0), rot);
                 *sg += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
@@ -243,39 +243,36 @@ fn main() {
 
     let grid: Vec<Vec<Tile>> = fill_grid(grid_cardinality, grid_cardinality);
 
-    let mut draw_obj_vec = vec![];
+    let mut obj_vec = vec![];
 
     for (row_idx, row) in grid.iter().enumerate() {
         for (col_idx, cell) in row.iter().enumerate() {
-            draw_obj_vec.extend(draw_tile(*cell, (row_idx, col_idx)));
+            obj_vec.extend(draw_tile(*cell, (row_idx, col_idx)));
         }
     }
 
-    let mut draw_objs = Canvas::from_objs(draw_obj_vec.into_iter(), /*autobucket=*/ false)
+    let mut objs = Canvas::from_objs(obj_vec.into_iter(), /*autobucket=*/ false)
         .with_frame(make_frame((image_width, image_width), Pt(margin, margin)));
 
     let scale = image_width / 2.0 / (grid_cardinality as f64);
 
-    draw_objs
-        .dos_by_bucket
-        .iter_mut()
-        .for_each(|(_bucket, layers)| {
-            layers.iter_mut().for_each(|d_o| match &mut d_o.obj {
-                DrawObjInner::Polygon(p) => {
-                    *p *= scale;
-                    *p += Pt(margin, margin);
-                }
-                DrawObjInner::Segment(s) => {
-                    *s *= scale;
-                    *s += Pt(margin, margin);
-                }
-                _ => {
-                    unimplemented!()
-                }
-            });
+    objs.dos_by_bucket.iter_mut().for_each(|(_bucket, layers)| {
+        layers.iter_mut().for_each(|d_o| match &mut d_o.obj {
+            Object2dInner::Polygon(p) => {
+                *p *= scale;
+                *p += Pt(margin, margin);
+            }
+            Object2dInner::Segment(s) => {
+                *s *= scale;
+                *s += Pt(margin, margin);
+            }
+            _ => {
+                unimplemented!()
+            }
         });
+    });
 
-    let () = draw_objs
+    let () = objs
         .write_to_svg(
             Size {
                 width: (image_width + 2.0 * margin) as usize,

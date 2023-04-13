@@ -3,8 +3,8 @@
 use {
     plotz_color::*,
     plotz_geometry::{
-        draw_obj::DrawObj,
-        draw_obj_inner::DrawObjInner,
+        object2d::Object2d,
+        object2d_inner::Object2dInner,
         group::Group,
         interpolate::extrapolate_2d as extrapolate,
         point::{PolarPt, Pt},
@@ -232,7 +232,7 @@ trait Tile {
     fn pts_iter_mut(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt> + '_>;
 }
 
-pub fn make() -> Vec<DrawObj> {
+pub fn make() -> Vec<Object2d> {
     let ell: f64 = (5.0_f64.sqrt() - 1.0) / 2.0;
 
     let t1 = {
@@ -300,8 +300,8 @@ pub fn make() -> Vec<DrawObj> {
             let segments = shade_polygon(&config, &p).unwrap();
 
             // std::iter::empty() //
-            std::iter::once(DrawObj::new(p).with_color(color)).chain([DrawObj::new(Group::new(
-                segments.into_iter().map(DrawObjInner::Segment),
+            std::iter::once(Object2d::new(p).with_color(color)).chain([Object2d::new(Group::new(
+                segments.into_iter().map(Object2dInner::Segment),
             ))
             .with_color(color)])
         })

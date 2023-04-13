@@ -1,15 +1,15 @@
 //! Occludes things. Cmon.
 
 use plotz_geometry::{
-    draw_obj::DrawObj, draw_obj_inner::DrawObjInner, segment::IntersectionOutcome,
+    object2d::Object2d, object2d_inner::Object2dInner, segment::IntersectionOutcome,
 };
 
-use crate::{object_inner::ObjectInner, style::Style};
+use crate::{object3d_inner::Object3dInner, style::Style3d};
 
 /// Occludes.
 pub struct Occluder {
     /// Incorporated objects. 
-    objects: Vec<(DrawObjInner, ObjectInner, Option<Style>)>,
+    objects: Vec<(Object2dInner, Object3dInner, Option<Style3d>)>,
 }
 
 impl Occluder {
@@ -21,9 +21,9 @@ impl Occluder {
     /// Incorporates an object.
     pub fn add(
         &mut self,
-        incoming_obj2: DrawObjInner,
-        incoming_obj3: ObjectInner,
-        style: Option<Style>,
+        incoming_obj2: Object2dInner,
+        incoming_obj3: Object3dInner,
+        style: Option<Style3d>,
     ) {
         // let is_collision = self.objects.iter().any(|(existing_obj2, _, _)| -> bool {
         //     // check collision
@@ -73,12 +73,12 @@ impl Occluder {
     }
 
     /// Exports the occluded 2d objects.
-    pub fn export(self) -> Vec<DrawObj> {
+    pub fn export(self) -> Vec<Object2d> {
         self.objects
             .into_iter()
             .map(|(doi, _, style)| match style {
-                None => DrawObj::new(doi),
-                Some(Style { color, thickness }) => DrawObj::new(doi)
+                None => Object2d::new(doi),
+                Some(Style3d { color, thickness }) => Object2d::new(doi)
                     .with_color(color)
                     .with_thickness(thickness),
             })

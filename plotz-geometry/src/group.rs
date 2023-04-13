@@ -6,7 +6,7 @@ use {
     crate::{
         bounded::Bounded,
         crop::{CropToPolygonError, Croppable},
-        draw_obj_inner::DrawObjInner,
+        object2d_inner::Object2dInner,
         point::Pt,
         polygon::Polygon,
         traits::*,
@@ -17,17 +17,17 @@ use {
 
 #[derive(Debug, PartialEq, Clone)]
 /// A group of objects.
-pub struct Group(Vec<DrawObjInner>);
+pub struct Group(Vec<Object2dInner>);
 
 impl Group {
     /// Creates a new group.
-    pub fn new(dois: impl IntoIterator<Item = DrawObjInner>) -> Group {
+    pub fn new(dois: impl IntoIterator<Item = Object2dInner>) -> Group {
         Group(dois.into_iter().collect::<Vec<_>>())
     }
 
-    /// Returns a boxed iterator of immutable DrawObjInners, the members of this
+    /// Returns a boxed iterator of immutable Object2dInners, the members of this
     /// group.
-    pub fn iter_dois(&self) -> Box<dyn Iterator<Item = &DrawObjInner> + '_> {
+    pub fn iter_dois(&self) -> Box<dyn Iterator<Item = &Object2dInner> + '_> {
         Box::new(self.0.iter())
     }
 
