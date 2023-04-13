@@ -156,12 +156,11 @@ pub fn make() -> Vec<Object2d> {
                 .build();
             let segments = shade_polygon(&config, &p).unwrap();
 
-            std::iter::empty()
-                .chain(
-                    segments
-                        .into_iter()
-                        .map(|s| Object2d::new(s).with_color(color)),
-                )
+            std::iter::empty().chain(
+                segments
+                    .into_iter()
+                    .map(|s| Object2d::new(s).with_color(color)),
+            )
         })
         .collect();
 

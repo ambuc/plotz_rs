@@ -4,7 +4,7 @@ use crate::polygon::Polygon;
 
 use {
     crate::{
-        bounded::{Bounds, Bounded},
+        bounded::{Bounded, Bounds},
         crop::{CropToPolygonError, Croppable, PointLoc},
         interpolate::interpolate_2d_checked,
         point::{PolarPt, Pt},
@@ -415,10 +415,7 @@ fn intersections_of_line_and_curvearc(
 
 impl Croppable for CurveArc {
     type Output = CurveArc;
-    fn crop_to(
-        &self,
-        frame: &Polygon,
-    ) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
     where
         Self: Sized,
     {

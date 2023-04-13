@@ -3,8 +3,8 @@ use {
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        bounded::Bounded, crop::Croppable, curve::CurveArcs, object2d::Object2d,
-        object2d_inner::Object2dInner, grid::Grid, point::Pt,
+        bounded::Bounded, crop::Croppable, curve::CurveArcs, grid::Grid, object2d::Object2d,
+        object2d_inner::Object2dInner, point::Pt,
     },
     rand::Rng,
     std::f64::consts::*,

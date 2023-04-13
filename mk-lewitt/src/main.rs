@@ -5,8 +5,8 @@ use {
     plotz_geometry::{
         crop::PointLoc,
         curve::CurveArc,
-        object2d::Object2d,
         grid_layout::{GridLayout, GridLayoutSettings},
+        object2d::Object2d,
         point::Pt,
     },
     rand::{seq::SliceRandom, thread_rng, Rng},

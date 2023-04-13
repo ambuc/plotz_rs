@@ -5,7 +5,7 @@ use either::Either;
 
 use crate::{isxn::Intersection, point::Pt, segment::Segment};
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct AnnotatedIsxn {
     pub a_idx: usize,
     pub b_idx: usize,
