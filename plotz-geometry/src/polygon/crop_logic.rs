@@ -7,8 +7,8 @@ use crate::{isxn::Intersection, point::Pt, segment::Segment};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct AnnotatedIsxn {
-    pub frame_segment_idx: usize,
-    pub inner_segment_idx: usize,
+    pub a_idx: usize,
+    pub b_idx: usize,
     pub intersection: Intersection,
 }
 impl AnnotatedIsxn {
@@ -19,14 +19,14 @@ impl AnnotatedIsxn {
 
 #[derive(Debug, Copy, Clone)]
 pub enum On {
-    OnInner,
-    OnFrame,
+    OnA,
+    OnB,
 }
 impl On {
     pub fn flip(&self) -> On {
         match self {
-            On::OnInner => On::OnFrame,
-            On::OnFrame => On::OnInner,
+            On::OnA => On::OnB,
+            On::OnB => On::OnA,
         }
     }
 }
@@ -46,38 +46,38 @@ pub struct Cursor<'a> {
     pub facing_along_segment_idx: usize, // segment index
     // context
     #[derivative(Debug = "ignore")]
-    pub inner_pts: &'a Vec<(usize, &'a Pt)>,
+    pub a_pts: &'a Vec<(usize, &'a Pt)>,
     #[derivative(Debug = "ignore")]
-    pub inner_pts_len: &'a usize,
+    pub a_pts_len: &'a usize,
     #[derivative(Debug = "ignore")]
-    pub frame_pts: &'a Vec<(usize, &'a Pt)>,
+    pub b_pts: &'a Vec<(usize, &'a Pt)>,
     #[derivative(Debug = "ignore")]
-    pub frame_pts_len: &'a usize,
+    pub b_pts_len: &'a usize,
     #[derivative(Debug = "ignore")]
-    pub inner_segments: &'a Vec<(usize, Segment)>,
+    pub a_segments: &'a Vec<(usize, Segment)>,
 }
 impl<'a> Cursor<'a> {
     pub fn pt(&self) -> Pt {
         match &self.position {
             Either::Left(one_polygon) => match one_polygon.on_polygon {
-                On::OnInner => *self.inner_pts[one_polygon.at_point_index].1,
-                On::OnFrame => *self.frame_pts[one_polygon.at_point_index].1,
+                On::OnA => *self.a_pts[one_polygon.at_point_index].1,
+                On::OnB => *self.b_pts[one_polygon.at_point_index].1,
             },
             Either::Right(isxn) => isxn.pt(),
         }
     }
     pub fn pts_len(&self, on: On) -> usize {
         match on {
-            On::OnInner => *self.inner_pts_len,
-            On::OnFrame => *self.frame_pts_len,
+            On::OnA => *self.a_pts_len,
+            On::OnB => *self.b_pts_len,
         }
     }
     pub fn march_to_next_point(&mut self) {
         let v = (match self.position {
             Either::Left(one_polygon) => one_polygon.at_point_index,
             Either::Right(isxn) => match self.facing_along {
-                On::OnInner => isxn.inner_segment_idx,
-                On::OnFrame => isxn.frame_segment_idx,
+                On::OnA => isxn.a_idx,
+                On::OnB => isxn.b_idx,
             },
         } + 1)
             % self.pts_len(self.facing_along);
@@ -96,8 +96,8 @@ impl<'a> Cursor<'a> {
             self.facing_along
         };
         let new_facing_along_segment_idx = match new_facing_along {
-            On::OnFrame => next_isxn.frame_segment_idx,
-            On::OnInner => next_isxn.inner_segment_idx,
+            On::OnB => next_isxn.b_idx,
+            On::OnA => next_isxn.a_idx,
         };
         self.position = new_position;
         self.facing_along = new_facing_along;

@@ -2,22 +2,40 @@
 
 use crate::point::Pt;
 
+use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 
 #[derive(Debug, PartialEq, Copy, Clone, Eq, Hash)]
 /// Guaranteed to be 0.0 <= f <= 1.0. Witness type.
-pub struct NormF {
-    /// NOT PUB
-    val: FloatOrd<f64>,
+pub enum NormF {
+    /// Zero.
+    Zero,
+    /// Another value.
+    Val(FloatOrd<f64>),
+    /// One.
+    One,
 }
 impl NormF {
     /// new normf.
     pub fn new(f: f64) -> Option<NormF> {
-        if (0.0..=1.0).contains(&f) {
-            Some(NormF { val: FloatOrd(f) })
-        } else {
-            None
+        match f {
+            f if approx_eq!(f64, f, 0.0) => Some(NormF::Zero),
+            f if approx_eq!(f64, f, 1.0) => Some(NormF::One),
+            f if (0.0..=1.0).contains(&f) => Some(NormF::Val(FloatOrd(f))),
+            _ => None,
         }
+    }
+    /// as an f64.
+    pub fn to_f64(&self) -> f64 {
+        match self {
+            NormF::Zero => 0.0,
+            NormF::Val(f) => f.0,
+            NormF::One => 1.0,
+        }
+    }
+    /// as a FloatOrd<f64>.
+    pub fn to_float_ord(&self) -> FloatOrd<f64> {
+        FloatOrd(self.to_f64())
     }
 }
 
@@ -46,24 +64,24 @@ impl Intersection {
     }
 
     /// The percent of the way along line A at which the intersection occurs.
-    pub fn percent_along_inner(&self) -> FloatOrd<f64> {
-        self.1.val
+    pub fn percent_along_a(&self) -> FloatOrd<f64> {
+        self.1.to_float_ord()
     }
     /// The percent of the way along line B at which the intersection occurs.
-    pub fn percent_along_frame(&self) -> FloatOrd<f64> {
-        self.2.val
+    pub fn percent_along_b(&self) -> FloatOrd<f64> {
+        self.2.to_float_ord()
     }
 
-    fn on_points_of_self(&self) -> bool {
-        self.percent_along_inner().0 == 0.0 || self.percent_along_inner().0 == 1.0
+    fn on_points_of_a(&self) -> bool {
+        matches!(self.1, NormF::Zero | NormF::One)
     }
-    fn on_points_of_other(&self) -> bool {
-        self.percent_along_frame().0 == 0.0 || self.percent_along_frame().0 == 1.0
+    fn on_points_of_b(&self) -> bool {
+        matches!(self.2, NormF::Zero | NormF::One)
     }
     /// Returns true if the intersection occurs at the head or tail of either
     /// intersecting segment.
-    pub fn on_points_of_either_polygon(&self) -> bool {
-        self.on_points_of_self() || self.on_points_of_other()
+    pub fn on_points_of_either(&self) -> bool {
+        self.on_points_of_a() || self.on_points_of_b()
     }
 }
 

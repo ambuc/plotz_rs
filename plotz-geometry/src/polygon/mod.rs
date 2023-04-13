@@ -268,75 +268,75 @@ impl Polygon {
 
 impl Croppable for Polygon {
     type Output = Polygon;
-    /// Crop this polygon to some frame. Returns a list of resultant polygons.
+    /// Crop this polygon to some frame (b). Returns a list of resultant polygons.
     /// Both polygons must already be closed and positively oriented.
     ///
     /// Known bug: If multiple resultant polygons are present, this will return
     /// only one.
-    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
-        // crop self to frame, return modified self.
+    fn crop_to(&self, b: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
+        // crop self to b, return modified self.
 
         if self.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThisPolygonNotClosed);
         }
-        if frame.kind != PolygonKind::Closed {
+        if b.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThatPolygonNotClosed);
         }
         if self.get_curve_orientation() != CurveOrientation::Positive {
             return Err(CropToPolygonError::ThisPolygonNotPositivelyOriented);
         }
-        if frame.get_curve_orientation() != CurveOrientation::Positive {
+        if b.get_curve_orientation() != CurveOrientation::Positive {
             return Err(CropToPolygonError::ThatPolygonNotPositivelyOriented);
         }
 
-        let inner_segments: Vec<_> = self.to_segments().into_iter().enumerate().collect();
-        let frame_segments: Vec<_> = frame.to_segments().into_iter().enumerate().collect();
+        let a_segments: Vec<_> = self.to_segments().into_iter().enumerate().collect();
+        let b_segments: Vec<_> = b.to_segments().into_iter().enumerate().collect();
 
-        let isxn_outcomes: Vec<_> = iproduct!(&inner_segments, &frame_segments)
-            .filter_map(|((inner_idx, i_seg), (frame_idx, f_seg))| {
+        let isxn_outcomes: Vec<_> = iproduct!(&a_segments, &b_segments)
+            .filter_map(|((a_idx, i_seg), (b_idx, f_seg))| {
                 i_seg
                     .intersects(f_seg)
-                    .map(|outcome| (*inner_idx, *frame_idx, outcome))
+                    .map(|outcome| (*a_idx, *b_idx, outcome))
             })
             .collect();
 
         // If there are no intersections,
         if isxn_outcomes.is_empty() {
-            let frame_pts_in_inner: Vec<(usize, PointLoc)> = {
+            let b_pts_in_a: Vec<(usize, PointLoc)> = {
                 let mut v = vec![];
-                for (idx, pt) in frame.pts.iter().enumerate() {
+                for (idx, pt) in b.pts.iter().enumerate() {
                     v.push((idx, self.contains_pt(pt)?));
                 }
                 Result::<_, ContainsPointError>::Ok(v)
             }?;
-            let inner_pts_in_frame: Vec<(usize, PointLoc)> = {
+            let a_pts_in_b: Vec<(usize, PointLoc)> = {
                 let mut v = vec![];
                 for (idx, pt) in self.pts.iter().enumerate() {
-                    v.push((idx, frame.contains_pt(pt)?));
+                    v.push((idx, b.contains_pt(pt)?));
                 }
                 Result::<_, ContainsPointError>::Ok(v)
             }?;
 
-            let all_frame_points_in_inner = all(&frame_pts_in_inner, |(_idx, isxn)| {
+            let all_b_pts_in_a = all(&b_pts_in_a, |(_idx, isxn)| {
                 !matches!(isxn, PointLoc::Outside)
             });
-            let all_inner_points_in_frame = all(&inner_pts_in_frame, |(_idx, isxn)| {
+            let all_a_pts_in_b = all(&a_pts_in_b, |(_idx, isxn)| {
                 !matches!(isxn, PointLoc::Outside)
             });
 
-            // Then either all of the frame points are inside inner,
-            if all_frame_points_in_inner {
-                // in which case we ought to return the frame unchanged,
-                return Ok(vec![frame.clone()]);
-                // or all of the inner points are inside frame,
-            } else if all_inner_points_in_frame {
-                // in which case we ought to return inner unchanged.
+            // Then either all of the points are inside a,
+            if all_b_pts_in_a {
+                // in which case we ought to return b unchanged,
+                return Ok(vec![b.clone()]);
+                // or all of the a points are inside b,
+            } else if all_a_pts_in_b {
+                // in which case we ought to return a unchanged.
                 return Ok(vec![self.clone()]);
             }
         }
 
-        let inner_pts: Vec<_> = self.pts.iter().enumerate().collect();
-        let frame_pts: Vec<_> = frame.pts.iter().enumerate().collect();
+        let a_pts: Vec<_> = self.pts.iter().enumerate().collect();
+        let b_pts: Vec<_> = b.pts.iter().enumerate().collect();
 
         let mut resultant_polygons: Vec<Polygon> = vec![];
         let mut resultant_pts: Vec<Pt> = vec![];
@@ -345,17 +345,17 @@ impl Croppable for Polygon {
 
         let mut curr = Cursor {
             position: Either::Left(OnePolygon {
-                on_polygon: On::OnInner,
+                on_polygon: On::OnA,
                 at_point_index: 0,
             }),
-            facing_along: On::OnInner,
+            facing_along: On::OnA,
             facing_along_segment_idx: 0_usize,
             //
-            inner_pts: &inner_pts,
-            inner_pts_len: &inner_pts.len(),
-            frame_pts: &frame_pts,
-            frame_pts_len: &frame_pts.len(),
-            inner_segments: &inner_segments,
+            a_pts: &a_pts,
+            a_pts_len: &a_pts.len(),
+            b_pts: &b_pts,
+            b_pts_len: &b_pts.len(),
+            a_segments: &a_segments,
         };
 
         'outer: loop {
@@ -376,37 +376,35 @@ impl Croppable for Polygon {
 
             let mut relevant_isxns: Vec<AnnotatedIsxn> = isxn_outcomes
                 .iter()
-                .filter_map(|(inner_idx, frame_idx, isxn_outcome)| match isxn_outcome {
+                .filter_map(|(a_idx, b_idx, isxn_outcome)| match isxn_outcome {
                     IsxnResult::MultipleIntersections(_) => None,
-                    IsxnResult::OneIntersection(isxn) => Some((inner_idx, frame_idx, isxn)),
+                    IsxnResult::OneIntersection(isxn) => Some((a_idx, b_idx, isxn)),
                 })
-                .filter(|(inner_idx, frame_idx, _isxn)| {
+                .filter(|(a_idx, b_idx, _isxn)| {
                     **(match curr.facing_along {
-                        On::OnInner => inner_idx,
-                        On::OnFrame => frame_idx,
+                        On::OnA => a_idx,
+                        On::OnB => b_idx,
                     }) == curr.facing_along_segment_idx
                 })
-                .map(
-                    |(inner_segment_idx, frame_segment_idx, intersection)| AnnotatedIsxn {
-                        frame_segment_idx: *frame_segment_idx,
-                        inner_segment_idx: *inner_segment_idx,
-                        intersection: *intersection,
-                    },
-                )
+                .map(|(a_idx, b_idx, intersection)| AnnotatedIsxn {
+                    b_idx: *b_idx,
+                    a_idx: *a_idx,
+                    intersection: *intersection,
+                })
                 // then collect them.
                 .collect();
 
             relevant_isxns.sort_by(|a: &AnnotatedIsxn, b: &AnnotatedIsxn| {
                 match &curr.facing_along {
-                    On::OnInner => a
+                    On::OnA => a
                         .intersection
-                        .percent_along_inner()
-                        .partial_cmp(&b.intersection.percent_along_inner())
+                        .percent_along_a()
+                        .partial_cmp(&b.intersection.percent_along_a())
                         .unwrap(),
-                    On::OnFrame => a
+                    On::OnB => a
                         .intersection
-                        .percent_along_frame()
-                        .partial_cmp(&b.intersection.percent_along_frame())
+                        .percent_along_b()
+                        .partial_cmp(&b.intersection.percent_along_b())
                         .unwrap(),
                 }
             });
@@ -417,8 +415,8 @@ impl Croppable for Polygon {
                         relevant_isxns
                             .into_iter()
                             .partition(|isxn| match curr.facing_along {
-                                On::OnInner => isxn.intersection.percent_along_inner().0 == 0.0,
-                                On::OnFrame => isxn.intersection.percent_along_frame().0 == 0.0,
+                                On::OnA => isxn.intersection.percent_along_a().0 == 0.0,
+                                On::OnB => isxn.intersection.percent_along_b().0 == 0.0,
                             });
                     relevant_isxns = v;
                 }
@@ -427,20 +425,20 @@ impl Croppable for Polygon {
                         relevant_isxns
                             .into_iter()
                             .partition(|isxn| match curr.facing_along {
-                                On::OnInner => {
-                                    isxn.intersection.percent_along_inner()
-                                        <= this_isxn.intersection.percent_along_inner()
+                                On::OnA => {
+                                    isxn.intersection.percent_along_a()
+                                        <= this_isxn.intersection.percent_along_a()
                                 }
-                                On::OnFrame => {
-                                    isxn.intersection.percent_along_frame()
-                                        <= this_isxn.intersection.percent_along_frame()
+                                On::OnB => {
+                                    isxn.intersection.percent_along_b()
+                                        <= this_isxn.intersection.percent_along_b()
                                 }
                             });
                     relevant_isxns = v;
                 }
             }
 
-            if !matches!(frame.contains_pt(&curr_pt)?, PointLoc::Outside) {
+            if !matches!(b.contains_pt(&curr_pt)?, PointLoc::Outside) {
                 resultant_pts.push(curr_pt);
             }
 
@@ -452,7 +450,7 @@ impl Croppable for Polygon {
                         let next_isxn = relevant_isxns.first().expect("?");
                         curr.march_to_isxn(
                             *next_isxn, /*should_flip */
-                            !matches!(frame.contains_pt(&curr_pt)?, PointLoc::Outside),
+                            !matches!(b.contains_pt(&curr_pt)?, PointLoc::Outside),
                         );
                     }
                     Either::Right(_) => {

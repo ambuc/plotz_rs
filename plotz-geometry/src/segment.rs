@@ -305,9 +305,9 @@ impl Croppable for Segment {
                     _ => None,
                 })
                 .collect::<Vec<Intersection>>();
-            isxns.sort_by_key(|i| i.percent_along_inner());
+            isxns.sort_by_key(|i| i.percent_along_a());
             let (_, vs) = isxns.into_iter().partition(|i| {
-                i.percent_along_inner().0
+                i.percent_along_a().0
                     <= interpolate::interpolate_2d_checked(self.i, self.f, curr_pt).unwrap_or_else(
                         |_| {
                             panic!(
@@ -324,7 +324,7 @@ impl Croppable for Segment {
                     let new_pt = interpolate::extrapolate_2d(
                         self.i,
                         self.f,
-                        intersection.percent_along_inner().0,
+                        intersection.percent_along_a().0,
                     );
 
                     // Not sure why. But escape the loop.
