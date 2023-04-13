@@ -3,12 +3,12 @@
 mod crop_logic;
 
 use {
-    self::crop_logic::{Cursor, Isxn, IsxnOutcome, On, OnePolygon},
+    self::crop_logic::{Cursor, AnnotatedIsxn, AnnotatedIsxnResult, On, OnePolygon},
     crate::{
         bounded::{Bounded, Bounds},
         crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
         point::Pt,
-        segment::{Contains, IntersectionOutcome, Segment},
+        segment::{Contains, IsxnResult, Segment},
         traits::*,
     },
     either::Either,
@@ -180,7 +180,7 @@ impl Polygon {
 
     /// Returns the detailed set of intersection outcomes between this polygon's
     /// segments and another polygon's segments.
-    pub fn intersects_detailed(&self, other: &Polygon) -> Vec<IntersectionOutcome> {
+    pub fn intersects_detailed(&self, other: &Polygon) -> Vec<IsxnResult> {
         iproduct!(self.to_segments(), other.to_segments())
             .flat_map(|(l1, l2)| l1.intersects(&l2))
             .collect::<Vec<_>>()
@@ -291,9 +291,9 @@ impl Croppable for Polygon {
         let inner_segments: Vec<_> = self.to_segments().into_iter().enumerate().collect();
         let frame_segments: Vec<_> = frame.to_segments().into_iter().enumerate().collect();
 
-        let isxn_outcomes: Vec<IsxnOutcome> = iproduct!(&inner_segments, &frame_segments)
+        let isxn_outcomes: Vec<AnnotatedIsxnResult> = iproduct!(&inner_segments, &frame_segments)
             .filter_map(|((inner_idx, i_seg), (frame_idx, f_seg))| {
-                i_seg.intersects(f_seg).map(|outcome| IsxnOutcome {
+                i_seg.intersects(f_seg).map(|outcome| AnnotatedIsxnResult {
                     frame_segment_idx: *frame_idx,
                     inner_segment_idx: *inner_idx,
                     outcome,
@@ -375,7 +375,7 @@ impl Croppable for Polygon {
                 return Err(CropToPolygonError::CycleError);
             }
 
-            let mut relevant_isxns: Vec<Isxn> = isxn_outcomes
+            let mut relevant_isxns: Vec<AnnotatedIsxn> = isxn_outcomes
                 .iter()
                 .filter_map(|isxn_outcome| isxn_outcome.to_isxn())
                 .filter(|isxn| {
@@ -387,7 +387,7 @@ impl Croppable for Polygon {
                 // then collect them.
                 .collect();
 
-            relevant_isxns.sort_by(|a: &Isxn, b: &Isxn| match &curr.facing_along {
+            relevant_isxns.sort_by(|a: &AnnotatedIsxn, b: &AnnotatedIsxn| match &curr.facing_along {
                 On::OnInner => a
                     .intersection
                     .percent_along_inner()

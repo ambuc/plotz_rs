@@ -6,20 +6,20 @@ use either::Either;
 use crate::{
     interpolate,
     point::Pt,
-    segment::{Intersection, IntersectionOutcome, Segment},
+    segment::{Intersection, IsxnResult, Segment},
 };
 
 #[derive(Debug)]
-pub struct IsxnOutcome {
+pub struct AnnotatedIsxnResult {
     pub frame_segment_idx: usize,
     pub inner_segment_idx: usize,
-    pub outcome: IntersectionOutcome,
+    pub outcome: IsxnResult,
 }
 
-impl IsxnOutcome {
-    pub fn to_isxn(&self) -> Option<Isxn> {
+impl AnnotatedIsxnResult {
+    pub fn to_isxn(&self) -> Option<AnnotatedIsxn> {
         match self.outcome {
-            IntersectionOutcome::OneIntersection(i) => Some(Isxn {
+            IsxnResult::OneIntersection(i) => Some(AnnotatedIsxn {
                 frame_segment_idx: self.frame_segment_idx,
                 inner_segment_idx: self.inner_segment_idx,
                 intersection: i,
@@ -30,12 +30,12 @@ impl IsxnOutcome {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub struct Isxn {
+pub struct AnnotatedIsxn {
     pub frame_segment_idx: usize,
     pub inner_segment_idx: usize,
     pub intersection: Intersection,
 }
-impl Isxn {
+impl AnnotatedIsxn {
     pub fn pt_given_self_segs(&self, self_segs: &[(usize, Segment)]) -> Pt {
         let (_, seg) = self_segs[self.inner_segment_idx];
         interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_inner().0)
@@ -66,7 +66,7 @@ pub struct OnePolygon {
 #[derivative(Debug)]
 pub struct Cursor<'a> {
     // current position
-    pub position: Either<OnePolygon, Isxn>,
+    pub position: Either<OnePolygon, AnnotatedIsxn>,
     pub facing_along: On,
     pub facing_along_segment_idx: usize, // segment index
     // context
@@ -113,8 +113,8 @@ impl<'a> Cursor<'a> {
         self.facing_along_segment_idx = v;
     }
 
-    pub fn march_to_isxn(&mut self, next_isxn: Isxn, should_flip: bool) {
-        let new_position: Either<_, Isxn> = Either::Right(next_isxn);
+    pub fn march_to_isxn(&mut self, next_isxn: AnnotatedIsxn, should_flip: bool) {
+        let new_position: Either<_, AnnotatedIsxn> = Either::Right(next_isxn);
         let new_facing_along = if should_flip {
             self.facing_along.flip()
         } else {
