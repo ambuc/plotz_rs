@@ -1,8 +1,6 @@
 //! Occludes things. Cmon.
 
-use plotz_geometry::{
-    object2d::Object2d, object2d_inner::Object2dInner, segment::IntersectionOutcome,
-};
+use plotz_geometry::{object2d::Object2d, object2d_inner::Object2dInner};
 
 use crate::{object3d_inner::Object3dInner, style::Style3d};
 

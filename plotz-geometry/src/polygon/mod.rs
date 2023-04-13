@@ -1,11 +1,9 @@
 //! A 2D polygon (or multi&line).
 
-use self::crop_logic::Isxn;
-use std::ops::DivAssign;
-
 mod crop_logic;
 
 use {
+    self::crop_logic::{Cursor, Isxn, IsxnOutcome, On, OnePolygon},
     crate::{
         bounded::{Bounded, Bounds},
         crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
@@ -146,16 +144,6 @@ pub enum CurveOrientation {
 }
 
 impl Polygon {
-    /// Inverts the polygon across the x-axis.
-    #[deprecated]
-    pub fn flip_x(&mut self) {
-        self.pts.iter_mut().for_each(|p| p.flip_x());
-    }
-    /// Inverts the polygon across the y-axis.
-    #[deprecated]
-    pub fn flip_y(&mut self) {
-        self.pts.iter_mut().for_each(|p| p.flip_y());
-    }
     /// Returns the segments of a polygon, one at a time.
     ///
     /// If this is an open polygon, we return only the line segments without the
@@ -303,18 +291,15 @@ impl Croppable for Polygon {
         let inner_segments: Vec<_> = self.to_segments().into_iter().enumerate().collect();
         let frame_segments: Vec<_> = frame.to_segments().into_iter().enumerate().collect();
 
-        let isxn_outcomes: Vec<crop_logic::IsxnOutcome> =
-            iproduct!(&inner_segments, &frame_segments)
-                .filter_map(|((inner_idx, i_seg), (frame_idx, f_seg))| {
-                    i_seg
-                        .intersects(f_seg)
-                        .map(|outcome| crop_logic::IsxnOutcome {
-                            frame_segment_idx: *frame_idx,
-                            inner_segment_idx: *inner_idx,
-                            outcome,
-                        })
+        let isxn_outcomes: Vec<IsxnOutcome> = iproduct!(&inner_segments, &frame_segments)
+            .filter_map(|((inner_idx, i_seg), (frame_idx, f_seg))| {
+                i_seg.intersects(f_seg).map(|outcome| IsxnOutcome {
+                    frame_segment_idx: *frame_idx,
+                    inner_segment_idx: *inner_idx,
+                    outcome,
                 })
-                .collect();
+            })
+            .collect();
 
         // If there are no intersections,
         if isxn_outcomes.is_empty() {
@@ -359,12 +344,12 @@ impl Croppable for Polygon {
 
         let mut visited_pts = HashSet::<Pt>::new();
 
-        let mut curr = crop_logic::Cursor {
-            position: Either::Left(crop_logic::OnePolygon {
-                on_polygon: crop_logic::On::OnInner,
+        let mut curr = Cursor {
+            position: Either::Left(OnePolygon {
+                on_polygon: On::OnInner,
                 at_point_index: 0,
             }),
-            facing_along: crop_logic::On::OnInner,
+            facing_along: On::OnInner,
             facing_along_segment_idx: 0_usize,
             //
             inner_pts: &inner_pts,
@@ -395,26 +380,24 @@ impl Croppable for Polygon {
                 .filter_map(|isxn_outcome| isxn_outcome.to_isxn())
                 .filter(|isxn| {
                     (match curr.facing_along {
-                        crop_logic::On::OnInner => isxn.inner_segment_idx,
-                        crop_logic::On::OnFrame => isxn.frame_segment_idx,
+                        On::OnInner => isxn.inner_segment_idx,
+                        On::OnFrame => isxn.frame_segment_idx,
                     }) == curr.facing_along_segment_idx
                 })
                 // then collect them.
                 .collect();
 
-            relevant_isxns.sort_by(|a: &crop_logic::Isxn, b: &crop_logic::Isxn| {
-                match &curr.facing_along {
-                    crop_logic::On::OnInner => a
-                        .intersection
-                        .percent_along_inner()
-                        .partial_cmp(&b.intersection.percent_along_inner())
-                        .unwrap(),
-                    crop_logic::On::OnFrame => a
-                        .intersection
-                        .percent_along_frame()
-                        .partial_cmp(&b.intersection.percent_along_frame())
-                        .unwrap(),
-                }
+            relevant_isxns.sort_by(|a: &Isxn, b: &Isxn| match &curr.facing_along {
+                On::OnInner => a
+                    .intersection
+                    .percent_along_inner()
+                    .partial_cmp(&b.intersection.percent_along_inner())
+                    .unwrap(),
+                On::OnFrame => a
+                    .intersection
+                    .percent_along_frame()
+                    .partial_cmp(&b.intersection.percent_along_frame())
+                    .unwrap(),
             });
 
             match curr.position {
@@ -423,12 +406,8 @@ impl Croppable for Polygon {
                         relevant_isxns
                             .into_iter()
                             .partition(|isxn| match curr.facing_along {
-                                crop_logic::On::OnInner => {
-                                    isxn.intersection.percent_along_inner().0 == 0.0
-                                }
-                                crop_logic::On::OnFrame => {
-                                    isxn.intersection.percent_along_frame().0 == 0.0
-                                }
+                                On::OnInner => isxn.intersection.percent_along_inner().0 == 0.0,
+                                On::OnFrame => isxn.intersection.percent_along_frame().0 == 0.0,
                             });
                     relevant_isxns = v;
                 }
@@ -437,11 +416,11 @@ impl Croppable for Polygon {
                         relevant_isxns
                             .into_iter()
                             .partition(|isxn| match curr.facing_along {
-                                crop_logic::On::OnInner => {
+                                On::OnInner => {
                                     isxn.intersection.percent_along_inner()
                                         <= this_isxn.intersection.percent_along_inner()
                                 }
-                                crop_logic::On::OnFrame => {
+                                On::OnFrame => {
                                     isxn.intersection.percent_along_frame()
                                         <= this_isxn.intersection.percent_along_frame()
                                 }
