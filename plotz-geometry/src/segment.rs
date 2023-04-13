@@ -121,6 +121,7 @@ impl Segment {
         ) {
             Some(IsxnResult::OneIntersection(
                 Intersection::new(
+                    pt,
                     interpolate_2d_checked(self.i, self.f, pt).ok()?,
                     interpolate_2d_checked(other.i, other.f, pt).ok()?,
                 )
@@ -568,25 +569,25 @@ mod tests {
         assert_eq!(
             Segment(e, i).intersects(&Segment(c, g)),
             Some(IsxnResult::OneIntersection(
-                Intersection::new(0.0, 0.5).unwrap()
+                Intersection::new(e, 0.0, 0.5).unwrap()
             ))
         );
         assert_eq!(
             Segment(a, e).intersects(&Segment(c, g)),
             Some(IsxnResult::OneIntersection(
-                Intersection::new(1.0, 0.5).unwrap()
+                Intersection::new(e, 1.0, 0.5).unwrap()
             ))
         );
         assert_eq!(
             Segment(c, g).intersects(&Segment(e, i)),
             Some(IsxnResult::OneIntersection(
-                Intersection::new(0.5, 0.0).unwrap()
+                Intersection::new(e, 0.5, 0.0).unwrap()
             ))
         );
         assert_eq!(
             Segment(c, g).intersects(&Segment(a, e)),
             Some(IsxnResult::OneIntersection(
-                Intersection::new(0.5, 1.0).unwrap()
+                Intersection::new(e, 0.5, 1.0).unwrap()
             ))
         );
 
@@ -594,25 +595,25 @@ mod tests {
         assert_eq!(
             Segment(a, c).intersects(&Segment(c, i)),
             Some(IsxnResult::OneIntersection(
-                Intersection::new(1.0, -0.0).unwrap()
+                Intersection::new(c, 1.0, -0.0).unwrap()
             ))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(i, c)),
             Some(IsxnResult::OneIntersection(
-                Intersection::new(1.0, 1.0).unwrap()
+                Intersection::new(c, 1.0, 1.0).unwrap()
             ))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(g, a)),
             Some(IsxnResult::OneIntersection(
-                Intersection::new(0.0, 1.0).unwrap()
+                Intersection::new(a, 0.0, 1.0).unwrap()
             )),
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(a, g)),
             Some(IsxnResult::OneIntersection(
-                Intersection::new(0.0, -0.0).unwrap()
+                Intersection::new(a, 0.0, -0.0).unwrap()
             ))
         );
 
@@ -620,7 +621,7 @@ mod tests {
         assert_eq!(
             Segment(a, i).intersects(&Segment(c, g)),
             Some(IsxnResult::OneIntersection(
-                Intersection::new(0.5, 0.5).unwrap()
+                Intersection::new(e, 0.5, 0.5).unwrap()
             ))
         );
     }

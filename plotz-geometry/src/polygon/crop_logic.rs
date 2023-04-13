@@ -3,7 +3,7 @@
 use derivative::Derivative;
 use either::Either;
 
-use crate::{interpolate, isxn::Intersection, point::Pt, segment::Segment};
+use crate::{isxn::Intersection, point::Pt, segment::Segment};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct AnnotatedIsxn {
@@ -12,9 +12,8 @@ pub struct AnnotatedIsxn {
     pub intersection: Intersection,
 }
 impl AnnotatedIsxn {
-    pub fn pt_given_self_segs(&self, self_segs: &[(usize, Segment)]) -> Pt {
-        let (_, seg) = self_segs[self.inner_segment_idx];
-        interpolate::extrapolate_2d(seg.i, seg.f, self.intersection.percent_along_inner().0)
+    pub fn pt(&self) -> Pt {
+        self.intersection.pt()
     }
 }
 
@@ -64,7 +63,7 @@ impl<'a> Cursor<'a> {
                 On::OnInner => *self.inner_pts[one_polygon.at_point_index].1,
                 On::OnFrame => *self.frame_pts[one_polygon.at_point_index].1,
             },
-            Either::Right(isxn) => isxn.pt_given_self_segs(self.inner_segments),
+            Either::Right(isxn) => isxn.pt(),
         }
     }
     pub fn pts_len(&self, on: On) -> usize {

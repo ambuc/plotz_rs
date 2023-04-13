@@ -1,9 +1,8 @@
 //! An intersection between two segments.
 
-use {
-    float_ord::FloatOrd,
-    //
-};
+use crate::point::Pt;
+
+use float_ord::FloatOrd;
 
 #[derive(Debug, PartialEq, Copy, Clone, Eq, Hash)]
 /// Guaranteed to be 0.0 <= f <= 1.0. Witness type.
@@ -31,23 +30,28 @@ impl NormF {
 ///    the second is the % of the way along line B at which the intersection
 ///    occurs. Guaranteed to be 0.0<=x<=1.0.
 #[derive(Debug, PartialEq, Copy, Clone, Eq, Hash)]
-pub struct Intersection(NormF, NormF);
+pub struct Intersection(Pt, NormF, NormF);
 
 impl Intersection {
     /// A new intersection value, witnessed.
-    pub fn new(a: f64, b: f64) -> Option<Intersection> {
+    pub fn new(pt: Pt, a: f64, b: f64) -> Option<Intersection> {
         let na = NormF::new(a)?;
         let nb = NormF::new(b)?;
-        Some(Intersection(na, nb))
+        Some(Intersection(pt, na, nb))
+    }
+
+    /// The point.
+    pub fn pt(&self) -> Pt {
+        self.0
     }
 
     /// The percent of the way along line A at which the intersection occurs.
     pub fn percent_along_inner(&self) -> FloatOrd<f64> {
-        self.0.val
+        self.1.val
     }
     /// The percent of the way along line B at which the intersection occurs.
     pub fn percent_along_frame(&self) -> FloatOrd<f64> {
-        self.1.val
+        self.2.val
     }
 
     fn on_points_of_self(&self) -> bool {
