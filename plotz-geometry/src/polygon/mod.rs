@@ -1,9 +1,11 @@
 //! A 2D polygon (or multi&line).
 
+use self::crop_logic::Position;
+
 mod crop_logic;
 
 use {
-    self::crop_logic::{AnnotatedIsxn, Cursor, On, OnePolygon},
+    self::crop_logic::{AnnotatedIsxn, Cursor, OnPolygon, WhichPolygon},
     crate::{
         bounded::{Bounded, Bounds},
         crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
@@ -12,7 +14,6 @@ use {
         segment::{Contains, Segment},
         traits::*,
     },
-    either::Either,
     float_cmp::approx_eq,
     itertools::{all, iproduct, zip},
     std::{
@@ -344,11 +345,11 @@ impl Croppable for Polygon {
         let mut visited_pts = HashSet::<Pt>::new();
 
         let mut curr = Cursor {
-            position: Either::Left(OnePolygon {
-                on_polygon: On::OnA,
+            position: Position::OnPolygon(OnPolygon {
+                on_polygon: WhichPolygon::A,
                 at_point_index: 0,
             }),
-            facing_along: On::OnA,
+            facing_along: WhichPolygon::A,
             facing_along_segment_idx: 0_usize,
             //
             a_pts: &a_pts,
@@ -382,8 +383,8 @@ impl Croppable for Polygon {
                 })
                 .filter(|(a_idx, b_idx, _isxn)| {
                     **(match curr.facing_along {
-                        On::OnA => a_idx,
-                        On::OnB => b_idx,
+                        WhichPolygon::A => a_idx,
+                        WhichPolygon::B => b_idx,
                     }) == curr.facing_along_segment_idx
                 })
                 .map(|(a_idx, b_idx, intersection)| AnnotatedIsxn {
@@ -396,12 +397,12 @@ impl Croppable for Polygon {
 
             relevant_isxns.sort_by(|a: &AnnotatedIsxn, b: &AnnotatedIsxn| {
                 match &curr.facing_along {
-                    On::OnA => a
+                    WhichPolygon::A => a
                         .intersection
                         .percent_along_a()
                         .partial_cmp(&b.intersection.percent_along_a())
                         .unwrap(),
-                    On::OnB => a
+                    WhichPolygon::B => a
                         .intersection
                         .percent_along_b()
                         .partial_cmp(&b.intersection.percent_along_b())
@@ -410,30 +411,29 @@ impl Croppable for Polygon {
             });
 
             match curr.position {
-                Either::Left(_) => {
+                Position::OnPolygon(_) => {
                     let (_drained, v) =
                         relevant_isxns
                             .into_iter()
                             .partition(|isxn| match curr.facing_along {
-                                On::OnA => isxn.intersection.percent_along_a().0 == 0.0,
-                                On::OnB => isxn.intersection.percent_along_b().0 == 0.0,
+                                WhichPolygon::A => isxn.intersection.percent_along_a().0 == 0.0,
+                                WhichPolygon::B => isxn.intersection.percent_along_b().0 == 0.0,
                             });
                     relevant_isxns = v;
                 }
-                Either::Right(this_isxn) => {
-                    let (_drained, v) =
-                        relevant_isxns
-                            .into_iter()
-                            .partition(|isxn| match curr.facing_along {
-                                On::OnA => {
-                                    isxn.intersection.percent_along_a()
-                                        <= this_isxn.intersection.percent_along_a()
-                                }
-                                On::OnB => {
-                                    isxn.intersection.percent_along_b()
-                                        <= this_isxn.intersection.percent_along_b()
-                                }
-                            });
+                Position::OnIsxn(this_isxn) => {
+                    let (_drained, v) = relevant_isxns.into_iter().partition(
+                        |AnnotatedIsxn { intersection, .. }| match curr.facing_along {
+                            WhichPolygon::A => {
+                                intersection.percent_along_a()
+                                    <= this_isxn.intersection.percent_along_a()
+                            }
+                            WhichPolygon::B => {
+                                intersection.percent_along_b()
+                                    <= this_isxn.intersection.percent_along_b()
+                            }
+                        },
+                    );
                     relevant_isxns = v;
                 }
             }
@@ -446,14 +446,14 @@ impl Croppable for Polygon {
                 curr.march_to_next_point();
             } else {
                 match curr.position {
-                    Either::Left(_) => {
+                    Position::OnPolygon(_) => {
                         let next_isxn = relevant_isxns.first().expect("?");
                         curr.march_to_isxn(
                             *next_isxn, /*should_flip */
                             !matches!(b.contains_pt(&curr_pt)?, PointLoc::Outside),
                         );
                     }
-                    Either::Right(_) => {
+                    Position::OnIsxn(_) => {
                         match relevant_isxns.get(0) {
                             Some(next_isxn) => {
                                 curr.march_to_isxn(*next_isxn, /*should_flip */ true);
