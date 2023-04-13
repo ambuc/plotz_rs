@@ -3,31 +3,7 @@
 use derivative::Derivative;
 use either::Either;
 
-use crate::{
-    interpolate,
-    point::Pt,
-    segment::{Intersection, IsxnResult, Segment},
-};
-
-#[derive(Debug)]
-pub struct AnnotatedIsxnResult {
-    pub frame_segment_idx: usize,
-    pub inner_segment_idx: usize,
-    pub outcome: IsxnResult,
-}
-
-impl AnnotatedIsxnResult {
-    pub fn to_isxn(&self) -> Option<AnnotatedIsxn> {
-        match self.outcome {
-            IsxnResult::OneIntersection(i) => Some(AnnotatedIsxn {
-                frame_segment_idx: self.frame_segment_idx,
-                inner_segment_idx: self.inner_segment_idx,
-                intersection: i,
-            }),
-            _ => None,
-        }
-    }
-}
+use crate::{interpolate, isxn::Intersection, point::Pt, segment::Segment};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct AnnotatedIsxn {

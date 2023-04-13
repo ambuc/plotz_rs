@@ -4,12 +4,12 @@ use crate::{
     crop::{CropToPolygonError, Croppable, PointLoc},
     interpolate,
     interpolate::interpolate_2d_checked,
+    isxn::{Intersection, IsxnResult, MultipleIntersections},
     point::Pt,
     polygon::Polygon,
     traits::*,
 };
 use float_cmp::approx_eq;
-use float_ord::FloatOrd;
 use std::{cmp::PartialOrd, fmt::Debug, ops::*};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -29,86 +29,6 @@ pub enum Contains {
     /// A line segment contains a point at its tail.
     AtEnd,
 }
-
-#[derive(Debug, PartialEq, Copy, Clone, Eq, Hash)]
-/// Guaranteed to be 0.0 <= f <= 1.0. Witness type.
-pub struct NormF {
-    /// NOT PUB
-    val: FloatOrd<f64>,
-}
-impl NormF {
-    /// new normf.
-    pub fn new(f: f64) -> Option<NormF> {
-        if (0.0..=1.0).contains(&f) {
-            Some(NormF { val: FloatOrd(f) })
-        } else {
-            None
-        }
-    }
-}
-
-/// A struct representing an intersection between two line segments.
-/// Two values:
-///    the first is the % of the way along line A at which the intersection
-///    occurs. Guaranteed to be 0.0<=x<=1.0.
-//       If this value is 0.0, the intersection is at self_i.
-//       If this value is 1.0, the intersection is at self_f.
-///    the second is the % of the way along line B at which the intersection
-///    occurs. Guaranteed to be 0.0<=x<=1.0.
-#[derive(Debug, PartialEq, Copy, Clone, Eq, Hash)]
-pub struct Intersection(NormF, NormF);
-
-impl Intersection {
-    /// A new intersection value, witnessed.
-    pub fn new(a: f64, b: f64) -> Option<Intersection> {
-        let na = NormF::new(a)?;
-        let nb = NormF::new(b)?;
-        Some(Intersection(na, nb))
-    }
-
-    /// The percent of the way along line A at which the intersection occurs.
-    pub fn percent_along_inner(&self) -> FloatOrd<f64> {
-        self.0.val
-    }
-    /// The percent of the way along line B at which the intersection occurs.
-    pub fn percent_along_frame(&self) -> FloatOrd<f64> {
-        self.1.val
-    }
-
-    fn on_points_of_self(&self) -> bool {
-        self.percent_along_inner().0 == 0.0 || self.percent_along_inner().0 == 1.0
-    }
-    fn on_points_of_other(&self) -> bool {
-        self.percent_along_frame().0 == 0.0 || self.percent_along_frame().0 == 1.0
-    }
-    /// Returns true if the intersection occurs at the head or tail of either
-    /// intersecting segment.
-    pub fn on_points_of_either_polygon(&self) -> bool {
-        self.on_points_of_self() || self.on_points_of_other()
-    }
-}
-
-/// An enum representing two intersections.
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
-pub enum MultipleIntersections {
-    /// Two line segments intersect because they are the same.
-    LineSegmentsAreTheSame,
-    /// Two line segments intersect because they are the same but reversed.
-    LineSegmentsAreTheSameButReversed,
-    /// Two line segments intersect at multiple points because they are colinear,
-    /// but they are not the same.
-    LineSegmentsAreColinear,
-}
-
-/// An enum representing whether an intersection occurred and where.
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
-pub enum IsxnResult {
-    /// Two line segments intersect at many points.
-    MultipleIntersections(MultipleIntersections),
-    /// Two line segments intersect at one point, defined by |Intersection|.
-    OneIntersection(Intersection),
-}
-
 /// A segment in 2D space, with initial and final points.
 #[derive(Debug, Clone, Copy, Eq, Hash)]
 pub struct Segment {
@@ -384,7 +304,7 @@ impl Croppable for Segment {
                     _ => None,
                 })
                 .collect::<Vec<Intersection>>();
-            isxns.sort_by(|i, j| i.percent_along_inner().cmp(&j.percent_along_inner()));
+            isxns.sort_by_key(|i| i.percent_along_inner());
             let (_, vs) = isxns.into_iter().partition(|i| {
                 i.percent_along_inner().0
                     <= interpolate::interpolate_2d_checked(self.i, self.f, curr_pt).unwrap_or_else(

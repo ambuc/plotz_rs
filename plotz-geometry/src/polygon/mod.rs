@@ -3,12 +3,13 @@
 mod crop_logic;
 
 use {
-    self::crop_logic::{Cursor, AnnotatedIsxn, AnnotatedIsxnResult, On, OnePolygon},
+    self::crop_logic::{AnnotatedIsxn, Cursor, On, OnePolygon},
     crate::{
         bounded::{Bounded, Bounds},
         crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
+        isxn::IsxnResult,
         point::Pt,
-        segment::{Contains, IsxnResult, Segment},
+        segment::{Contains, Segment},
         traits::*,
     },
     either::Either,
@@ -291,13 +292,11 @@ impl Croppable for Polygon {
         let inner_segments: Vec<_> = self.to_segments().into_iter().enumerate().collect();
         let frame_segments: Vec<_> = frame.to_segments().into_iter().enumerate().collect();
 
-        let isxn_outcomes: Vec<AnnotatedIsxnResult> = iproduct!(&inner_segments, &frame_segments)
+        let isxn_outcomes: Vec<_> = iproduct!(&inner_segments, &frame_segments)
             .filter_map(|((inner_idx, i_seg), (frame_idx, f_seg))| {
-                i_seg.intersects(f_seg).map(|outcome| AnnotatedIsxnResult {
-                    frame_segment_idx: *frame_idx,
-                    inner_segment_idx: *inner_idx,
-                    outcome,
-                })
+                i_seg
+                    .intersects(f_seg)
+                    .map(|outcome| (*inner_idx, *frame_idx, outcome))
             })
             .collect();
 
@@ -377,27 +376,39 @@ impl Croppable for Polygon {
 
             let mut relevant_isxns: Vec<AnnotatedIsxn> = isxn_outcomes
                 .iter()
-                .filter_map(|isxn_outcome| isxn_outcome.to_isxn())
-                .filter(|isxn| {
-                    (match curr.facing_along {
-                        On::OnInner => isxn.inner_segment_idx,
-                        On::OnFrame => isxn.frame_segment_idx,
+                .filter_map(|(inner_idx, frame_idx, isxn_outcome)| match isxn_outcome {
+                    IsxnResult::MultipleIntersections(_) => None,
+                    IsxnResult::OneIntersection(isxn) => Some((inner_idx, frame_idx, isxn)),
+                })
+                .filter(|(inner_idx, frame_idx, _isxn)| {
+                    **(match curr.facing_along {
+                        On::OnInner => inner_idx,
+                        On::OnFrame => frame_idx,
                     }) == curr.facing_along_segment_idx
                 })
+                .map(
+                    |(inner_segment_idx, frame_segment_idx, intersection)| AnnotatedIsxn {
+                        frame_segment_idx: *frame_segment_idx,
+                        inner_segment_idx: *inner_segment_idx,
+                        intersection: *intersection,
+                    },
+                )
                 // then collect them.
                 .collect();
 
-            relevant_isxns.sort_by(|a: &AnnotatedIsxn, b: &AnnotatedIsxn| match &curr.facing_along {
-                On::OnInner => a
-                    .intersection
-                    .percent_along_inner()
-                    .partial_cmp(&b.intersection.percent_along_inner())
-                    .unwrap(),
-                On::OnFrame => a
-                    .intersection
-                    .percent_along_frame()
-                    .partial_cmp(&b.intersection.percent_along_frame())
-                    .unwrap(),
+            relevant_isxns.sort_by(|a: &AnnotatedIsxn, b: &AnnotatedIsxn| {
+                match &curr.facing_along {
+                    On::OnInner => a
+                        .intersection
+                        .percent_along_inner()
+                        .partial_cmp(&b.intersection.percent_along_inner())
+                        .unwrap(),
+                    On::OnFrame => a
+                        .intersection
+                        .percent_along_frame()
+                        .partial_cmp(&b.intersection.percent_along_frame())
+                        .unwrap(),
+                }
             });
 
             match curr.position {

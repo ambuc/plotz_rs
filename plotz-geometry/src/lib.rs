@@ -10,6 +10,7 @@ pub mod grid;
 pub mod grid_layout;
 pub mod group;
 pub mod interpolate;
+pub mod isxn;
 pub mod object2d;
 pub mod object2d_inner;
 pub mod point;
