@@ -287,6 +287,8 @@ impl Croppable for Polygon {
         if self.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThisPolygonNotClosed);
         }
+
+        // frame actually MUST be closed.
         if b.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThatPolygonNotClosed);
         }
@@ -314,25 +316,23 @@ impl Croppable for Polygon {
             // If there are no intersections,
 
             // Then either all of the points are inside a,
-            if all(
-                b.pts
-                    .iter()
-                    .enumerate()
-                    .map(|(idx, pt)| (idx, self.contains_pt(pt).expect("contains pt fail"))),
-                |(_idx, isxn)| !matches!(isxn, PointLoc::Outside),
-            ) {
+            if b.pts.iter().all(|pt| {
+                !matches!(
+                    self.contains_pt(pt).expect("contains pt fail"),
+                    PointLoc::Outside
+                )
+            }) {
                 // in which case we ought to return b unchanged,
                 return Ok(vec![b.clone()]);
             }
 
             // or all of the a points are inside b,
-            if all(
-                self.pts
-                    .iter()
-                    .enumerate()
-                    .map(|(idx, pt)| (idx, b.contains_pt(pt).expect("contains pt fail"))),
-                |(_idx, isxn)| !matches!(isxn, PointLoc::Outside),
-            ) {
+            if self.pts.iter().all(|pt| {
+                !matches!(
+                    b.contains_pt(pt).expect("contains pt fail"),
+                    PointLoc::Outside
+                )
+            }) {
                 // in which case we ought to return a unchanged.
                 return Ok(vec![self.clone()]);
             }
