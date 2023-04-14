@@ -1,17 +1,13 @@
 //! A 2D polygon (or multi&line).
 
-use crate::isxn::Which;
-
-use self::crop_logic::Position;
-
 mod crop_logic;
 
 use {
-    self::crop_logic::{AnnotatedIsxn, Cursor, OnPolygon},
+    self::crop_logic::{AnnotatedIsxn, Cursor, OnPolygon, Position},
     crate::{
         bounded::{Bounded, Bounds},
         crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
-        isxn::IsxnResult,
+        isxn::{IsxnResult, Which},
         point::Pt,
         segment::{Contains, Segment},
         traits::*,
@@ -192,12 +188,9 @@ impl Polygon {
 
     /// Returns true if any line segment from this polygon intersects other.
     pub fn intersects_segment(&self, other: &Segment) -> bool {
-        for l1 in self.to_segments() {
-            if l1.intersects(other).is_some() {
-                return true;
-            }
-        }
-        false
+        self.to_segments()
+            .iter()
+            .any(|l| l.intersects(other).is_some())
     }
 
     /// Calculates whether a point is within, without, or along a closed polygon
@@ -292,168 +285,162 @@ impl Croppable for Polygon {
             return Err(CropToPolygonError::ThatPolygonNotPositivelyOriented);
         }
 
-        let a_segments: Vec<_> = self.to_segments().into_iter().enumerate().collect();
-        let b_segments: Vec<_> = b.to_segments().into_iter().enumerate().collect();
+        let isxn_outcomes: Vec<_> = iproduct!(
+            self.to_segments().iter().enumerate(),
+            b.to_segments().iter().enumerate()
+        )
+        .filter_map(|((a_idx, i_seg), (b_idx, f_seg))| {
+            i_seg
+                .intersects(f_seg)
+                .map(|outcome| (a_idx, b_idx, outcome))
+        })
+        .collect();
 
-        let isxn_outcomes: Vec<_> = iproduct!(&a_segments, &b_segments)
-            .filter_map(|((a_idx, i_seg), (b_idx, f_seg))| {
-                i_seg
-                    .intersects(f_seg)
-                    .map(|outcome| (*a_idx, *b_idx, outcome))
-            })
-            .collect();
-
-        // If there are no intersections,
         if isxn_outcomes.is_empty() {
-            let b_pts_in_a: Vec<(usize, PointLoc)> = {
-                let mut v = vec![];
-                for (idx, pt) in b.pts.iter().enumerate() {
-                    v.push((idx, self.contains_pt(pt)?));
-                }
-                Result::<_, ContainsPointError>::Ok(v)
-            }?;
-            let a_pts_in_b: Vec<(usize, PointLoc)> = {
-                let mut v = vec![];
-                for (idx, pt) in self.pts.iter().enumerate() {
-                    v.push((idx, b.contains_pt(pt)?));
-                }
-                Result::<_, ContainsPointError>::Ok(v)
-            }?;
-
-            let all_b_pts_in_a = all(&b_pts_in_a, |(_idx, isxn)| {
-                !matches!(isxn, PointLoc::Outside)
-            });
-            let all_a_pts_in_b = all(&a_pts_in_b, |(_idx, isxn)| {
-                !matches!(isxn, PointLoc::Outside)
-            });
+            // If there are no intersections,
 
             // Then either all of the points are inside a,
-            if all_b_pts_in_a {
+            if all(
+                b.pts
+                    .iter()
+                    .enumerate()
+                    .map(|(idx, pt)| (idx, self.contains_pt(pt).expect("contains pt fail"))),
+                |(_idx, isxn)| !matches!(isxn, PointLoc::Outside),
+            ) {
                 // in which case we ought to return b unchanged,
                 return Ok(vec![b.clone()]);
-                // or all of the a points are inside b,
-            } else if all_a_pts_in_b {
+            }
+
+            // or all of the a points are inside b,
+            if all(
+                self.pts
+                    .iter()
+                    .enumerate()
+                    .map(|(idx, pt)| (idx, b.contains_pt(pt).expect("contains pt fail"))),
+                |(_idx, isxn)| !matches!(isxn, PointLoc::Outside),
+            ) {
                 // in which case we ought to return a unchanged.
                 return Ok(vec![self.clone()]);
             }
-        }
 
-        let a_pts: Vec<_> = self.pts.iter().enumerate().collect();
-        let b_pts: Vec<_> = b.pts.iter().enumerate().collect();
+            panic!("i thought there were no intersections.");
+        } else {
+            // Otherwise there are definitely intersections.
+            let a_pts: Vec<_> = self.pts.iter().enumerate().collect();
+            let b_pts: Vec<_> = b.pts.iter().enumerate().collect();
 
-        let mut resultant_polygons: Vec<Polygon> = vec![];
-        let mut resultant_pts: Vec<Pt> = vec![];
+            let mut resultant_polygons: Vec<Polygon> = vec![];
+            let mut resultant_pts: Vec<Pt> = vec![];
 
-        let mut visited_pts = HashSet::<Pt>::new();
+            let mut visited_pts = HashSet::<Pt>::new();
 
-        let mut curr = Cursor {
-            position: Position::OnPolygon(OnPolygon {
-                on_polygon: Which::A,
-                at_point_index: 0,
-            }),
-            facing_along: Which::A,
-            facing_along_segment_idx: 0_usize,
-            //
-            a_pts: &a_pts,
-            b_pts: &b_pts,
-        };
+            let mut curr = Cursor {
+                position: Position::OnPolygon(OnPolygon {
+                    on_polygon: Which::A,
+                    at_point_index: 0,
+                }),
+                facing_along: Which::A,
+                facing_along_segment_idx: 0_usize,
+                //
+                a_pts: &a_pts,
+                b_pts: &b_pts,
+            };
 
-        'outer: loop {
-            let curr_pt: Pt = curr.pt();
-
-            // If we've made a cycle,
-            if let Some(pt) = resultant_pts.get(0) {
-                if *pt == curr_pt {
-                    // then break out of it.
-                    break 'outer;
+            'outer: loop {
+                // If we've made a cycle,
+                if let Some(pt) = resultant_pts.get(0) {
+                    if *pt == curr.pt() {
+                        // then break out of it.
+                        break 'outer;
+                    }
                 }
-            }
 
-            // If we've revisited a point otherwise, it is an error.
-            if !visited_pts.insert(curr_pt) {
-                return Err(CropToPolygonError::CycleError);
-            }
-
-            let mut relevant_isxns: Vec<AnnotatedIsxn> = isxn_outcomes
-                .iter()
-                .filter_map(|(a_idx, b_idx, isxn_outcome)| match isxn_outcome {
-                    IsxnResult::MultipleIntersections(_) => None,
-                    IsxnResult::OneIntersection(isxn) => Some((a_idx, b_idx, isxn)),
-                })
-                .filter(|(a_idx, b_idx, _isxn)| {
-                    **(match curr.facing_along {
-                        Which::A => a_idx,
-                        Which::B => b_idx,
-                    }) == curr.facing_along_segment_idx
-                })
-                .map(|(a_idx, b_idx, intersection)| AnnotatedIsxn {
-                    b_idx: *b_idx,
-                    a_idx: *a_idx,
-                    intersection: *intersection,
-                })
-                // then collect them.
-                .collect();
-
-            relevant_isxns.sort_by(|a: &AnnotatedIsxn, b: &AnnotatedIsxn| {
-                a.intersection
-                    .percent_along(curr.facing_along)
-                    .partial_cmp(&b.intersection.percent_along(curr.facing_along))
-                    .unwrap()
-            });
-
-            match curr.position {
-                Position::OnPolygon(_) => {
-                    let (_drained, v) = relevant_isxns.into_iter().partition(|isxn| {
-                        isxn.intersection.percent_along(curr.facing_along).0 == 0.0
-                    });
-                    relevant_isxns = v;
+                // If we've revisited a point otherwise, it is an error.
+                if !visited_pts.insert(curr.pt()) {
+                    return Err(CropToPolygonError::CycleError);
                 }
-                Position::OnIsxn(this_isxn) => {
-                    let (_drained, v) = relevant_isxns.into_iter().partition(|other_isxn| {
-                        other_isxn.intersection.percent_along(curr.facing_along)
-                            <= this_isxn.intersection.percent_along(curr.facing_along)
-                    });
-                    relevant_isxns = v;
-                }
-            }
 
-            if !matches!(b.contains_pt(&curr_pt)?, PointLoc::Outside) {
-                resultant_pts.push(curr_pt);
-            }
+                let mut relevant_isxns: Vec<AnnotatedIsxn> = isxn_outcomes
+                    .iter()
+                    .filter_map(|(a_idx, b_idx, isxn_outcome)| match isxn_outcome {
+                        IsxnResult::MultipleIntersections(_) => None,
+                        IsxnResult::OneIntersection(isxn) => Some((a_idx, b_idx, isxn)),
+                    })
+                    .filter(|(a_idx, b_idx, _isxn)| {
+                        **(match curr.facing_along {
+                            Which::A => a_idx,
+                            Which::B => b_idx,
+                        }) == curr.facing_along_segment_idx
+                    })
+                    .map(|(a_idx, b_idx, intersection)| AnnotatedIsxn {
+                        b_idx: *b_idx,
+                        a_idx: *a_idx,
+                        intersection: *intersection,
+                    })
+                    // then collect them.
+                    .collect();
 
-            if relevant_isxns.is_empty() {
-                curr.march_to_next_point();
-            } else {
+                relevant_isxns.sort_by(|a: &AnnotatedIsxn, b: &AnnotatedIsxn| {
+                    a.intersection
+                        .percent_along(curr.facing_along)
+                        .partial_cmp(&b.intersection.percent_along(curr.facing_along))
+                        .unwrap()
+                });
+
                 match curr.position {
                     Position::OnPolygon(_) => {
-                        let next_isxn = relevant_isxns.first().expect("?");
-                        curr.march_to_isxn(
-                            *next_isxn, /*should_flip */
-                            !matches!(b.contains_pt(&curr_pt)?, PointLoc::Outside),
-                        );
+                        let (_drained, v) = relevant_isxns.into_iter().partition(|isxn| {
+                            isxn.intersection.percent_along(curr.facing_along).0 == 0.0
+                        });
+                        relevant_isxns = v;
                     }
-                    Position::OnIsxn(_) => {
-                        match relevant_isxns.get(0) {
-                            Some(next_isxn) => {
-                                curr.march_to_isxn(*next_isxn, /*should_flip */ true);
-                            }
-                            None => {
-                                curr.march_to_next_point();
+                    Position::OnIsxn(this_isxn) => {
+                        let (_drained, v) = relevant_isxns.into_iter().partition(|other_isxn| {
+                            other_isxn.intersection.percent_along(curr.facing_along)
+                                <= this_isxn.intersection.percent_along(curr.facing_along)
+                        });
+                        relevant_isxns = v;
+                    }
+                }
+
+                if !matches!(b.contains_pt(&curr.pt())?, PointLoc::Outside) {
+                    resultant_pts.push(curr.pt());
+                }
+
+                if relevant_isxns.is_empty() {
+                    curr.march_to_next_point();
+                } else {
+                    match curr.position {
+                        Position::OnPolygon(_) => {
+                            let next_isxn = relevant_isxns.first().expect("?");
+                            curr.march_to_isxn(
+                                *next_isxn, /*should_flip */
+                                !matches!(b.contains_pt(&curr.pt())?, PointLoc::Outside),
+                            );
+                        }
+                        Position::OnIsxn(_) => {
+                            match relevant_isxns.get(0) {
+                                Some(next_isxn) => {
+                                    curr.march_to_isxn(*next_isxn, /*should_flip */ true);
+                                }
+                                None => {
+                                    curr.march_to_next_point();
+                                }
                             }
                         }
                     }
                 }
             }
+
+            // here, check that there aren't any unaccounted-for inner points or
+            // intersections which did not result in points of resultant polygons.
+            // if there are, we need to find other resultants.
+            // TODO
+
+            resultant_polygons.push(Polygon(resultant_pts)?);
+
+            Ok(resultant_polygons)
         }
-
-        // here, check that there aren't any unaccounted-for inner points or
-        // intersections which did not result in points of resultant polygons.
-        // if there are, we need to find other resultants.
-        // TODO
-
-        resultant_polygons.push(Polygon(resultant_pts)?);
-
-        Ok(resultant_polygons)
     }
 }
 
