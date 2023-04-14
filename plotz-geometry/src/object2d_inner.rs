@@ -1,5 +1,7 @@
 //! The inner value of a Object2d, i.e. the enum which holds some geometric thingy.
 
+use crate::polygon::PolygonKind;
+
 use {
     crate::{
         bounded::Bounded,
@@ -296,12 +298,20 @@ impl Croppable for Object2dInner {
                     vec![]
                 }
             }
-            Object2dInner::Polygon(pg) => pg
-                .to_segments()
-                .into_iter()
-                .flat_map(|sg| sg.crop_to(frame).expect("crop segment to frame failed"))
-                .map(Object2dInner::from)
-                .collect::<Vec<_>>(),
+            Object2dInner::Polygon(pg) => match pg.kind {
+                PolygonKind::Open => pg
+                    .to_segments()
+                    .into_iter()
+                    .flat_map(|sg| sg.crop_to(frame).expect("crop failure"))
+                    .into_iter()
+                    .map(Object2dInner::from)
+                    .collect::<Vec<_>>(),
+                PolygonKind::Closed => pg
+                    .crop_to(frame)?
+                    .into_iter()
+                    .map(Object2dInner::from)
+                    .collect::<Vec<_>>(),
+            },
             Object2dInner::Segment(sg) => sg
                 .crop_to(frame)?
                 .into_iter()

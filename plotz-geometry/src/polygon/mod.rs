@@ -13,7 +13,7 @@ use {
         traits::*,
     },
     float_cmp::approx_eq,
-    itertools::{all, iproduct, zip},
+    itertools::{iproduct, zip},
     std::{
         cmp::{Eq, PartialEq},
         collections::HashSet,
@@ -315,7 +315,7 @@ impl Croppable for Polygon {
         if isxn_outcomes.is_empty() {
             // If there are no intersections,
 
-            // Then either all of the points are inside a,
+            // Then either all of the points in b are inside a,
             if b.pts.iter().all(|pt| {
                 !matches!(
                     self.contains_pt(pt).expect("contains pt fail"),
@@ -335,6 +335,16 @@ impl Croppable for Polygon {
             }) {
                 // in which case we ought to return a unchanged.
                 return Ok(vec![self.clone()]);
+            }
+
+            // if all the points in a are outside b, return nothing.
+            if self.pts.iter().all(|pt| {
+                matches!(
+                    b.contains_pt(pt).expect("contains pt fail"),
+                    PointLoc::Outside
+                )
+            }) {
+                return Ok(vec![]);
             }
 
             panic!("i thought there were no intersections.");
