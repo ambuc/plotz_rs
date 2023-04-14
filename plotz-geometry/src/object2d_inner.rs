@@ -297,9 +297,9 @@ impl Croppable for Object2dInner {
                 }
             }
             Object2dInner::Polygon(pg) => pg
-                .to_segments()
+                .crop_to(frame)
+                .expect("crop polygon to frame failed")
                 .into_iter()
-                .flat_map(|sg| sg.crop_to(frame).expect("crop segment to frame failed"))
                 .map(Object2dInner::from)
                 .collect::<Vec<_>>(),
             Object2dInner::Segment(sg) => sg
