@@ -62,8 +62,8 @@ impl Occluder {
                     vec![incoming.clone()]
                 }
             }
-            (Object2dInner::Polygon(_pg), Object2dInner::Segment(_sg))
-            | (Object2dInner::Segment(_sg), Object2dInner::Polygon(_pg)) => {
+            (Object2dInner::Polygon(pg), Object2dInner::Segment(sg))
+            | (Object2dInner::Segment(sg), Object2dInner::Polygon(pg)) => {
                 unimplemented!("no seg-to-polygon cropping");
                 // let is_collision = pg
                 //     .intersects_segment_detailed(&sg)
@@ -88,7 +88,7 @@ impl Occluder {
                 //     vec![incoming.clone()]
                 // }
             }
-            (Object2dInner::Segment(_sg1), Object2dInner::Segment(_sg2)) => {
+            (Object2dInner::Segment(sg1), Object2dInner::Segment(sg2)) => {
                 unimplemented!("no seg-to-seg cropping");
                 // let is_collision = match sg1.intersects(&sg2) {
                 //     None => false,

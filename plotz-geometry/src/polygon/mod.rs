@@ -121,18 +121,10 @@ pub fn Polygon(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, PolygonConstr
     if pts.len() <= 2 {
         return Err(PolygonConstructorError::TwoOrFewerPoints);
     }
-    let mut p = Polygon {
+    Ok(Polygon {
         pts,
         kind: PolygonKind::Closed,
-    };
-
-    if p.get_curve_orientation() == CurveOrientation::Negative {
-        p.orient_curve();
-    }
-
-    assert_ne!(p.get_curve_orientation(), CurveOrientation::Negative);
-
-    Ok(p)
+    })
 }
 
 /// Convenience constructor for rectangles.
@@ -147,9 +139,6 @@ pub fn Rect(tl: Pt, (w, h): (f64, f64)) -> Result<Polygon, PolygonConstructorErr
 pub enum CurveOrientation {
     /// Negatively oriented, i.e. points listed in clockwise order.
     Negative,
-    /// This is a line or multiline with no internal area, such as a->b->a or
-    /// a->b->c but they're all colinear.
-    Zero,
     /// Positively oriented, i.e. points listed in counter-clockwise order.
     Positive,
 }
@@ -253,17 +242,16 @@ impl Polygon {
     /// whether or not the points in the polygon are stored in clockwise or
     /// counterclockwise order.
     pub fn get_curve_orientation(&self) -> CurveOrientation {
-        let o = self
+        if self
             .to_segments()
             .iter()
             .map(|segment| (segment.f.x.0 - segment.i.x.0) * (segment.f.y.0 + segment.i.y.0))
-            .sum::<f64>();
-
-        match o {
-            o if approx_eq!(f64, o, 0.0) => CurveOrientation::Zero,
-            o if o >= 0.0 => CurveOrientation::Negative,
-            _ => CurveOrientation::Positive,
+            .sum::<f64>()
+            >= 0_f64
+        {
+            return CurveOrientation::Negative;
         }
+        CurveOrientation::Positive
     }
 
     /// Orients a polygon in-place such that it has a positive orientation.
