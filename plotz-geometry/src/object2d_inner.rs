@@ -336,4 +336,55 @@ impl Croppable for Object2dInner {
                 .collect::<Vec<_>>(),
         })
     }
+
+    fn crop_excluding(&self, other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    where
+        Self: Sized,
+    {
+        Ok(match &self {
+            Object2dInner::Point(pt) => {
+                if matches!(other.contains_pt(pt), Ok(PointLoc::Outside)) {
+                    vec![]
+                } else {
+                    vec![self.clone()]
+                }
+            }
+            Object2dInner::Polygon(pg) => match pg.kind {
+                PolygonKind::Open => pg
+                    .to_segments()
+                    .into_iter()
+                    .flat_map(|sg| sg.crop_excluding(other).expect("crop failure"))
+                    .into_iter()
+                    .map(Object2dInner::from)
+                    .collect::<Vec<_>>(),
+                PolygonKind::Closed => pg
+                    .crop_excluding(other)?
+                    .into_iter()
+                    .map(Object2dInner::from)
+                    .collect::<Vec<_>>(),
+            },
+            Object2dInner::Segment(sg) => sg
+                .crop_excluding(other)?
+                .into_iter()
+                .map(Object2dInner::from)
+                .collect::<Vec<_>>(),
+            Object2dInner::CurveArc(ca) => ca
+                .crop_excluding(other)?
+                .into_iter()
+                .map(Object2dInner::from)
+                .collect::<Vec<_>>(),
+            Object2dInner::Char(ch) => {
+                if matches!(other.contains_pt(&ch.pt), Ok(PointLoc::Outside)) {
+                    vec![]
+                } else {
+                    vec![self.clone()]
+                }
+            }
+            Object2dInner::Group(g) => g
+                .crop_excluding(other)?
+                .into_iter()
+                .map(Object2dInner::from)
+                .collect::<Vec<_>>(),
+        })
+    }
 }

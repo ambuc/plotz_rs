@@ -73,6 +73,8 @@ impl<'a> Cursor<'a> {
             Position::OnIsxn(isxn) => isxn.idx(self.facing_along),
         } + 1)
             % self.pts(self.facing_along).len();
+        println!("ptslen: {:?}", self.pts(self.facing_along).len());
+        println!("v: {:?}", v);
         self.position = Position::OnPolygon(OnPolygon {
             on_polygon: self.facing_along,
             at_point_index: v,

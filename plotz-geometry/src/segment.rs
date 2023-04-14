@@ -346,6 +346,13 @@ impl Croppable for Segment {
 
         Ok(resultants)
     }
+
+    fn crop_excluding(&self, other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    where
+        Self: Sized,
+    {
+        unimplemented!("TODO");
+    }
 }
 
 impl Translatable for Segment {}

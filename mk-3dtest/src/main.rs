@@ -1,5 +1,5 @@
 use itertools::iproduct;
-use plotz_geometry3d::camera::Occlusion;
+use plotz_geometry3d::{camera::Occlusion, face::Face};
 
 use {
     argh::FromArgs,
@@ -54,17 +54,34 @@ fn main() {
 
         // objects.extend(axes);
 
-        let e = 0.6;
-        for (i, j) in iproduct!(0..1, 0..2) {
-            objects.extend(
-                Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, e))
-                    .items
-                    .into_iter()
-                    .map(|face| {
-                        Object3d::new(face)
-                            .with_style(Style3d::builder().color(&PINK).thickness(1.0).build())
-                    }),
-            );
+        {
+            // let e = 0.6;
+            // for (i, j) in iproduct!(0..1, 0..2) {
+            //     objects.extend(
+            //         Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, e))
+            //             .items
+            //             .into_iter()
+            //             .map(|face| {
+            //                 Object3d::new(face)
+            //                     .with_style(Style3d::builder().color(&PINK).thickness(1.0).build())
+            //             }),
+            //     );
+            // }
+        }
+
+        {
+            let o = Pt3d(0.0, 0.0, 0.0);
+            let f1 = Face::from(Polygon3d([
+                o,
+                o + Pt3d(0.0, 1.0, 0.0),
+                o + Pt3d(0.0, 1.0, 1.0),
+                o + Pt3d(0.0, 0.0, 1.0),
+                o,
+            ]));
+            let f2 = f1.clone() + Pt3d(0.3, 0.0, 0.0);
+
+            objects.push(Object3d::new(f1));
+            objects.push(Object3d::new(f2));
         }
 
         // // Triangle.

@@ -57,8 +57,8 @@ impl Occluder {
                         });
 
                 if is_collision {
-                    match incoming.crop_to(pg2) {
-                        Ok(p) => p,
+                    match pg1.crop_excluding(pg2) {
+                        Ok(p) => p.into_iter().map(Object2dInner::from).collect(),
                         Err(_) => vec![],
                     }
                 } else {
@@ -67,43 +67,41 @@ impl Occluder {
             }
             (Object2dInner::Polygon(pg), Object2dInner::Segment(sg))
             | (Object2dInner::Segment(sg), Object2dInner::Polygon(pg)) => {
-                unimplemented!("no seg-to-polygon cropping");
-                // let is_collision = pg
-                //     .intersects_segment_detailed(&sg)
-                //     .iter()
-                //     .any(|isxn_result| match isxn_result {
-                //         IsxnResult::MultipleIntersections(_) => false,
-                //         IsxnResult::OneIntersection(isxn) => {
-                //             if isxn.on_points_of_either() {
-                //                 false
-                //             } else {
-                //                 true
-                //             }
-                //         }
-                //     });
-                // if is_collision {
-                //     sg.crop_to(pg)
-                //         .expect("crop failed")
-                //         .into_iter()
-                //         .map(|sg| Object2dInner::from(sg))
-                //         .collect()
-                // } else {
-                //     vec![incoming.clone()]
-                // }
+                let is_collision = pg
+                    .intersects_segment_detailed(&sg)
+                    .iter()
+                    .any(|isxn_result| match isxn_result {
+                        IsxnResult::MultipleIntersections(_) => false,
+                        IsxnResult::OneIntersection(isxn) => {
+                            if isxn.on_points_of_either() {
+                                false
+                            } else {
+                                true
+                            }
+                        }
+                    });
+                if is_collision {
+                    sg.crop_excluding(pg)
+                        .expect("crop failed")
+                        .into_iter()
+                        .map(|sg| Object2dInner::from(sg))
+                        .collect()
+                } else {
+                    vec![incoming.clone()]
+                }
             }
             (Object2dInner::Segment(sg1), Object2dInner::Segment(sg2)) => {
-                unimplemented!("no seg-to-seg cropping");
-                // let is_collision = match sg1.intersects(&sg2) {
-                //     None => false,
-                //     Some(IsxnResult::MultipleIntersections(_)) => false,
-                //     Some(IsxnResult::OneIntersection(isxn)) => !isxn.on_points_of_either(),
-                // };
-                // if is_collision {
-                //     // TODO(ambuc): implement cropping here
-                //     unimplemented!("have not yet implemented 3d sg/sg crop");
-                // } else {
-                //     vec![incoming.clone()]
-                // }
+                let is_collision = match sg1.intersects(&sg2) {
+                    None => false,
+                    Some(IsxnResult::MultipleIntersections(_)) => false,
+                    Some(IsxnResult::OneIntersection(isxn)) => !isxn.on_points_of_either(),
+                };
+                if is_collision {
+                    // TODO(ambuc): implement cropping here
+                    unimplemented!("have not yet implemented 3d sg/sg crop");
+                } else {
+                    vec![incoming.clone()]
+                }
             }
         }
     }
@@ -119,7 +117,7 @@ impl Occluder {
         self.objects.push((
             incoming_obj2.clone(),
             incoming_obj3.clone(),
-            Some(Style3d::builder().color(&RED).thickness(0.05).build()),
+            Some(Style3d::builder().color(&RED).thickness(1.0).build()),
         ));
 
         // if the collision is parallel, don't crop.

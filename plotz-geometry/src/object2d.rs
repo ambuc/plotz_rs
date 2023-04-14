@@ -152,4 +152,10 @@ impl Croppable for Object2d {
             })
             .collect())
     }
+    fn crop_excluding(&self, other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    where
+        Self: Sized,
+    {
+        unimplemented!("TODO");
+    }
 }

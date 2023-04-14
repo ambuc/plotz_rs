@@ -98,6 +98,7 @@ pub fn Multiline(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, MultilineCo
     if pts.len() <= 1 {
         return Err(MultilineConstructorError::OneOrFewerPoints);
     }
+
     let mut p = Polygon {
         pts,
         kind: PolygonKind::Open,
@@ -121,10 +122,15 @@ pub enum PolygonConstructorError {
 /// result in a PolygonConstructorErrorip
 #[allow(non_snake_case)]
 pub fn Polygon(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, PolygonConstructorError> {
-    let pts: Vec<Pt> = a.into_iter().collect();
+    let mut pts: Vec<Pt> = a.into_iter().collect();
     if pts.len() <= 2 {
         return Err(PolygonConstructorError::TwoOrFewerPoints);
     }
+
+    if pts[pts.len() - 1] == pts[0] {
+        let _ = pts.pop();
+    }
+
     let mut p = Polygon {
         pts,
         kind: PolygonKind::Closed,
@@ -280,18 +286,9 @@ impl Polygon {
         let sum_y: f64 = self.pts.iter().map(|pt| pt.y.0).sum();
         Pt(sum_x / num, sum_y / num)
     }
-}
 
-impl Croppable for Polygon {
-    type Output = Polygon;
-    /// Crop this polygon to some frame (b). Returns a list of resultant polygons.
-    /// Both polygons must already be closed and positively oriented.
-    ///
-    /// Known bug: If multiple resultant polygons are present, this will return
-    /// only one.
-    fn crop_to(&self, b: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
-        // crop self to b, return modified self.
-
+    // check that this and the other are both closed and positively oriented.
+    fn crop_check_prerequisites(&self, b: &Polygon) -> Result<(), CropToPolygonError> {
         if self.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThisPolygonNotClosed);
         }
@@ -308,8 +305,11 @@ impl Croppable for Polygon {
         if b.get_curve_orientation() != Some(CurveOrientation::Positive) {
             return Err(CropToPolygonError::ThatPolygonNotPositivelyOriented);
         }
+        Ok(())
+    }
 
-        let isxn_outcomes: Vec<_> = iproduct!(
+    fn get_isxn_outcomes(&self, b: &Polygon) -> Vec<(usize, usize, IsxnResult)> {
+        iproduct!(
             self.to_segments().iter().enumerate(),
             b.to_segments().iter().enumerate()
         )
@@ -318,40 +318,52 @@ impl Croppable for Polygon {
                 .intersects(f_seg)
                 .map(|outcome| (a_idx, b_idx, outcome))
         })
-        .collect();
+        .collect()
+    }
+
+    // check if this polygon totally contains another.
+    // assumes no intersections.
+    fn totally_contains(&self, other: &Polygon) -> bool {
+        other.pts.iter().all(|pt| {
+            !matches!(
+                self.contains_pt(pt).expect("contains pt fail"),
+                PointLoc::Outside
+            )
+        })
+    }
+
+    // check if the other polygon isn't inside of or intersecting this one at all.
+    // assumes no intersections.
+    fn contains_not_at_all(&self, other: &Polygon) -> bool {
+        other.pts.iter().all(|pt| {
+            matches!(
+                self.contains_pt(pt).expect("contains pt fail"),
+                PointLoc::Outside
+            )
+        })
+    }
+}
+
+impl Croppable for Polygon {
+    type Output = Polygon;
+    /// Crop this polygon to some frame (b). Returns a list of resultant polygons.
+    /// Both polygons must already be closed and positively oriented.
+    ///
+    /// Known bug: If multiple resultant polygons are present, this will return
+    /// only one.
+    fn crop_to(&self, b: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
+        // crop self to b, return modified self.
+        let () = self.crop_check_prerequisites(&b)?;
+        let isxn_outcomes = self.get_isxn_outcomes(&b);
 
         if isxn_outcomes.is_empty() {
-            // If there are no intersections,
-
-            // Then either all of the points in b are inside a,
-            if b.pts.iter().all(|pt| {
-                !matches!(
-                    self.contains_pt(pt).expect("contains pt fail"),
-                    PointLoc::Outside
-                )
-            }) {
-                // in which case we ought to return b unchanged,
+            if self.totally_contains(&b) {
                 return Ok(vec![b.clone()]);
             }
-
-            // or all of the a points are inside b,
-            if self.pts.iter().all(|pt| {
-                !matches!(
-                    b.contains_pt(pt).expect("contains pt fail"),
-                    PointLoc::Outside
-                )
-            }) {
-                // in which case we ought to return a unchanged.
+            if b.totally_contains(&self) {
                 return Ok(vec![self.clone()]);
             }
-
-            // if all the points in a are outside b, return nothing.
-            if self.pts.iter().all(|pt| {
-                matches!(
-                    b.contains_pt(pt).expect("contains pt fail"),
-                    PointLoc::Outside
-                )
-            }) {
+            if b.contains_not_at_all(&self) {
                 return Ok(vec![]);
             }
 
@@ -469,6 +481,30 @@ impl Croppable for Polygon {
             resultant_polygons.push(Polygon(resultant_pts)?);
 
             Ok(resultant_polygons)
+        }
+    }
+
+    fn crop_excluding(&self, b: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    where
+        Self: Sized,
+    {
+        let () = self.crop_check_prerequisites(&b)?;
+        let isxn_outcomes = self.get_isxn_outcomes(&b);
+
+        if isxn_outcomes.is_empty() {
+            if self.totally_contains(&b) {
+                unimplemented!("have been asked to return a minus b, but b is totally within a. not prepared to handle polygons with cavities.");
+            }
+            if b.totally_contains(&self) {
+                return Ok(vec![]);
+            }
+            if b.contains_not_at_all(&self) {
+                return Ok(vec![self.clone()]);
+            }
+
+            panic!("i thought there were no intersections.");
+        } else {
+            unimplemented!("OH NO")
         }
     }
 }
