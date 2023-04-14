@@ -98,10 +98,14 @@ pub fn Multiline(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, MultilineCo
     if pts.len() <= 1 {
         return Err(MultilineConstructorError::OneOrFewerPoints);
     }
-    Ok(Polygon {
+    let mut p = Polygon {
         pts,
         kind: PolygonKind::Open,
-    })
+    };
+    if p.get_curve_orientation() == Some(CurveOrientation::Negative) {
+        p.orient_curve_positively();
+    }
+    Ok(p)
 }
 
 /// A general error arising from trying to construct a Polygon.
@@ -121,10 +125,14 @@ pub fn Polygon(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, PolygonConstr
     if pts.len() <= 2 {
         return Err(PolygonConstructorError::TwoOrFewerPoints);
     }
-    Ok(Polygon {
+    let mut p = Polygon {
         pts,
         kind: PolygonKind::Closed,
-    })
+    };
+    if p.get_curve_orientation() == Some(CurveOrientation::Negative) {
+        p.orient_curve_positively();
+    }
+    Ok(p)
 }
 
 /// Convenience constructor for rectangles.
@@ -806,31 +814,31 @@ mod tests {
             let p = e;
             assert_eq!(frame1.contains_pt(&p).unwrap(), PointLoc::Inside);
         }
-        assert_eq!(frame1.contains_pt(&a).unwrap(), PointLoc::OnPoint(0));
-        assert_eq!(frame1.contains_pt(&c).unwrap(), PointLoc::OnPoint(1));
-        assert_eq!(frame1.contains_pt(&i).unwrap(), PointLoc::OnPoint(2));
-        assert_eq!(frame1.contains_pt(&g).unwrap(), PointLoc::OnPoint(3));
+        assert_eq!(frame1.contains_pt(&a).unwrap(), PointLoc::OnPoint(3));
+        assert_eq!(frame1.contains_pt(&c).unwrap(), PointLoc::OnPoint(2));
+        assert_eq!(frame1.contains_pt(&i).unwrap(), PointLoc::OnPoint(1));
+        assert_eq!(frame1.contains_pt(&g).unwrap(), PointLoc::OnPoint(0));
 
-        assert_eq!(frame1.contains_pt(&b).unwrap(), PointLoc::OnSegment(0));
-        assert_eq!(frame1.contains_pt(&f).unwrap(), PointLoc::OnSegment(1));
-        assert_eq!(frame1.contains_pt(&h).unwrap(), PointLoc::OnSegment(2));
         assert_eq!(frame1.contains_pt(&d).unwrap(), PointLoc::OnSegment(3));
+        assert_eq!(frame1.contains_pt(&b).unwrap(), PointLoc::OnSegment(2));
+        assert_eq!(frame1.contains_pt(&f).unwrap(), PointLoc::OnSegment(1));
+        assert_eq!(frame1.contains_pt(&h).unwrap(), PointLoc::OnSegment(0));
 
         // frame [a,b,e,d] should contain a, b, d, e...
         let frame2 = Polygon([a, b, e, d]).unwrap();
-        assert_eq!(frame2.contains_pt(&a).unwrap(), PointLoc::OnPoint(0));
-        assert_eq!(frame2.contains_pt(&b).unwrap(), PointLoc::OnPoint(1));
-        assert_eq!(frame2.contains_pt(&e).unwrap(), PointLoc::OnPoint(2));
-        assert_eq!(frame2.contains_pt(&d).unwrap(), PointLoc::OnPoint(3));
+        assert_eq!(frame2.contains_pt(&a).unwrap(), PointLoc::OnPoint(3));
+        assert_eq!(frame2.contains_pt(&b).unwrap(), PointLoc::OnPoint(2));
+        assert_eq!(frame2.contains_pt(&e).unwrap(), PointLoc::OnPoint(1));
+        assert_eq!(frame2.contains_pt(&d).unwrap(), PointLoc::OnPoint(0));
         for p in [c, f, i, h, g] {
             assert_eq!(frame2.contains_pt(&p).unwrap(), PointLoc::Outside);
         }
 
         let frame3 = Polygon([b, f, h, d]).unwrap();
-        assert_eq!(frame3.contains_pt(&b).unwrap(), PointLoc::OnPoint(0));
-        assert_eq!(frame3.contains_pt(&f).unwrap(), PointLoc::OnPoint(1));
-        assert_eq!(frame3.contains_pt(&h).unwrap(), PointLoc::OnPoint(2));
-        assert_eq!(frame3.contains_pt(&d).unwrap(), PointLoc::OnPoint(3));
+        assert_eq!(frame3.contains_pt(&b).unwrap(), PointLoc::OnPoint(3));
+        assert_eq!(frame3.contains_pt(&f).unwrap(), PointLoc::OnPoint(2));
+        assert_eq!(frame3.contains_pt(&h).unwrap(), PointLoc::OnPoint(1));
+        assert_eq!(frame3.contains_pt(&d).unwrap(), PointLoc::OnPoint(0));
         assert_eq!(frame3.contains_pt(&e).unwrap(), PointLoc::Inside);
         for p in [a, c, g, i] {
             assert_eq!(frame3.contains_pt(&p).unwrap(), PointLoc::Outside);
@@ -888,28 +896,6 @@ mod tests {
                 .crop_to(&Multiline([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
                 .unwrap_err(),
             CropToPolygonError::ThatPolygonNotClosed
-        );
-    }
-
-    #[test]
-    fn test_crop_to_polygon_this_not_positively_oriented() {
-        assert_eq!(
-            Polygon([Pt(1, 1), Pt(1, 3), Pt(3, 3), Pt(3, 1)])
-                .unwrap()
-                .crop_to(&Polygon([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap())
-                .unwrap_err(),
-            CropToPolygonError::ThisPolygonNotPositivelyOriented
-        );
-    }
-
-    #[test]
-    fn test_crop_to_polygon_that_not_positively_oriented() {
-        assert_eq!(
-            Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)])
-                .unwrap()
-                .crop_to(&Polygon([Pt(0, 0), Pt(0, 4), Pt(4, 4), Pt(4, 0)]).unwrap())
-                .unwrap_err(),
-            CropToPolygonError::ThatPolygonNotPositivelyOriented
         );
     }
 
@@ -1188,7 +1174,7 @@ mod tests {
 
         assert_eq!(
             Polygon([a, c, i, g]).unwrap().get_curve_orientation(),
-            Some(CurveOrientation::Negative)
+            Some(CurveOrientation::Positive)
         );
         assert_eq!(
             Polygon([a, g, i, c]).unwrap().get_curve_orientation(),

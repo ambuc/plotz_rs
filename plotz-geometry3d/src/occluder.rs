@@ -57,7 +57,10 @@ impl Occluder {
                         });
 
                 if is_collision {
-                    incoming.crop_to(pg2).expect("crop failed")
+                    match incoming.crop_to(pg2) {
+                        Ok(p) => p,
+                        Err(_) => vec![],
+                    }
                 } else {
                     vec![incoming.clone()]
                 }
