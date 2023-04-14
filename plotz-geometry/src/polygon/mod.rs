@@ -193,6 +193,15 @@ impl Polygon {
             .any(|l| l.intersects(other).is_some())
     }
 
+    /// Returns the detailed set of intersection outcomes between this polygon's
+    /// segments and another segment.
+    pub fn intersects_segment_detailed(&self, other: &Segment) -> Vec<IsxnResult> {
+        self.to_segments()
+            .iter()
+            .flat_map(|l| l.intersects(&other))
+            .collect::<Vec<_>>()
+    }
+
     /// Calculates whether a point is within, without, or along a closed polygon
     /// using the https://en.wikipedia.org/wiki/Winding_number method.
     pub fn contains_pt(&self, other: &Pt) -> Result<PointLoc, ContainsPointError> {

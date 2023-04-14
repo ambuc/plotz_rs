@@ -127,9 +127,10 @@ impl Canvas {
                     .flatten(),
             )?;
 
+            let buffer = 0.9;
             let w_scale = frame_bounds.width() / inner_bounds.width();
             let s_scale = frame_bounds.height() / inner_bounds.height();
-            let scale = std::cmp::min(FloatOrd(w_scale), FloatOrd(s_scale)).0;
+            let scale = std::cmp::min(FloatOrd(w_scale), FloatOrd(s_scale)).0 * buffer;
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
                 for d_o in dos.iter_mut() {

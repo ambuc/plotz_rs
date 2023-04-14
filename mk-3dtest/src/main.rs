@@ -54,9 +54,10 @@ fn main() {
 
         // objects.extend(axes);
 
-        for (i, j) in iproduct!(0..1, 0..1) {
+        let e = 0.6;
+        for (i, j) in iproduct!(0..1, 0..2) {
             objects.extend(
-                Cube(Pt3d(i as f64, j as f64, 0.0), (0.75, 0.75, 0.75))
+                Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, e))
                     .items
                     .into_iter()
                     .map(|face| {
