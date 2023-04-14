@@ -241,22 +241,25 @@ impl Polygon {
     /// Which curve orientation a polygon has. Curve orientation refers to
     /// whether or not the points in the polygon are stored in clockwise or
     /// counterclockwise order.
-    pub fn get_curve_orientation(&self) -> CurveOrientation {
-        if self
+    ///
+    /// If there is no internal area, returns None.
+    pub fn get_curve_orientation(&self) -> Option<CurveOrientation> {
+        let o = self
             .to_segments()
             .iter()
             .map(|segment| (segment.f.x.0 - segment.i.x.0) * (segment.f.y.0 + segment.i.y.0))
-            .sum::<f64>()
-            >= 0_f64
-        {
-            return CurveOrientation::Negative;
+            .sum::<f64>();
+
+        match o {
+            o if approx_eq!(f64, o, 0.0) => None,
+            o if o >= 0_f64 => Some(CurveOrientation::Negative),
+            _ => Some(CurveOrientation::Positive),
         }
-        CurveOrientation::Positive
     }
 
     /// Orients a polygon in-place such that it has a positive orientation.
-    pub fn orient_curve(&mut self) {
-        if self.get_curve_orientation() == CurveOrientation::Negative {
+    pub fn orient_curve_positively(&mut self) {
+        if let Some(CurveOrientation::Negative) = self.get_curve_orientation() {
             self.pts.reverse();
         }
     }
@@ -287,10 +290,12 @@ impl Croppable for Polygon {
         if b.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThatPolygonNotClosed);
         }
-        if self.get_curve_orientation() != CurveOrientation::Positive {
+
+        if self.get_curve_orientation() != Some(CurveOrientation::Positive) {
             return Err(CropToPolygonError::ThisPolygonNotPositivelyOriented);
         }
-        if b.get_curve_orientation() != CurveOrientation::Positive {
+
+        if b.get_curve_orientation() != Some(CurveOrientation::Positive) {
             return Err(CropToPolygonError::ThatPolygonNotPositivelyOriented);
         }
 
@@ -1173,11 +1178,11 @@ mod tests {
 
         assert_eq!(
             Polygon([a, c, i, g]).unwrap().get_curve_orientation(),
-            CurveOrientation::Negative
+            Some(CurveOrientation::Negative)
         );
         assert_eq!(
             Polygon([a, g, i, c]).unwrap().get_curve_orientation(),
-            CurveOrientation::Positive
+            Some(CurveOrientation::Positive)
         );
     }
 
@@ -1197,9 +1202,9 @@ mod tests {
         let g = Pt(0, 0);
         let i = Pt(2, 0);
         let mut p = Polygon([a, g, i, c]).unwrap();
-        assert_eq!(p.get_curve_orientation(), CurveOrientation::Positive);
-        p.orient_curve();
-        assert_eq!(p.get_curve_orientation(), CurveOrientation::Negative);
+        assert_eq!(p.get_curve_orientation(), Some(CurveOrientation::Positive));
+        p.orient_curve_positively();
+        assert_eq!(p.get_curve_orientation(), Some(CurveOrientation::Negative));
     }
 
     #[test]
