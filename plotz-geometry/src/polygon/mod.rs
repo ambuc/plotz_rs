@@ -380,28 +380,25 @@ impl Croppable for Polygon {
                     // then collect them.
                     .collect();
 
-                relevant_isxns.sort_by(|a: &AnnotatedIsxn, b: &AnnotatedIsxn| {
-                    a.intersection
-                        .percent_along(curr.facing_along)
-                        .partial_cmp(&b.intersection.percent_along(curr.facing_along))
-                        .unwrap()
+                relevant_isxns.sort_by_key(|a: &AnnotatedIsxn| {
+                    a.intersection.percent_along(curr.facing_along)
                 });
 
-                match curr.position {
+                relevant_isxns = match curr.position {
                     Position::OnPolygon(_) => {
                         let (_drained, v) = relevant_isxns.into_iter().partition(|isxn| {
                             isxn.intersection.percent_along(curr.facing_along).0 == 0.0
                         });
-                        relevant_isxns = v;
+                        v
                     }
                     Position::OnIsxn(this_isxn) => {
                         let (_drained, v) = relevant_isxns.into_iter().partition(|other_isxn| {
                             other_isxn.intersection.percent_along(curr.facing_along)
                                 <= this_isxn.intersection.percent_along(curr.facing_along)
                         });
-                        relevant_isxns = v;
+                        v
                     }
-                }
+                };
 
                 if !matches!(b.contains_pt(&curr.pt())?, PointLoc::Outside) {
                     resultant_pts.push(curr.pt());
