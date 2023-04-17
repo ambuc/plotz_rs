@@ -1,5 +1,9 @@
 //! Crop logic for polygons.
 
+use crate::{crop::PointLoc, isxn::Pct};
+
+use super::Polygon;
+
 use {
     crate::{
         isxn::{Intersection, Which},
@@ -56,10 +60,10 @@ impl Debug for Position {
             }) => {
                 write!(
                     f,
-                    "on isxn {:.2?}% along segment {:?} of A, and {:.2?}% along segment {:?} of B",
-                    a_pct.to_f64(),
+                    "on isxn {:.0?}% along segment {:?} of A, and {:.0?}% along segment {:?} of B",
+                    a_pct.to_f64() * 100.0,
                     a_idx,
-                    b_pct.to_f64(),
+                    b_pct.to_f64() * 100.0,
                     b_idx
                 )
             }
@@ -71,18 +75,19 @@ pub struct Cursor<'a> {
     // current position
     pub position: Position,
     pub facing_along: Which,
-    pub facing_along_segment_idx: usize, // segment index
     // context
     pub a_pts: &'a Vec<Pt>,
     pub b_pts: &'a Vec<Pt>,
+
+    pub a: &'a Polygon,
 }
 
 impl<'a> Debug for Cursor<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "at {:?}, facing {:?} along segment {:?}",
-            self.position, self.facing_along, self.facing_along_segment_idx
+            "[{:?}] at {:?}, facing along {:?}",
+            self.facing_along, self.position, self.facing_along
         )
     }
 }
@@ -105,36 +110,72 @@ impl<'a> Cursor<'a> {
         }
     }
 
+    pub fn idx(&self) -> usize {
+        match &self.position {
+            Position::OnPolygon(OnPolygon { at_point_index, .. }) => *at_point_index,
+            Position::OnIsxn(AnnotatedIsxn { a_idx, b_idx, .. }) => match self.facing_along {
+                Which::A => *a_idx,
+                Which::B => *b_idx,
+            },
+        }
+    }
+
     pub fn march_to_next_point(&mut self) {
         match self.position {
             Position::OnPolygon(OnPolygon { at_point_index, .. }) => {
-                let v = (at_point_index + 1) % self.pts(self.facing_along).len();
+                // println!("\t\ton polygon");
+                let next_isxn_idx = (at_point_index + 1) % self.pts(self.facing_along).len();
                 self.position = Position::OnPolygon(OnPolygon {
                     on_polygon: self.facing_along,
-                    at_point_index: v,
+                    at_point_index: next_isxn_idx,
                 });
-                self.facing_along_segment_idx = v;
             }
             Position::OnIsxn(isxn) => {
-                let v = (isxn.idx(self.facing_along) + 1) % self.pts(self.facing_along).len();
+                let prev_pt = self.pt();
+                let next_isxn_idx =
+                    (isxn.idx(self.facing_along) + 1) % self.pts(self.facing_along).len();
                 self.position = Position::OnPolygon(OnPolygon {
                     on_polygon: self.facing_along,
-                    at_point_index: v,
+                    at_point_index: next_isxn_idx,
                 });
-                self.facing_along_segment_idx = v;
+                let new_pt = self.pt();
+                if prev_pt == new_pt {
+                    self.march_to_next_point();
+                }
             }
         }
     }
 
     pub fn march_to_isxn(&mut self, next_isxn: AnnotatedIsxn, should_flip: bool) {
-        let new_facing_along = if should_flip {
-            self.facing_along.flip()
-        } else {
-            self.facing_along
-        };
+        // if we are given an intersection which is at a point, we should replace it with being at a point instead. (and flip);
+        // if next_isxn.intersection.on_points_of_either() {
+        //     dbg!(&next_isxn);
+        //     match next_isxn.intersection {
+        //         Intersection {
+        //             a_pct: Pct::One, ..
+        //         } => {
+        //             //
+        //             self.pos
+        //         }
+        //         Intersection {
+        //             b_pct: Pct::One, ..
+        //         } => {
+        //             //
+        //         }
+        //         _ => {
+        //             // ??
+        //         }
+        //     }
+        // } else {
+        {
+            let new_facing_along = if should_flip {
+                self.facing_along.flip()
+            } else {
+                self.facing_along
+            };
 
-        self.position = Position::OnIsxn(next_isxn);
-        self.facing_along = new_facing_along;
-        self.facing_along_segment_idx = next_isxn.idx(new_facing_along);
+            self.position = Position::OnIsxn(next_isxn);
+            self.facing_along = new_facing_along;
+        }
     }
 }

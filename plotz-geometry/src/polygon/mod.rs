@@ -366,6 +366,10 @@ impl Croppable for Polygon {
     fn crop_to(&self, b: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
         let a: &Polygon = self;
 
+        if a == b {
+            return Ok(vec![a.clone()]);
+        }
+
         // crop a to b, return modified a.
         let () = Polygon::crop_check_prerequisites(&a, &b)?;
         let annotated_isxn_outcomes = Polygon::get_annotated_isxns(&a, &b);
@@ -393,7 +397,6 @@ impl Croppable for Polygon {
             if let Some(idx) = a
                 .pts
                 .iter()
-                // idx of first inside pt
                 .position(|pt| matches!(b.contains_pt(pt).expect("ok"), PointLoc::Inside))
             {
                 idx
@@ -414,14 +417,14 @@ impl Croppable for Polygon {
                 at_point_index: idx,
             }),
             facing_along: Which::A,
-            facing_along_segment_idx: idx,
             //
             a_pts: &a.pts,
             b_pts: &b.pts,
+            a: &a,
         };
 
         'outer: loop {
-            println!("cursor: {:?}", curr);
+            // println!("cursor: {:?}", curr);
             // If we've made a cycle,
             if let Some(pt) = resultant_pts.first() {
                 if *pt == curr.pt() {
@@ -435,11 +438,11 @@ impl Croppable for Polygon {
                 // only find the intersections where the candidate index is the
                 // same as the current segment index.
                 .filter(|annotated_isxn_outcome| {
-                    let candidate_segment_idx: usize = match curr.facing_along {
+                    let candidate_pt_idx: usize = match curr.facing_along {
                         Which::A => annotated_isxn_outcome.a_idx,
                         Which::B => annotated_isxn_outcome.b_idx,
                     };
-                    candidate_segment_idx == curr.facing_along_segment_idx
+                    candidate_pt_idx == curr.idx()
                 })
                 // then collect them.
                 .collect();
@@ -452,7 +455,9 @@ impl Croppable for Polygon {
                 Position::OnPolygon(_) => {
                     let (_drained, v) = relevant_isxns.into_iter().partition(|isxn| {
                         isxn.intersection.percent_along(curr.facing_along).0 == 0.0
+                        //false
                     });
+                    // println!("\t(i) drained: {:?}", _drained);
                     v
                 }
                 Position::OnIsxn(this_isxn) => {
@@ -460,6 +465,7 @@ impl Croppable for Polygon {
                         other_isxn.intersection.percent_along(curr.facing_along)
                             <= this_isxn.intersection.percent_along(curr.facing_along)
                     });
+                    // println!("\t(j) drained: {:?}", _drained);
                     v
                 }
             };
@@ -471,18 +477,20 @@ impl Croppable for Polygon {
 
             match relevant_isxns.get(0) {
                 Some(next_isxn) => {
-                    match curr.position {
+                    let should_flip = match curr.position {
                         Position::OnPolygon(_) => {
-                            let should_flip: bool =
-                                !matches!(b.contains_pt(&curr.pt())?, PointLoc::Outside);
-                            curr.march_to_isxn(**next_isxn, should_flip);
+                            // println!("\ton polygon, marching to isxn");
+                            !matches!(b.contains_pt(&curr.pt())?, PointLoc::Outside)
                         }
                         Position::OnIsxn(_) => {
-                            curr.march_to_isxn(**next_isxn, /*should_flip */ true);
+                            // println!("\ton isxn, marching to isxn");
+                            true
                         }
-                    }
+                    };
+                    curr.march_to_isxn(**next_isxn, should_flip);
                 }
                 None => {
+                    // println!("\tno next isxn, marching to next point");
                     curr.march_to_next_point();
                 }
             }
@@ -1177,36 +1185,36 @@ mod tests {
         assert_eq!(crops, vec![expected]);
     }
 
-    #[test]
-    #[ignore]
-    fn test_crop_to_polygon_concavities_01() {
-        // ⬆️ y
-        // ⬜🟨🟨🟨⬜
-        // ⬜🟨⬜🟨⬜
-        // 🟥🟧🟥🟧🟥
-        // 🟥🟧🟥🟧🟥
-        // ⬜🟨⬜🟨⬜
-        let inner = Polygon([
-            Pt(1, 0),
-            Pt(2, 0),
-            Pt(2, 4),
-            Pt(3, 4),
-            Pt(3, 0),
-            Pt(4, 0),
-            Pt(4, 5),
-            Pt(1, 5),
-        ])
-        .unwrap();
-        let frame = Polygon([Pt(0, 1), Pt(5, 1), Pt(5, 3), Pt(0, 3)]).unwrap();
-        let expected = vec![
-            Polygon([Pt(1, 1), Pt(2, 1), Pt(2, 3), Pt(1, 3)]).unwrap(),
-            Polygon([Pt(3, 1), Pt(4, 1), Pt(4, 3), Pt(3, 3)]).unwrap(),
-        ];
-        let crops = inner.crop_to(&frame).unwrap();
-        assert_eq!(crops.len(), 2);
-        assert_eq!(crops[0], expected[0]);
-        assert_eq!(crops[1], expected[1]);
-    }
+    // #[test]
+    // #[ignore]
+    // fn test_crop_to_polygon_concavities_01() {
+    //     // ⬆️ y
+    //     // ⬜🟨🟨🟨⬜
+    //     // ⬜🟨⬜🟨⬜
+    //     // 🟥🟧🟥🟧🟥
+    //     // 🟥🟧🟥🟧🟥
+    //     // ⬜🟨⬜🟨⬜
+    //     let inner = Polygon([
+    //         Pt(1, 0),
+    //         Pt(2, 0),
+    //         Pt(2, 4),
+    //         Pt(3, 4),
+    //         Pt(3, 0),
+    //         Pt(4, 0),
+    //         Pt(4, 5),
+    //         Pt(1, 5),
+    //     ])
+    //     .unwrap();
+    //     let frame = Polygon([Pt(0, 1), Pt(5, 1), Pt(5, 3), Pt(0, 3)]).unwrap();
+    //     let expected = vec![
+    //         Polygon([Pt(1, 1), Pt(2, 1), Pt(2, 3), Pt(1, 3)]).unwrap(),
+    //         Polygon([Pt(3, 1), Pt(4, 1), Pt(4, 3), Pt(3, 3)]).unwrap(),
+    //     ];
+    //     let crops = inner.crop_to(&frame).unwrap();
+    //     assert_eq!(crops.len(), 2);
+    //     assert_eq!(crops[0], expected[0]);
+    //     assert_eq!(crops[1], expected[1]);
+    // }
 
     #[test]
     fn test_polygon_get_curve_orientation() {
