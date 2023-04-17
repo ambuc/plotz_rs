@@ -64,9 +64,9 @@ fn write_doi_to_context(
             context.move_to(pt.x.0, pt.y.0);
             context.show_text(&chr.to_string()).expect("show text");
         }
-        Object2dInner::Group(dois) => {
-            for doi in dois.iter_dois() {
-                write_doi_to_context(doi, context).expect("write");
+        Object2dInner::Group(group) => {
+            for obj in group.iter_objects() {
+                write_obj_to_context(obj, context).expect("write");
             }
         }
         Object2dInner::CurveArc(arc) => {

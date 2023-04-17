@@ -301,7 +301,7 @@ pub fn make() -> Vec<Object2d> {
 
             // std::iter::empty() //
             std::iter::once(Object2d::new(p).with_color(color)).chain([Object2d::new(Group::new(
-                segments.into_iter().map(Object2dInner::Segment),
+                segments.into_iter().map(Object2d::new),
             ))
             .with_color(color)])
         })

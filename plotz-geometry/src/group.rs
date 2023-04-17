@@ -6,7 +6,7 @@ use {
     crate::{
         bounded::Bounded,
         crop::{CropToPolygonError, Croppable},
-        object2d_inner::Object2dInner,
+        object2d::Object2d,
         point::Pt,
         polygon::Polygon,
         traits::*,
@@ -17,24 +17,24 @@ use {
 
 #[derive(Debug, PartialEq, Clone)]
 /// A group of objects.
-pub struct Group(Vec<Object2dInner>);
+pub struct Group(Vec<Object2d>);
 
 impl Group {
     /// Creates a new group.
-    pub fn new(dois: impl IntoIterator<Item = Object2dInner>) -> Group {
-        Group(dois.into_iter().collect::<Vec<_>>())
+    pub fn new(objs: impl IntoIterator<Item = Object2d>) -> Group {
+        Group(objs.into_iter().collect::<Vec<_>>())
     }
 
     /// Returns a boxed iterator of immutable Object2dInners, the members of this
     /// group.
-    pub fn iter_dois(&self) -> Box<dyn Iterator<Item = &Object2dInner> + '_> {
+    pub fn iter_objects(&self) -> Box<dyn Iterator<Item = &Object2d> + '_> {
         Box::new(self.0.iter())
     }
 
     /// Mutates each point in each object in the group. See |Mutable|.
     pub fn mutate(&mut self, f: impl Fn(&mut Pt)) {
-        for doi in &mut self.0 {
-            doi.mutate(&f);
+        for obj in &mut self.0 {
+            obj.mutate(&f);
         }
     }
 }
@@ -44,7 +44,7 @@ impl YieldPoints for Group {
         Some(Box::new(
             self.0
                 .iter()
-                .flat_map(|doi| doi.inner_impl_yield_points().yield_pts())
+                .flat_map(|obj| obj.inner_impl_yield_points().yield_pts())
                 .flatten(),
         ))
     }
@@ -54,7 +54,7 @@ impl YieldPointsMut for Group {
         Some(Box::new(
             self.0
                 .iter_mut()
-                .flat_map(|doi| doi.inner_impl_yield_points_mut().yield_pts_mut())
+                .flat_map(|obj| obj.inner_impl_yield_points_mut().yield_pts_mut())
                 .flatten(),
         ))
     }
@@ -64,26 +64,26 @@ impl Bounded for Group {
     fn bounds(&self) -> crate::bounded::Bounds {
         Bounds {
             top_bound: self
-                .iter_dois()
-                .map(|doi| FloatOrd(doi.top_bound()))
+                .iter_objects()
+                .map(|obj| FloatOrd(obj.top_bound()))
                 .min()
                 .unwrap()
                 .0,
             bottom_bound: self
-                .iter_dois()
-                .map(|doi| FloatOrd(doi.bottom_bound()))
+                .iter_objects()
+                .map(|obj| FloatOrd(obj.bottom_bound()))
                 .max()
                 .unwrap()
                 .0,
             left_bound: self
-                .iter_dois()
-                .map(|doi| FloatOrd(doi.left_bound()))
+                .iter_objects()
+                .map(|obj| FloatOrd(obj.left_bound()))
                 .min()
                 .unwrap()
                 .0,
             right_bound: self
-                .iter_dois()
-                .map(|doi| FloatOrd(doi.right_bound()))
+                .iter_objects()
+                .map(|obj| FloatOrd(obj.right_bound()))
                 .max()
                 .unwrap()
                 .0,

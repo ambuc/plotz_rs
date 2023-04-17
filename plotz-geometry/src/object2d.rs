@@ -45,6 +45,21 @@ impl Object2d {
     pub fn with_thickness(self, thickness: f64) -> Object2d {
         Object2d { thickness, ..self }
     }
+
+    /// Casts each inner value to something which implements Bounded.
+    pub fn inner_impl_bounded(&self) -> &dyn Bounded {
+        self.inner.inner_impl_bounded()
+    }
+
+    /// Casts each inner value to something which implements YieldPoints.
+    pub fn inner_impl_yield_points(&self) -> &dyn YieldPoints {
+        self.inner.inner_impl_yield_points()
+    }
+
+    /// Casts each inner value to something which implements YieldPointsMut.
+    pub fn inner_impl_yield_points_mut(&mut self) -> &mut dyn YieldPointsMut {
+        self.inner.inner_impl_yield_points_mut()
+    }
 }
 
 impl YieldPoints for Object2d {
