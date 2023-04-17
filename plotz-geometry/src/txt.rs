@@ -7,32 +7,32 @@ use {
 
 #[derive(Debug, PartialEq, Clone)]
 /// A character laid out at a point.
-pub struct Char {
+pub struct Txt {
     /// the point.
     pub pt: Pt,
-    /// the character.
-    pub chr: char,
+    /// the text.
+    pub inner: String,
 }
 
-impl Bounded for Char {
+impl Bounded for Txt {
     fn bounds(&self) -> crate::bounded::Bounds {
         self.pt.bounds()
     }
 }
 
-impl YieldPoints for Char {
+impl YieldPoints for Txt {
     fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
         Some(Box::new(std::iter::once(&self.pt)))
     }
 }
 
-impl YieldPointsMut for Char {
+impl YieldPointsMut for Txt {
     fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
         Some(Box::new(std::iter::once(&mut self.pt)))
     }
 }
 
-impl Add<Pt> for Char {
+impl Add<Pt> for Txt {
     type Output = Self;
     fn add(self, rhs: Pt) -> Self::Output {
         Self {
@@ -41,7 +41,7 @@ impl Add<Pt> for Char {
         }
     }
 }
-impl Sub<Pt> for Char {
+impl Sub<Pt> for Txt {
     type Output = Self;
     fn sub(self, rhs: Pt) -> Self::Output {
         Self {
@@ -51,19 +51,19 @@ impl Sub<Pt> for Char {
     }
 }
 
-impl AddAssign<Pt> for Char {
+impl AddAssign<Pt> for Txt {
     fn add_assign(&mut self, rhs: Pt) {
         self.pt += rhs;
     }
 }
 
-impl SubAssign<Pt> for Char {
+impl SubAssign<Pt> for Txt {
     fn sub_assign(&mut self, rhs: Pt) {
         self.pt -= rhs;
     }
 }
 
-impl Mul<Pt> for Char {
+impl Mul<Pt> for Txt {
     type Output = Self;
     fn mul(self, rhs: Pt) -> Self::Output {
         Self {
@@ -72,7 +72,7 @@ impl Mul<Pt> for Char {
         }
     }
 }
-impl Mul<f64> for Char {
+impl Mul<f64> for Txt {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
         Self {
@@ -81,7 +81,7 @@ impl Mul<f64> for Char {
         }
     }
 }
-impl Div<Pt> for Char {
+impl Div<Pt> for Txt {
     type Output = Self;
     fn div(self, rhs: Pt) -> Self::Output {
         Self {
@@ -90,7 +90,7 @@ impl Div<Pt> for Char {
         }
     }
 }
-impl Div<f64> for Char {
+impl Div<f64> for Txt {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
         Self {
@@ -100,39 +100,39 @@ impl Div<f64> for Char {
     }
 }
 
-impl MulAssign<f64> for Char {
+impl MulAssign<f64> for Txt {
     fn mul_assign(&mut self, rhs: f64) {
         self.pt *= rhs;
     }
 }
-impl MulAssign<Pt> for Char {
+impl MulAssign<Pt> for Txt {
     fn mul_assign(&mut self, rhs: Pt) {
         self.pt *= rhs;
     }
 }
-impl DivAssign<f64> for Char {
+impl DivAssign<f64> for Txt {
     fn div_assign(&mut self, rhs: f64) {
         self.pt /= rhs;
     }
 }
-impl DivAssign<Pt> for Char {
+impl DivAssign<Pt> for Txt {
     fn div_assign(&mut self, rhs: Pt) {
         self.pt /= rhs;
     }
 }
-impl RemAssign<Pt> for Char {
+impl RemAssign<Pt> for Txt {
     fn rem_assign(&mut self, rhs: Pt) {
         self.pt.x.0 %= rhs.x.0;
         self.pt.y.0 %= rhs.y.0;
     }
 }
 
-impl Mutable for Char {}
-impl Translatable for Char {}
-impl Scalable<Pt> for Char {}
-impl Scalable<f64> for Char {}
+impl Mutable for Txt {}
+impl Translatable for Txt {}
+impl Scalable<Pt> for Txt {}
+impl Scalable<f64> for Txt {}
 
-impl Nullable for Char {
+impl Nullable for Txt {
     fn is_empty(&self) -> bool {
         false
     }

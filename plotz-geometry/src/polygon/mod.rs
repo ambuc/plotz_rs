@@ -1,5 +1,7 @@
 //! A 2D polygon (or multi&line).
 
+use crate::{object2d::Object2d, txt::Txt};
+
 mod crop_logic;
 
 use {
@@ -645,6 +647,28 @@ impl Roundable for Polygon {
 impl Nullable for Polygon {
     fn is_empty(&self) -> bool {
         self.pts.is_empty()
+    }
+}
+
+impl Annotatable for Polygon {
+    fn annotate(&self) -> Vec<Object2d> {
+        let mut a = vec![];
+
+        for (idx, pt) in self.pts.iter().enumerate() {
+            a.push(Object2d::new(Txt {
+                pt: *pt,
+                inner: format!("p{}", idx.to_string()),
+            }));
+        }
+
+        for (idx, sg) in self.to_segments().iter().enumerate() {
+            a.push(Object2d::new(Txt {
+                pt: sg.i.avg(&sg.f),
+                inner: format!("s{}", idx.to_string()),
+            }));
+        }
+
+        a
     }
 }
 

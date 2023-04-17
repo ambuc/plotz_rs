@@ -3,7 +3,6 @@
 #![deny(missing_docs)]
 
 pub mod bounded;
-pub mod char;
 pub mod crop;
 pub mod curve;
 pub mod grid;
@@ -18,3 +17,4 @@ pub mod polygon;
 pub mod segment;
 pub mod shading;
 pub mod traits;
+pub mod txt;

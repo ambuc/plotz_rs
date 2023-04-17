@@ -3,7 +3,7 @@
 use {
     plotz_color::BLACK,
     plotz_geometry::polygon::PolygonKind,
-    plotz_geometry::{char::Char, object2d::Object2d, object2d_inner::Object2dInner},
+    plotz_geometry::{object2d::Object2d, object2d_inner::Object2dInner, txt::Txt},
     std::fmt::Debug,
     thiserror::Error,
 };
@@ -57,12 +57,12 @@ fn write_doi_to_context(
             context.line_to(segment.i.x.0, segment.i.y.0);
             context.line_to(segment.f.x.0, segment.f.y.0);
         }
-        Object2dInner::Char(Char { pt, chr }) => {
+        Object2dInner::Char(Txt { pt, inner: txt }) => {
             context.select_font_face("serif", cairo::FontSlant::Normal, cairo::FontWeight::Bold);
-            context.set_font_size(12.0);
+            context.set_font_size(8.0);
 
             context.move_to(pt.x.0, pt.y.0);
-            context.show_text(&chr.to_string()).expect("show text");
+            context.show_text(txt).expect("show text");
         }
         Object2dInner::Group(group) => {
             for obj in group.iter_objects() {

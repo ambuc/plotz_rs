@@ -5,7 +5,6 @@ use crate::polygon::PolygonKind;
 use {
     crate::{
         bounded::Bounded,
-        char::Char,
         crop::{CropToPolygonError, Croppable, PointLoc},
         curve::CurveArc,
         group::Group,
@@ -13,6 +12,7 @@ use {
         polygon::Polygon,
         segment::Segment,
         traits::*,
+        txt::Txt,
     },
     derive_more::From,
     std::ops::*,
@@ -30,7 +30,7 @@ pub enum Object2dInner {
     /// An arc.
     CurveArc(CurveArc),
     /// A character to be printed in SVG, at a point.
-    Char(Char),
+    Char(Txt),
     /// A group of other objects.
     Group(Group),
 }
@@ -386,5 +386,18 @@ impl Croppable for Object2dInner {
                 .map(Object2dInner::from)
                 .collect::<Vec<_>>(),
         })
+    }
+}
+
+impl Annotatable for Object2dInner {
+    fn annotate(&self) -> Vec<crate::object2d::Object2d> {
+        match self {
+            Object2dInner::Polygon(pg) => pg.annotate(),
+            Object2dInner::Group(g) => g.annotate(),
+            Object2dInner::Point(_)
+            | Object2dInner::Segment(_)
+            | Object2dInner::CurveArc(_)
+            | Object2dInner::Char(_) => vec![],
+        }
     }
 }

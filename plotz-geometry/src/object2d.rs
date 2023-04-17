@@ -174,3 +174,13 @@ impl Croppable for Object2d {
         unimplemented!("TODO");
     }
 }
+
+impl Annotatable for Object2d {
+    fn annotate(&self) -> Vec<Object2d> {
+        self.inner
+            .annotate()
+            .into_iter()
+            .map(|o| o.with_color(self.color))
+            .collect()
+    }
+}

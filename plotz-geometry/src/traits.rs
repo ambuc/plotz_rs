@@ -1,5 +1,7 @@
 //! Traits.
 
+use crate::object2d::Object2d;
+
 use {crate::point::Pt, std::ops::*};
 
 /// A geometric figure made of points which might emit a boxed iterator of immutable points.
@@ -51,4 +53,10 @@ pub trait Roundable {
 pub trait Nullable {
     /// Is it empty?
     fn is_empty(&self) -> bool;
+}
+
+/// Something which can have its points and segments labelled.
+pub trait Annotatable {
+    /// Return the labelled points and segments.
+    fn annotate(&self) -> Vec<Object2d>;
 }
