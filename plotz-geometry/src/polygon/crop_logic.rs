@@ -67,15 +67,13 @@ impl<'a> Cursor<'a> {
             Position::OnIsxn(AnnotatedIsxn { intersection, .. }) => intersection.pt(),
         }
     }
-    
+
     pub fn march_to_next_point(&mut self) {
         let v = (match self.position {
             Position::OnPolygon(OnPolygon { at_point_index, .. }) => at_point_index,
             Position::OnIsxn(isxn) => isxn.idx(self.facing_along),
         } + 1)
             % self.pts(self.facing_along).len();
-        println!("ptslen: {:?}", self.pts(self.facing_along).len());
-        println!("v: {:?}", v);
         self.position = Position::OnPolygon(OnPolygon {
             on_polygon: self.facing_along,
             at_point_index: v,

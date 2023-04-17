@@ -9,13 +9,14 @@ edition = "2021"
 
 [workspace]
 members = [
+    "mk-3dtest",
     "mk-arcs",
+    "mk-croptest",
     "mk-lewitt",
     "mk-tilings",
     "mk-voronoi",
     "mk-wang",
     "mk-wrapping",
-    "mk-3dtest",
     "orchestrator",
     "plotz-color",
     "plotz-core",
