@@ -63,9 +63,12 @@ impl Which {
 ///    occurs. Guaranteed to be 0.0<=x<=1.0.
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Intersection {
-    pt: Pt,
-    a_pct: Pct,
-    b_pct: Pct,
+    /// pt
+    pub pt: Pt,
+    /// a_pct
+    pub a_pct: Pct,
+    /// b_pct
+    pub b_pct: Pct,
 }
 
 impl Intersection {

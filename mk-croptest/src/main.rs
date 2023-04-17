@@ -48,7 +48,7 @@ fn main() {
     let f = 12.5;
     for (idx, offset) in iproduct!(0..=6, 0..=6)
         .map(|(i, j)| ((i, j), Pt((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
-        // .filter(|(idx, _)| *idx == (5, 1))
+        .filter(|(idx, _)| *idx == (4, 1))
     {
         let r = Rect(Pt(50.0, 50.0), (50.0, 50.0)).unwrap();
         let base_sq = Object2d::new(r.clone())

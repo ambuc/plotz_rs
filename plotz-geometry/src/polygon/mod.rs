@@ -400,10 +400,8 @@ impl Croppable for Polygon {
                 .iter()
                 .position(|pt| !matches!(b.contains_pt(pt).expect("ok"), PointLoc::Outside))
             {
-                println!("starting on first not-outside point.");
                 idx
             } else {
-                println!("starting on point 0 for no great reason.");
                 0
             }
         };
@@ -420,8 +418,8 @@ impl Croppable for Polygon {
             b_pts: &b.pts,
         };
 
-
         'outer: loop {
+            println!("cursor: {:?}", curr);
             // If we've made a cycle,
             if let Some(pt) = resultant_pts.first() {
                 if *pt == curr.pt() {
@@ -469,26 +467,21 @@ impl Croppable for Polygon {
                 resultant_pts.push(curr.pt());
             }
 
-            if relevant_isxns.is_empty() {
-                curr.march_to_next_point();
-            } else {
-                match curr.position {
-                    Position::OnPolygon(_) => {
-                        curr.march_to_isxn(
-                            *relevant_isxns[0], /*should_flip */
-                            !matches!(b.contains_pt(&curr.pt())?, PointLoc::Outside),
-                        );
-                    }
-                    Position::OnIsxn(_) => {
-                        match relevant_isxns.get(0) {
-                            Some(next_isxn) => {
-                                curr.march_to_isxn(**next_isxn, /*should_flip */ true);
-                            }
-                            None => {
-                                curr.march_to_next_point();
-                            }
+            match relevant_isxns.get(0) {
+                Some(next_isxn) => {
+                    match curr.position {
+                        Position::OnPolygon(_) => {
+                            let should_flip: bool =
+                                !matches!(b.contains_pt(&curr.pt())?, PointLoc::Outside);
+                            curr.march_to_isxn(**next_isxn, should_flip);
+                        }
+                        Position::OnIsxn(_) => {
+                            curr.march_to_isxn(**next_isxn, /*should_flip */ true);
                         }
                     }
+                }
+                None => {
+                    curr.march_to_next_point();
                 }
             }
         }
@@ -500,8 +493,6 @@ impl Croppable for Polygon {
 
         if resultant_pts.len() < 3 {
             // not enough points.
-            println!("not enough points for a polygon, returning nothing.");
-
             return Ok(vec![]);
         }
 
