@@ -45,13 +45,13 @@ pub struct Cursor<'a> {
     pub facing_along_segment_idx: usize, // segment index
     // context
     #[derivative(Debug = "ignore")]
-    pub a_pts: &'a Vec<(usize, &'a Pt)>,
+    pub a_pts: &'a Vec<Pt>,
     #[derivative(Debug = "ignore")]
-    pub b_pts: &'a Vec<(usize, &'a Pt)>,
+    pub b_pts: &'a Vec<Pt>,
 }
 
 impl<'a> Cursor<'a> {
-    fn pts(&self, which: Which) -> &'a Vec<(usize, &'a Pt)> {
+    fn pts(&self, which: Which) -> &'a Vec<Pt> {
         match which {
             Which::A => self.a_pts,
             Which::B => self.b_pts,
@@ -63,10 +63,11 @@ impl<'a> Cursor<'a> {
             Position::OnPolygon(OnPolygon {
                 on_polygon,
                 at_point_index,
-            }) => *self.pts(*on_polygon)[*at_point_index].1,
+            }) => self.pts(*on_polygon)[*at_point_index],
             Position::OnIsxn(AnnotatedIsxn { intersection, .. }) => intersection.pt(),
         }
     }
+    
     pub fn march_to_next_point(&mut self) {
         let v = (match self.position {
             Position::OnPolygon(OnPolygon { at_point_index, .. }) => at_point_index,

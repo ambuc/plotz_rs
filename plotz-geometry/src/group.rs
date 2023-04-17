@@ -170,7 +170,7 @@ impl Croppable for Group {
                 .collect::<Vec<_>>(),
         )])
     }
-    fn crop_excluding(&self, other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
     where
         Self: Sized,
     {
