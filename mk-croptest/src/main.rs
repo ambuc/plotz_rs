@@ -1,7 +1,9 @@
+use itertools::iproduct;
 use plotz_geometry::{
     crop,
     grid_layout::{GridLayout, GridLayoutSettings},
     group::Group,
+    polygon::Polygon,
 };
 
 use {
@@ -34,16 +36,39 @@ fn main() {
         /*offset=*/ Pt(mgn, mgn),
     );
 
+    let mut gl = GridLayout::new(
+        GridLayoutSettings::builder()
+            .init((30, 30))
+            .dims((700, 900))
+            .divisions((7, 7))
+            .object_margin((5, 5))
+            .build(),
+    );
+
+    let f = 12.5;
+    for (idx, offset) in iproduct!(0..=6, 0..=6)
+        .map(|(i, j)| ((i, j), Pt((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
+        // .filter(|(idx, _)| *idx == (5, 1))
     {
-        let offset = Pt(30.0, 30.0);
-        let r = Rect(Pt(30.0, 30.0), (50.0, 50.0)).unwrap();
+        let r = Rect(Pt(50.0, 50.0), (50.0, 50.0)).unwrap();
         let base_sq = Object2d::new(r.clone())
             .with_color(&BLACK)
             .with_thickness(2.0);
-        let subject_sq = Object2d::new(r.clone())
+
+        let a = Pt(60.0, 60.0);
+        let b = Pt(70.0, 60.0);
+        let c = Pt(80.0, 60.0);
+        let d = Pt(90.0, 60.0);
+        let e = Pt(70.0, 75.0);
+        let f = Pt(80.0, 75.0);
+        let g = Pt(60.0, 90.0);
+        let h = Pt(90.0, 90.0);
+
+        let subject_sq = Object2d::new(Polygon([a, b, e, f, c, d, h, g, a]).unwrap())
             .with_color(&RED)
             .with_thickness(1.0)
             + offset;
+
         let cropped_sqs: Vec<Object2d> = subject_sq
             .crop_to(&r)
             .unwrap()
@@ -51,10 +76,15 @@ fn main() {
             .map(|o| o.with_color(&GREEN).with_thickness(2.0))
             .collect();
 
-        dos.push(base_sq);
-        dos.push(subject_sq);
-        dos.extend(cropped_sqs);
+        let mut v: Vec<Object2d> = vec![base_sq, subject_sq];
+        v.extend(cropped_sqs);
+
+        let g = Group::new(v);
+
+        gl.insert_and_rescale_to_cubby(idx, Object2d::new(g), 0.9);
     }
+
+    dos.extend(gl.to_object2ds());
 
     let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
 

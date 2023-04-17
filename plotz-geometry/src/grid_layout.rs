@@ -1,5 +1,7 @@
 //! GridLayout for grid...layouts... what do you want from me.
 
+use float_ord::FloatOrd;
+
 use crate::{bounded::Bounded, point::Pt};
 
 use {
@@ -103,5 +105,36 @@ impl GridLayout {
             .expect("crop failed");
 
         self.objs[i][j].extend(cropped);
+    }
+
+    /// Given an Object2d, recales it to the cubby at objs[i][j] and inserts that into the grid.
+    pub fn insert_and_rescale_to_cubby(
+        &mut self,
+        (i, j): (usize, usize),
+        d_o: Object2d,
+        buffer: f64,
+    ) {
+        let mut modified_obj = d_o.clone();
+        {
+            let frame_bounds = self.get_cubby_bounds((i, j));
+            let inner_bounds = modified_obj.bounds();
+
+            let w_scale = frame_bounds.width() / inner_bounds.width();
+            let s_scale = frame_bounds.height() / inner_bounds.height();
+            let scale = std::cmp::min(FloatOrd(w_scale), FloatOrd(s_scale)).0 * buffer;
+
+            modified_obj *= scale;
+        }
+
+        {
+            let frame_bounds = self.get_cubby_bounds((i, j));
+            let inner_bounds = modified_obj.bounds();
+
+            let translate_diff = frame_bounds.bbox_center() - inner_bounds.bbox_center();
+
+            modified_obj += translate_diff;
+        }
+
+        self.objs[i][j].push(modified_obj);
     }
 }

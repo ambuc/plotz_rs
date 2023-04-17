@@ -1,6 +1,6 @@
 //! A group of objects.
 
-use crate::bounded::Bounds;
+use crate::bounded::BoundsCollector;
 
 use {
     crate::{
@@ -11,7 +11,6 @@ use {
         polygon::Polygon,
         traits::*,
     },
-    float_ord::FloatOrd,
     std::ops::*,
 };
 
@@ -62,32 +61,13 @@ impl YieldPointsMut for Group {
 
 impl Bounded for Group {
     fn bounds(&self) -> crate::bounded::Bounds {
-        Bounds {
-            top_bound: self
-                .iter_objects()
-                .map(|obj| FloatOrd(obj.top_bound()))
-                .min()
-                .unwrap()
-                .0,
-            bottom_bound: self
-                .iter_objects()
-                .map(|obj| FloatOrd(obj.bottom_bound()))
-                .max()
-                .unwrap()
-                .0,
-            left_bound: self
-                .iter_objects()
-                .map(|obj| FloatOrd(obj.left_bound()))
-                .min()
-                .unwrap()
-                .0,
-            right_bound: self
-                .iter_objects()
-                .map(|obj| FloatOrd(obj.right_bound()))
-                .max()
-                .unwrap()
-                .0,
+        let mut bc = BoundsCollector::default();
+        if let Some(iter) = self.yield_pts() {
+            for pt in iter {
+                bc.incorporate(pt);
+            }
         }
+        bc.bounds()
     }
 }
 

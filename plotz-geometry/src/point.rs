@@ -2,6 +2,7 @@
 
 use crate::{
     bounded::{Bounded, Bounds},
+    polygon::abp,
     segment::Segment,
     traits::*,
 };
@@ -202,6 +203,14 @@ impl Pt {
     /// Flip y
     pub fn flip_y(&mut self) {
         self.y.0 *= -1.0;
+    }
+
+    /// angle from here to there.
+    pub fn angle_to(&self, other: &Pt) -> f64 {
+        let o = self;
+        let j = other;
+        let i = Pt(other.x.0, self.y.0);
+        abp(o, &i, j)
     }
 }
 

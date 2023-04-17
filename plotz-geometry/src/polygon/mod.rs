@@ -16,7 +16,6 @@ use {
     itertools::{iproduct, zip},
     std::{
         cmp::{Eq, PartialEq},
-        collections::HashSet,
         fmt::Debug,
         ops::*,
     },
@@ -387,19 +386,40 @@ impl Croppable for Polygon {
         let mut resultant_polygons: Vec<Polygon> = vec![];
         let mut resultant_pts: Vec<Pt> = vec![];
 
-        let mut visited_pts = HashSet::<Pt>::new();
+        // which index to start on? something along a which is in b.
+        let idx = {
+            if let Some(idx) = a
+                .pts
+                .iter()
+                // idx of first inside pt
+                .position(|pt| matches!(b.contains_pt(pt).expect("ok"), PointLoc::Inside))
+            {
+                idx
+            } else if let Some(idx) = a
+                .pts
+                .iter()
+                .position(|pt| !matches!(b.contains_pt(pt).expect("ok"), PointLoc::Outside))
+            {
+                println!("starting on first not-outside point.");
+                idx
+            } else {
+                println!("starting on point 0 for no great reason.");
+                0
+            }
+        };
 
         let mut curr = Cursor {
             position: Position::OnPolygon(OnPolygon {
                 on_polygon: Which::A,
-                at_point_index: 0,
+                at_point_index: idx,
             }),
             facing_along: Which::A,
-            facing_along_segment_idx: 0_usize,
+            facing_along_segment_idx: idx,
             //
             a_pts: &a.pts,
             b_pts: &b.pts,
         };
+
 
         'outer: loop {
             // If we've made a cycle,
@@ -408,12 +428,6 @@ impl Croppable for Polygon {
                     // then break out of it.
                     break 'outer;
                 }
-            }
-
-            // Mark this point as visited. If we've already visited it, that's a
-            // cycle error.
-            if !visited_pts.insert(curr.pt()) {
-                return Err(CropToPolygonError::CycleError);
             }
 
             let mut relevant_isxns: Vec<&AnnotatedIsxn> = annotated_isxn_outcomes
@@ -483,6 +497,13 @@ impl Croppable for Polygon {
         // here, check that there aren't any unaccounted-for inner points or
         // intersections which did not result in points of resultant polygons.
         // if there are, we need to find other resultants.
+
+        if resultant_pts.len() < 3 {
+            // not enough points.
+            println!("not enough points for a polygon, returning nothing.");
+
+            return Ok(vec![]);
+        }
 
         resultant_polygons.push(Polygon(resultant_pts)?);
 
@@ -948,7 +969,7 @@ mod tests {
         // 🟨🟨🟨🟨⬜ ➡️ x
         let inner = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟥
         let frame = Polygon([Pt(0, 0), Pt(3, 0), Pt(3, 3), Pt(0, 3)]).unwrap(); // 🟨
-        assert_eq!(inner.crop_to(&frame).unwrap()[0].pts, inner.pts);
+        assert_eq!(inner.crop_to(&frame).unwrap()[0], inner);
 
         // ⬆️ y
         // ⬜⬜⬜⬜⬜
@@ -956,10 +977,7 @@ mod tests {
         // ⬜🟧🟧🟧🟨
         // ⬜🟧🟧🟧🟨
         // ⬜🟨🟨🟨🟨 ➡️ x
-        assert_eq!(
-            inner.crop_to(&(&frame + Pt(1, 0))).unwrap()[0].pts,
-            inner.pts
-        );
+        assert_eq!(inner.crop_to(&(&frame + Pt(1, 0))).unwrap()[0], inner,);
 
         // ⬆️ y
         // 🟨🟨🟨🟨⬜
@@ -967,10 +985,7 @@ mod tests {
         // 🟨🟧🟧🟧⬜
         // 🟨🟧🟧🟧⬜
         // ⬜⬜⬜⬜⬜ ➡ x
-        assert_eq!(
-            inner.crop_to(&(&frame + Pt(0, 1))).unwrap()[0].pts,
-            inner.pts
-        );
+        assert_eq!(inner.crop_to(&(&frame + Pt(0, 1))).unwrap()[0], inner);
 
         // ⬆️ y
         // ⬜🟨🟨🟨🟨
@@ -978,10 +993,7 @@ mod tests {
         // ⬜🟧🟧🟧🟨
         // ⬜🟧🟧🟧🟨
         // ⬜⬜⬜⬜⬜ ➡ x
-        assert_eq!(
-            inner.crop_to(&(&frame + Pt(1, 1))).unwrap()[0].pts,
-            inner.pts
-        );
+        assert_eq!(inner.crop_to(&(&frame + Pt(1, 1))).unwrap()[0], inner,);
     }
 
     #[test]
