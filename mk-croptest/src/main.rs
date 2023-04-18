@@ -42,17 +42,16 @@ fn main() {
             .build(),
     );
 
-    let f = 10.5;
+    let f = 13.5;
     for (idx, offset) in iproduct!(0..=5, 0..=4)
         .map(|(i, j)| ((i, j), Pt((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
-    // .filter(|(idx, _)| *idx == (2, 2))
     {
         let r = Rect(Pt(50.0, 50.0), (50.0, 50.0)).unwrap();
 
         let base_sq = Object2d::new(r.clone())
             .with_color(&BLACK)
             .with_thickness(2.0);
-        let base_sq_annotations = base_sq.annotate();
+        // let base_sq_annotations = base_sq.annotate();
 
         // let a = Pt(60.0, 60.0);
         // let b = Pt(70.0, 60.0);
@@ -82,7 +81,7 @@ fn main() {
             .with_color(&RED)
             .with_thickness(1.0)
             + offset;
-        let subject_sq_annotations = subject_sq.annotate();
+        // let subject_sq_annotations = subject_sq.annotate();
 
         let cropped_sqs: Vec<Object2d> = subject_sq
             .crop_to(&r)
@@ -92,8 +91,8 @@ fn main() {
             .collect();
 
         let mut v: Vec<Object2d> = vec![base_sq, subject_sq];
-        v.extend(base_sq_annotations);
-        v.extend(subject_sq_annotations);
+        // v.extend(base_sq_annotations);
+        // v.extend(subject_sq_annotations);
         v.extend(cropped_sqs);
 
         let g = Group::new(v);

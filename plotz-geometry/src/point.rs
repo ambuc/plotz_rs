@@ -7,13 +7,13 @@ use crate::{
     traits::*,
 };
 use {
-    float_cmp::approx_eq,
     float_ord::FloatOrd,
-    std::{convert::From, fmt::Debug, hash::Hash, ops::*},
+    std::hash::Hash,
+    std::{convert::From, fmt::Debug, ops::*},
 };
 
 /// A point in 2D space.
-#[derive(Hash, Copy, Clone, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct Pt {
     /// The x-coordinate of the point.
     pub x: FloatOrd<f64>,
@@ -21,19 +21,9 @@ pub struct Pt {
     pub y: FloatOrd<f64>,
 }
 
-impl PartialEq<Pt> for Pt {
-    // TOPO(ambuc): derive_hash_xor_eq ???
-    fn eq(&self, other: &Pt) -> bool {
-        approx_eq!(f64, self.x.0, other.x.0, epsilon = 0.0003)
-            && approx_eq!(f64, self.y.0, other.y.0, epsilon = 0.0003)
-    }
-}
-
-impl Eq for Pt {}
-
 impl Debug for Pt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Pt({:.2}, {:.2})", self.x.0, self.y.0)
+        write!(f, "Pt({:.20}, {:.20})", self.x.0, self.y.0)
     }
 }
 
