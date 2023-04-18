@@ -1,6 +1,7 @@
 //! An intefield2section between two segments.
 
 use crate::point::Pt;
+use std::fmt::Debug;
 
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
@@ -53,6 +54,24 @@ impl Which {
     }
 }
 
+/// two things, keyed by A / B
+pub struct Pair<'a, T> {
+    /// a
+    pub a: &'a T,
+    /// b
+    pub b: &'a T,
+}
+
+impl<'a, T> Pair<'a, T> {
+    /// get one.
+    pub fn get(&'a self, which: Which) -> &'a T {
+        match which {
+            Which::A => self.a,
+            Which::B => self.b,
+        }
+    }
+}
+
 /// A struct representing an intersection between two line segments.
 /// Two values:
 ///    the first is the % of the way along line A at which the intersection
@@ -61,7 +80,7 @@ impl Which {
 //       If this value is 1.0, the intersection is at self_f.
 ///    the second is the % of the way along line B at which the intersection
 ///    occurs. Guaranteed to be 0.0<=x<=1.0.
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone)]
 pub struct Intersection {
     /// pt
     pub pt: Pt,
@@ -108,6 +127,27 @@ impl Intersection {
     pub fn on_points_of_either(&self) -> bool {
         matches!(self.a_pct, Pct::Zero | Pct::One) || matches!(self.b_pct, Pct::Zero | Pct::One)
     }
+
+    /// for whatever reason, some callers need to flip these.
+    pub fn flip_pcts(self) -> Intersection {
+        Intersection {
+            pt: self.pt,
+            a_pct: self.b_pct,
+            b_pct: self.a_pct,
+        }
+    }
+}
+
+impl Debug for Intersection {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "pt({:?}) {:.0}% along a, {:.0}% along b",
+            self.pt,
+            100.0 * self.a_pct.to_f64(),
+            100.0 * self.b_pct.to_f64()
+        )
+    }
 }
 
 /// An enum representing two intersections.
@@ -123,10 +163,19 @@ pub enum MultipleIntersections {
 }
 
 /// An enum representing whether an intersection occurred and where.
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone)]
 pub enum IsxnResult {
     /// Two line segments intersect at many points.
     MultipleIntersections(MultipleIntersections),
     /// Two line segments intersect at one point, defined by |Intersection|.
     OneIntersection(Intersection),
+}
+
+impl Debug for IsxnResult {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            IsxnResult::MultipleIntersections(_) => write!(f, "multiple intersections."),
+            IsxnResult::OneIntersection(isxn) => write!(f, "one: {:?}", isxn),
+        }
+    }
 }

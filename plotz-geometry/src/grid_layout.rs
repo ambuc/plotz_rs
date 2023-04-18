@@ -114,7 +114,7 @@ impl GridLayout {
         d_o: Object2d,
         buffer: f64,
     ) {
-        let mut modified_obj = d_o.clone();
+        let mut modified_obj = d_o;
         {
             let frame_bounds = self.get_cubby_bounds((i, j));
             let inner_bounds = modified_obj.bounds();
