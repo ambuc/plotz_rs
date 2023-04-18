@@ -123,7 +123,6 @@ impl<'a> Cursor<'a> {
     pub fn march_to_next_point(&mut self) {
         match self.position {
             Position::OnPolygon(OnPolygon { at_point_index, .. }) => {
-                // println!("\t\ton polygon");
                 let next_isxn_idx = (at_point_index + 1) % self.pts(self.facing_along).len();
                 self.position = Position::OnPolygon(OnPolygon {
                     on_polygon: self.facing_along,
@@ -148,34 +147,14 @@ impl<'a> Cursor<'a> {
 
     pub fn march_to_isxn(&mut self, next_isxn: AnnotatedIsxn, should_flip: bool) {
         // if we are given an intersection which is at a point, we should replace it with being at a point instead. (and flip);
-        // if next_isxn.intersection.on_points_of_either() {
-        //     dbg!(&next_isxn);
-        //     match next_isxn.intersection {
-        //         Intersection {
-        //             a_pct: Pct::One, ..
-        //         } => {
-        //             //
-        //             self.pos
-        //         }
-        //         Intersection {
-        //             b_pct: Pct::One, ..
-        //         } => {
-        //             //
-        //         }
-        //         _ => {
-        //             // ??
-        //         }
-        //     }
-        // } else {
-        {
-            let new_facing_along = if should_flip {
-                self.facing_along.flip()
-            } else {
-                self.facing_along
-            };
 
-            self.position = Position::OnIsxn(next_isxn);
-            self.facing_along = new_facing_along;
-        }
+        let new_facing_along = if should_flip {
+            self.facing_along.flip()
+        } else {
+            self.facing_along
+        };
+
+        self.position = Position::OnIsxn(next_isxn);
+        self.facing_along = new_facing_along;
     }
 }

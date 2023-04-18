@@ -424,7 +424,7 @@ impl Croppable for Polygon {
         };
 
         'outer: loop {
-            // println!("cursor: {:?}", curr);
+            println!("cursor: {:?}", curr);
             // If we've made a cycle,
             if let Some(pt) = resultant_pts.first() {
                 if *pt == curr.pt() {
@@ -457,7 +457,7 @@ impl Croppable for Polygon {
                         isxn.intersection.percent_along(curr.facing_along).0 == 0.0
                         //false
                     });
-                    // println!("\t(i) drained: {:?}", _drained);
+                    println!("\t(i) drained: {:?}", _drained);
                     v
                 }
                 Position::OnIsxn(this_isxn) => {
@@ -465,7 +465,7 @@ impl Croppable for Polygon {
                         other_isxn.intersection.percent_along(curr.facing_along)
                             <= this_isxn.intersection.percent_along(curr.facing_along)
                     });
-                    // println!("\t(j) drained: {:?}", _drained);
+                    println!("\t(j) drained: {:?}", _drained);
                     v
                 }
             };
@@ -479,18 +479,18 @@ impl Croppable for Polygon {
                 Some(next_isxn) => {
                     let should_flip = match curr.position {
                         Position::OnPolygon(_) => {
-                            // println!("\ton polygon, marching to isxn");
+                            println!("\ton polygon, marching to isxn");
                             !matches!(b.contains_pt(&curr.pt())?, PointLoc::Outside)
                         }
                         Position::OnIsxn(_) => {
-                            // println!("\ton isxn, marching to isxn");
+                            println!("\ton isxn, marching to isxn");
                             true
                         }
                     };
                     curr.march_to_isxn(**next_isxn, should_flip);
                 }
                 None => {
-                    // println!("\tno next isxn, marching to next point");
+                    println!("\tno next isxn, marching to next point");
                     curr.march_to_next_point();
                 }
             }
