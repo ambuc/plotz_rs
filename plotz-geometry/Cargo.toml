@@ -6,15 +6,16 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-plotz-color = { path = "../plotz-color" }
+derivative = "*"
+derive_more = "*"
 either = "*"
 float-cmp = "*"
 float-ord = "*"
-derivative = "*"
 itertools = "*"
 num = "*"
-derive_more = "*"
 num-traits = "*"
+petgraph = "0.6.3"
+plotz-color = { path = "../plotz-color" }
 rand = "*"
 thiserror = "*"
 typed-builder = "*"

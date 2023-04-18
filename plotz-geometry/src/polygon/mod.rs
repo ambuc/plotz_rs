@@ -5,7 +5,7 @@ use crate::{object2d::Object2d, txt::Txt};
 mod crop_logic;
 
 use {
-    self::crop_logic::{AnnotatedIsxn, Cursor, OnPolygon, Position},
+    self::crop_logic::*,
     crate::{
         bounded::{Bounded, Bounds},
         crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
@@ -309,30 +309,6 @@ impl Polygon {
         Ok(())
     }
 
-    fn get_annotated_isxns(a: &Polygon, b: &Polygon) -> Vec<AnnotatedIsxn> {
-        // get all intersections,
-        iproduct!(
-            a.to_segments().iter().enumerate(),
-            b.to_segments().iter().enumerate()
-        )
-        .filter_map(|((a_idx, i_seg), (b_idx, f_seg))| {
-            i_seg
-                .intersects(f_seg)
-                .map(|outcome| (a_idx, b_idx, outcome))
-        })
-        .into_iter()
-        // then reduce down to just the single intersections.
-        .filter_map(|(a_idx, b_idx, isxn_result)| match isxn_result {
-            IsxnResult::MultipleIntersections(_) => None,
-            IsxnResult::OneIntersection(isxn) => Some(AnnotatedIsxn {
-                a_idx: a_idx,
-                b_idx: b_idx,
-                intersection: isxn,
-            }),
-        })
-        .collect()
-    }
-
     // check if this polygon totally contains another.
     // assumes no intersections.
     fn totally_contains(&self, other: &Polygon) -> bool {
@@ -364,151 +340,7 @@ impl Croppable for Polygon {
     /// Known bug: If multiple resultant polygons are present, this will return
     /// only one.
     fn crop_to(&self, b: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
-        let a: &Polygon = self;
-
-        if a == b {
-            return Ok(vec![a.clone()]);
-        }
-
-        // crop a to b, return modified a.
-        let () = Polygon::crop_check_prerequisites(&a, &b)?;
-        let annotated_isxn_outcomes = Polygon::get_annotated_isxns(&a, &b);
-
-        if annotated_isxn_outcomes.is_empty() {
-            if a.totally_contains(&b) {
-                return Ok(vec![b.clone()]);
-            }
-            if b.totally_contains(&a) {
-                return Ok(vec![a.clone()]);
-            }
-            if b.contains_not_at_all(&a) {
-                return Ok(vec![]);
-            }
-
-            panic!("i thought there were no intersections.");
-        }
-
-        // Otherwise there are definitely intersections.
-        let mut resultant_polygons: Vec<Polygon> = vec![];
-        let mut resultant_pts: Vec<Pt> = vec![];
-
-        // which index to start on? something along a which is in b.
-        let idx = {
-            if let Some(idx) = a
-                .pts
-                .iter()
-                .position(|pt| matches!(b.contains_pt(pt).expect("ok"), PointLoc::Inside))
-            {
-                idx
-            } else if let Some(idx) = a
-                .pts
-                .iter()
-                .position(|pt| !matches!(b.contains_pt(pt).expect("ok"), PointLoc::Outside))
-            {
-                idx
-            } else {
-                0
-            }
-        };
-
-        let mut curr = Cursor {
-            position: Position::OnPolygon(OnPolygon {
-                on_polygon: Which::A,
-                at_point_index: idx,
-            }),
-            facing_along: Which::A,
-            //
-            a_pts: &a.pts,
-            b_pts: &b.pts,
-            a: &a,
-        };
-
-        'outer: loop {
-            println!("cursor: {:?}", curr);
-            // If we've made a cycle,
-            if let Some(pt) = resultant_pts.first() {
-                if *pt == curr.pt() {
-                    // then break out of it.
-                    break 'outer;
-                }
-            }
-
-            let mut relevant_isxns: Vec<&AnnotatedIsxn> = annotated_isxn_outcomes
-                .iter()
-                // only find the intersections where the candidate index is the
-                // same as the current segment index.
-                .filter(|annotated_isxn_outcome| {
-                    let candidate_pt_idx: usize = match curr.facing_along {
-                        Which::A => annotated_isxn_outcome.a_idx,
-                        Which::B => annotated_isxn_outcome.b_idx,
-                    };
-                    candidate_pt_idx == curr.idx()
-                })
-                // then collect them.
-                .collect();
-
-            relevant_isxns.sort_by_key(|isxn: &&AnnotatedIsxn| {
-                isxn.intersection.percent_along(curr.facing_along)
-            });
-
-            relevant_isxns = match curr.position {
-                Position::OnPolygon(_) => {
-                    let (_drained, v) = relevant_isxns.into_iter().partition(|isxn| {
-                        isxn.intersection.percent_along(curr.facing_along).0 == 0.0
-                        //false
-                    });
-                    println!("\t(i) drained: {:?}", _drained);
-                    v
-                }
-                Position::OnIsxn(this_isxn) => {
-                    let (_drained, v) = relevant_isxns.into_iter().partition(|other_isxn| {
-                        other_isxn.intersection.percent_along(curr.facing_along)
-                            <= this_isxn.intersection.percent_along(curr.facing_along)
-                    });
-                    println!("\t(j) drained: {:?}", _drained);
-                    v
-                }
-            };
-
-            if !matches!(b.contains_pt(&curr.pt())?, PointLoc::Outside) {
-                // if we got a point inside b, add it to our resultant points.
-                resultant_pts.push(curr.pt());
-            }
-
-            match relevant_isxns.get(0) {
-                Some(next_isxn) => {
-                    let should_flip = match curr.position {
-                        Position::OnPolygon(_) => {
-                            println!("\ton polygon, marching to isxn");
-                            !matches!(b.contains_pt(&curr.pt())?, PointLoc::Outside)
-                        }
-                        Position::OnIsxn(_) => {
-                            println!("\ton isxn, marching to isxn");
-                            true
-                        }
-                    };
-                    curr.march_to_isxn(**next_isxn, should_flip);
-                }
-                None => {
-                    println!("\tno next isxn, marching to next point");
-                    curr.march_to_next_point();
-                }
-            }
-        }
-
-        // TODO
-        // here, check that there aren't any unaccounted-for inner points or
-        // intersections which did not result in points of resultant polygons.
-        // if there are, we need to find other resultants.
-
-        if resultant_pts.len() < 3 {
-            // not enough points.
-            return Ok(vec![]);
-        }
-
-        resultant_polygons.push(Polygon(resultant_pts)?);
-
-        Ok(resultant_polygons)
+        Ok(vec![])
     }
 
     fn crop_excluding(&self, _b: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
