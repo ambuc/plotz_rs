@@ -1,5 +1,7 @@
 //! A filled polygon without edges.
 
+use std::fmt::Debug;
+
 use {
     crate::{camera::Oblique, point3d::Pt3d, polygon3d::Polygon3d},
     derive_more::From,
@@ -9,10 +11,17 @@ use {
 
 /// A Face is a polygon which is opaque, i.e. the face of the polygon rather
 /// than its edges.
-#[derive(Debug, Clone, From)]
+#[derive(Clone, From)]
 pub struct Face {
     /// The polygon.
     pub pg3d: Polygon3d,
+}
+
+impl Debug for Face {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Face { pg3d } = self;
+        write!(f, "{:?}", pg3d)
+    }
 }
 
 impl Face {

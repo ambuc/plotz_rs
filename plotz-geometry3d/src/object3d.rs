@@ -1,5 +1,9 @@
 //! A 3d object.
 
+use std::fmt::Debug;
+
+use plotz_color::ColorRGB;
+
 use crate::point3d::Pt3d;
 
 use {
@@ -8,7 +12,7 @@ use {
 };
 
 /// A 3d object and some styling information for its 2d representation.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Object3d {
     /// An inner object.
     pub inner: Object3dInner,
@@ -31,6 +35,16 @@ impl Object3d {
             ..self
         }
     }
+    /// Modifier with color.
+    pub fn with_color(self, c: &'static ColorRGB) -> Object3d {
+        Object3d {
+            style: match self.style {
+                None => Some(Style3d::builder().color(c).build()),
+                Some(s) => Some(s.with_color(c)),
+            },
+            ..self
+        }
+    }
 
     /// Project oblique.
     pub fn project_oblique(&self, oblique_projection: &Oblique) -> Object2d {
@@ -45,5 +59,12 @@ impl Object3d {
     /// The center of the object, projected along the view vector.
     pub fn dist_along(&self, view_vector: &Pt3d) -> f64 {
         self.inner.dist_along(view_vector)
+    }
+}
+
+impl Debug for Object3d {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Object3d { inner, style } = self;
+        write!(f, "inner={:?} style={:?}", inner, style)
     }
 }

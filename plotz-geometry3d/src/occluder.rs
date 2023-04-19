@@ -21,7 +21,6 @@ impl Occluder {
 
     fn hide_a_behind_b(incoming: &Object2dInner, existing: &Object2dInner) -> Vec<Object2dInner> {
         // TODO(jbuckland): use quadtrees here to make this MUCH faster please!!!!
-        // dbg!("incoming {:?} existing {:?}", incoming, existing);
 
         match (&incoming, &existing) {
             // points can/should be occluded, not handled yet.
@@ -42,27 +41,12 @@ impl Occluder {
             }
 
             (Object2dInner::Polygon(pg1), Object2dInner::Polygon(pg2)) => {
-                let is_collision =
-                    pg1.intersects_detailed(&pg2)
-                        .iter()
-                        .any(|isxn_result| match isxn_result {
-                            IsxnResult::MultipleIntersections(_) => false,
-                            IsxnResult::OneIntersection(isxn) => {
-                                if isxn.on_points_of_either() {
-                                    false
-                                } else {
-                                    true
-                                }
-                            }
-                        });
-
-                if is_collision {
-                    match pg1.crop_excluding(pg2) {
-                        Ok(p) => p.into_iter().map(Object2dInner::from).collect(),
-                        Err(_) => vec![],
+                match pg1.crop_excluding(pg2) {
+                    Ok(p) => {
+                        dbg!(&pg1, &pg2, &p);
+                        p.into_iter().map(Object2dInner::from).collect()
                     }
-                } else {
-                    vec![incoming.clone()]
+                    Err(_) => vec![],
                 }
             }
             (Object2dInner::Polygon(pg), Object2dInner::Segment(sg))
@@ -113,11 +97,11 @@ impl Occluder {
         incoming_obj3: Object3dInner,
         _style3d: Option<Style3d>,
     ) {
-        // debug
+        // debug only
         self.objects.push((
             incoming_obj2.clone(),
             incoming_obj3.clone(),
-            Some(Style3d::builder().color(&RED).thickness(1.0).build()),
+            Some(Style3d::builder().color(&RED).thickness(0.5).build()),
         ));
 
         // if the collision is parallel, don't crop.
@@ -141,11 +125,8 @@ impl Occluder {
             )
             .into_iter()
             .for_each(|new_obj2| {
-                self.objects.push((
-                    new_obj2,
-                    incoming_obj3.clone(),
-                    Some(Style3d::builder().color(&GREEN).thickness(2.0).build()),
-                ));
+                self.objects
+                    .push((new_obj2, incoming_obj3.clone(), _style3d));
             });
     }
 

@@ -1,5 +1,7 @@
 //! A polygon in 3d.
 
+use std::fmt::Debug;
+
 use {
     crate::{camera::Oblique, point3d::Pt3d},
     plotz_geometry::polygon::Polygon,
@@ -7,10 +9,17 @@ use {
 };
 
 /// A multiline is a list of points rendered with connecting line segments.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Polygon3d {
     /// The points which describe a polygon or multiline.
     pub pts: Vec<Pt3d>,
+}
+
+impl Debug for Polygon3d {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Polygon3d { pts } = self;
+        write!(f, "pts={:?}", pts)
+    }
 }
 
 impl Polygon3d {

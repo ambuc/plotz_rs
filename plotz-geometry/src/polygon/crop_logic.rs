@@ -25,10 +25,15 @@ pub struct AnnotatedIsxnResult {
 
 impl Debug for AnnotatedIsxnResult {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let AnnotatedIsxnResult {
+            isxn_result,
+            a_segment_idx,
+            b_segment_idx,
+        } = self;
         write!(
             f,
             "{:?} on [segment #{:?} of a, segment #{:?} of b]",
-            self.isxn_result, self.a_segment_idx, self.b_segment_idx
+            isxn_result, a_segment_idx, b_segment_idx
         )
     }
 }

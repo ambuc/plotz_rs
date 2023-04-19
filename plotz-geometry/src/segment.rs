@@ -365,7 +365,8 @@ impl Croppable for Segment {
     where
         Self: Sized,
     {
-        unimplemented!("TODO");
+        // println!("WARNING we haven't implemented segment crop excluding");
+        Ok(vec![self.clone()])
     }
 }
 

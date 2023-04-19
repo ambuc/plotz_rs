@@ -4,9 +4,12 @@
 
 use float_ord::FloatOrd;
 use rand::prelude::SliceRandom;
-use std::hash::{Hash, Hasher};
+use std::{
+    fmt::Debug,
+    hash::{Hash, Hasher},
+};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Copy, Clone)]
 /// A color, articulated in the [RGB color model](https://en.wikipedia.org/wiki/RGB_color_model).
 pub struct ColorRGB {
     /// How much red (0.0 <= r <= 1.0).
@@ -15,6 +18,13 @@ pub struct ColorRGB {
     pub g: f64,
     /// How much blue (0.0 <= b <= 1.0).
     pub b: f64,
+}
+
+impl Debug for ColorRGB {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let ColorRGB { r, g, b } = self;
+        write!(f, "({:.1},{:.1},{:.1})", r, g, b)
+    }
 }
 
 #[allow(non_snake_case)]

@@ -1,5 +1,7 @@
 //! An annotated object with color and thickness.
 
+use std::fmt::Debug;
+
 use crate::crop::CropType;
 
 use {
@@ -16,7 +18,7 @@ use {
 };
 
 /// An object with a color and thickness.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Object2d {
     /// The object.
     pub inner: Object2dInner,
@@ -26,6 +28,21 @@ pub struct Object2d {
 
     /// The thickness.
     pub thickness: f64,
+}
+
+impl Debug for Object2d {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Object2d {
+            inner,
+            color,
+            thickness,
+        } = self;
+        write!(
+            f,
+            "inner={:?} color={:?} thickness={:?}",
+            inner, color, thickness
+        )
+    }
 }
 
 impl Object2d {

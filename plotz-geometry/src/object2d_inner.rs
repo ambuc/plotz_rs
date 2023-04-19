@@ -1,5 +1,7 @@
 //! The inner value of a Object2d, i.e. the enum which holds some geometric thingy.
 
+use std::fmt::Debug;
+
 use crate::{crop::CropType, polygon::PolygonKind};
 
 use {

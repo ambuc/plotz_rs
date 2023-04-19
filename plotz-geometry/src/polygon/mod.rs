@@ -40,12 +40,19 @@ pub enum PolygonKind {
 /// A multiline is a list of points rendered with connecting line segments.
 /// If constructed with PolygonKind::Open, this is a multiline (unshaded).
 /// If constructed with PolygonKind::Closed, this is a closed, shaded polygon.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Polygon {
     /// The points which describe a polygon or multiline.
     pub pts: Vec<Pt>,
     /// Whether this polygon is open or closed.
     pub kind: PolygonKind,
+}
+
+impl Debug for Polygon {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Polygon { pts, kind } = self;
+        write!(f, "kind={:?} pts={:?}", kind, pts)
+    }
 }
 
 impl PartialEq for Polygon {

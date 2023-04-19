@@ -140,12 +140,13 @@ impl Intersection {
 
 impl Debug for Intersection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let Intersection { pt, a_pct, b_pct } = self;
         write!(
             f,
             "pt({:?}) {:.0}% along a, {:.0}% along b",
-            self.pt,
-            100.0 * self.a_pct.to_f64(),
-            100.0 * self.b_pct.to_f64()
+            pt,
+            100.0 * a_pct.to_f64(),
+            100.0 * b_pct.to_f64()
         )
     }
 }

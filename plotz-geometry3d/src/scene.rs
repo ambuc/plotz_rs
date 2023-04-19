@@ -61,6 +61,7 @@ impl Scene {
 
                 let mut occ = Occluder::new();
 
+                // add objects to the occluder in distance order.
                 for obj3 in self.objects.iter().sorted_by(|o1, o2| {
                     Ord::cmp(
                         &FloatOrd(o1.dist_along(&view_vector)),
