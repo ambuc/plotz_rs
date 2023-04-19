@@ -87,13 +87,13 @@ fn main() {
         let mut v: Vec<Object2d> = vec![base_sq, subject_sq.clone()];
         //v.extend(base_sq_annotations);
         //v.extend(subject_sq_annotations);
-        // v.extend(
-        //     subject_sq
-        //         .crop_to(&r)
-        //         .unwrap()
-        //         .into_iter()
-        //         .map(|o| o.with_color(&GREEN).with_thickness(2.0)),
-        // );
+        v.extend(
+            subject_sq
+                .crop_to(&r)
+                .unwrap()
+                .into_iter()
+                .map(|o| o.with_color(&GREEN).with_thickness(2.0)),
+        );
         v.extend(
             subject_sq
                 .crop_excluding(&r.clone())
