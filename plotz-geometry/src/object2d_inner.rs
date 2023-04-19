@@ -1,6 +1,6 @@
 //! The inner value of a Object2d, i.e. the enum which holds some geometric thingy.
 
-use crate::polygon::PolygonKind;
+use crate::{crop::CropType, polygon::PolygonKind};
 
 use {
     crate::{
@@ -289,9 +289,14 @@ impl TranslatableAssign for Object2dInner {}
 
 impl Croppable for Object2dInner {
     type Output = Object2dInner;
-    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
+    fn crop(
+        &self,
+        frame: &Polygon,
+        crop_type: CropType,
+    ) -> Result<Vec<Self::Output>, CropToPolygonError> {
         Ok(match &self {
             Object2dInner::Point(pt) => {
+                assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(pt), Ok(PointLoc::Outside)) {
                     vec![self.clone()]
                 } else {
@@ -302,27 +307,28 @@ impl Croppable for Object2dInner {
                 PolygonKind::Open => pg
                     .to_segments()
                     .into_iter()
-                    .flat_map(|sg| sg.crop_to(frame).expect("crop failure"))
+                    .flat_map(|sg| sg.crop(frame, crop_type).expect("crop failure"))
                     .into_iter()
                     .map(Object2dInner::from)
                     .collect::<Vec<_>>(),
                 PolygonKind::Closed => pg
-                    .crop_to(frame)?
+                    .crop(frame, crop_type)?
                     .into_iter()
                     .map(Object2dInner::from)
                     .collect::<Vec<_>>(),
             },
             Object2dInner::Segment(sg) => sg
-                .crop_to(frame)?
+                .crop(frame, crop_type)?
                 .into_iter()
                 .map(Object2dInner::from)
                 .collect::<Vec<_>>(),
             Object2dInner::CurveArc(ca) => ca
-                .crop_to(frame)?
+                .crop(frame, crop_type)?
                 .into_iter()
                 .map(Object2dInner::from)
                 .collect::<Vec<_>>(),
             Object2dInner::Char(ch) => {
+                assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(&ch.pt), Ok(PointLoc::Outside)) {
                     vec![self.clone()]
                 } else {
@@ -330,7 +336,7 @@ impl Croppable for Object2dInner {
                 }
             }
             Object2dInner::Group(g) => g
-                .crop_to(frame)?
+                .crop(frame, crop_type)?
                 .into_iter()
                 .map(Object2dInner::from)
                 .collect::<Vec<_>>(),

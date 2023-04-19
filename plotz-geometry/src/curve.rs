@@ -1,6 +1,6 @@
 //! A curve.
 
-use crate::polygon::Polygon;
+use crate::{crop::CropType, polygon::Polygon};
 
 use {
     crate::{
@@ -415,10 +415,16 @@ fn intersections_of_line_and_curvearc(
 
 impl Croppable for CurveArc {
     type Output = CurveArc;
-    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop(
+        &self,
+        frame: &Polygon,
+        crop_type: CropType,
+    ) -> Result<Vec<Self::Output>, CropToPolygonError>
     where
         Self: Sized,
     {
+        assert_eq!(crop_type, CropType::Inclusive);
+
         let mut isxns: Vec<PtLoc> = vec![];
         for frame_segment in frame.to_segments() {
             let discovered = match intersections_of_line_and_curvearc(&frame_segment, self) {

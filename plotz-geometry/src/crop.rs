@@ -56,6 +56,17 @@ pub enum PointLoc {
     OnSegment(usize),
 }
 
+/// Types of crops.
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+pub enum CropType {
+    /// The traditional crop -- cropping a to b inclusively preserves the bit(s) of
+    /// a which is also in b.
+    Inclusive,
+    /// The other one -- cropping a to b exclusively preserves the bit(s) of a
+    /// which are not in b.
+    Exclusive,
+}
+
 /// Crops
 pub trait Croppable {
     /// The output type of cropping this thingy. Why is this an associated type?
@@ -64,14 +75,20 @@ pub trait Croppable {
     type Output;
 
     /// Crop self to an outer frame
-    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop_to(&self, other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
     where
-        Self: Sized;
+        Self: Sized,
+    {
+        self.crop(other, CropType::Inclusive)
+    }
 
     /// Crop self so that the portion of self overlapping other is removed.
     fn crop_excluding(&self, other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
     where
-        Self: Sized;
+        Self: Sized,
+    {
+        self.crop(other, CropType::Exclusive)
+    }
 
     /// Crop self to outer bounds.
     fn crop_to_bounds(&self, bounds: Bounds) -> Result<Vec<Self::Output>, CropToPolygonError>
@@ -80,4 +97,11 @@ pub trait Croppable {
     {
         self.crop_to(&bounds.to_polygon())
     }
+
+    /// general crop -- could be either type.
+    fn crop(
+        &self,
+        other: &Polygon,
+        crop_type: CropType,
+    ) -> Result<Vec<Self::Output>, CropToPolygonError>;
 }

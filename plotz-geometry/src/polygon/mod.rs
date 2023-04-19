@@ -1,5 +1,7 @@
 //! A 2D polygon (or multi&line).
 
+use crate::crop::CropType;
+
 mod crop_logic;
 
 use {
@@ -354,7 +356,11 @@ impl Croppable for Polygon {
     ///
     /// Known bug: If multiple resultant polygons are present, this will return
     /// only one.
-    fn crop_to(&self, b: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
+    fn crop(
+        &self,
+        b: &Polygon,
+        crop_type: CropType,
+    ) -> Result<Vec<Self::Output>, CropToPolygonError> {
         let a: &Polygon = self;
 
         if a == b {
@@ -363,35 +369,61 @@ impl Croppable for Polygon {
 
         Polygon::crop_check_prerequisites(a, b)?;
 
+        // scenario with no intersections.
         if Polygon::annotated_intersects_detailed(a, b).is_empty() {
-            if a.totally_contains(b) {
-                return Ok(vec![b.clone()]);
+            match crop_type {
+                CropType::Inclusive => {
+                    // if inclusive, then we want the bit of |a| in |b|.
+                    if a.totally_contains(b) {
+                        // if |a| totally contains |b|, just return |b|.
+                        return Ok(vec![b.clone()]);
+                    }
+                    if b.totally_contains(a) {
+                        // if |b| totally contains |a|, just return |a|.
+                        return Ok(vec![a.clone()]);
+                    }
+                    if b.contains_not_at_all(a) {
+                        // if |b| doesn't contain any part of |a| (and there are
+                        // no intersections) then return nothing.
+                        return Ok(vec![]);
+                    }
+                    panic!("I thought there were no intersections.");
+                }
+                CropType::Exclusive => {
+                    // if exclusive, then we want the bit of |a| _not_ in |b|.
+                    if a.totally_contains(b) {
+                        panic!("we want a polygon with a cavity here -- not yet supported.");
+                    }
+                    if b.totally_contains(a) {
+                        // if |b| totally contains |a|, then there's no part of
+                        // |a| we want.
+                        return Ok(vec![]);
+                    }
+                    if b.contains_not_at_all(a) {
+                        // if |b| doesn't contain any part of |a| (and there are
+                        // no intersections) then return A unchanged.
+                        return Ok(vec![a.clone()]);
+                    }
+                }
             }
-            if b.totally_contains(a) {
-                return Ok(vec![a.clone()]);
-            }
-            if b.contains_not_at_all(a) {
-                return Ok(vec![]);
-            }
-            panic!("I thought there were no intersections.");
         }
 
-        let mut cropgraph = CropGraph::build_from_polygons(a, b);
-        cropgraph.remove_outside_nodes();
-        cropgraph.remove_stubs();
-        cropgraph.remove_back_and_forth();
-        cropgraph.remove_acycle_nodes();
-        if cropgraph.nodes_count() == 0 {
+        let mut crop_graph = CropGraph::build_from_polygons(a, b, crop_type);
+        match crop_type {
+            CropType::Inclusive => {
+                crop_graph.remove_outside_nodes();
+            }
+            CropType::Exclusive => {
+                crop_graph.remove_nodes_inside_b_or_outside_a();
+            }
+        }
+        crop_graph.remove_stubs();
+        crop_graph.remove_back_and_forth();
+        crop_graph.remove_acycle_nodes();
+        if crop_graph.nodes_count() == 0 {
             return Ok(vec![]);
         }
-        Ok(cropgraph.to_resultant_polygons())
-    }
-
-    fn crop_excluding(&self, _b: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
-    where
-        Self: Sized,
-    {
-        unimplemented!("OH NO")
+        Ok(crop_graph.to_resultant_polygons())
     }
 }
 

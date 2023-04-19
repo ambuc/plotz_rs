@@ -1,5 +1,7 @@
 //! An annotated object with color and thickness.
 
+use crate::crop::CropType;
+
 use {
     crate::{
         bounded::Bounded,
@@ -156,22 +158,35 @@ impl TranslatableAssign for Object2d {}
 
 impl Croppable for Object2d {
     type Output = Object2d;
-    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
-        Ok(self
-            .inner
-            .crop_to(frame)?
-            .into_iter()
-            .map(|doi| Object2d {
-                inner: doi,
-                ..(*self)
-            })
-            .collect())
-    }
-    fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+
+    fn crop(
+        &self,
+        other: &Polygon,
+        crop_type: CropType,
+    ) -> Result<Vec<Self::Output>, CropToPolygonError>
     where
         Self: Sized,
     {
-        unimplemented!("TODO");
+        match crop_type {
+            CropType::Inclusive => Ok(self
+                .inner
+                .crop_to(other)?
+                .into_iter()
+                .map(|doi| Object2d {
+                    inner: doi,
+                    ..(*self)
+                })
+                .collect()),
+            CropType::Exclusive => Ok(self
+                .inner
+                .crop_excluding(other)?
+                .into_iter()
+                .map(|doi| Object2d {
+                    inner: doi,
+                    ..(*self)
+                })
+                .collect()),
+        }
     }
 }
 

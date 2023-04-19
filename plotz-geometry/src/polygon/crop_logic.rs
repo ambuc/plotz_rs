@@ -1,7 +1,7 @@
 //! Crop logic for polygons.
 
 use crate::{
-    crop::PointLoc,
+    crop::{CropType, PointLoc},
     isxn::{Intersection, IsxnResult, Pair, Which},
     point::Pt,
     polygon::Polygon,
@@ -9,6 +9,7 @@ use crate::{
 use float_ord::FloatOrd;
 use itertools::Itertools;
 use petgraph::{
+    // dot::{Config, Dot},
     prelude::DiGraphMap,
     Direction::{Incoming, Outgoing},
 };
@@ -39,7 +40,11 @@ pub struct CropGraph<'a> {
 }
 
 impl<'a> CropGraph<'a> {
-    pub fn build_from_polygons(a: &'a Polygon, b: &'a Polygon) -> CropGraph<'a> {
+    pub fn build_from_polygons(
+        a: &'a Polygon,
+        b: &'a Polygon,
+        crop_type: CropType,
+    ) -> CropGraph<'a> {
         let mut graph = DiGraphMap::<Pt, ()>::new();
 
         // inelegant way to run a against b, then b against a. oops
@@ -49,6 +54,10 @@ impl<'a> CropGraph<'a> {
             let that = pair.get(which.flip());
 
             for sg in this.to_segments() {
+                let sg = match (which, crop_type) {
+                    (Which::B, CropType::Exclusive) => sg.flip(),
+                    _ => sg,
+                };
                 let mut isxns: Vec<Intersection> = that
                     .intersects_segment_detailed(&sg)
                     .into_iter()
@@ -107,6 +116,26 @@ impl<'a> CropGraph<'a> {
                     PointLoc::Outside
                 ) || matches!(
                     self.b.contains_pt(node).expect("contains"),
+                    PointLoc::Outside
+                )
+            })
+            .collect::<Vec<_>>()
+        {
+            self.graph.remove_node(node);
+        }
+    }
+
+    pub fn remove_nodes_inside_b_or_outside_a(&mut self) {
+        // remove nodes which are inside.
+        for node in self
+            .graph
+            .nodes()
+            .filter(|node| {
+                matches!(
+                    self.b.contains_pt(node).expect("contains"),
+                    PointLoc::Inside
+                ) || matches!(
+                    self.a.contains_pt(node).expect("contains"),
                     PointLoc::Outside
                 )
             })
@@ -215,6 +244,11 @@ impl<'a> CropGraph<'a> {
     }
 
     pub fn to_resultant_polygons(mut self) -> Vec<Polygon> {
+        // println!(
+        //     "{:?}",
+        //     Dot::with_config(&self.graph, &[Config::EdgeNoLabel])
+        // );
+
         let mut resultant = vec![];
 
         while let Some(pg) = self.extract_polygon() {

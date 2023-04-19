@@ -1,7 +1,7 @@
 //! A 2D segment.
 use crate::{
     bounded::{Bounded, Bounds},
-    crop::{CropToPolygonError, Croppable, PointLoc},
+    crop::{CropToPolygonError, CropType, Croppable, PointLoc},
     interpolate,
     interpolate::interpolate_2d_checked,
     isxn::{Intersection, IsxnResult, MultipleIntersections},
@@ -92,6 +92,14 @@ impl Segment {
             return Some(Contains::Within);
         }
         None
+    }
+
+    /// sometimes you just have to flip it.
+    pub fn flip(&self) -> Segment {
+        Segment {
+            i: self.f,
+            f: self.i,
+        }
     }
 
     /// Returns true if one line segment intersects another.
@@ -277,10 +285,16 @@ impl Mutable for Segment {}
 impl Croppable for Segment {
     type Output = Segment;
 
-    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop(
+        &self,
+        frame: &Polygon,
+        crop_type: CropType,
+    ) -> Result<Vec<Self::Output>, CropToPolygonError>
     where
         Self: Sized,
     {
+        assert_eq!(crop_type, CropType::Inclusive);
+
         let frame_segments = frame.to_segments();
         let mut resultants: Vec<Segment> = vec![];
         let mut curr_pt = self.i;

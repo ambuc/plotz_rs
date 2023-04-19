@@ -1,6 +1,6 @@
 //! A group of objects.
 
-use crate::bounded::BoundsCollector;
+use crate::{bounded::BoundsCollector, crop::CropType};
 
 use {
     crate::{
@@ -141,11 +141,15 @@ impl Scalable<f64> for Group {}
 
 impl Croppable for Group {
     type Output = Group;
-    fn crop_to(&self, frame: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError> {
+    fn crop(
+        &self,
+        frame: &Polygon,
+        crop_type: CropType,
+    ) -> Result<Vec<Self::Output>, CropToPolygonError> {
         Ok(vec![Group::new(
             self.0
                 .iter()
-                .flat_map(|d_o| d_o.crop_to(frame))
+                .flat_map(|d_o| d_o.crop(frame, crop_type))
                 .flatten()
                 .collect::<Vec<_>>(),
         )])

@@ -42,9 +42,10 @@ fn main() {
             .build(),
     );
 
-    let f = 13.5;
+    let f = 10.0;
     for (idx, offset) in iproduct!(0..=5, 0..=4)
         .map(|(i, j)| ((i, j), Pt((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
+    // .filter(|(idx, _)| *idx == (1, 3))
     {
         let r = Rect(Pt(50.0, 50.0), (50.0, 50.0)).unwrap();
 
@@ -53,29 +54,29 @@ fn main() {
             .with_thickness(2.0);
         // let base_sq_annotations = base_sq.annotate();
 
-        // let a = Pt(60.0, 60.0);
-        // let b = Pt(70.0, 60.0);
-        // let c = Pt(80.0, 60.0);
-        // let d = Pt(90.0, 60.0);
-        // let e = Pt(70.0, 75.0);
-        // let f = Pt(80.0, 75.0);
-        // let g = Pt(60.0, 90.0);
-        // let h = Pt(90.0, 90.0);
-        // let pts = [a, b, e, f, c, d, h, g, a];
+        let a = Pt(60.0, 60.0);
+        let b = Pt(70.0, 60.0);
+        let c = Pt(80.0, 60.0);
+        let d = Pt(90.0, 60.0);
+        let e = Pt(70.0, 75.0);
+        let f = Pt(80.0, 75.0);
+        let g = Pt(60.0, 90.0);
+        let h = Pt(90.0, 90.0);
+        let pts = [a, b, e, f, c, d, h, g, a];
 
-        let a = Pt(60.0, 40.0);
-        let b = Pt(70.0, 40.0);
-        let c = Pt(70.0, 70.0);
-        let d = Pt(80.0, 70.0);
-        let e = Pt(80.0, 40.0);
-        let f = Pt(90.0, 40.0);
-        let g = Pt(90.0, 110.0);
-        let h = Pt(80.0, 110.0);
-        let i = Pt(80.0, 80.0);
-        let j = Pt(70.0, 80.0);
-        let k = Pt(70.0, 110.0);
-        let l = Pt(60.0, 110.0);
-        let pts = [a, b, c, d, e, f, g, h, i, j, k, l, a];
+        // let a = Pt(60.0, 40.0);
+        // let b = Pt(70.0, 40.0);
+        // let c = Pt(70.0, 70.0);
+        // let d = Pt(80.0, 70.0);
+        // let e = Pt(80.0, 40.0);
+        // let f = Pt(90.0, 40.0);
+        // let g = Pt(90.0, 110.0);
+        // let h = Pt(80.0, 110.0);
+        // let i = Pt(80.0, 80.0);
+        // let j = Pt(70.0, 80.0);
+        // let k = Pt(70.0, 110.0);
+        // let l = Pt(60.0, 110.0);
+        // let pts = [a, b, c, d, e, f, g, h, i, j, k, l, a];
 
         let subject_sq = Object2d::new(Polygon(pts).unwrap())
             .with_color(&RED)
@@ -83,17 +84,23 @@ fn main() {
             + offset;
         // let subject_sq_annotations = subject_sq.annotate();
 
-        let cropped_sqs: Vec<Object2d> = subject_sq
-            .crop_to(&r)
-            .unwrap()
-            .into_iter()
-            .map(|o| o.with_color(&GREEN).with_thickness(2.0))
-            .collect();
-
-        let mut v: Vec<Object2d> = vec![base_sq, subject_sq];
-        // v.extend(base_sq_annotations);
-        // v.extend(subject_sq_annotations);
-        v.extend(cropped_sqs);
+        let mut v: Vec<Object2d> = vec![base_sq, subject_sq.clone()];
+        //v.extend(base_sq_annotations);
+        //v.extend(subject_sq_annotations);
+        // v.extend(
+        //     subject_sq
+        //         .crop_to(&r)
+        //         .unwrap()
+        //         .into_iter()
+        //         .map(|o| o.with_color(&GREEN).with_thickness(2.0)),
+        // );
+        v.extend(
+            subject_sq
+                .crop_excluding(&r.clone())
+                .unwrap()
+                .into_iter()
+                .map(|o| o.with_color(&BLUE).with_thickness(2.0)),
+        );
 
         let g = Group::new(v);
 

@@ -23,7 +23,7 @@ pub struct Pt {
 
 impl Debug for Pt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Pt({:.20}, {:.20})", self.x.0, self.y.0)
+        write!(f, "Pt({:.2}, {:.2})", self.x.0, self.y.0)
     }
 }
 
