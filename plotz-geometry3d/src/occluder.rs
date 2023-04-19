@@ -127,7 +127,10 @@ impl Occluder {
     }
 
     /// Exports the occluded 2d objects.
-    pub fn export(self) -> Vec<Object2d> {
+    pub fn export(mut self) -> Vec<Object2d> {
+        // we store them front-to-back, but we want to render them to svg back-to-front.
+        self.objects.reverse();
+
         self.objects
             .into_iter()
             .map(|(doi, _, style)| match style {

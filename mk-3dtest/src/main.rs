@@ -54,38 +54,39 @@ fn main() {
 
         // objects.extend(axes);
 
-        // {
-        //     let e = 0.6;
-        //     for (i, j) in iproduct!(0..1, 0..2) {
-        //         objects.extend(
-        //             Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, e))
-        //                 .items
-        //                 .into_iter()
-        //                 .map(|face| {
-        //                     Object3d::new(face)
-        //                         .with_style(Style3d::builder().color(&PINK).thickness(1.0).build())
-        //                 }),
-        //         );
-        //     }
-        // }
-
         {
-            let o = Pt3d(0.0, 0.0, 0.0);
-
-            let f1 = Face::from(Polygon3d([
-                o,
-                o + Pt3d(0.0, 1.0, 0.0),
-                o + Pt3d(0.0, 1.0, 1.0),
-                o + Pt3d(0.0, 0.0, 1.0),
-                o,
-            ]));
-            objects.push(Object3d::new(f1.clone() + Pt3d(0.0, 0.0, 0.0)).with_color(&RED));
-            objects.push(Object3d::new(f1.clone() + Pt3d(0.3, 0.0, 0.0)).with_color(&ORANGE));
-            objects.push(Object3d::new(f1.clone() + Pt3d(0.6, 0.0, 0.0)).with_color(&YELLOW));
-            objects.push(Object3d::new(f1.clone() + Pt3d(0.9, 0.0, 0.0)).with_color(&GREEN));
+            let e = 0.7;
+            for (i, j) in iproduct!(0..1, 0..2) {
+                objects.extend(
+                    Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, e))
+                        .items
+                        .into_iter()
+                        .map(|face| {
+                            Object3d::new(face)
+                                .with_style(Style3d::builder().color(&PINK).thickness(1.0).build())
+                        }),
+                );
+            }
         }
 
-        // // Triangle.
+        // {
+        //     let o = Pt3d(0.0, 0.0, 0.0);
+
+        //     let f1 = Face::from(Polygon3d([
+        //         o,
+        //         o + Pt3d(0.0, 1.0, 0.0),
+        //         o + Pt3d(0.0, 1.0, 1.0),
+        //         o + Pt3d(0.0, 0.0, 1.0),
+        //         o,
+        //     ]));
+        //     objects.push(Object3d::new(f1.clone() + Pt3d(0.0, 0.0, 0.0)).with_color(&RED));
+        //     objects.push(Object3d::new(f1.clone() + Pt3d(0.3, 0.0, 0.0)).with_color(&ORANGE));
+        //     objects.push(Object3d::new(f1.clone() + Pt3d(0.6, 0.0, 0.0)).with_color(&YELLOW));
+        //     objects.push(Object3d::new(f1.clone() + Pt3d(0.9, 0.0, 0.0)).with_color(&GREEN));
+        //     objects.push(Object3d::new(f1.clone() + Pt3d(1.2, 0.0, 0.0)).with_color(&BLUE));
+        // }
+
+        // Triangle.
         // objects.push(
         //     Object3d::new(Polygon3d([
         //         origin_3d + Pt3d(0.5, 0.0, 0.0),
