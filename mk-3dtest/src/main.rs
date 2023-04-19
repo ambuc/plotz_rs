@@ -79,9 +79,9 @@ fn main() {
                 o + Pt3d(0.0, 0.0, 1.0),
                 o,
             ]));
-            // objects.push(Object3d::new(f1.clone() + Pt3d(0.0, 0.0, 0.0)).with_color(&RED));
+            objects.push(Object3d::new(f1.clone() + Pt3d(0.0, 0.0, 0.0)).with_color(&RED));
             objects.push(Object3d::new(f1.clone() + Pt3d(0.3, 0.0, 0.0)).with_color(&ORANGE));
-            // objects.push(Object3d::new(f1.clone() + Pt3d(0.6, 0.0, 0.0)).with_color(&YELLOW));
+            objects.push(Object3d::new(f1.clone() + Pt3d(0.6, 0.0, 0.0)).with_color(&YELLOW));
             objects.push(Object3d::new(f1.clone() + Pt3d(0.9, 0.0, 0.0)).with_color(&GREEN));
         }
 

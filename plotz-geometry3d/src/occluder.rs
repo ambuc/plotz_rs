@@ -1,6 +1,5 @@
 //! Occludes things. Cmon.
 
-use plotz_color::*;
 use plotz_geometry::{
     crop::Croppable, isxn::IsxnResult, object2d::Object2d, object2d_inner::Object2dInner,
 };
@@ -42,10 +41,7 @@ impl Occluder {
 
             (Object2dInner::Polygon(pg1), Object2dInner::Polygon(pg2)) => {
                 match pg1.crop_excluding(pg2) {
-                    Ok(p) => {
-                        dbg!(&pg1, &pg2, &p);
-                        p.into_iter().map(Object2dInner::from).collect()
-                    }
+                    Ok(p) => p.into_iter().map(Object2dInner::from).collect(),
                     Err(_) => vec![],
                 }
             }
@@ -97,12 +93,12 @@ impl Occluder {
         incoming_obj3: Object3dInner,
         _style3d: Option<Style3d>,
     ) {
-        // debug only
-        self.objects.push((
-            incoming_obj2.clone(),
-            incoming_obj3.clone(),
-            Some(Style3d::builder().color(&RED).thickness(0.5).build()),
-        ));
+        // // debug only
+        // self.objects.push((
+        //     incoming_obj2.clone(),
+        //     incoming_obj3.clone(),
+        //     Some(Style3d::builder().color(&RED).thickness(0.5).build()),
+        // ));
 
         // if the collision is parallel, don't crop.
         // if the collision exists at a point, don't crop.

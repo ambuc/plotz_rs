@@ -1,5 +1,7 @@
 //! Crop logic for polygons.
 
+use approx::ulps_eq;
+
 use crate::{
     crop::{CropType, PointLoc},
     isxn::{Intersection, IsxnResult, Pair, Which},
@@ -9,7 +11,6 @@ use crate::{
 use float_ord::FloatOrd;
 use itertools::Itertools;
 use petgraph::{
-    // dot::{Config, Dot},
     prelude::DiGraphMap,
     Direction::{Incoming, Outgoing},
 };
@@ -42,18 +43,49 @@ pub struct CropGraph<'a> {
     graph: DiGraphMap<Pt, ()>,
     a: &'a Polygon,
     b: &'a Polygon,
+    // why do we have a known_pts vector?
+    //
+    // it's simple -- points are allowed to implement a fuzzy equality (using
+    // approx_eq!(f64, i, j) or somesuch) but unfortunately hashmaps really do
+    // not like it when a==b =/> hash(a)==hash(b).
+    //
+    // instead, we check if a point is known (i.e. if it's approximately equal
+    // to one in this vec) before treating it as a hashable value. if it is
+    // known,
+    known_pts: Vec<Pt>,
 }
 
 impl<'a> CropGraph<'a> {
-    pub fn build_from_polygons(
-        a: &'a Polygon,
-        b: &'a Polygon,
-        crop_type: CropType,
-    ) -> CropGraph<'a> {
-        let mut graph = DiGraphMap::<Pt, ()>::new();
+    pub fn new(a: &'a Polygon, b: &'a Polygon) -> CropGraph<'a> {
+        CropGraph {
+            graph: DiGraphMap::<Pt, ()>::new(),
+            a,
+            b,
+            known_pts: vec![],
+        }
+    }
 
+    fn normalize_pt(&mut self, pt: &Pt) -> Pt {
+        // if something in self.known_pts matches, return that instead.
+        // otherwise insert pt into known_pts and return it.
+
+        if let Some(extant) = self.known_pts.iter().find(|extant| {
+            ulps_eq!(extant.x.0, pt.x.0, max_ulps = 10)
+                && ulps_eq!(extant.y.0, pt.y.0, max_ulps = 10)
+        }) {
+            *extant
+        } else {
+            self.known_pts.push(*pt);
+            *pt
+        }
+    }
+
+    pub fn build_from_polygons(&mut self, crop_type: CropType) {
         // inelegant way to run a against b, then b against a. oops
-        let pair = Pair { a: &a, b: &b };
+        let pair = Pair {
+            a: self.a,
+            b: self.b,
+        };
         for which in [Which::A, Which::B] {
             let this = pair.get(which);
             let that = pair.get(which.flip());
@@ -79,35 +111,65 @@ impl<'a> CropGraph<'a> {
                     .collect();
 
                 if isxns.is_empty() {
-                    let from = graph.add_node(sg.i);
-                    let to = graph.add_node(sg.f);
-                    graph.add_edge(from, to, ());
+                    let from_pt_normalized = self.normalize_pt(&sg.i);
+                    let from = self.graph.add_node(from_pt_normalized);
+                    assert_eq!(from, from_pt_normalized);
+
+                    let to_pt_normalized = self.normalize_pt(&sg.f);
+                    let to = self.graph.add_node(to_pt_normalized);
+                    assert_eq!(to, to_pt_normalized);
+
+                    self.graph.add_edge(from, to, ());
                 } else {
                     isxns.sort_by_key(|isxn| FloatOrd(isxn.percent_along(which).0));
 
                     {
-                        let from = graph.add_node(sg.i);
-                        let to = isxns[0].pt();
+                        let from_pt_normalized = self.normalize_pt(&sg.i);
+                        let from = self.graph.add_node(from_pt_normalized);
+                        assert_eq!(from, from_pt_normalized);
+
+                        let to_pt = isxns[0].pt();
+                        let to_pt_normalized = self.normalize_pt(&to_pt);
+                        let to = self.graph.add_node(to_pt_normalized);
+                        assert_eq!(to, to_pt_normalized);
+
                         if from != to {
-                            graph.add_edge(from, to, ());
+                            self.graph.add_edge(from, to, ());
                         }
                     }
 
                     for (i, j) in isxns.iter().tuple_windows() {
-                        graph.add_edge(i.pt(), j.pt(), ());
+                        let from_pt = i.pt();
+                        let from_pt_normalized = self.normalize_pt(&from_pt);
+                        let from = self.graph.add_node(from_pt_normalized);
+                        assert_eq!(from, from_pt_normalized);
+
+                        let to_pt = j.pt();
+                        let to_pt_normalized = self.normalize_pt(&to_pt);
+                        let to = self.graph.add_node(to_pt_normalized);
+                        assert_eq!(to, to_pt_normalized);
+
+                        self.graph.add_edge(from, to, ());
                     }
 
                     {
-                        let from = isxns.last().unwrap().pt();
-                        let to = graph.add_node(sg.f);
+                        let from_pt = isxns.last().unwrap().pt();
+                        let from_pt_normalized = self.normalize_pt(&from_pt);
+                        let from = self.graph.add_node(from_pt_normalized);
+                        assert_eq!(from, from_pt_normalized);
+
+                        let to_pt = &sg.f;
+                        let to_pt_normalized = self.normalize_pt(&to_pt);
+                        let to = self.graph.add_node(to_pt_normalized);
+                        assert_eq!(to, to_pt_normalized);
+
                         if from != to {
-                            graph.add_edge(from, to, ());
+                            self.graph.add_edge(from, to, ());
                         }
                     }
                 }
             }
         }
-        CropGraph { graph, a, b }
     }
 
     pub fn remove_outside_nodes(&mut self) {
@@ -249,6 +311,7 @@ impl<'a> CropGraph<'a> {
     }
 
     pub fn to_resultant_polygons(mut self) -> Vec<Polygon> {
+        // use petgraph::dot::{Config, Dot};
         // println!(
         //     "{:?}",
         //     Dot::with_config(&self.graph, &[Config::EdgeNoLabel])

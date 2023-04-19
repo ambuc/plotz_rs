@@ -415,7 +415,8 @@ impl Croppable for Polygon {
             }
         }
 
-        let mut crop_graph = CropGraph::build_from_polygons(a, b, crop_type);
+        let mut crop_graph = CropGraph::new(a, b);
+        crop_graph.build_from_polygons(crop_type);
         match crop_type {
             CropType::Inclusive => {
                 crop_graph.remove_outside_nodes();
