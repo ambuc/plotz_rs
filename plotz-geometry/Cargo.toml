@@ -20,6 +20,7 @@ plotz-color = { path = "../plotz-color" }
 rand = "*"
 thiserror = "*"
 typed-builder = "*"
+tracing = "*"
 
 [dev-dependencies]
 float_eq = "*"

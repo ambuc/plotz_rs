@@ -3,6 +3,7 @@
 use {
     crate::style::Style3d,
     plotz_geometry::{crop::Croppable, object2d::Object2d, object2d_inner::Object2dInner},
+    tracing::*,
 };
 
 /// Occludes.
@@ -39,10 +40,11 @@ impl Occluder {
             }
 
             (Object2dInner::Polygon(pg1), Object2dInner::Polygon(pg2)) => {
+                trace!("cropping pg to pg");
                 match pg1.crop_excluding(pg2) {
                     Ok(p) => p.into_iter().map(Object2dInner::from).collect(),
                     Err(e) => {
-                        println!("ERROR: {:?}", e);
+                        error!("{:?}", e);
                         vec![]
                     }
                 }

@@ -10,8 +10,6 @@ use plotz_core::{
 };
 use plotz_geometry::point::Pt;
 use plotz_geometry3d::*;
-use tracing::*;
-use tracing_subscriber::FmtSubscriber;
 
 #[derive(FromArgs, Debug)]
 #[argh(description = "...")]
@@ -36,9 +34,9 @@ struct Args {
 }
 
 fn main() {
-    let subscriber = FmtSubscriber::builder()
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
         .compact()
-        .with_max_level(Level::TRACE)
+        .with_max_level(tracing::Level::TRACE)
         .without_time()
         .finish();
     tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");

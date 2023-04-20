@@ -16,6 +16,8 @@ use {
         segment3d::Segment3d,
         style::Style3d,
     },
+    tracing::*,
+    tracing_subscriber::FmtSubscriber,
 };
 
 #[derive(FromArgs)]
@@ -26,6 +28,13 @@ struct Args {
 }
 
 fn main() {
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .compact()
+        .with_max_level(Level::INFO)
+        .without_time()
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
     let args: Args = argh::from_env();
 
     let mgn = 25.0;

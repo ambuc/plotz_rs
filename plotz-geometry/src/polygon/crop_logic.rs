@@ -16,6 +16,8 @@ use {
         Direction::{Incoming, Outgoing},
     },
     std::fmt::Debug,
+    tracing::*,
+    typed_builder::TypedBuilder,
 };
 
 /// An IsxnResult which knows the polygon segments of its two lines.
@@ -41,10 +43,15 @@ impl Debug for AnnotatedIsxnResult {
     }
 }
 
+#[derive(Debug, TypedBuilder)]
 pub struct CropGraph<'a> {
+    #[builder(default)]
     graph: DiGraphMap<Pt, ()>,
+
     a: &'a Polygon,
+
     b: &'a Polygon,
+
     // why do we have a known_pts vector?
     //
     // it's simple -- points are allowed to implement a fuzzy equality (using
@@ -54,19 +61,11 @@ pub struct CropGraph<'a> {
     // instead, we check if a point is known (i.e. if it's approximately equal
     // to one in this vec) before treating it as a hashable value. if it is
     // known,
+    #[builder(default)]
     known_pts: Vec<Pt>,
 }
 
 impl<'a> CropGraph<'a> {
-    pub fn new(a: &'a Polygon, b: &'a Polygon) -> CropGraph<'a> {
-        CropGraph {
-            graph: DiGraphMap::<Pt, ()>::new(),
-            a,
-            b,
-            known_pts: vec![],
-        }
-    }
-
     fn normalize_pt(&mut self, pt: &Pt) -> Pt {
         // if something in self.known_pts matches, return that instead.
         // otherwise insert pt into known_pts and return it.
@@ -298,7 +297,7 @@ impl<'a> CropGraph<'a> {
                 [n, _] if self.a.pts.contains(&n) => n,
                 [_, n] if self.a.pts.contains(&n) => n,
                 [a, b] => {
-                    println!("aborting search: found two {:?},{:?}", a, b);
+                    error!("aborting search: found two {:?},{:?}", a, b);
                     return None;
                 }
                 _ => {
@@ -306,7 +305,7 @@ impl<'a> CropGraph<'a> {
                         .graph
                         .neighbors_directed(curr_node, Outgoing)
                         .collect::<Vec<_>>();
-                    println!("aborting search: from {:?}, found {:?}", curr_node, a);
+                    error!("aborting search: from {:?}, found {:?}", curr_node, a);
                     return None;
                 }
             };

@@ -19,6 +19,7 @@ num-traits = "*"
 rand = "*"
 thiserror = "*"
 typed-builder = "*"
+tracing = "*"
 
 [dev-dependencies]
 float_eq = "*"

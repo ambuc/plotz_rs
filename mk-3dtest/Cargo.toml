@@ -25,4 +25,5 @@ plotz-geometry3d = { path = "../plotz-geometry3d" }
 rand = { version = "0.8.5", features = ["alloc"] }
 regex = "*"
 typed-builder = "*"
-
+tracing = "*"
+tracing-subscriber = "*"

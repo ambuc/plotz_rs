@@ -32,6 +32,7 @@ pub struct DebugSettings {
 #[derive(Debug, Clone, TypedBuilder)]
 pub struct Scene {
     /// Some objects.
+    #[builder(default)]
     objects: Vec<Object3d>,
 
     /// Some debug settings.
@@ -42,21 +43,20 @@ pub struct Scene {
 impl Scene {
     /// A new scene.
     pub fn new() -> Scene {
-        Scene {
-            objects: vec![],
-            debug: None,
-        }
+        Scene::builder().build()
     }
 
     /// Projects the scene onto a camera, renders to 2d, and returns a vector of object2ds.
     pub fn project_with(&self, projection: Projection, occlusion: Occlusion) -> Vec<Object2d> {
-        let mut resultant: Vec<Object2d> = vec![];
         match (projection, occlusion) {
-            (Projection::Oblique(obl), Occlusion::False) => {
-                resultant.extend(self.objects.iter().map(|obj| obj.project_oblique(&obl)))
-            }
+            (Projection::Oblique(obl), Occlusion::False) => self
+                .objects
+                .iter()
+                .map(|obj| obj.project_oblique(&obl))
+                .collect(),
 
             (Projection::Oblique(obl), Occlusion::True) => {
+                let mut resultant = vec![];
                 let view_vector = Pt3d(-2.0, -1.0, -1.0);
 
                 let mut occ = Occluder::new();
@@ -88,8 +88,8 @@ impl Scene {
                 }
 
                 resultant.extend(occ.export());
+                resultant
             }
         }
-        resultant
     }
 }
