@@ -5,56 +5,54 @@ use {
     crate::{
         camera::{Occlusion, Projection},
         object3d::Object3d,
-        object3d_inner::Object3dInner,
         occluder::Occluder,
         point3d::Pt3d,
         style::Style3d,
     },
     float_ord::FloatOrd,
     itertools::Itertools,
-    plotz_geometry::object2d::Object2d,
+    plotz_geometry::{object2d::Object2d, traits::Annotatable},
+    std::fmt::Debug,
+    typed_builder::TypedBuilder,
 };
 
+/// Debug settings.
+#[derive(Debug, Clone, TypedBuilder)]
+pub struct DebugSettings {
+    /// A style for drawing wireframes, if configured.
+    #[builder(default, setter(strip_option))]
+    draw_wireframes: Option<Style3d>,
+    /// Whether or not to annotate everything.
+    should_annotate: bool,
+}
+
 /// A scene of 3d objects ready to be projected down to a 2d plane.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, TypedBuilder)]
 pub struct Scene {
     /// Some objects.
-    pub objects: Vec<Object3d>,
+    objects: Vec<Object3d>,
+    /// Some debug settings.
+    #[builder(default, setter(strip_option))]
+    debug: Option<DebugSettings>,
 }
 
 impl Scene {
     /// A new scene.
     pub fn new() -> Scene {
-        Scene { objects: vec![] }
-    }
-    /// Make a scene from some objects.
-    pub fn from(a: impl IntoIterator<Item = Object3d>) -> Scene {
         Scene {
-            objects: a.into_iter().collect(),
-        }
-    }
-    /// Make a scene from some objects
-    pub fn from_objects_with_style(
-        a: impl IntoIterator<Item = Object3dInner>,
-        style: Style3d,
-    ) -> Scene {
-        Scene {
-            objects: a
-                .into_iter()
-                .map(|a| Object3d::new(a).with_style(style.clone()))
-                .collect(),
+            objects: vec![],
+            debug: None,
         }
     }
 
     /// Projects the scene onto a camera, renders to 2d, and returns a vector of object2ds.
     pub fn project_with(&self, projection: Projection, occlusion: Occlusion) -> Vec<Object2d> {
+        let mut resultant: Vec<Object2d> = vec![];
         match (projection, occlusion) {
             //
-            (Projection::Oblique(obl), Occlusion::False) => self
-                .objects
-                .iter()
-                .map(|obj| obj.project_oblique(&obl))
-                .collect::<Vec<_>>(),
+            (Projection::Oblique(obl), Occlusion::False) => {
+                resultant.extend(self.objects.iter().map(|obj| obj.project_oblique(&obl)))
+            }
             //
             (Projection::Oblique(obl), Occlusion::True) => {
                 let view_vector = Pt3d(-1.0, -1.0, -1.0);
@@ -69,11 +67,27 @@ impl Scene {
                     )
                 }) {
                     let obj2 = obj3.project_oblique(&obl);
+
+                    if let Some(DebugSettings {
+                        draw_wireframes,
+                        should_annotate,
+                    }) = self.debug
+                    {
+                        if let Some(Style3d { color, thickness }) = draw_wireframes {
+                            resultant
+                                .push(obj2.clone().with_color(color).with_thickness(thickness));
+                        }
+                        if should_annotate {
+                            resultant.extend(obj2.annotate());
+                        }
+                    }
+
                     occ.add(obj2.inner, obj3.inner.clone(), obj3.style.clone());
                 }
 
-                occ.export()
+                resultant.extend(occ.export());
             }
         }
+        resultant
     }
 }

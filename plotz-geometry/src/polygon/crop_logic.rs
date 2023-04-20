@@ -1,21 +1,22 @@
 //! Crop logic for polygons.
 
-use approx::ulps_eq;
-use petgraph::dot::{Config, Dot};
-
-use crate::{
-    crop::{CropType, PointLoc},
-    isxn::{Intersection, IsxnResult, Pair, Which},
-    point::Pt,
-    polygon::Polygon,
+use {
+    crate::{
+        crop::{CropType, PointLoc},
+        isxn::{Intersection, IsxnResult, Pair, Which},
+        point::Pt,
+        polygon::Polygon,
+    },
+    approx::ulps_eq,
+    float_ord::FloatOrd,
+    itertools::Itertools,
+    petgraph::dot::{Config, Dot},
+    petgraph::{
+        prelude::DiGraphMap,
+        Direction::{Incoming, Outgoing},
+    },
+    std::fmt::Debug,
 };
-use float_ord::FloatOrd;
-use itertools::Itertools;
-use petgraph::{
-    prelude::DiGraphMap,
-    Direction::{Incoming, Outgoing},
-};
-use std::fmt::Debug;
 
 /// An IsxnResult which knows the polygon segments of its two lines.
 #[derive(PartialEq, Copy, Clone)]

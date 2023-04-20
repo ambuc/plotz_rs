@@ -1,13 +1,12 @@
 //! A 2D polygon (or multi&line).
 
-use crate::crop::CropType;
-
 mod crop_logic;
 
 use {
     self::crop_logic::*,
     crate::{
         bounded::{Bounded, Bounds},
+        crop::CropType,
         crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
         isxn::IsxnResult,
         object2d::Object2d,

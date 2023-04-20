@@ -1,18 +1,18 @@
-use itertools::iproduct;
-use plotz_geometry3d::{camera::Occlusion, face::Face};
-
+#![allow(unused_imports)]
 use {
     argh::FromArgs,
+    itertools::iproduct,
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{object2d::Object2d, point::Pt},
     plotz_geometry3d::{
-        camera::{Oblique, Projection},
+        camera::{Oblique, Occlusion, Projection},
         cube3d::Cube,
+        face::Face,
         object3d::Object3d,
         point3d::Pt3d,
         polygon3d::Polygon3d,
-        scene::Scene,
+        scene::{DebugSettings, Scene},
         segment3d::Segment3d,
         style::Style3d,
     },
@@ -56,7 +56,7 @@ fn main() {
 
         {
             let e = 0.8;
-            for (i, j) in iproduct!(0..3, 0..4) {
+            for (i, j) in iproduct!(0..2, 0..2) {
                 objects.extend(
                     Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, e))
                         .items
@@ -123,7 +123,16 @@ fn main() {
         //     .with_style(Style3d::builder().color(&POWDERBLUE).thickness(2.0).build()),
         // );
 
-        Scene::from(objects).project_with(Projection::Oblique(Oblique::standard()), Occlusion::True)
+        let scene = Scene::builder()
+            .debug(
+                DebugSettings::builder()
+                    .draw_wireframes(Style3d::builder().color(&RED).thickness(0.5).build())
+                    .should_annotate(true)
+                    .build(),
+            )
+            .objects(objects)
+            .build();
+        scene.project_with(Projection::Oblique(Oblique::standard()), Occlusion::True)
     };
 
     let mut canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);

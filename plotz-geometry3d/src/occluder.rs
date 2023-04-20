@@ -1,12 +1,11 @@
 //! Occludes things. Cmon.
 
-use plotz_color::*;
-use plotz_geometry::{
-    crop::Croppable, isxn::IsxnResult, object2d::Object2d, object2d_inner::Object2dInner,
-    traits::Annotatable,
+use {
+    crate::{object3d_inner::Object3dInner, style::Style3d},
+    plotz_geometry::{
+        crop::Croppable, isxn::IsxnResult, object2d::Object2d, object2d_inner::Object2dInner,
+    },
 };
-
-use crate::{object3d_inner::Object3dInner, style::Style3d};
 
 /// Occludes.
 pub struct Occluder {
@@ -95,13 +94,6 @@ impl Occluder {
         incoming_obj3: Object3dInner,
         _style3d: Option<Style3d>,
     ) {
-        // // debug only
-        // self.objects.push((
-        //     incoming_obj2.clone(),
-        //     incoming_obj3.clone(),
-        //     Some(Style3d::builder().color(&RED).thickness(0.5).build()),
-        // ));
-
         // if the collision is parallel, don't crop.
         // if the collision exists at a point, don't crop.
         // otherwise, there is a collision!
@@ -117,6 +109,7 @@ impl Occluder {
                     .collect::<Vec<_>>()
             },
         );
+
         for new_obj2 in resultants {
             self.objects
                 .push((new_obj2, incoming_obj3.clone(), _style3d));
