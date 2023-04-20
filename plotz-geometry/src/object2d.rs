@@ -208,9 +208,9 @@ impl Croppable for Object2d {
 }
 
 impl Annotatable for Object2d {
-    fn annotate(&self) -> Vec<Object2d> {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<Object2d> {
         self.inner
-            .annotate()
+            .annotate(settings)
             .into_iter()
             .map(|o| o.with_color(self.color))
             .collect()

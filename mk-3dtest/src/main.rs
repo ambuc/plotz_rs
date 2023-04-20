@@ -1,6 +1,7 @@
 #![allow(unused_imports)]
 
 use itertools::zip;
+use plotz_geometry::traits::AnnotationSettings;
 use {
     argh::FromArgs,
     itertools::iproduct,
@@ -165,7 +166,7 @@ fn main() {
             .debug(
                 DebugSettings::builder()
                     .draw_wireframes(Style3d::builder().color(&RED).thickness(0.1).build())
-                    .should_annotate(true)
+                    .annotate(AnnotationSettings::builder().font_size(12.0).build())
                     .build(),
             )
             .objects(objects)

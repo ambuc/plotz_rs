@@ -398,10 +398,10 @@ impl Croppable for Object2dInner {
 }
 
 impl Annotatable for Object2dInner {
-    fn annotate(&self) -> Vec<crate::object2d::Object2d> {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<crate::object2d::Object2d> {
         match self {
-            Object2dInner::Polygon(pg) => pg.annotate(),
-            Object2dInner::Group(g) => g.annotate(),
+            Object2dInner::Polygon(pg) => pg.annotate(settings),
+            Object2dInner::Group(g) => g.annotate(settings),
             Object2dInner::Point(_)
             | Object2dInner::Segment(_)
             | Object2dInner::CurveArc(_)

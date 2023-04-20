@@ -169,7 +169,7 @@ impl Nullable for Group {
 }
 
 impl Annotatable for Group {
-    fn annotate(&self) -> Vec<Object2d> {
-        self.0.iter().flat_map(|o| o.annotate()).collect()
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<Object2d> {
+        self.0.iter().flat_map(|o| o.annotate(settings)).collect()
     }
 }

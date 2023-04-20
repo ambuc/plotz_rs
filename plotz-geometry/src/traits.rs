@@ -1,5 +1,7 @@
 //! Traits.
 
+use typed_builder::TypedBuilder;
+
 use crate::object2d::Object2d;
 
 use {crate::point::Pt, std::ops::*};
@@ -55,8 +57,15 @@ pub trait Nullable {
     fn is_empty(&self) -> bool;
 }
 
+/// Settings for debug annotation (font size, etc.)
+#[derive(Debug, Clone, TypedBuilder)]
+pub struct AnnotationSettings {
+    /// Font size.
+    pub font_size: f64,
+}
+
 /// Something which can have its points and segments labelled.
 pub trait Annotatable {
     /// Return the labelled points and segments.
-    fn annotate(&self) -> Vec<Object2d>;
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<Object2d>;
 }

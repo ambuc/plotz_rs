@@ -12,6 +12,8 @@ pub struct Txt {
     pub pt: Pt,
     /// the text.
     pub inner: String,
+    /// The font size.
+    pub font_size: f64,
 }
 
 impl Bounded for Txt {

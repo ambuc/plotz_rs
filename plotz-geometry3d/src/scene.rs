@@ -1,6 +1,8 @@
 //! A scene, i.e. a holder for 3d objects ready to be projected down onto a 2d
 //! plane.
 
+use plotz_geometry::traits::AnnotationSettings;
+
 use {
     crate::{
         camera::{Occlusion, Projection},
@@ -13,8 +15,8 @@ use {
     itertools::Itertools,
     plotz_geometry::{object2d::Object2d, traits::Annotatable},
     std::fmt::Debug,
-    typed_builder::TypedBuilder,
     tracing::*,
+    typed_builder::TypedBuilder,
 };
 
 /// Debug settings.
@@ -25,8 +27,8 @@ pub struct DebugSettings {
     draw_wireframes: Option<Style3d>,
 
     /// Whether or not to annotate everything.
-    #[builder(default)]
-    should_annotate: bool,
+    #[builder(default, setter(strip_option))]
+    annotate: Option<AnnotationSettings>,
 }
 
 /// A scene of 3d objects ready to be projected down to a 2d plane.
@@ -73,15 +75,15 @@ impl Scene {
 
                     if let Some(DebugSettings {
                         draw_wireframes,
-                        should_annotate,
-                    }) = self.debug
+                        annotate: should_annotate,
+                    }) = &self.debug
                     {
                         if let Some(Style3d { color, thickness }) = draw_wireframes {
                             resultant
-                                .push(obj2.clone().with_color(color).with_thickness(thickness));
+                                .push(obj2.clone().with_color(color).with_thickness(*thickness));
                         }
-                        if should_annotate {
-                            resultant.extend(obj2.annotate());
+                        if let Some(settings) = should_annotate {
+                            resultant.extend(obj2.annotate(&settings));
                         }
                     }
 

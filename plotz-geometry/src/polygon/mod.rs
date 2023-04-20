@@ -572,13 +572,15 @@ impl Nullable for Polygon {
 }
 
 impl Annotatable for Polygon {
-    fn annotate(&self) -> Vec<Object2d> {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<Object2d> {
         let mut a = vec![];
 
+        let AnnotationSettings { font_size } = settings;
         for (_idx, pt) in self.pts.iter().enumerate() {
             a.push(Object2d::new(Txt {
                 pt: *pt,
                 inner: format!("{:?}", pt),
+                font_size: *font_size,
             }));
         }
 

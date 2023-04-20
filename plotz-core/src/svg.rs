@@ -57,9 +57,13 @@ fn write_doi_to_context(
             context.line_to(segment.i.x.0, segment.i.y.0);
             context.line_to(segment.f.x.0, segment.f.y.0);
         }
-        Object2dInner::Char(Txt { pt, inner: txt }) => {
+        Object2dInner::Char(Txt {
+            pt,
+            inner: txt,
+            font_size,
+        }) => {
             context.select_font_face("serif", cairo::FontSlant::Normal, cairo::FontWeight::Bold);
-            context.set_font_size(2.0);
+            context.set_font_size(*font_size);
 
             context.move_to(pt.x.0, pt.y.0);
             context.show_text(txt).expect("show text");
