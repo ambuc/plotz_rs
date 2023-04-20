@@ -5,7 +5,7 @@ use crate::{crop::CropType, polygon::Polygon};
 use {
     crate::{
         bounded::{Bounded, Bounds},
-        crop::{CropToPolygonError, Croppable, PointLoc},
+        crop::{Croppable, PointLoc},
         interpolate::interpolate_2d_checked,
         point::{PolarPt, Pt},
         polygon::abp,
@@ -415,11 +415,7 @@ fn intersections_of_line_and_curvearc(
 
 impl Croppable for CurveArc {
     type Output = CurveArc;
-    fn crop(
-        &self,
-        frame: &Polygon,
-        crop_type: CropType,
-    ) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop(&self, frame: &Polygon, crop_type: CropType) -> Vec<Self::Output>
     where
         Self: Sized,
     {
@@ -446,7 +442,7 @@ impl Croppable for CurveArc {
                 PointLoc::Inside | PointLoc::OnSegment(_) | PointLoc::OnPoint(_),
             ) = (contains_i, contains_f)
             {
-                return Ok(vec![*self]);
+                return vec![*self];
             }
         }
 
@@ -483,9 +479,9 @@ impl Croppable for CurveArc {
             }
         }
 
-        Ok(r)
+        r
     }
-    fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop_excluding(&self, _other: &Polygon) -> Vec<Self::Output>
     where
         Self: Sized,
     {
@@ -692,7 +688,7 @@ mod test {
         "four intersections, all passthrough"
     )]
     fn test_curvearc_crop(rect: Polygon, curvearc: CurveArc, expected_curvearcs: Vec<CurveArc>) {
-        let actual_curvearcs = curvearc.crop_to(&rect).unwrap();
+        let actual_curvearcs = curvearc.crop_to(&rect);
         assert_eq!(actual_curvearcs.len(), expected_curvearcs.len());
 
         for (actual, expected) in actual_curvearcs.iter().zip(expected_curvearcs.iter()) {

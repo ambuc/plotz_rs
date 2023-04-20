@@ -52,7 +52,7 @@ fn main() {
 
             dos.extend(
                 cas.iter()
-                    .flat_map(|ca| ca.crop_to(&frame_polygon).unwrap())
+                    .flat_map(|ca| ca.crop_to(&frame_polygon))
                     .into_iter()
                     .map(|ca| Object2d::new(ca).with_color(&GREEN).with_thickness(0.30))
                     .into_iter(),

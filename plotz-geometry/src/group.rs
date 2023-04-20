@@ -4,11 +4,7 @@ use crate::{bounded::BoundsCollector, crop::CropType};
 
 use {
     crate::{
-        bounded::Bounded,
-        crop::{CropToPolygonError, Croppable},
-        object2d::Object2d,
-        point::Pt,
-        polygon::Polygon,
+        bounded::Bounded, crop::Croppable, object2d::Object2d, point::Pt, polygon::Polygon,
         traits::*,
     },
     std::ops::*,
@@ -141,20 +137,15 @@ impl Scalable<f64> for Group {}
 
 impl Croppable for Group {
     type Output = Group;
-    fn crop(
-        &self,
-        frame: &Polygon,
-        crop_type: CropType,
-    ) -> Result<Vec<Self::Output>, CropToPolygonError> {
-        Ok(vec![Group::new(
+    fn crop(&self, frame: &Polygon, crop_type: CropType) -> Vec<Self::Output> {
+        vec![Group::new(
             self.0
                 .iter()
                 .flat_map(|d_o| d_o.crop(frame, crop_type))
-                .flatten()
                 .collect::<Vec<_>>(),
-        )])
+        )]
     }
-    fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop_excluding(&self, _other: &Polygon) -> Vec<Self::Output>
     where
         Self: Sized,
     {

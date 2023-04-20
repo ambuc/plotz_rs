@@ -100,7 +100,6 @@ fn main() {
         v.extend(
             subject_sq
                 .crop_to(&r)
-                .unwrap()
                 .into_iter()
                 .map(|o| o.with_color(&GREEN).with_thickness(2.0)),
         );
@@ -108,7 +107,6 @@ fn main() {
         v.extend(
             subject_sq
                 .crop_excluding(&r.clone())
-                .unwrap()
                 .into_iter()
                 .map(|o| o.with_color(&BLUE).with_thickness(2.0)),
         );

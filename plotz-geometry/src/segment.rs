@@ -1,7 +1,7 @@
 //! A 2D segment.
 use crate::{
     bounded::{Bounded, Bounds},
-    crop::{CropToPolygonError, CropType, Croppable, PointLoc},
+    crop::{CropType, Croppable, PointLoc},
     interpolate,
     interpolate::interpolate_2d_checked,
     isxn::{Intersection, IsxnResult, MultipleIntersections},
@@ -285,11 +285,7 @@ impl Mutable for Segment {}
 impl Croppable for Segment {
     type Output = Segment;
 
-    fn crop(
-        &self,
-        frame: &Polygon,
-        crop_type: CropType,
-    ) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop(&self, frame: &Polygon, crop_type: CropType) -> Vec<Self::Output>
     where
         Self: Sized,
     {
@@ -343,7 +339,7 @@ impl Croppable for Segment {
 
                     // Not sure why. But escape the loop.
                     if new_pt == curr_pt {
-                        return Ok(resultants);
+                        return resultants;
                     }
 
                     if !matches!(frame.contains_pt(&new_pt), PointLoc::Outside) && curr_pen_down {
@@ -353,15 +349,15 @@ impl Croppable for Segment {
                     curr_pen_down = !curr_pen_down;
                 }
                 None => {
-                    return Ok(resultants);
+                    return resultants;
                 }
             }
         }
 
-        Ok(resultants)
+        resultants
     }
 
-    fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop_excluding(&self, _other: &Polygon) -> Vec<Self::Output>
     where
         Self: Sized,
     {

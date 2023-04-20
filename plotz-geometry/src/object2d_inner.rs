@@ -7,7 +7,7 @@ use crate::{crop::CropType, polygon::PolygonKind};
 use {
     crate::{
         bounded::Bounded,
-        crop::{CropToPolygonError, Croppable, PointLoc},
+        crop::{Croppable, PointLoc},
         curve::CurveArc,
         group::Group,
         point::Pt,
@@ -291,12 +291,8 @@ impl TranslatableAssign for Object2dInner {}
 
 impl Croppable for Object2dInner {
     type Output = Object2dInner;
-    fn crop(
-        &self,
-        frame: &Polygon,
-        crop_type: CropType,
-    ) -> Result<Vec<Self::Output>, CropToPolygonError> {
-        Ok(match &self {
+    fn crop(&self, frame: &Polygon, crop_type: CropType) -> Vec<Self::Output> {
+        match &self {
             Object2dInner::Point(pt) => {
                 assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(pt), PointLoc::Outside) {
@@ -309,23 +305,23 @@ impl Croppable for Object2dInner {
                 PolygonKind::Open => pg
                     .to_segments()
                     .into_iter()
-                    .flat_map(|sg| sg.crop(frame, crop_type).expect("crop failure"))
+                    .flat_map(|sg| sg.crop(frame, crop_type))
                     .into_iter()
                     .map(Object2dInner::from)
                     .collect::<Vec<_>>(),
                 PolygonKind::Closed => pg
-                    .crop(frame, crop_type)?
+                    .crop(frame, crop_type)
                     .into_iter()
                     .map(Object2dInner::from)
                     .collect::<Vec<_>>(),
             },
             Object2dInner::Segment(sg) => sg
-                .crop(frame, crop_type)?
+                .crop(frame, crop_type)
                 .into_iter()
                 .map(Object2dInner::from)
                 .collect::<Vec<_>>(),
             Object2dInner::CurveArc(ca) => ca
-                .crop(frame, crop_type)?
+                .crop(frame, crop_type)
                 .into_iter()
                 .map(Object2dInner::from)
                 .collect::<Vec<_>>(),
@@ -338,18 +334,18 @@ impl Croppable for Object2dInner {
                 }
             }
             Object2dInner::Group(g) => g
-                .crop(frame, crop_type)?
+                .crop(frame, crop_type)
                 .into_iter()
                 .map(Object2dInner::from)
                 .collect::<Vec<_>>(),
-        })
+        }
     }
 
-    fn crop_excluding(&self, other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop_excluding(&self, other: &Polygon) -> Vec<Self::Output>
     where
         Self: Sized,
     {
-        Ok(match &self {
+        match &self {
             Object2dInner::Point(pt) => {
                 if matches!(other.contains_pt(pt), PointLoc::Outside) {
                     vec![]
@@ -361,23 +357,23 @@ impl Croppable for Object2dInner {
                 PolygonKind::Open => pg
                     .to_segments()
                     .into_iter()
-                    .flat_map(|sg| sg.crop_excluding(other).expect("crop failure"))
+                    .flat_map(|sg| sg.crop_excluding(other))
                     .into_iter()
                     .map(Object2dInner::from)
                     .collect::<Vec<_>>(),
                 PolygonKind::Closed => pg
-                    .crop_excluding(other)?
+                    .crop_excluding(other)
                     .into_iter()
                     .map(Object2dInner::from)
                     .collect::<Vec<_>>(),
             },
             Object2dInner::Segment(sg) => sg
-                .crop_excluding(other)?
+                .crop_excluding(other)
                 .into_iter()
                 .map(Object2dInner::from)
                 .collect::<Vec<_>>(),
             Object2dInner::CurveArc(ca) => ca
-                .crop_excluding(other)?
+                .crop_excluding(other)
                 .into_iter()
                 .map(Object2dInner::from)
                 .collect::<Vec<_>>(),
@@ -389,11 +385,11 @@ impl Croppable for Object2dInner {
                 }
             }
             Object2dInner::Group(g) => g
-                .crop_excluding(other)?
+                .crop_excluding(other)
                 .into_iter()
                 .map(Object2dInner::from)
                 .collect::<Vec<_>>(),
-        })
+        }
     }
 }
 

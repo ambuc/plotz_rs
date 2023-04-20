@@ -83,7 +83,7 @@ pub fn shade_polygon(
     while line.i.y > float_ord::FloatOrd(bounds.bottom_bound())
         || line.f.y > float_ord::FloatOrd(bounds.bottom_bound())
     {
-        let cropped_strokes = line.crop_to(polygon)?;
+        let cropped_strokes = line.crop_to(polygon);
         segments.extend(cropped_strokes.iter());
         // segments.push(line);
 

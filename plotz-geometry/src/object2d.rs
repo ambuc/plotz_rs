@@ -6,12 +6,8 @@ use crate::crop::CropType;
 
 use {
     crate::{
-        bounded::Bounded,
-        crop::{CropToPolygonError, Croppable},
-        object2d_inner::Object2dInner,
-        point::Pt,
-        polygon::Polygon,
-        traits::*,
+        bounded::Bounded, crop::Croppable, object2d_inner::Object2dInner, point::Pt,
+        polygon::Polygon, traits::*,
     },
     plotz_color::{ColorRGB, BLACK},
     std::ops::*,
@@ -184,33 +180,29 @@ impl TranslatableAssign for Object2d {}
 impl Croppable for Object2d {
     type Output = Object2d;
 
-    fn crop(
-        &self,
-        other: &Polygon,
-        crop_type: CropType,
-    ) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop(&self, other: &Polygon, crop_type: CropType) -> Vec<Self::Output>
     where
         Self: Sized,
     {
         match crop_type {
-            CropType::Inclusive => Ok(self
+            CropType::Inclusive => self
                 .inner
-                .crop_to(other)?
+                .crop_to(other)
                 .into_iter()
                 .map(|doi| Object2d {
                     inner: doi,
                     ..(*self)
                 })
-                .collect()),
-            CropType::Exclusive => Ok(self
+                .collect(),
+            CropType::Exclusive => self
                 .inner
-                .crop_excluding(other)?
+                .crop_excluding(other)
                 .into_iter()
                 .map(|doi| Object2d {
                     inner: doi,
                     ..(*self)
                 })
-                .collect()),
+                .collect(),
         }
     }
 }

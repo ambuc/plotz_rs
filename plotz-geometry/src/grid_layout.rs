@@ -100,9 +100,7 @@ impl GridLayout {
     /// Given an Object2d, crops it to the cubby at objs[i][j] and inserts that
     /// into the grid.
     pub fn insert_and_crop_to_cubby(&mut self, (i, j): (usize, usize), d_o: Object2d) {
-        let cropped = d_o
-            .crop_to_bounds(self.get_cubby_bounds((i, j)))
-            .expect("crop failed");
+        let cropped = d_o.crop_to_bounds(self.get_cubby_bounds((i, j)));
 
         self.objs[i][j].extend(cropped);
     }

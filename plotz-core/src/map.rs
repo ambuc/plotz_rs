@@ -393,7 +393,7 @@ impl Map {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             *dos = dos
                 .into_iter()
-                .map(|d_o| d_o.crop_to(&frame).unwrap_or(vec![]))
+                .map(|d_o| d_o.crop_to(&frame))
                 .flatten()
                 .collect();
         }

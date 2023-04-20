@@ -75,7 +75,7 @@ pub trait Croppable {
     type Output;
 
     /// Crop self to an outer frame
-    fn crop_to(&self, other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop_to(&self, other: &Polygon) -> Vec<Self::Output>
     where
         Self: Sized,
     {
@@ -83,7 +83,7 @@ pub trait Croppable {
     }
 
     /// Crop self so that the portion of self overlapping other is removed.
-    fn crop_excluding(&self, other: &Polygon) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop_excluding(&self, other: &Polygon) -> Vec<Self::Output>
     where
         Self: Sized,
     {
@@ -91,7 +91,7 @@ pub trait Croppable {
     }
 
     /// Crop self to outer bounds.
-    fn crop_to_bounds(&self, bounds: Bounds) -> Result<Vec<Self::Output>, CropToPolygonError>
+    fn crop_to_bounds(&self, bounds: Bounds) -> Vec<Self::Output>
     where
         Self: Sized,
     {
@@ -99,9 +99,5 @@ pub trait Croppable {
     }
 
     /// general crop -- could be either type.
-    fn crop(
-        &self,
-        other: &Polygon,
-        crop_type: CropType,
-    ) -> Result<Vec<Self::Output>, CropToPolygonError>;
+    fn crop(&self, other: &Polygon, crop_type: CropType) -> Vec<Self::Output>;
 }
