@@ -10,8 +10,8 @@ use {
     approx::ulps_eq,
     float_ord::FloatOrd,
     itertools::Itertools,
-    petgraph::dot::{Config, Dot},
     petgraph::{
+        // dot::{Config, Dot},
         prelude::DiGraphMap,
         Direction::{Incoming, Outgoing},
     },

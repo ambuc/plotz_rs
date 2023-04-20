@@ -322,13 +322,6 @@ impl Polygon {
             return Err(CropToPolygonError::ThatPolygonNotClosed);
         }
 
-        if self.get_curve_orientation() != Some(CurveOrientation::Positive) {
-            return Err(CropToPolygonError::ThisPolygonNotPositivelyOriented);
-        }
-
-        if b.get_curve_orientation() != Some(CurveOrientation::Positive) {
-            return Err(CropToPolygonError::ThatPolygonNotPositivelyOriented);
-        }
         Ok(())
     }
 

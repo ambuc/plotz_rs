@@ -40,7 +40,7 @@ fn main() {
 
         let mut objects: Vec<Object3d> = vec![];
 
-        let axes: Vec<Object3d> = vec![
+        let _axes: Vec<Object3d> = vec![
             (Pt3d(1.0, 0.0, 0.0), &RED),
             (Pt3d(0.0, 1.0, 0.0), &BLUE),
             (Pt3d(0.0, 0.0, 1.0), &GREEN),
@@ -52,13 +52,17 @@ fn main() {
         })
         .collect();
 
-        // objects.extend(axes);
+        // objects.extend(_axes);
 
         {
             let e = 0.8;
-            for (i, j) in iproduct!(0..2, 0..2) {
+            // use rand::Rng;
+            // let mut rng = rand::thread_rng();
+            for (i, j) in iproduct!(0..6, 0..6) {
+                // let zh = rng.gen_range(0.5..=3.0);
+                let zh = 0.8;
                 objects.extend(
-                    Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, e))
+                    Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, zh))
                         .items
                         .into_iter()
                         .map(|face| {
@@ -126,8 +130,8 @@ fn main() {
         let scene = Scene::builder()
             .debug(
                 DebugSettings::builder()
-                    .draw_wireframes(Style3d::builder().color(&RED).thickness(0.5).build())
-                    .should_annotate(true)
+                    // .draw_wireframes(Style3d::builder().color(&RED).thickness(0.1).build())
+                    // .should_annotate(true)
                     .build(),
             )
             .objects(objects)

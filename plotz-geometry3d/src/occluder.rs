@@ -1,16 +1,14 @@
 //! Occludes things. Cmon.
 
 use {
-    crate::{object3d_inner::Object3dInner, style::Style3d},
-    plotz_geometry::{
-        crop::Croppable, isxn::IsxnResult, object2d::Object2d, object2d_inner::Object2dInner,
-    },
+    crate::style::Style3d,
+    plotz_geometry::{crop::Croppable, object2d::Object2d, object2d_inner::Object2dInner},
 };
 
 /// Occludes.
 pub struct Occluder {
     /// Incorporated objects.
-    objects: Vec<(Object2dInner, Object3dInner, Option<Style3d>)>,
+    objects: Vec<(Object2dInner, Option<Style3d>)>,
 }
 
 impl Occluder {
@@ -24,11 +22,11 @@ impl Occluder {
 
         match (&incoming, &existing) {
             // points can/should be occluded, not handled yet.
-            (Object2dInner::Point(_), _) | (_, Object2dInner::Point(_)) => {
+            (Object2dInner::Point(_), _) => {
                 unimplemented!("no support for points yet")
             }
             // chars are points, see above.
-            (Object2dInner::Char(_), _) | (_, Object2dInner::Char(_)) => {
+            (Object2dInner::Char(_), _) => {
                 unimplemented!("no support for chars yet")
             }
             // groups are not handled yet.
@@ -43,77 +41,70 @@ impl Occluder {
             (Object2dInner::Polygon(pg1), Object2dInner::Polygon(pg2)) => {
                 match pg1.crop_excluding(pg2) {
                     Ok(p) => p.into_iter().map(Object2dInner::from).collect(),
-                    Err(_) => vec![],
+                    Err(e) => {
+                        println!("ERROR: {:?}", e);
+                        vec![]
+                    }
                 }
             }
-            (Object2dInner::Polygon(pg), Object2dInner::Segment(sg))
-            | (Object2dInner::Segment(sg), Object2dInner::Polygon(pg)) => {
-                let is_collision = pg
-                    .intersects_segment_detailed(&sg)
-                    .iter()
-                    .any(|isxn_result| match isxn_result {
-                        IsxnResult::MultipleIntersections(_) => false,
-                        IsxnResult::OneIntersection(isxn) => {
-                            if isxn.on_points_of_either() {
-                                false
-                            } else {
-                                true
-                            }
-                        }
-                    });
-                if is_collision {
-                    sg.crop_excluding(pg)
-                        .expect("crop failed")
-                        .into_iter()
-                        .map(|sg| Object2dInner::from(sg))
-                        .collect()
-                } else {
-                    vec![incoming.clone()]
-                }
+            (Object2dInner::Segment(_sg), Object2dInner::Polygon(_pg)) => {
+                unimplemented!("no support for pg x sg yet");
+                // let is_collision = pg
+                //     .intersects_segment_detailed(&sg)
+                //     .iter()
+                //     .any(|isxn_result| match isxn_result {
+                //         IsxnResult::MultipleIntersections(_) => false,
+                //         IsxnResult::OneIntersection(isxn) => {
+                //             if isxn.on_points_of_either() {
+                //                 false
+                //             } else {
+                //                 true
+                //             }
+                //         }
+                //     });
+                // if is_collision {
+                //     sg.crop_excluding(pg)
+                //         .expect("crop failed")
+                //         .into_iter()
+                //         .map(|sg| Object2dInner::from(sg))
+                //         .collect()
+                // } else {
+                //     vec![incoming.clone()]
+                // }
             }
-            (Object2dInner::Segment(sg1), Object2dInner::Segment(sg2)) => {
-                let is_collision = match sg1.intersects(&sg2) {
-                    None => false,
-                    Some(IsxnResult::MultipleIntersections(_)) => false,
-                    Some(IsxnResult::OneIntersection(isxn)) => !isxn.on_points_of_either(),
-                };
-                if is_collision {
-                    // TODO(ambuc): implement cropping here
-                    unimplemented!("have not yet implemented 3d sg/sg crop");
-                } else {
-                    vec![incoming.clone()]
-                }
+
+            //
+            // you can't hide something behind a segment or a point or a char. don't be daft.
+            (
+                incoming,
+                Object2dInner::Segment(_) | Object2dInner::Point(_) | Object2dInner::Char(_),
+            ) => {
+                vec![(**incoming).clone()]
             }
         }
     }
 
     /// Incorporates an object.
-    pub fn add(
-        &mut self,
-        incoming_obj2: Object2dInner,
-        incoming_obj3: Object3dInner,
-        _style3d: Option<Style3d>,
-    ) {
-        // if the collision is parallel, don't crop.
-        // if the collision exists at a point, don't crop.
-        // otherwise, there is a collision!
-
-        let resultants = self.objects.iter().fold(
-            // One incoming object.
-            vec![incoming_obj2],
-            // a set of incoming (reduced) objects, and a single existing object.
-            |acc, (existing_obj2, _, _)| -> Vec<Object2dInner> {
-                acc.into_iter()
-                    .map(|reduced_obj2| Occluder::hide_a_behind_b(&reduced_obj2, &existing_obj2))
-                    .flatten()
-                    .collect::<Vec<_>>()
-            },
-        );
-
-        for new_obj2 in resultants {
+    pub fn add(&mut self, incoming: Object2dInner, style3d: Option<Style3d>) {
+        self.objects.extend(
             self.objects
-                .push((new_obj2, incoming_obj3.clone(), _style3d));
-        }
+                .iter()
+                .fold(
+                    // One incoming object.
+                    vec![incoming],
+                    // a set of incoming (reduced) objects, and a single existing object.
+                    |acc, (existing, _)| -> Vec<Object2dInner> {
+                        acc.into_iter()
+                            .map(|reduced: Object2dInner| {
+                                Occluder::hide_a_behind_b(&reduced, &existing)
+                            })
+                            .flatten()
+                            .collect()
+                    },
+                )
+                .into_iter()
+                .map(|o: Object2dInner| (o, style3d)),
+        );
     }
 
     /// Exports the occluded 2d objects.
@@ -121,21 +112,15 @@ impl Occluder {
         // we store them front-to-back, but we want to render them to svg back-to-front.
         self.objects.reverse();
 
-        let mut resultant = vec![];
-
-        for (doi, _, style) in self.objects {
-            let o: Object2d = match style {
-                None => Object2d::new(doi),
-                Some(Style3d { color, thickness }) => Object2d::new(doi)
-                    .with_color(color)
-                    .with_thickness(thickness),
-            };
-            resultant.push(o.clone());
-
-            //   let aos = o.annotate();
-            //   resultant.extend(aos);
-        }
-
-        resultant
+        self.objects
+            .into_iter()
+            .map(|(obj, style)| {
+                let mut o = Object2d::new(obj);
+                if let Some(Style3d { color, thickness }) = style {
+                    o = o.with_color(color).with_thickness(thickness);
+                }
+                o
+            })
+            .collect()
     }
 }

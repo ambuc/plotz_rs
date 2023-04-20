@@ -22,7 +22,9 @@ pub struct DebugSettings {
     /// A style for drawing wireframes, if configured.
     #[builder(default, setter(strip_option))]
     draw_wireframes: Option<Style3d>,
+
     /// Whether or not to annotate everything.
+    #[builder(default)]
     should_annotate: bool,
 }
 
@@ -31,6 +33,7 @@ pub struct DebugSettings {
 pub struct Scene {
     /// Some objects.
     objects: Vec<Object3d>,
+
     /// Some debug settings.
     #[builder(default, setter(strip_option))]
     debug: Option<DebugSettings>,
@@ -49,13 +52,12 @@ impl Scene {
     pub fn project_with(&self, projection: Projection, occlusion: Occlusion) -> Vec<Object2d> {
         let mut resultant: Vec<Object2d> = vec![];
         match (projection, occlusion) {
-            //
             (Projection::Oblique(obl), Occlusion::False) => {
                 resultant.extend(self.objects.iter().map(|obj| obj.project_oblique(&obl)))
             }
-            //
+
             (Projection::Oblique(obl), Occlusion::True) => {
-                let view_vector = Pt3d(-1.0, -1.0, -1.0);
+                let view_vector = Pt3d(-2.0, -1.0, -1.0);
 
                 let mut occ = Occluder::new();
 
@@ -82,7 +84,7 @@ impl Scene {
                         }
                     }
 
-                    occ.add(obj2.inner, obj3.inner.clone(), obj3.style.clone());
+                    occ.add(obj2.inner, obj3.style.clone());
                 }
 
                 resultant.extend(occ.export());
