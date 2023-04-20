@@ -69,7 +69,7 @@ fn main() {
             let e = 0.7;
             // use rand::Rng;
             // let mut rng = rand::thread_rng();
-            let n = 3;
+            let n = 2;
             let colors = vec![
                 &RED,
                 &YELLOW,
@@ -164,8 +164,8 @@ fn main() {
         let scene = Scene::builder()
             .debug(
                 DebugSettings::builder()
-                    // .draw_wireframes(Style3d::builder().color(&RED).thickness(0.1).build())
-                    // .should_annotate(true)
+                    .draw_wireframes(Style3d::builder().color(&RED).thickness(0.1).build())
+                    .should_annotate(true)
                     .build(),
             )
             .objects(objects)

@@ -14,6 +14,7 @@ use {
     plotz_geometry::{object2d::Object2d, traits::Annotatable},
     std::fmt::Debug,
     typed_builder::TypedBuilder,
+    tracing::*,
 };
 
 /// Debug settings.
@@ -68,6 +69,7 @@ impl Scene {
                     )
                 }) {
                     let obj2 = obj3.project_oblique(&obl);
+                    info!("Adding {:?}", obj2);
 
                     if let Some(DebugSettings {
                         draw_wireframes,
