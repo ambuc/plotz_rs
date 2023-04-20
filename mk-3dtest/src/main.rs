@@ -1,7 +1,7 @@
 #![allow(unused_imports)]
 
 use itertools::zip;
-use plotz_geometry::traits::AnnotationSettings;
+use plotz_geometry::{object2d_inner::Object2dInner, polygon::Polygon, traits::AnnotationSettings};
 use {
     argh::FromArgs,
     itertools::iproduct,
@@ -68,25 +68,12 @@ fn main() {
 
         {
             let e = 0.7;
-            // use rand::Rng;
-            // let mut rng = rand::thread_rng();
-            let n = 2;
-            let colors = vec![
-                &RED,
-                &YELLOW,
-                &GREEN,
-                &BLUE,
-                &PLUM,
-                &ORANGE,
-                &DARKRED,
-                &BROWN,
-                &DARKGREEN,
-                &DARKBLUE,
-                &DARKORCHID,
-                &DARKORANGE,
-            ];
+            //use rand::Rng;
+            //let mut rng = rand::thread_rng();
+            let n = 3;
+            let colors = vec![&RED, &YELLOW, &GREEN, &BLUE, &PLUM, &ORANGE];
             for ((i, j), color) in zip(iproduct!(0..n, 0..n), colors.iter().cycle()) {
-                // let zh = rng.gen_range(0.5..=3.0);
+                //let zh = rng.gen_range(0.5..=3.0);
                 let zh = 1.0;
                 objects.extend(
                     Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, zh))
@@ -100,73 +87,11 @@ fn main() {
             }
         }
 
-        // {
-        //     // objects.extend(
-        //     //     Cube(Pt3d(0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
-        //     //         .items
-        //     //         .into_iter()
-        //     //         .map(|face| {
-        //     //             Object3d::new(face).with_style(Style3d::builder().thickness(2.0).build())
-        //     //         }),
-        //     // );
-        //     let style = Style3d::builder().thickness(2.0).build();
-        //     // objects.push(
-        //     //     Object3d::new(Face::from(Polygon3d([
-        //     //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 0.0, 0.0),
-        //     //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 1.0, 0.0),
-        //     //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 1.0, 1.0),
-        //     //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 0.0, 1.0),
-        //     //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 0.0, 0.0),
-        //     //     ])))
-        //     //     .with_style(style),
-        //     // );
-        //     objects.extend(
-        //         Cube(Pt3d(0.0, 1.3, 0.0), (1.0, 1.0, 1.0))
-        //             .items
-        //             .into_iter()
-        //             .map(|face| Object3d::new(face).with_style(style)),
-        //     );
-        //     objects.extend(
-        //         Cube(Pt3d(0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
-        //             .items
-        //             .into_iter()
-        //             .map(|face| Object3d::new(face).with_style(style)),
-        //     );
-        // }
-
-        // {
-        //     let o = Pt3d(0.0, 0.0, 0.0);
-
-        //     let f1 = Face::from(Polygon3d([
-        //         o,
-        //         o + Pt3d(0.0, 1.0, 0.0),
-        //         o + Pt3d(0.0, 1.0, 1.0),
-        //         o + Pt3d(0.0, 0.0, 1.0),
-        //         o,
-        //     ]));
-        //     objects.push(Object3d::new(f1.clone() + Pt3d(0.0, 0.0, 0.0)).with_color(&RED));
-        //     objects.push(Object3d::new(f1.clone() + Pt3d(0.3, 0.0, 0.0)).with_color(&ORANGE));
-        //     objects.push(Object3d::new(f1.clone() + Pt3d(0.6, 0.0, 0.0)).with_color(&YELLOW));
-        //     objects.push(Object3d::new(f1.clone() + Pt3d(0.9, 0.0, 0.0)).with_color(&GREEN));
-        //     objects.push(Object3d::new(f1.clone() + Pt3d(1.2, 0.0, 0.0)).with_color(&BLUE));
-        // }
-
-        // Triangle.
-        // objects.push(
-        //     Object3d::new(Polygon3d([
-        //         origin_3d + Pt3d(0.5, 0.0, 0.0),
-        //         origin_3d + Pt3d(0.0, 0.5, 0.0),
-        //         origin_3d + Pt3d(0.0, 0.0, 0.5),
-        //         origin_3d + Pt3d(0.5, 0.0, 0.0),
-        //     ]))
-        //     .with_style(Style3d::builder().color(&POWDERBLUE).thickness(2.0).build()),
-        // );
-
         let scene = Scene::builder()
             .debug(
                 DebugSettings::builder()
-                    .draw_wireframes(Style3d::builder().color(&RED).thickness(0.1).build())
-                    .annotate(AnnotationSettings::builder().font_size(12.0).build())
+                    // .draw_wireframes(Style3d::builder().color(&RED).thickness(0.1).build())
+                    // .annotate(AnnotationSettings::builder().font_size(12.0).build())
                     .build(),
             )
             .objects(objects)

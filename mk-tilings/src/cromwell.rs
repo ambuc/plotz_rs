@@ -1,5 +1,7 @@
 // https://tilings.math.uni-bielefeld.de/substitution/cromwell-kite-rhombus-trapezium/
 
+use plotz_geometry::polygon::TryPolygon;
+
 use {
     plotz_color::*,
     plotz_geometry::{
@@ -287,7 +289,7 @@ pub fn make() -> Vec<Object2d> {
         .into_iter()
         .flat_map(|tile| {
             let color = tile.color();
-            let mut p = Polygon(tile.pts()).unwrap();
+            let mut p = TryPolygon(tile.pts()).unwrap();
             p *= Pt(1.0, -1.0); // flip
             p *= 3500.0;
             p += Pt(95.0, -300.0); // translate

@@ -1,5 +1,7 @@
 // https://tilings.math.uni-bielefeld.de/substitution/danzers-7-fold-original/
 
+use plotz_geometry::polygon::TryPolygon;
+
 use {
     float_cmp::assert_approx_eq,
     lazy_static::lazy_static,
@@ -248,7 +250,7 @@ pub fn make() -> Vec<Object2d> {
         .flat_map(|tile| {
             let color = tile.kind.color();
 
-            let p = Polygon(tile.pts).unwrap();
+            let p = TryPolygon(tile.pts).unwrap();
 
             let config = ShadeConfig::builder()
                 .gap(1.0)

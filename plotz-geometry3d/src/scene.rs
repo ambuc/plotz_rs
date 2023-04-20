@@ -1,8 +1,6 @@
 //! A scene, i.e. a holder for 3d objects ready to be projected down onto a 2d
 //! plane.
 
-use plotz_geometry::traits::AnnotationSettings;
-
 use {
     crate::{
         camera::{Occlusion, Projection},
@@ -13,7 +11,11 @@ use {
     },
     float_ord::FloatOrd,
     itertools::Itertools,
-    plotz_geometry::{object2d::Object2d, traits::Annotatable},
+    plotz_color::*,
+    plotz_geometry::{
+        object2d::Object2d, point::Pt, polygon::Polygon, traits::Annotatable,
+        traits::AnnotationSettings,
+    },
     std::fmt::Debug,
     tracing::*,
     typed_builder::TypedBuilder,
@@ -61,9 +63,9 @@ impl Scene {
             (Projection::Oblique(obl), Occlusion::True) => {
                 let mut resultant = vec![];
 
+                // // add objects to the occluder in distance order.
+                let mut unmodified = vec![];
                 let mut occ = Occluder::new();
-
-                // add objects to the occluder in distance order.
                 for obj3 in self.objects.iter().sorted_by(|o1, o2| {
                     Ord::cmp(
                         &FloatOrd(o1.min_dist_along(&obl.view_vector)),
@@ -71,7 +73,7 @@ impl Scene {
                     )
                 }) {
                     let obj2 = obj3.project_oblique(&obl);
-                    info!("Adding {:?}", obj2);
+                    unmodified.push(obj2.clone());
 
                     if let Some(DebugSettings {
                         draw_wireframes,
@@ -89,6 +91,41 @@ impl Scene {
 
                     occ.add(obj2.inner, obj3.style.clone());
                 }
+                // dbg!(&unmodified);
+
+                // // // MINIMAL EXAMPLE !!!!
+                // occ = Occluder::new();
+                // for obj2 in vec![
+                //    Object2d::new(Polygon([Pt(0.7000000000,0.8900000000), Pt(0.0000000000,1.3800000000), Pt(-0.7000000000,0.8900000000), Pt(0.0000000000,0.4000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(0.0000000000,2.3800000000), Pt(0.0000000000,1.3800000000), Pt(0.7000000000,0.8900000000), Pt(0.7000000000,1.8900000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(-0.7000000000,0.8900000000), Pt(0.0000000000,1.3800000000), Pt(0.0000000000,2.3800000000), Pt(-0.7000000000,1.8900000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(0.0000000000,0.4000000000), Pt(0.7000000000,0.8900000000), Pt(0.7000000000,1.8900000000), Pt(0.0000000000,1.4000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(0.0000000000,1.4000000000), Pt(-0.7000000000,1.8900000000), Pt(-0.7000000000,0.8900000000), Pt(0.0000000000,0.4000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(0.7000000000,1.8900000000), Pt(0.0000000000,2.3800000000), Pt(-0.7000000000,1.8900000000), Pt(0.0000000000,1.4000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(-0.3000000000,0.1900000000), Pt(-1.0000000000,0.6800000000), Pt(-1.7000000000,0.1900000000), Pt(-1.0000000000,-0.3000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(-1.0000000000,1.6800000000), Pt(-1.0000000000,0.6800000000), Pt(-0.3000000000,0.1900000000), Pt(-0.3000000000,1.1900000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(-1.7000000000,0.1900000000), Pt(-1.0000000000,0.6800000000), Pt(-1.0000000000,1.6800000000), Pt(-1.7000000000,1.1900000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(-1.0000000000,-0.3000000000), Pt(-0.3000000000,0.1900000000), Pt(-0.3000000000,1.1900000000), Pt(-1.0000000000,0.7000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(-1.0000000000,0.7000000000), Pt(-1.7000000000,1.1900000000), Pt(-1.7000000000,0.1900000000), Pt(-1.0000000000,-0.3000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(-0.3000000000,1.1900000000), Pt(-1.0000000000,1.6800000000), Pt(-1.7000000000,1.1900000000), Pt(-1.0000000000,0.7000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(1.7000000000,0.1900000000), Pt(1.0000000000,0.6800000000), Pt(0.3000000000,0.1900000000), Pt(1.0000000000,-0.3000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(1.0000000000,1.6800000000), Pt(1.0000000000,0.6800000000), Pt(1.7000000000,0.1900000000), Pt(1.7000000000,1.1900000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(0.3000000000,0.1900000000), Pt(1.0000000000,0.6800000000), Pt(1.0000000000,1.6800000000), Pt(0.3000000000,1.1900000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(1.0000000000,-0.3000000000), Pt(1.7000000000,0.1900000000), Pt(1.7000000000,1.1900000000), Pt(1.0000000000,0.7000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(1.0000000000,0.7000000000), Pt(0.3000000000,1.1900000000), Pt(0.3000000000,0.1900000000), Pt(1.0000000000,-0.3000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(1.7000000000,1.1900000000), Pt(1.0000000000,1.6800000000), Pt(0.3000000000,1.1900000000), Pt(1.0000000000,0.7000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(0.7000000000,-0.5100000000), Pt(0.0000000000,-0.0200000000), Pt(-0.7000000000,-0.5100000000), Pt(0.0000000000,-1.0000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(0.0000000000,0.9800000000), Pt(0.0000000000,-0.0200000000), Pt(0.7000000000,-0.5100000000), Pt(0.7000000000,0.4900000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(-0.7000000000,-0.5100000000), Pt(0.0000000000,-0.0200000000), Pt(0.0000000000,0.9800000000), Pt(-0.7000000000,0.4900000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(0.0000000000,-1.0000000000), Pt(0.7000000000,-0.5100000000), Pt(0.7000000000,0.4900000000), Pt(0.0000000000,0.0000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(0.0000000000,0.0000000000), Pt(-0.7000000000,0.4900000000), Pt(-0.7000000000,-0.5100000000), Pt(0.0000000000,-1.0000000000)])).with_color(&RED).with_thickness(3.0),
+                //    Object2d::new(Polygon([Pt(0.7000000000,0.4900000000), Pt(0.0000000000,0.9800000000), Pt(-0.7000000000,0.4900000000), Pt(0.0000000000,0.0000000000)])).with_color(&RED).with_thickness(3.0),
+                // ] {
+                //     occ.add(
+                //         obj2.inner,
+                //         Some(Style3d::builder().color(obj2.color).build()),
+                //     );
+                // }
 
                 resultant.extend(occ.export());
                 resultant

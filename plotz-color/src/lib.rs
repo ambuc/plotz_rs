@@ -22,13 +22,13 @@ pub struct ColorRGB {
 
 impl Debug for ColorRGB {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let ColorRGB { r, g, b } = self;
-        write!(f, "({:.1},{:.1},{:.1})", r, g, b)
+        write!(f, "&RED")
     }
 }
 
 #[allow(non_snake_case)]
-const fn ColorRGB(r: f64, g: f64, b: f64) -> ColorRGB {
+/// new color.
+pub const fn ColorRGB(r: f64, g: f64, b: f64) -> ColorRGB {
     ColorRGB { r, g, b }
 }
 

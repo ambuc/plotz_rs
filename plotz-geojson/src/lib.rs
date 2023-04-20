@@ -3,6 +3,8 @@
 //! A crate for reading GeoJSON files and parsing them to plotz_geometry
 //! structs.
 
+use plotz_geometry::polygon::TryPolygon;
+
 use {
     plotz_geometry::{
         object2d_inner::Object2dInner,
@@ -182,7 +184,7 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Object2dInner>, GeoJsonCo
         .expect("not array")
         .iter()
         .map(|points_list| {
-            Polygon(points_list.as_array().expect("not array").iter().map(|p| {
+            TryPolygon(points_list.as_array().expect("not array").iter().map(|p| {
                 Pt(
                     p[0].as_f64().expect("value not f64"),
                     p[1].as_f64().expect("value not f64"),
@@ -240,7 +242,7 @@ mod tests {
         assert_eq!(
             parse_to_polygon(&geojson).unwrap(),
             vec![Object2dInner::from(
-                Polygon([
+                TryPolygon([
                     Pt(-74.015_651_1, 40.721_544_6),
                     Pt(-74.015_493_9, 40.721_526_2),
                     Pt(-74.014_280_9, 40.721_384_4),
@@ -286,7 +288,7 @@ mod tests {
         assert_eq!(polygons.len(), 4);
         assert_eq!(
             polygons[0].0,
-            Object2dInner::from(Polygon([Pt(0, 0), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
+            Object2dInner::from(TryPolygon([Pt(0, 0), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
         );
 
         // assert_symbol_tuple_list(
@@ -316,12 +318,12 @@ mod tests {
 
         assert_eq!(
             polygons[2].0,
-            Object2dInner::from(Polygon([Pt(2, 2), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
+            Object2dInner::from(TryPolygon([Pt(2, 2), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
         );
 
         assert_eq!(
             polygons[3].0,
-            Object2dInner::from(Polygon([Pt(3, 3), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
+            Object2dInner::from(TryPolygon([Pt(3, 3), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
         );
     }
 }

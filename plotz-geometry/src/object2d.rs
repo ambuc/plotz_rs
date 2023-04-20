@@ -37,10 +37,18 @@ impl Debug for Object2d {
             color,
             thickness,
         } = self;
+        let inner_fmt = match inner {
+            Object2dInner::Point(p) => format!("{:?}", p),
+            Object2dInner::Polygon(pg) => format!("{:?}", pg),
+            Object2dInner::Segment(sg) => format!("{:?}", sg),
+            Object2dInner::CurveArc(ca) => format!("{:?}", ca),
+            Object2dInner::Char(ch) => format!("{:?}", ch),
+            Object2dInner::Group(g) => format!("{:?}", g),
+        };
         write!(
             f,
-            "inner={:?} color={:?} thickness={:?}",
-            inner, color, thickness
+            "Object2d::new({}).with_color({:?}).with_thickness({:?})",
+            inner_fmt, color, thickness
         )
     }
 }

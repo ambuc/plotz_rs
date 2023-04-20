@@ -73,6 +73,9 @@ impl Object3d {
 impl Debug for Object3d {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Object3d { inner, style } = self;
-        write!(f, "inner={:?} style={:?}", inner, style)
+        match style {
+            Some(style) => write!(f, "Object3d::new({:?}).with_style({:?})", inner, style),
+            None => write!(f, "Object3d::new({:?})", inner),
+        }
     }
 }

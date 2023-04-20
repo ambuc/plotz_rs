@@ -1,20 +1,20 @@
 //! Crop logic for polygons.
 
-use petgraph::Direction;
-
 use {
+    super::TryPolygon,
     crate::{
         crop::{CropType, PointLoc},
         isxn::{Intersection, IsxnResult, Pair, Which},
         point::Pt,
         polygon::Polygon,
     },
-    approx::ulps_eq,
+    approx::*,
     float_ord::FloatOrd,
     itertools::Itertools,
     petgraph::{
-        // dot::{Config, Dot},
         prelude::DiGraphMap,
+        // dot::{Config, Dot},
+        Direction,
         Direction::{Incoming, Outgoing},
     },
     std::fmt::Debug,
@@ -65,8 +65,6 @@ pub struct CropGraph<'a> {
     // known,
     #[builder(default)]
     known_pts: Vec<Pt>,
-
-    crop_type: CropType,
 }
 
 impl<'a> CropGraph<'a> {
@@ -75,8 +73,9 @@ impl<'a> CropGraph<'a> {
         // otherwise insert pt into known_pts and return it.
 
         if let Some(extant) = self.known_pts.iter().find(|extant| {
-            ulps_eq!(extant.x.0, pt.x.0, max_ulps = 10)
-                && ulps_eq!(extant.y.0, pt.y.0, max_ulps = 10)
+            let e = f64::EPSILON * 1_000_000_000.0;
+            relative_eq!(extant.x.0, pt.x.0, epsilon = e)
+                && relative_eq!(extant.y.0, pt.y.0, epsilon = e)
         }) {
             *extant
         } else {
@@ -289,6 +288,9 @@ impl<'a> CropGraph<'a> {
     pub fn extract_polygon(&mut self) -> Option<Polygon> {
         let mut pts: Vec<Pt> = vec![];
 
+        // info!("dot before extract:");
+        // println!( "{:?}", Dot::with_config(&self.graph, &[Config::EdgeNoLabel]));
+
         if self.nodes_count() == 0 {
             return None;
         }
@@ -309,8 +311,9 @@ impl<'a> CropGraph<'a> {
                     _ => match (self.a.pts.contains(&i), self.a.pts.contains(&j)) {
                         (true, _) => Some(i),
                         (_, true) => Some(j),
-                        _ => {
-                            warn!("hit a weird dead end.");
+                        x => {
+                            warn!("hit a weird dead end: {:?}", x);
+                            println!("DEAD END");
                             None
                         }
                     },
@@ -340,7 +343,7 @@ impl<'a> CropGraph<'a> {
         self.remove_nodes_with_no_neighbors_of_kind(Direction::Incoming);
         self.remove_nodes_with_no_neighbors_of_kind(Direction::Outgoing);
 
-        Polygon(pts).ok()
+        TryPolygon(pts).ok()
     }
 
     pub fn as_resultant_polygons(mut self) -> Vec<Polygon> {

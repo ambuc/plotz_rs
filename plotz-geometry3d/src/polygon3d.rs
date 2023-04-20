@@ -3,6 +3,7 @@
 use std::fmt::Debug;
 
 use float_ord::FloatOrd;
+use plotz_geometry::polygon::TryPolygon;
 
 use {
     crate::{camera::Oblique, point3d::Pt3d},
@@ -20,14 +21,14 @@ pub struct Polygon3d {
 impl Debug for Polygon3d {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Polygon3d { pts } = self;
-        write!(f, "pts={:?}", pts)
+        write!(f, "Polygon3d({:?})", pts)
     }
 }
 
 impl Polygon3d {
     /// Project oblique
     pub fn project_oblique(&self, oblique_projection: &Oblique) -> Polygon {
-        Polygon(
+        TryPolygon(
             self.pts
                 .iter()
                 .map(|pt3d| oblique_projection.project(&pt3d))

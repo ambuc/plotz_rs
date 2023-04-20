@@ -17,6 +17,12 @@ pub struct Face {
     pub pg3d: Polygon3d,
 }
 
+/// Face constructor.
+#[allow(non_snake_case)]
+pub fn Face(pg3d: Polygon3d) -> Face {
+    Face { pg3d }
+}
+
 impl Debug for Face {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Face { pg3d } = self;

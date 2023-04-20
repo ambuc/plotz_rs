@@ -1,3 +1,5 @@
+use plotz_geometry::polygon::TryPolygon;
+
 use {
     argh::FromArgs,
     plotz_color::{ColorRGB, *},
@@ -87,7 +89,7 @@ fn main() {
     let polygons: Vec<Polygon> = vornoi
         .iter_cells()
         .map(|cell| {
-            Polygon(cell.iter_vertices().map(|vertex| Pt(vertex.x, vertex.y)))
+            TryPolygon(cell.iter_vertices().map(|vertex| Pt(vertex.x, vertex.y)))
                 .expect("valid polygon")
                 * DIM
                 + Pt(20.0, 20.0)

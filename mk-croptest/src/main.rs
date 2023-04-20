@@ -1,3 +1,5 @@
+use plotz_geometry::polygon::TryPolygon;
+
 use {
     argh::FromArgs,
     itertools::iproduct,
@@ -49,7 +51,7 @@ fn main() {
             .build(),
     );
 
-    let f = 15.0;
+    let f = 10.0;
     for (idx, offset) in iproduct!(0..=5, 0..=4)
         .map(|(i, j)| ((i, j), Pt((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
     // .filter(|(idx, _)| *idx == (2, 2))
@@ -85,7 +87,7 @@ fn main() {
         let l = Pt(60.0, 110.0);
         let pts = [a, b, c, d, e, f, g, h, i, j, k, l, a];
 
-        let subject_sq = Object2d::new(Polygon(pts).unwrap())
+        let subject_sq = Object2d::new(TryPolygon(pts).unwrap())
             .with_color(&RED)
             .with_thickness(1.0)
             + offset;

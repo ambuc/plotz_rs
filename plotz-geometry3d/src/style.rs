@@ -26,6 +26,10 @@ impl Style3d {
 impl Debug for Style3d {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Style3d { color, thickness } = self;
-        write!(f, "color={:?} thickness={:?}", color, thickness)
+        write!(
+            f,
+            "Style3d::builder().color({:?}).thickness({:?}).build()",
+            color, thickness
+        )
     }
 }

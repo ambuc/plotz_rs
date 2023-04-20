@@ -22,12 +22,13 @@ impl Oblique {
     /// (1,1,1), with x going down-and-to-the-left, y going
     /// down-and-to-the-right, and z going straight up.
     pub fn standard() -> Oblique {
+        let spread = 0.8;
         Oblique {
             u_src: Pt3d(1.0, 0.0, 0.0),
             v_src: Pt3d(0.0, 1.0, 0.0),
             w_src: Pt3d(0.0, 0.0, 1.0),
-            u_dst: Pt(-1.0, 0.7),
-            v_dst: Pt(1.0, 0.7),
+            u_dst: Pt(-1.0, spread),
+            v_dst: Pt(1.0, spread),
             w_dst: Pt(0.0, -1.0),
             view_vector: Pt3d(-1.0, -1.0, -1.3),
         }
