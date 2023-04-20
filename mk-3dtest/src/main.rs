@@ -67,14 +67,26 @@ fn main() {
 
         {
             let e = 0.7;
-            use rand::Rng;
-            let mut rng = rand::thread_rng();
-            for ((i, j), color) in zip(
-                iproduct!(0..3, 0..3),
-                vec![&RED, &YELLOW, &GREEN, &BLUE].iter().cycle(),
-            ) {
-                let zh = rng.gen_range(0.5..=3.0);
-                //let zh = 0.8;
+            // use rand::Rng;
+            // let mut rng = rand::thread_rng();
+            let n = 3;
+            let colors = vec![
+                &RED,
+                &YELLOW,
+                &GREEN,
+                &BLUE,
+                &PLUM,
+                &ORANGE,
+                &DARKRED,
+                &BROWN,
+                &DARKGREEN,
+                &DARKBLUE,
+                &DARKORCHID,
+                &DARKORANGE,
+            ];
+            for ((i, j), color) in zip(iproduct!(0..n, 0..n), colors.iter().cycle()) {
+                // let zh = rng.gen_range(0.5..=3.0);
+                let zh = 1.0;
                 objects.extend(
                     Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, zh))
                         .items

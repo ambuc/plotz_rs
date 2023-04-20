@@ -60,6 +60,14 @@ impl Object3d {
     pub fn dist_along(&self, view_vector: &Pt3d) -> f64 {
         self.inner.dist_along(view_vector)
     }
+    /// The maximum distance of this object, projected along the view vector.
+    pub fn max_dist_along(&self, view_vector: &Pt3d) -> f64 {
+        self.inner.max_dist_along(view_vector)
+    }
+    /// The minimum distance of this object, projected along the view vector.
+    pub fn min_dist_along(&self, view_vector: &Pt3d) -> f64 {
+        self.inner.min_dist_along(view_vector)
+    }
 }
 
 impl Debug for Object3d {

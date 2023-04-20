@@ -2,6 +2,8 @@
 
 use std::fmt::Debug;
 
+use float_ord::FloatOrd;
+
 use {
     crate::{camera::Oblique, point3d::Pt3d},
     plotz_geometry::polygon::Polygon,
@@ -46,6 +48,24 @@ impl Polygon3d {
     /// The center of the object, projected along the view vector.
     pub fn dist_along(&self, view_vector: &Pt3d) -> f64 {
         view_vector.dot(&self.average_pt())
+    }
+    /// the minimum distance along a vector.
+    pub fn min_dist_along(&self, view_vector: &Pt3d) -> f64 {
+        self.pts
+            .iter()
+            .map(|pt| FloatOrd(view_vector.dot(&pt)))
+            .min()
+            .unwrap()
+            .0
+    }
+    /// the maximum distance along a vector.
+    pub fn max_dist_along(&self, view_vector: &Pt3d) -> f64 {
+        self.pts
+            .iter()
+            .map(|pt| FloatOrd(view_vector.dot(&pt)))
+            .max()
+            .unwrap()
+            .0
     }
 }
 

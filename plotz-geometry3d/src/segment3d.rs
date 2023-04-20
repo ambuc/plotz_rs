@@ -1,4 +1,6 @@
 //! A segment in 3d.
+
+use float_ord::FloatOrd;
 use {
     crate::{camera::Oblique, point3d::Pt3d},
     plotz_geometry::segment::Segment,
@@ -53,6 +55,24 @@ impl Segment3d {
     /// The center of the object, projected along the view vector.
     pub fn dist_along(&self, view_vector: &Pt3d) -> f64 {
         self.average_pt().dot(view_vector)
+    }
+    /// the maximum distance along a vector.
+    pub fn max_dist_along(&self, view_vector: &Pt3d) -> f64 {
+        [self.i, self.f]
+            .iter()
+            .map(|pt| FloatOrd(view_vector.dot(pt)))
+            .max()
+            .unwrap()
+            .0
+    }
+    /// the minimum distance along a vector.
+    pub fn min_dist_along(&self, view_vector: &Pt3d) -> f64 {
+        [self.i, self.f]
+            .iter()
+            .map(|pt| FloatOrd(view_vector.dot(pt)))
+            .min()
+            .unwrap()
+            .0
     }
 }
 

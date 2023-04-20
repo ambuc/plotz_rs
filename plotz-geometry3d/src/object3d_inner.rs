@@ -44,4 +44,20 @@ impl Object3dInner {
             Object3dInner::Face(face) => face.pg3d.dist_along(view_vector),
         }
     }
+    /// The maximum distance of the object, projected along the view vector.
+    pub fn max_dist_along(&self, view_vector: &Pt3d) -> f64 {
+        match self {
+            Object3dInner::Polygon3d(pg3d) => pg3d.max_dist_along(view_vector),
+            Object3dInner::Segment3d(sg3d) => sg3d.max_dist_along(view_vector),
+            Object3dInner::Face(face) => face.pg3d.max_dist_along(view_vector),
+        }
+    }
+    /// The minimum distance of the object, projected along the view vector.
+    pub fn min_dist_along(&self, view_vector: &Pt3d) -> f64 {
+        match self {
+            Object3dInner::Polygon3d(pg3d) => pg3d.min_dist_along(view_vector),
+            Object3dInner::Segment3d(sg3d) => sg3d.min_dist_along(view_vector),
+            Object3dInner::Face(face) => face.pg3d.min_dist_along(view_vector),
+        }
+    }
 }

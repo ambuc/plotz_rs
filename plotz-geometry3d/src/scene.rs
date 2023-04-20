@@ -63,8 +63,8 @@ impl Scene {
                 // add objects to the occluder in distance order.
                 for obj3 in self.objects.iter().sorted_by(|o1, o2| {
                     Ord::cmp(
-                        &FloatOrd(o1.dist_along(&obl.view_vector)),
-                        &FloatOrd(o2.dist_along(&obl.view_vector)),
+                        &FloatOrd(o1.min_dist_along(&obl.view_vector)),
+                        &FloatOrd(o2.max_dist_along(&obl.view_vector)),
                     )
                 }) {
                     let obj2 = obj3.project_oblique(&obl);
