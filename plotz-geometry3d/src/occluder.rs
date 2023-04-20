@@ -1,7 +1,9 @@
 //! Occludes things. Cmon.
 
+use plotz_color::*;
 use plotz_geometry::{
     crop::Croppable, isxn::IsxnResult, object2d::Object2d, object2d_inner::Object2dInner,
+    traits::Annotatable,
 };
 
 use crate::{object3d_inner::Object3dInner, style::Style3d};
@@ -104,26 +106,21 @@ impl Occluder {
         // if the collision exists at a point, don't crop.
         // otherwise, there is a collision!
 
-        self.objects
-            .iter()
-            .fold(
-                // One incoming object.
-                vec![incoming_obj2],
-                // a set of incoming (reduced) objects, and a single existing object.
-                |acc, (existing_obj2, _, _)| -> Vec<Object2dInner> {
-                    acc.into_iter()
-                        .map(|reduced_obj2| {
-                            Occluder::hide_a_behind_b(&reduced_obj2, &existing_obj2)
-                        })
-                        .flatten()
-                        .collect::<Vec<_>>()
-                },
-            )
-            .into_iter()
-            .for_each(|new_obj2| {
-                self.objects
-                    .push((new_obj2, incoming_obj3.clone(), _style3d));
-            });
+        let resultants = self.objects.iter().fold(
+            // One incoming object.
+            vec![incoming_obj2],
+            // a set of incoming (reduced) objects, and a single existing object.
+            |acc, (existing_obj2, _, _)| -> Vec<Object2dInner> {
+                acc.into_iter()
+                    .map(|reduced_obj2| Occluder::hide_a_behind_b(&reduced_obj2, &existing_obj2))
+                    .flatten()
+                    .collect::<Vec<_>>()
+            },
+        );
+        for new_obj2 in resultants {
+            self.objects
+                .push((new_obj2, incoming_obj3.clone(), _style3d));
+        }
     }
 
     /// Exports the occluded 2d objects.
@@ -131,14 +128,21 @@ impl Occluder {
         // we store them front-to-back, but we want to render them to svg back-to-front.
         self.objects.reverse();
 
-        self.objects
-            .into_iter()
-            .map(|(doi, _, style)| match style {
+        let mut resultant = vec![];
+
+        for (doi, _, style) in self.objects {
+            let o: Object2d = match style {
                 None => Object2d::new(doi),
                 Some(Style3d { color, thickness }) => Object2d::new(doi)
                     .with_color(color)
                     .with_thickness(thickness),
-            })
-            .collect()
+            };
+            resultant.push(o.clone());
+
+            //   let aos = o.annotate();
+            //   resultant.extend(aos);
+        }
+
+        resultant
     }
 }

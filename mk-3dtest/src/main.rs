@@ -55,19 +55,45 @@ fn main() {
         // objects.extend(axes);
 
         {
-            let e = 0.7;
-            for (i, j) in iproduct!(0..1, 0..2) {
+            let e = 0.8;
+            for (i, j) in iproduct!(0..3, 0..4) {
                 objects.extend(
                     Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, e))
                         .items
                         .into_iter()
                         .map(|face| {
                             Object3d::new(face)
-                                .with_style(Style3d::builder().color(&PINK).thickness(1.0).build())
+                                .with_style(Style3d::builder().color(&GREEN).thickness(3.0).build())
                         }),
                 );
             }
         }
+
+        // {
+        //     // objects.extend(
+        //     //     Cube(Pt3d(0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+        //     //         .items
+        //     //         .into_iter()
+        //     //         .map(|face| {
+        //     //             Object3d::new(face).with_style(Style3d::builder().thickness(2.0).build())
+        //     //         }),
+        //     // );
+        //     objects.push(Object3d::new(Face::from(Polygon3d([
+        //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 0.0, 0.0),
+        //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 1.0, 0.0),
+        //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 1.0, 1.0),
+        //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 0.0, 1.0),
+        //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 0.0, 0.0),
+        //     ]))));
+        //     objects.extend(
+        //         Cube(Pt3d(1.5, 0.0, 0.0), (1.0, 1.0, 1.0))
+        //             .items
+        //             .into_iter()
+        //             .map(|face| {
+        //                 Object3d::new(face).with_style(Style3d::builder().thickness(2.0).build())
+        //             }),
+        //     );
+        // }
 
         // {
         //     let o = Pt3d(0.0, 0.0, 0.0);

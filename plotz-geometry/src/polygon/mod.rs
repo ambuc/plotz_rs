@@ -425,9 +425,13 @@ impl Croppable for Polygon {
                 crop_graph.remove_nodes_inside_b_or_outside_a();
             }
         }
+        if CropType::Exclusive == crop_type {
+            crop_graph.remove_segments_which_cross_other();
+        }
         crop_graph.remove_stubs();
         crop_graph.remove_back_and_forth();
         crop_graph.remove_acycle_nodes();
+
         if crop_graph.nodes_count() == 0 {
             return Ok(vec![]);
         }
@@ -581,7 +585,7 @@ impl Annotatable for Polygon {
         for (_idx, pt) in self.pts.iter().enumerate() {
             a.push(Object2d::new(Txt {
                 pt: *pt,
-                inner: format!("{}x{}", pt.x.0, pt.y.0),
+                inner: format!("{:?}", pt),
             }));
         }
 

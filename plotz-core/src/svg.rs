@@ -59,7 +59,7 @@ fn write_doi_to_context(
         }
         Object2dInner::Char(Txt { pt, inner: txt }) => {
             context.select_font_face("serif", cairo::FontSlant::Normal, cairo::FontWeight::Bold);
-            context.set_font_size(5.0);
+            context.set_font_size(10.0);
 
             context.move_to(pt.x.0, pt.y.0);
             context.show_text(txt).expect("show text");

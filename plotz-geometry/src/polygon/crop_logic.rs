@@ -1,6 +1,7 @@
 //! Crop logic for polygons.
 
 use approx::ulps_eq;
+use petgraph::dot::{Config, Dot};
 
 use crate::{
     crop::{CropType, PointLoc},
@@ -265,6 +266,17 @@ impl<'a> CropGraph<'a> {
         self.graph.node_count()
     }
 
+    pub fn remove_segments_which_cross_other(&mut self) {
+        while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
+            matches!(
+                self.b.contains_pt(&edge.0.avg(&edge.1)).expect("contains"),
+                PointLoc::Inside
+            )
+        }) {
+            self.graph.remove_edge(i, j);
+        }
+    }
+
     pub fn extract_polygon(&mut self) -> Option<Polygon> {
         let mut pts: Vec<Pt> = vec![];
 
@@ -311,7 +323,6 @@ impl<'a> CropGraph<'a> {
     }
 
     pub fn to_resultant_polygons(mut self) -> Vec<Polygon> {
-        // use petgraph::dot::{Config, Dot};
         // println!(
         //     "{:?}",
         //     Dot::with_config(&self.graph, &[Config::EdgeNoLabel])
