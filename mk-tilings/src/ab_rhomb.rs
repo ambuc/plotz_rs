@@ -1,7 +1,5 @@
 // https://tilings.math.uni-bielefeld.de/substitution/ammann-beenker-rhomb-triangle/
 
-use plotz_geometry::polygon::TryPolygon;
-
 use {
     plotz_color::*,
     plotz_geometry::{
@@ -146,7 +144,7 @@ pub fn make() -> Vec<Object2d> {
         .into_iter()
         .flat_map(|tile| {
             let color = tile.color();
-            let mut p = TryPolygon(tile.pts()).unwrap();
+            let mut p = Polygon(tile.pts());
             p *= Pt(1.0, -1.0); // flip
             p *= 530.0;
             p += Pt(-17.0, 240.0); // translate

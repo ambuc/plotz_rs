@@ -539,7 +539,7 @@ fn paths_to_files(
 mod tests {
     use super::*;
     use float_eq::assert_float_eq;
-    use plotz_geometry::{bounded::BoundsCollector, polygon::TryPolygon};
+    use plotz_geometry::bounded::BoundsCollector;
     use tempdir::TempDir;
 
     #[test]
@@ -617,7 +617,7 @@ mod tests {
                 [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
             ),
         ] {
-            let obj = Object2dInner::Polygon(TryPolygon(initial).unwrap());
+            let obj = Object2dInner::Polygon(Polygon(initial));
             let mut map = Map {
                 canvas: {
                     let mut canvas = Canvas::new();
@@ -639,7 +639,7 @@ mod tests {
 
             assert_eq!(
                 x.next().unwrap()[0].inner,
-                Object2dInner::Polygon(TryPolygon(expected).unwrap())
+                Object2dInner::Polygon(Polygon(expected))
             );
         }
     }
@@ -670,7 +670,7 @@ mod tests {
                 [Pt(0.0, 0.0), Pt(0.0, 900.0), Pt(900.0, 0.0)],
             ),
         ] {
-            let obj = Object2dInner::Polygon(TryPolygon(initial).unwrap());
+            let obj = Object2dInner::Polygon(Polygon(initial));
             let mut map = Map {
                 center: None,
                 canvas: {
@@ -692,7 +692,7 @@ mod tests {
 
             assert_eq!(
                 x.next().unwrap()[0].inner,
-                Object2dInner::Polygon(TryPolygon(expected).unwrap())
+                Object2dInner::Polygon(Polygon(expected))
             );
         }
     }

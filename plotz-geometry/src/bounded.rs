@@ -2,7 +2,7 @@
 use crate::{
     crop::{ContainsPointError, PointLoc},
     point::Pt,
-    polygon::{Polygon, PolygonConstructorError, TryPolygon},
+    polygon::{Polygon, PolygonConstructorError},
 };
 use float_ord::FloatOrd;
 
@@ -34,14 +34,13 @@ pub struct Bounds {
 impl Bounds {
     /// Creates a frame, suitable for cropping.
     pub fn to_polygon(&self) -> Polygon {
-        TryPolygon([
+        Polygon([
             self.tl_bound(),
             self.tr_bound(),
             self.br_bound(),
             self.bl_bound(),
             self.tl_bound(),
         ])
-        .expect("failed to create polygon")
     }
     /// Whether or not bounds contain a point.
     pub fn contains_pt(&self, pt: Pt) -> Result<PointLoc, ContainsPointError> {
@@ -203,9 +202,9 @@ mod test_super {
     #[test]
     fn test_streaming_bbox() {
         let polygons = vec![
-            TryPolygon([Pt(0, 0), Pt(1, 0), Pt(1, 1)]).unwrap(),
-            TryPolygon([Pt(2, 0), Pt(3, 0), Pt(3, 1)]).unwrap(),
-            TryPolygon([Pt(0, 2), Pt(1, 2), Pt(1, 3)]).unwrap(),
+            Polygon([Pt(0, 0), Pt(1, 0), Pt(1, 1)]),
+            Polygon([Pt(2, 0), Pt(3, 0), Pt(3, 1)]),
+            Polygon([Pt(0, 2), Pt(1, 2), Pt(1, 3)]),
         ];
         let bounds = streaming_bbox(&polygons).unwrap();
         assert_eq!(bounds.bl_bound(), Pt(0, 0));

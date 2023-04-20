@@ -1,5 +1,3 @@
-use plotz_geometry::polygon::TryPolygon;
-
 use {
     argh::FromArgs,
     plotz_color::*,
@@ -193,7 +191,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<Object2d> {
         ret.extend({
             shade_polygon(
                 &ShadeConfig::builder().gap(0.05).slope(0.0).build(),
-                &TryPolygon([Pt(0.1, 0.1), Pt(0.5, 0.5), Pt(0.9, 0.1)]).unwrap(),
+                &Polygon([Pt(0.1, 0.1), Pt(0.5, 0.5), Pt(0.9, 0.1)]),
             )
             .unwrap()
             .iter()

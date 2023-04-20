@@ -28,13 +28,12 @@ impl Debug for Polygon3d {
 impl Polygon3d {
     /// Project oblique
     pub fn project_oblique(&self, oblique_projection: &Oblique) -> Polygon {
-        TryPolygon(
+        Polygon(
             self.pts
                 .iter()
                 .map(|pt3d| oblique_projection.project(&pt3d))
                 .collect::<Vec<_>>(),
         )
-        .expect("polygon construction failed")
     }
 
     /// The average point of the polygon.

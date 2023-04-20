@@ -241,16 +241,13 @@ mod tests {
         ]]);
         assert_eq!(
             parse_to_polygon(&geojson).unwrap(),
-            vec![Object2dInner::from(
-                TryPolygon([
-                    Pt(-74.015_651_1, 40.721_544_6),
-                    Pt(-74.015_493_9, 40.721_526_2),
-                    Pt(-74.014_280_9, 40.721_384_4),
-                    Pt(-74.014_248_1, 40.721_380_6),
-                    Pt(-74.013_283_1, 40.721_267_8),
-                ])
-                .unwrap()
-            )]
+            vec![Object2dInner::from(Polygon([
+                Pt(-74.015_651_1, 40.721_544_6),
+                Pt(-74.015_493_9, 40.721_526_2),
+                Pt(-74.014_280_9, 40.721_384_4),
+                Pt(-74.014_248_1, 40.721_380_6),
+                Pt(-74.013_283_1, 40.721_267_8),
+            ]))]
         );
     }
 
@@ -288,7 +285,7 @@ mod tests {
         assert_eq!(polygons.len(), 4);
         assert_eq!(
             polygons[0].0,
-            Object2dInner::from(TryPolygon([Pt(0, 0), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
+            Object2dInner::from(Polygon([Pt(0, 0), Pt(1.0, 2.5), Pt(2.0, 5.0)]))
         );
 
         // assert_symbol_tuple_list(
@@ -318,12 +315,12 @@ mod tests {
 
         assert_eq!(
             polygons[2].0,
-            Object2dInner::from(TryPolygon([Pt(2, 2), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
+            Object2dInner::from(Polygon([Pt(2, 2), Pt(1.0, 2.5), Pt(2.0, 5.0)]))
         );
 
         assert_eq!(
             polygons[3].0,
-            Object2dInner::from(TryPolygon([Pt(3, 3), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
+            Object2dInner::from(Polygon([Pt(3, 3), Pt(1.0, 2.5), Pt(2.0, 5.0)]))
         );
     }
 }

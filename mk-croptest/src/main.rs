@@ -1,5 +1,3 @@
-use plotz_geometry::polygon::TryPolygon;
-
 use {
     argh::FromArgs,
     itertools::iproduct,
@@ -87,7 +85,7 @@ fn main() {
         let l = Pt(60.0, 110.0);
         let pts = [a, b, c, d, e, f, g, h, i, j, k, l, a];
 
-        let subject_sq = Object2d::new(TryPolygon(pts).unwrap())
+        let subject_sq = Object2d::new(Polygon(pts))
             .with_color(&RED)
             .with_thickness(1.0)
             + offset;

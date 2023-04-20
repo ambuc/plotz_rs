@@ -131,7 +131,6 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
 mod test_super {
     use super::*;
     use plotz_geometry::object2d::Object2d;
-    use plotz_geometry::polygon::TryPolygon;
     use plotz_geometry::{point::Pt, polygon::Polygon};
     use tempdir::TempDir;
 
@@ -170,7 +169,7 @@ mod test_super {
             path.to_str().unwrap(),
             vec![&Object2d {
                 color: &BLACK,
-                inner: Object2dInner::Polygon(TryPolygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap()),
+                inner: Object2dInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)])),
                 thickness: 1.0,
             }],
         )
@@ -197,16 +196,12 @@ mod test_super {
             vec![
                 &Object2d {
                     color: &BLACK,
-                    inner: Object2dInner::Polygon(
-                        TryPolygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)]).unwrap(),
-                    ),
+                    inner: Object2dInner::Polygon(Polygon([Pt(0, 0), Pt(0, 1), Pt(1, 0)])),
                     thickness: 1.0,
                 },
                 &Object2d {
                     color: &BLACK,
-                    inner: Object2dInner::Polygon(
-                        TryPolygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)]).unwrap(),
-                    ),
+                    inner: Object2dInner::Polygon(Polygon([Pt(5, 5), Pt(5, 6), Pt(6, 5)])),
                     thickness: 1.0,
                 },
             ],

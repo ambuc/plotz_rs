@@ -459,7 +459,7 @@ pub fn abp(o: &Pt, i: &Pt, j: &Pt) -> f64 {
 impl Add<Pt> for &Polygon {
     type Output = Polygon;
     fn add(self, rhs: Pt) -> Self::Output {
-        TryPolygon(self.pts.iter().map(|p| *p + rhs)).unwrap()
+        Polygon(self.pts.iter().map(|p| *p + rhs))
     }
 }
 impl Add<Pt> for Polygon {
@@ -476,13 +476,13 @@ impl AddAssign<Pt> for Polygon {
 impl Div<Pt> for Polygon {
     type Output = Polygon;
     fn div(self, rhs: Pt) -> Self::Output {
-        TryPolygon(self.pts.iter().map(|p| *p / rhs)).unwrap()
+        Polygon(self.pts.iter().map(|p| *p / rhs))
     }
 }
 impl Div<f64> for Polygon {
     type Output = Polygon;
     fn div(self, rhs: f64) -> Self::Output {
-        TryPolygon(self.pts.iter().map(|p| *p / rhs)).unwrap()
+        Polygon(self.pts.iter().map(|p| *p / rhs))
     }
 }
 impl DivAssign<Pt> for Polygon {
@@ -498,7 +498,7 @@ impl DivAssign<f64> for Polygon {
 impl Mul<Pt> for Polygon {
     type Output = Polygon;
     fn mul(self, rhs: Pt) -> Polygon {
-        TryPolygon(self.pts.iter().map(|p| *p * rhs)).unwrap()
+        Polygon(self.pts.iter().map(|p| *p * rhs))
     }
 }
 impl Mul<f64> for Polygon {
@@ -521,13 +521,13 @@ impl MulAssign<f64> for Polygon {
 impl Sub<Pt> for &Polygon {
     type Output = Polygon;
     fn sub(self, rhs: Pt) -> Self::Output {
-        TryPolygon(self.pts.iter().map(|p| *p - rhs)).unwrap()
+        Polygon(self.pts.iter().map(|p| *p - rhs))
     }
 }
 impl Sub<Pt> for Polygon {
     type Output = Polygon;
     fn sub(self, rhs: Pt) -> Self::Output {
-        TryPolygon(self.pts.iter().map(|p| *p - rhs)).unwrap()
+        Polygon(self.pts.iter().map(|p| *p - rhs))
     }
 }
 impl SubAssign<Pt> for Polygon {
@@ -644,9 +644,7 @@ mod tests {
         );
 
         assert_eq!(
-            TryPolygon([Pt(0, 0), Pt(0, 1), Pt(0, 2)])
-                .unwrap()
-                .to_segments(),
+            Polygon([Pt(0, 0), Pt(0, 1), Pt(0, 2)]).to_segments(),
             [
                 Segment(Pt(0, 0), Pt(0, 1)),
                 Segment(Pt(0, 1), Pt(0, 2)),
@@ -655,9 +653,7 @@ mod tests {
         );
 
         assert_eq!(
-            TryPolygon([Pt(0, 0), Pt(0, 1), Pt(0, 2), Pt(0, 3)])
-                .unwrap()
-                .to_segments(),
+            Polygon([Pt(0, 0), Pt(0, 1), Pt(0, 2), Pt(0, 3)]).to_segments(),
             [
                 Segment(Pt(0, 0), Pt(0, 1)),
                 Segment(Pt(0, 1), Pt(0, 2)),
@@ -688,31 +684,17 @@ mod tests {
         let i = Pt(2, 0);
 
         // Positive area intersection.
-        assert!(TryPolygon([a, c, i, g])
-            .unwrap()
-            .intersects(&TryPolygon([b, f, h, d]).unwrap()));
-        assert!(TryPolygon([a, c, i, g])
-            .unwrap()
-            .intersects(&TryPolygon([a, b, e, d]).unwrap()));
-        assert!(TryPolygon([a, c, i, g])
-            .unwrap()
-            .intersects(&TryPolygon([e, f, i, h]).unwrap()));
+        assert!(Polygon([a, c, i, g]).intersects(&Polygon([b, f, h, d])));
+        assert!(Polygon([a, c, i, g]).intersects(&Polygon([a, b, e, d])));
+        assert!(Polygon([a, c, i, g]).intersects(&Polygon([e, f, i, h])));
 
         // Shares a corner.
-        assert!(TryPolygon([a, b, e, d])
-            .unwrap()
-            .intersects(&TryPolygon([e, f, i, h]).unwrap()));
-        assert!(TryPolygon([a, b, e, d])
-            .unwrap()
-            .intersects(&TryPolygon([b, c, f, e]).unwrap()));
+        assert!(Polygon([a, b, e, d]).intersects(&Polygon([e, f, i, h])));
+        assert!(Polygon([a, b, e, d]).intersects(&Polygon([b, c, f, e])));
 
         // No intersection.
-        assert!(!TryPolygon([a, b, d])
-            .unwrap()
-            .intersects(&TryPolygon([e, f, h]).unwrap()));
-        assert!(!TryPolygon([a, b, d])
-            .unwrap()
-            .intersects(&TryPolygon([f, h, i]).unwrap()));
+        assert!(!Polygon([a, b, d]).intersects(&Polygon([e, f, h])));
+        assert!(!Polygon([a, b, d]).intersects(&Polygon([f, h, i])));
     }
 
     #[test]
@@ -800,7 +782,7 @@ mod tests {
         let i = Pt(2, 0);
 
         // frame [a,c,i,g] should contain a, b, c, d, e, f, g, h, and i.
-        let frame1 = TryPolygon([a, c, i, g]).unwrap();
+        let frame1 = Polygon([a, c, i, g]);
         {
             let p = e;
             assert_eq!(frame1.contains_pt(&p).unwrap(), PointLoc::Inside);
@@ -816,7 +798,7 @@ mod tests {
         assert_eq!(frame1.contains_pt(&h).unwrap(), PointLoc::OnSegment(0));
 
         // frame [a,b,e,d] should contain a, b, d, e...
-        let frame2 = TryPolygon([a, b, e, d]).unwrap();
+        let frame2 = Polygon([a, b, e, d]);
         assert_eq!(frame2.contains_pt(&a).unwrap(), PointLoc::OnPoint(3));
         assert_eq!(frame2.contains_pt(&b).unwrap(), PointLoc::OnPoint(2));
         assert_eq!(frame2.contains_pt(&e).unwrap(), PointLoc::OnPoint(1));
@@ -825,7 +807,7 @@ mod tests {
             assert_eq!(frame2.contains_pt(&p).unwrap(), PointLoc::Outside);
         }
 
-        let frame3 = TryPolygon([b, f, h, d]).unwrap();
+        let frame3 = Polygon([b, f, h, d]);
         assert_eq!(frame3.contains_pt(&b).unwrap(), PointLoc::OnPoint(3));
         assert_eq!(frame3.contains_pt(&f).unwrap(), PointLoc::OnPoint(2));
         assert_eq!(frame3.contains_pt(&h).unwrap(), PointLoc::OnPoint(1));
@@ -838,7 +820,7 @@ mod tests {
 
     #[test]
     fn test_contains_pt_regression() {
-        let frame = TryPolygon([
+        let frame = Polygon([
             Pt(228.17, 202.35),
             Pt(231.21, 212.64),
             Pt(232.45, 228.76),
@@ -862,8 +844,7 @@ mod tests {
             Pt(228.83, 189.47),
             Pt(227.19, 195.84),
             Pt(228.17, 202.35),
-        ])
-        .unwrap();
+        ]);
         let suspicious_pt = Pt(228, 400);
         assert_eq!(frame.contains_pt(&suspicious_pt), Ok(PointLoc::Outside));
     }
@@ -898,8 +879,8 @@ mod tests {
         // ⬜🟧🟧🟧⬜
         // ⬜🟧🟧🟧⬜
         // ⬜⬜⬜⬜⬜ ➡️ x
-        let inner = TryPolygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟥
-        let frame = TryPolygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟨
+        let inner = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]); // 🟥
+        let frame = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]); // 🟨
         assert_eq!(inner, frame);
         let crops = inner.crop_to(&frame).unwrap(); // 🟧
         assert_eq!(crops, vec![inner]);
@@ -913,8 +894,8 @@ mod tests {
         // 🟨🟧🟧🟧⬜
         // 🟨🟧🟧🟧⬜
         // 🟨🟨🟨🟨⬜ ➡️ x
-        let inner = TryPolygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟥
-        let frame = TryPolygon([Pt(0, 0), Pt(3, 0), Pt(3, 3), Pt(0, 3)]).unwrap(); // 🟨
+        let inner = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]); // 🟥
+        let frame = Polygon([Pt(0, 0), Pt(3, 0), Pt(3, 3), Pt(0, 3)]); // 🟨
         assert_eq!(inner.crop_to(&frame).unwrap()[0], inner);
 
         // ⬆️ y
@@ -950,8 +931,8 @@ mod tests {
         // 🟨🟧🟧🟧🟨
         // 🟨🟧🟧🟧🟨
         // 🟨🟨🟨🟨🟨 ➡️ x
-        let inner = TryPolygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟥
-        let frame = TryPolygon([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]).unwrap(); // 🟨
+        let inner = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]); // 🟥
+        let frame = Polygon([Pt(0, 0), Pt(4, 0), Pt(4, 4), Pt(0, 4)]); // 🟨
 
         // inner /\ frame == inner
         let crops = inner.crop_to(&frame).unwrap(); // 🟧
@@ -966,9 +947,9 @@ mod tests {
         // 🟨🟧🟧🟥⬜
         // 🟨🟧🟧🟥⬜
         // 🟨🟨🟨⬜⬜ ➡️ x
-        let inner = TryPolygon([Pt(1, 1), Pt(4, 1), Pt(4, 4), Pt(1, 4)]).unwrap(); // 🟥
-        let frame = TryPolygon([Pt(0, 0), Pt(3, 0), Pt(3, 3), Pt(0, 3)]).unwrap(); // 🟨
-        let expected = TryPolygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟧
+        let inner = Polygon([Pt(1, 1), Pt(4, 1), Pt(4, 4), Pt(1, 4)]); // 🟥
+        let frame = Polygon([Pt(0, 0), Pt(3, 0), Pt(3, 3), Pt(0, 3)]); // 🟨
+        let expected = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]); // 🟧
 
         let crops = inner.crop_to(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
@@ -982,9 +963,9 @@ mod tests {
         // 🟨🟧🟧🟥⬜
         // 🟨🟧🟧🟥⬜
         // ⬜🟥🟥🟥⬜ ➡️ x
-        let inner = TryPolygon([Pt(1, 0), Pt(4, 0), Pt(4, 3), Pt(1, 3)]).unwrap(); // 🟥
-        let frame = TryPolygon([Pt(0, 1), Pt(3, 1), Pt(3, 4), Pt(0, 4)]).unwrap(); // 🟨
-        let expected = TryPolygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]).unwrap(); // 🟧
+        let inner = Polygon([Pt(1, 0), Pt(4, 0), Pt(4, 3), Pt(1, 3)]); // 🟥
+        let frame = Polygon([Pt(0, 1), Pt(3, 1), Pt(3, 4), Pt(0, 4)]); // 🟨
+        let expected = Polygon([Pt(1, 1), Pt(3, 1), Pt(3, 3), Pt(1, 3)]); // 🟧
 
         let crops = inner.crop_to(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
@@ -998,7 +979,7 @@ mod tests {
         // 🟨🟧🟧🟧🟨
         // 🟨🟧🟨🟧🟨
         // ⬜🟥⬜🟥⬜
-        let inner = TryPolygon([
+        let inner = Polygon([
             Pt(1, 0),
             Pt(2, 0),
             Pt(2, 2),
@@ -1011,10 +992,9 @@ mod tests {
             Pt(2, 3),
             Pt(2, 5),
             Pt(1, 5),
-        ])
-        .unwrap(); // 🟥
-        let frame = TryPolygon([Pt(0, 1), Pt(5, 1), Pt(5, 4), Pt(0, 4)]).unwrap(); // 🟨
-        let expected = TryPolygon([
+        ]); // 🟥
+        let frame = Polygon([Pt(0, 1), Pt(5, 1), Pt(5, 4), Pt(0, 4)]); // 🟨
+        let expected = Polygon([
             Pt(1, 1),
             Pt(2, 1),
             Pt(2, 2),
@@ -1027,8 +1007,7 @@ mod tests {
             Pt(2, 3),
             Pt(2, 4),
             Pt(1, 4),
-        ])
-        .unwrap(); // 🟧
+        ]); // 🟧
 
         let crops = inner.crop_to(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
@@ -1042,7 +1021,7 @@ mod tests {
         // 🟨🟧🟧🟧🟨
         // 🟨🟧🟨🟧🟨
         // ⬜⬜⬜⬜⬜
-        let inner = TryPolygon([
+        let inner = Polygon([
             Pt(1, 1),
             Pt(2, 1),
             Pt(2, 2),
@@ -1055,9 +1034,8 @@ mod tests {
             Pt(2, 3),
             Pt(2, 4),
             Pt(1, 4),
-        ])
-        .unwrap(); // 🟥
-        let frame = TryPolygon([Pt(0, 1), Pt(5, 1), Pt(5, 4), Pt(0, 4)]).unwrap(); // 🟨
+        ]); // 🟥
+        let frame = Polygon([Pt(0, 1), Pt(5, 1), Pt(5, 4), Pt(0, 4)]); // 🟨
         let expected = inner.clone();
         let crops = inner.crop_to(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
@@ -1071,7 +1049,7 @@ mod tests {
         // ⬜🟧🟧🟧⬜
         // ⬜🟧🟨🟧⬜
         // ⬜⬜⬜⬜⬜
-        let inner = TryPolygon([
+        let inner = Polygon([
             Pt(1, 1),
             Pt(2, 1),
             Pt(2, 2),
@@ -1084,9 +1062,8 @@ mod tests {
             Pt(2, 3),
             Pt(2, 4),
             Pt(1, 4),
-        ])
-        .unwrap(); // 🟥
-        let frame = TryPolygon([Pt(1, 1), Pt(4, 1), Pt(4, 4), Pt(1, 4)]).unwrap(); // 🟨
+        ]); // 🟥
+        let frame = Polygon([Pt(1, 1), Pt(4, 1), Pt(4, 4), Pt(1, 4)]); // 🟨
         let expected = inner.clone();
         let crops = inner.crop_to(&frame).unwrap();
         assert_eq!(crops, vec![expected.clone()]);
@@ -1139,11 +1116,11 @@ mod tests {
         let i = Pt(2, 0);
 
         assert_eq!(
-            TryPolygon([a, c, i, g]).unwrap().get_curve_orientation(),
+            Polygon([a, c, i, g]).get_curve_orientation(),
             Some(CurveOrientation::Positive)
         );
         assert_eq!(
-            TryPolygon([a, g, i, c]).unwrap().get_curve_orientation(),
+            Polygon([a, g, i, c]).get_curve_orientation(),
             Some(CurveOrientation::Positive)
         );
     }
@@ -1163,7 +1140,7 @@ mod tests {
         let c = Pt(2, 2);
         let g = Pt(0, 0);
         let i = Pt(2, 0);
-        let mut p = TryPolygon([a, g, i, c]).unwrap();
+        let mut p = Polygon([a, g, i, c]);
         assert_eq!(p.get_curve_orientation(), Some(CurveOrientation::Positive));
         p.orient_curve_positively();
         assert_eq!(p.get_curve_orientation(), Some(CurveOrientation::Negative));
@@ -1172,16 +1149,16 @@ mod tests {
     #[test]
     fn test_add() {
         assert_eq!(
-            &TryPolygon([Pt(0, 0), Pt(1, 1), Pt(2, 2)]).unwrap() + Pt(1, 0),
-            TryPolygon([Pt(1, 0), Pt(2, 1), Pt(3, 2)]).unwrap()
+            &Polygon([Pt(0, 0), Pt(1, 1), Pt(2, 2)]) + Pt(1, 0),
+            Polygon([Pt(1, 0), Pt(2, 1), Pt(3, 2)])
         );
     }
 
     #[test]
     fn test_sub() {
         assert_eq!(
-            &TryPolygon([Pt(0, 0), Pt(1, 1), Pt(2, 2)]).unwrap() - Pt(1, 0),
-            TryPolygon([Pt(-1, 0), Pt(0, 1), Pt(1, 2)]).unwrap()
+            &Polygon([Pt(0, 0), Pt(1, 1), Pt(2, 2)]) - Pt(1, 0),
+            Polygon([Pt(-1, 0), Pt(0, 1), Pt(1, 2)])
         );
     }
 
@@ -1199,7 +1176,7 @@ mod tests {
         let f = Pt(2, 1);
         let b = Pt(1, 2);
         let d = Pt(0, 1);
-        let p = TryPolygon([h, f, b, d]).unwrap();
+        let p = Polygon([h, f, b, d]);
         assert_eq!(p.top_bound(), 2.0);
         assert_eq!(p.bottom_bound(), 0.0);
         assert_eq!(p.left_bound(), 0.0);
@@ -1228,7 +1205,7 @@ mod tests {
         // |xxxxx| .   |xxxxx|xxxxx|xxxxx|
         // 0 - - 1 - - 2 - - 3 - - 4 - - 5 -> x
 
-        let frame = TryPolygon([
+        let frame = Polygon([
             Pt(0, 0),
             Pt(1, 0),
             Pt(1, 3),
@@ -1241,8 +1218,7 @@ mod tests {
             Pt(3, 1),
             Pt(3, 5),
             Pt(0, 5),
-        ])
-        .unwrap();
+        ]);
         let segment = Segment(Pt(0, 2), Pt(5, 2));
         assert_eq!(
             segment.crop_to(&frame).unwrap(),
@@ -1256,7 +1232,7 @@ mod tests {
 
     #[test]
     fn test_frame_to_segment_crop() {
-        let frame = TryPolygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]).unwrap();
+        let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]);
         assert_eq!(
             Segment(Pt(0, 2), Pt(2, 0)).crop_to(&frame),
             Ok(vec![Segment(Pt(0.5, 1.5), Pt(1.5, 0.5))])
@@ -1264,7 +1240,7 @@ mod tests {
     }
     #[test]
     fn test_frame_to_segment_crop_02() {
-        let frame = TryPolygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]).unwrap();
+        let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]);
         assert_eq!(
             Segment(Pt(0, 0), Pt(2, 2)).crop_to(&frame),
             Ok(vec![Segment(Pt(0.5, 0.5), Pt(1.5, 1.5))])
@@ -1272,12 +1248,12 @@ mod tests {
     }
     #[test]
     fn test_frame_to_segment_crop_empty() {
-        let frame = TryPolygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]).unwrap();
+        let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]);
         assert_eq!(Segment(Pt(0, 2), Pt(2, 2)).crop_to(&frame), Ok(vec![]));
     }
     #[test]
     fn test_frame_to_segment_crop_unchanged() {
-        let frame = TryPolygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]).unwrap();
+        let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]);
         assert_eq!(
             Segment(Pt(0, 1), Pt(2, 1)).crop_to(&frame),
             Ok(vec![Segment(Pt(0, 1), Pt(2, 1))])
