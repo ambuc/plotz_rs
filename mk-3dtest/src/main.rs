@@ -1,4 +1,6 @@
 #![allow(unused_imports)]
+
+use itertools::zip;
 use {
     argh::FromArgs,
     itertools::iproduct,
@@ -64,19 +66,22 @@ fn main() {
         // objects.extend(_axes);
 
         {
-            let e = 0.8;
-            // use rand::Rng;
-            // let mut rng = rand::thread_rng();
-            for (i, j) in iproduct!(0..6, 0..6) {
-                // let zh = rng.gen_range(0.5..=3.0);
-                let zh = 0.8;
+            let e = 0.7;
+            use rand::Rng;
+            let mut rng = rand::thread_rng();
+            for ((i, j), color) in zip(
+                iproduct!(0..3, 0..3),
+                vec![&RED, &YELLOW, &GREEN, &BLUE].iter().cycle(),
+            ) {
+                let zh = rng.gen_range(0.5..=3.0);
+                //let zh = 0.8;
                 objects.extend(
                     Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, zh))
                         .items
                         .into_iter()
                         .map(|face| {
                             Object3d::new(face)
-                                .with_style(Style3d::builder().color(&GREEN).thickness(3.0).build())
+                                .with_style(Style3d::builder().color(color).thickness(3.0).build())
                         }),
                 );
             }
@@ -91,20 +96,28 @@ fn main() {
         //     //             Object3d::new(face).with_style(Style3d::builder().thickness(2.0).build())
         //     //         }),
         //     // );
-        //     objects.push(Object3d::new(Face::from(Polygon3d([
-        //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 0.0, 0.0),
-        //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 1.0, 0.0),
-        //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 1.0, 1.0),
-        //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 0.0, 1.0),
-        //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 0.0, 0.0),
-        //     ]))));
+        //     let style = Style3d::builder().thickness(2.0).build();
+        //     // objects.push(
+        //     //     Object3d::new(Face::from(Polygon3d([
+        //     //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 0.0, 0.0),
+        //     //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 1.0, 0.0),
+        //     //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 1.0, 1.0),
+        //     //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 0.0, 1.0),
+        //     //         Pt3d(1.0, 0.0, 0.0) + Pt3d(0.0, 0.0, 0.0),
+        //     //     ])))
+        //     //     .with_style(style),
+        //     // );
         //     objects.extend(
-        //         Cube(Pt3d(1.5, 0.0, 0.0), (1.0, 1.0, 1.0))
+        //         Cube(Pt3d(0.0, 1.3, 0.0), (1.0, 1.0, 1.0))
         //             .items
         //             .into_iter()
-        //             .map(|face| {
-        //                 Object3d::new(face).with_style(Style3d::builder().thickness(2.0).build())
-        //             }),
+        //             .map(|face| Object3d::new(face).with_style(style)),
+        //     );
+        //     objects.extend(
+        //         Cube(Pt3d(0.0, 0.0, 0.0), (1.0, 1.0, 1.0))
+        //             .items
+        //             .into_iter()
+        //             .map(|face| Object3d::new(face).with_style(style)),
         //     );
         // }
 

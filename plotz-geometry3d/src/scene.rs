@@ -57,15 +57,14 @@ impl Scene {
 
             (Projection::Oblique(obl), Occlusion::True) => {
                 let mut resultant = vec![];
-                let view_vector = Pt3d(-2.0, -1.0, -1.0);
 
                 let mut occ = Occluder::new();
 
                 // add objects to the occluder in distance order.
                 for obj3 in self.objects.iter().sorted_by(|o1, o2| {
                     Ord::cmp(
-                        &FloatOrd(o1.dist_along(&view_vector)),
-                        &FloatOrd(o2.dist_along(&view_vector)),
+                        &FloatOrd(o1.dist_along(&obl.view_vector)),
+                        &FloatOrd(o2.dist_along(&obl.view_vector)),
                     )
                 }) {
                     let obj2 = obj3.project_oblique(&obl);

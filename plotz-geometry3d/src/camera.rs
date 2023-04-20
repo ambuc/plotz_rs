@@ -13,6 +13,8 @@ pub struct Oblique {
     u_dst: Pt,
     v_dst: Pt,
     w_dst: Pt,
+    /// the angle from which to view 3d objects (for dist along projection)
+    pub view_vector: Pt3d,
 }
 
 impl Oblique {
@@ -24,9 +26,10 @@ impl Oblique {
             u_src: Pt3d(1.0, 0.0, 0.0),
             v_src: Pt3d(0.0, 1.0, 0.0),
             w_src: Pt3d(0.0, 0.0, 1.0),
-            u_dst: Pt(-1.0, 0.6),
-            v_dst: Pt(1.0, 0.6),
+            u_dst: Pt(-1.0, 0.7),
+            v_dst: Pt(1.0, 0.7),
             w_dst: Pt(0.0, -1.0),
+            view_vector: Pt3d(-1.0, -1.0, -1.3),
         }
     }
 
