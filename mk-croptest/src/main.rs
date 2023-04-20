@@ -9,9 +9,7 @@ use {
         group::Group,
         object2d::Object2d,
         point::Pt,
-        polygon::Polygon,
-        polygon::Rect,
-        traits::*,
+        polygon::{Polygon, Rect},
     },
 };
 
@@ -23,6 +21,15 @@ struct Args {
 }
 
 fn main() {
+    tracing::subscriber::set_global_default(
+        tracing_subscriber::FmtSubscriber::builder()
+            .compact()
+            .with_max_level(tracing::Level::INFO)
+            .without_time()
+            .finish(),
+    )
+    .expect("setting default subscriber failed");
+
     let args: Args = argh::from_env();
 
     let mut dos = vec![];
@@ -42,10 +49,10 @@ fn main() {
             .build(),
     );
 
-    let f = 9.5;
+    let f = 15.0;
     for (idx, offset) in iproduct!(0..=5, 0..=4)
         .map(|(i, j)| ((i, j), Pt((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
-    // .filter(|(idx, _)| *idx == (1, 3))
+    // .filter(|(idx, _)| *idx == (2, 2))
     {
         let r = Rect(Pt(50.0, 50.0), (50.0, 50.0)).unwrap();
 
@@ -58,7 +65,7 @@ fn main() {
         // let b = Pt(70.0, 60.0);
         // let c = Pt(80.0, 60.0);
         // let d = Pt(90.0, 60.0);
-        // let e = Pt(70.0, 75.0);
+        // let e = Pt(70.0, 75.0)nw;
         // let f = Pt(80.0, 75.0);
         // let g = Pt(60.0, 90.0);
         // let h = Pt(90.0, 90.0);
@@ -84,9 +91,12 @@ fn main() {
             + offset;
         // let subject_sq_annotations = subject_sq.annotate();
 
-        let mut v: Vec<Object2d> = vec![base_sq, subject_sq.clone()];
-        //v.extend(base_sq_annotations);
-        //v.extend(subject_sq_annotations);
+        let mut v: Vec<Object2d> = vec![];
+        v.push(base_sq);
+        // v.push(subject_sq.clone());
+        // v.extend(base_sq_annotations);
+        // v.extend(subject_sq_annotations);
+
         v.extend(
             subject_sq
                 .crop_to(&r)
@@ -94,6 +104,7 @@ fn main() {
                 .into_iter()
                 .map(|o| o.with_color(&GREEN).with_thickness(2.0)),
         );
+
         v.extend(
             subject_sq
                 .crop_excluding(&r.clone())

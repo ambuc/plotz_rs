@@ -1,5 +1,7 @@
 //! Crop logic for polygons.
 
+use petgraph::Direction;
+
 use {
     crate::{
         crop::{CropType, PointLoc},
@@ -63,6 +65,8 @@ pub struct CropGraph<'a> {
     // known,
     #[builder(default)]
     known_pts: Vec<Pt>,
+
+    crop_type: CropType,
 }
 
 impl<'a> CropGraph<'a> {
@@ -78,6 +82,13 @@ impl<'a> CropGraph<'a> {
         } else {
             self.known_pts.push(*pt);
             *pt
+        }
+    }
+
+    fn pair(&self) -> Pair<Polygon> {
+        Pair {
+            a: self.a,
+            b: self.b,
         }
     }
 
@@ -160,7 +171,7 @@ impl<'a> CropGraph<'a> {
                         assert_eq!(from, from_pt_normalized);
 
                         let to_pt = &sg.f;
-                        let to_pt_normalized = self.normalize_pt(&to_pt);
+                        let to_pt_normalized = self.normalize_pt(to_pt);
                         let to = self.graph.add_node(to_pt_normalized);
                         assert_eq!(to, to_pt_normalized);
 
@@ -173,53 +184,34 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    pub fn remove_outside_nodes(&mut self) {
-        // remove nodes which are outside.
-        for node in self
-            .graph
-            .nodes()
-            .filter(|node| {
-                matches!(
-                    self.a.contains_pt(node).expect("contains"),
-                    PointLoc::Outside
-                ) || matches!(
-                    self.b.contains_pt(node).expect("contains"),
-                    PointLoc::Outside
-                )
-            })
-            .collect::<Vec<_>>()
-        {
-            self.graph.remove_node(node);
-        }
-    }
-
-    pub fn remove_nodes_inside_b_or_outside_a(&mut self) {
-        // remove nodes which are inside.
-        for node in self
-            .graph
-            .nodes()
-            .filter(|node| {
-                matches!(
-                    self.b.contains_pt(node).expect("contains"),
-                    PointLoc::Inside
-                ) || matches!(
-                    self.a.contains_pt(node).expect("contains"),
-                    PointLoc::Outside
-                )
-            })
-            .collect::<Vec<_>>()
-        {
-            self.graph.remove_node(node);
-        }
-    }
-
-    pub fn remove_acycle_nodes(&mut self) {
-        // also, remove all nodes that aren't part of a cycle (i.e. have at
-        // least one incoming and at least one outgoing)
-        while let Some(node_to_remove) = self.graph.nodes().find(|&node| {
-            self.graph.neighbors_directed(node, Incoming).count() == 0
-                || self.graph.neighbors_directed(node, Outgoing).count() == 0
+    pub fn remove_nodes_inside_polygon(&mut self, which: Which) {
+        while let Some(node) = self.graph.nodes().find(|node| {
+            matches!(
+                self.pair().get(which).contains_pt(node).expect("contains"),
+                PointLoc::Inside
+            )
         }) {
+            self.graph.remove_node(node);
+        }
+    }
+
+    pub fn remove_nodes_outside_polygon(&mut self, which: Which) {
+        while let Some(node) = self.graph.nodes().find(|node| {
+            matches!(
+                self.pair().get(which).contains_pt(node).expect("contains"),
+                PointLoc::Outside
+            )
+        }) {
+            self.graph.remove_node(node);
+        }
+    }
+
+    pub fn remove_nodes_with_no_neighbors_of_kind(&mut self, direction: Direction) {
+        while let Some(node_to_remove) = self
+            .graph
+            .nodes()
+            .find(|&node| self.graph.neighbors_directed(node, direction).count() == 0)
+        {
             self.graph.remove_node(node_to_remove);
         }
     }
@@ -234,31 +226,32 @@ impl<'a> CropGraph<'a> {
         // where s is the stub -- it's connected (didn't get removed by
         // |remove_acycle_nodes|) but is still degenerate.
         while let Some(node) = self.graph.nodes().find(|node| {
-            let inn: Vec<Pt> = self
-                .graph
-                .neighbors_directed(*node, Incoming)
-                .into_iter()
-                .collect::<Vec<_>>();
-            let out: Vec<Pt> = self
-                .graph
-                .neighbors_directed(*node, Outgoing)
-                .into_iter()
-                .collect::<Vec<_>>();
-
-            matches!((&inn[..], &out[..]), ([a], [b]) if a==b)
+            match (
+                &self
+                    .graph
+                    .neighbors_directed(*node, Incoming)
+                    .collect::<Vec<_>>()[..],
+                &self
+                    .graph
+                    .neighbors_directed(*node, Outgoing)
+                    .collect::<Vec<_>>()[..],
+            ) {
+                ([a], [b]) => a == b,
+                _ => false,
+            }
         }) {
             self.graph.remove_node(node);
         }
     }
 
-    pub fn remove_back_and_forth(&mut self) {
-        while let Some((a, b, ())) = self.graph.all_edges().find(|edge| {
-            let i = edge.0;
-            let f = edge.1;
-            self.graph.contains_edge(f, i)
-        }) {
-            self.graph.remove_edge(a, b);
-            self.graph.remove_edge(b, a);
+    pub fn remove_dual_edges(&mut self) {
+        while let Some((i, j, ())) = self
+            .graph
+            .all_edges()
+            .find(|edge| self.graph.contains_edge(edge.1, edge.0))
+        {
+            self.graph.remove_edge(i, j);
+            self.graph.remove_edge(j, i);
         }
     }
 
@@ -266,10 +259,26 @@ impl<'a> CropGraph<'a> {
         self.graph.node_count()
     }
 
-    pub fn remove_segments_which_cross_other(&mut self) {
+    pub fn remove_edges_outside(&mut self, which: Which) {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
-                self.b.contains_pt(&edge.0.avg(&edge.1)).expect("contains"),
+                self.pair()
+                    .get(which)
+                    .contains_pt(&edge.0.avg(&edge.1))
+                    .expect("contains"),
+                PointLoc::Outside
+            )
+        }) {
+            self.graph.remove_edge(i, j);
+        }
+    }
+    pub fn remove_edges_inside(&mut self, which: Which) {
+        while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
+            matches!(
+                self.pair()
+                    .get(which)
+                    .contains_pt(&edge.0.avg(&edge.1))
+                    .expect("contains"),
                 PointLoc::Inside
             )
         }) {
@@ -288,50 +297,61 @@ impl<'a> CropGraph<'a> {
         while !pts.contains(&curr_node) {
             pts.push(curr_node);
 
-            curr_node = match self
+            let next_node: Option<Pt> = match self
                 .graph
                 .neighbors_directed(curr_node, Outgoing)
                 .collect::<Vec<_>>()[..]
             {
-                [n] => n,
-                [n, _] if self.a.pts.contains(&n) => n,
-                [_, n] if self.a.pts.contains(&n) => n,
-                [a, b] => {
-                    error!("aborting search: found two {:?},{:?}", a, b);
-                    return None;
-                }
+                [i] => Some(i),
+                [i, j] => match (pts.contains(&i), pts.contains(&j)) {
+                    (true, false) => Some(i),
+                    (false, true) => Some(j),
+                    _ => match (self.a.pts.contains(&i), self.a.pts.contains(&j)) {
+                        (true, _) => Some(i),
+                        (_, true) => Some(j),
+                        _ => {
+                            warn!("hit a weird dead end.");
+                            None
+                        }
+                    },
+                },
                 _ => {
                     let a = self
                         .graph
                         .neighbors_directed(curr_node, Outgoing)
                         .collect::<Vec<_>>();
                     error!("aborting search: from {:?}, found {:?}", curr_node, a);
-                    return None;
+                    None
                 }
             };
+
+            if let Some(next_node) = next_node {
+                // remove the edges now...
+                self.graph.remove_edge(curr_node, next_node);
+                curr_node = next_node;
+            } else {
+                // hit a dead end -- close the polygon and break.
+                pts.push(pts[0]);
+                break;
+            }
         }
 
-        for pt in &pts {
-            self.graph.remove_node(*pt);
-        }
+        // and the nodes later.
+        self.remove_nodes_with_no_neighbors_of_kind(Direction::Incoming);
+        self.remove_nodes_with_no_neighbors_of_kind(Direction::Outgoing);
 
-        if let Ok(pg) = Polygon(pts) {
-            Some(pg)
-        } else {
-            None
-        }
+        Polygon(pts).ok()
     }
 
-    pub fn to_resultant_polygons(mut self) -> Vec<Polygon> {
-        // println!(
-        //     "{:?}",
-        //     Dot::with_config(&self.graph, &[Config::EdgeNoLabel])
-        // );
-
+    pub fn as_resultant_polygons(mut self) -> Vec<Polygon> {
         let mut resultant = vec![];
 
         while let Some(pg) = self.extract_polygon() {
             resultant.push(pg);
+
+            // clean up in between extractions.
+            self.remove_nodes_with_no_neighbors_of_kind(Direction::Incoming);
+            self.remove_nodes_with_no_neighbors_of_kind(Direction::Outgoing);
         }
 
         resultant

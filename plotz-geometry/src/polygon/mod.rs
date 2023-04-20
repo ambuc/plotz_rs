@@ -1,5 +1,9 @@
 //! A 2D polygon (or multi&line).
 
+use petgraph::Direction;
+
+use crate::isxn::Which;
+
 mod crop_logic;
 
 use {
@@ -407,27 +411,24 @@ impl Croppable for Polygon {
             }
         }
 
-        let mut crop_graph = CropGraph::builder().a(a).b(b).build();
+        let mut crop_graph = CropGraph::builder().a(a).b(b).crop_type(crop_type).build();
         crop_graph.build_from_polygons(crop_type);
+        crop_graph.remove_nodes_outside_polygon(Which::A);
         match crop_type {
             CropType::Inclusive => {
-                crop_graph.remove_outside_nodes();
+                crop_graph.remove_nodes_outside_polygon(Which::B);
+                crop_graph.remove_edges_outside(Which::A);
             }
             CropType::Exclusive => {
-                crop_graph.remove_nodes_inside_b_or_outside_a();
+                crop_graph.remove_nodes_inside_polygon(Which::B);
+                crop_graph.remove_edges_inside(Which::B);
             }
         }
-        if CropType::Exclusive == crop_type {
-            crop_graph.remove_segments_which_cross_other();
-        }
         crop_graph.remove_stubs();
-        crop_graph.remove_back_and_forth();
-        crop_graph.remove_acycle_nodes();
-
-        if crop_graph.nodes_count() == 0 {
-            return Ok(vec![]);
-        }
-        Ok(crop_graph.to_resultant_polygons())
+        crop_graph.remove_dual_edges();
+        crop_graph.remove_nodes_with_no_neighbors_of_kind(Direction::Incoming);
+        crop_graph.remove_nodes_with_no_neighbors_of_kind(Direction::Outgoing);
+        Ok(crop_graph.as_resultant_polygons())
     }
 }
 
