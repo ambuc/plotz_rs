@@ -184,23 +184,21 @@ impl<'a> CropGraph<'a> {
     }
 
     pub fn remove_nodes_inside_polygon(&mut self, which: Which) {
-        while let Some(node) = self.graph.nodes().find(|node| {
-            matches!(
-                self.pair().get(which).contains_pt(node).expect("contains"),
-                PointLoc::Inside
-            )
-        }) {
+        while let Some(node) = self
+            .graph
+            .nodes()
+            .find(|node| matches!(self.pair().get(which).contains_pt(node), PointLoc::Inside))
+        {
             self.graph.remove_node(node);
         }
     }
 
     pub fn remove_nodes_outside_polygon(&mut self, which: Which) {
-        while let Some(node) = self.graph.nodes().find(|node| {
-            matches!(
-                self.pair().get(which).contains_pt(node).expect("contains"),
-                PointLoc::Outside
-            )
-        }) {
+        while let Some(node) = self
+            .graph
+            .nodes()
+            .find(|node| matches!(self.pair().get(which).contains_pt(node), PointLoc::Outside))
+        {
             self.graph.remove_node(node);
         }
     }
@@ -261,11 +259,8 @@ impl<'a> CropGraph<'a> {
     pub fn remove_edges_outside(&mut self, which: Which) {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
-                self.pair()
-                    .get(which)
-                    .contains_pt(&edge.0.avg(&edge.1))
-                    .expect("contains"),
-                PointLoc::Outside
+                self.pair().get(which).contains_pt(&edge.0.avg(&edge.1)),
+                PointLoc::Outside,
             )
         }) {
             self.graph.remove_edge(i, j);
@@ -274,10 +269,7 @@ impl<'a> CropGraph<'a> {
     pub fn remove_edges_inside(&mut self, which: Which) {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
-                self.pair()
-                    .get(which)
-                    .contains_pt(&edge.0.avg(&edge.1))
-                    .expect("contains"),
+                self.pair().get(which).contains_pt(&edge.0.avg(&edge.1)),
                 PointLoc::Inside
             )
         }) {

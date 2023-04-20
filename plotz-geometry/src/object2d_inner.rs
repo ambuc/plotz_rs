@@ -299,7 +299,7 @@ impl Croppable for Object2dInner {
         Ok(match &self {
             Object2dInner::Point(pt) => {
                 assert_eq!(crop_type, CropType::Inclusive);
-                if !matches!(frame.contains_pt(pt), Ok(PointLoc::Outside)) {
+                if !matches!(frame.contains_pt(pt), PointLoc::Outside) {
                     vec![self.clone()]
                 } else {
                     vec![]
@@ -331,7 +331,7 @@ impl Croppable for Object2dInner {
                 .collect::<Vec<_>>(),
             Object2dInner::Char(ch) => {
                 assert_eq!(crop_type, CropType::Inclusive);
-                if !matches!(frame.contains_pt(&ch.pt), Ok(PointLoc::Outside)) {
+                if !matches!(frame.contains_pt(&ch.pt), PointLoc::Outside) {
                     vec![self.clone()]
                 } else {
                     vec![]
@@ -351,7 +351,7 @@ impl Croppable for Object2dInner {
     {
         Ok(match &self {
             Object2dInner::Point(pt) => {
-                if matches!(other.contains_pt(pt), Ok(PointLoc::Outside)) {
+                if matches!(other.contains_pt(pt), PointLoc::Outside) {
                     vec![]
                 } else {
                     vec![self.clone()]
@@ -382,7 +382,7 @@ impl Croppable for Object2dInner {
                 .map(Object2dInner::from)
                 .collect::<Vec<_>>(),
             Object2dInner::Char(ch) => {
-                if matches!(other.contains_pt(&ch.pt), Ok(PointLoc::Outside)) {
+                if matches!(other.contains_pt(&ch.pt), PointLoc::Outside) {
                     vec![]
                 } else {
                     vec![self.clone()]

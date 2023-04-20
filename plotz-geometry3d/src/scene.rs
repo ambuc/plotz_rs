@@ -6,18 +6,12 @@ use {
         camera::{Occlusion, Projection},
         object3d::Object3d,
         occluder::Occluder,
-        point3d::Pt3d,
         style::Style3d,
     },
     float_ord::FloatOrd,
     itertools::Itertools,
-    plotz_color::*,
-    plotz_geometry::{
-        object2d::Object2d, point::Pt, polygon::Polygon, traits::Annotatable,
-        traits::AnnotationSettings,
-    },
+    plotz_geometry::{object2d::Object2d, traits::Annotatable, traits::AnnotationSettings},
     std::fmt::Debug,
-    tracing::*,
     typed_builder::TypedBuilder,
 };
 

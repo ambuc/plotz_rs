@@ -11,7 +11,7 @@ use {
     crate::{
         bounded::{Bounded, Bounds},
         crop::CropType,
-        crop::{ContainsPointError, CropToPolygonError, Croppable, PointLoc},
+        crop::{CropToPolygonError, Croppable, PointLoc},
         isxn::IsxnResult,
         object2d::Object2d,
         point::Pt,
@@ -254,21 +254,21 @@ impl Polygon {
 
     /// Calculates whether a point is within, without, or along a closed polygon
     /// using the https://en.wikipedia.org/wiki/Winding_number method.
-    pub fn contains_pt(&self, other: &Pt) -> Result<PointLoc, ContainsPointError> {
+    pub fn contains_pt(&self, other: &Pt) -> PointLoc {
         // If |self| is open, error out.
         if self.kind == PolygonKind::Open {
-            return Err(ContainsPointError::PolygonIsOpen);
+            panic!("Polygon is open.");
         }
 
         for (idx, pt) in self.pts.iter().enumerate() {
             if other == pt {
-                return Ok(PointLoc::OnPoint(idx));
+                return PointLoc::OnPoint(idx);
             }
         }
         for (idx, seg) in self.to_segments().iter().enumerate() {
             match seg.line_segment_contains_pt(other) {
                 Some(Contains::Within) => {
-                    return Ok(PointLoc::OnSegment(idx));
+                    return PointLoc::OnSegment(idx);
                 }
                 Some(Contains::AtStart | Contains::AtEnd) => {
                     panic!("?");
@@ -282,10 +282,10 @@ impl Polygon {
             theta += abp(other, i, j)
         }
 
-        Ok(match approx_eq!(f64, theta, 0_f64, epsilon = 0.00001) {
+        match approx_eq!(f64, theta, 0_f64, epsilon = 0.00001) {
             true => PointLoc::Outside,
             false => PointLoc::Inside,
-        })
+        }
     }
 
     /// Which curve orientation a polygon has. Curve orientation refers to
@@ -340,23 +340,19 @@ impl Polygon {
     // check if this polygon totally contains another.
     // assumes no intersections.
     fn totally_contains(&self, other: &Polygon) -> bool {
-        other.pts.iter().all(|pt| {
-            !matches!(
-                self.contains_pt(pt).expect("contains pt fail"),
-                PointLoc::Outside
-            )
-        })
+        other
+            .pts
+            .iter()
+            .all(|pt| !matches!(self.contains_pt(pt), PointLoc::Outside))
     }
 
     // check if the other polygon isn't inside of or intersecting this one at all.
     // assumes no intersections.
     fn contains_not_at_all(&self, other: &Polygon) -> bool {
-        other.pts.iter().all(|pt| {
-            matches!(
-                self.contains_pt(pt).expect("contains pt fail"),
-                PointLoc::Outside
-            )
-        })
+        other
+            .pts
+            .iter()
+            .all(|pt| matches!(self.contains_pt(pt), PointLoc::Outside))
     }
 }
 
@@ -785,36 +781,36 @@ mod tests {
         let frame1 = Polygon([a, c, i, g]);
         {
             let p = e;
-            assert_eq!(frame1.contains_pt(&p).unwrap(), PointLoc::Inside);
+            assert_eq!(frame1.contains_pt(&p), PointLoc::Inside);
         }
-        assert_eq!(frame1.contains_pt(&a).unwrap(), PointLoc::OnPoint(3));
-        assert_eq!(frame1.contains_pt(&c).unwrap(), PointLoc::OnPoint(2));
-        assert_eq!(frame1.contains_pt(&i).unwrap(), PointLoc::OnPoint(1));
-        assert_eq!(frame1.contains_pt(&g).unwrap(), PointLoc::OnPoint(0));
+        assert_eq!(frame1.contains_pt(&a), PointLoc::OnPoint(3));
+        assert_eq!(frame1.contains_pt(&c), PointLoc::OnPoint(2));
+        assert_eq!(frame1.contains_pt(&i), PointLoc::OnPoint(1));
+        assert_eq!(frame1.contains_pt(&g), PointLoc::OnPoint(0));
 
-        assert_eq!(frame1.contains_pt(&d).unwrap(), PointLoc::OnSegment(3));
-        assert_eq!(frame1.contains_pt(&b).unwrap(), PointLoc::OnSegment(2));
-        assert_eq!(frame1.contains_pt(&f).unwrap(), PointLoc::OnSegment(1));
-        assert_eq!(frame1.contains_pt(&h).unwrap(), PointLoc::OnSegment(0));
+        assert_eq!(frame1.contains_pt(&d), PointLoc::OnSegment(3));
+        assert_eq!(frame1.contains_pt(&b), PointLoc::OnSegment(2));
+        assert_eq!(frame1.contains_pt(&f), PointLoc::OnSegment(1));
+        assert_eq!(frame1.contains_pt(&h), PointLoc::OnSegment(0));
 
         // frame [a,b,e,d] should contain a, b, d, e...
         let frame2 = Polygon([a, b, e, d]);
-        assert_eq!(frame2.contains_pt(&a).unwrap(), PointLoc::OnPoint(3));
-        assert_eq!(frame2.contains_pt(&b).unwrap(), PointLoc::OnPoint(2));
-        assert_eq!(frame2.contains_pt(&e).unwrap(), PointLoc::OnPoint(1));
-        assert_eq!(frame2.contains_pt(&d).unwrap(), PointLoc::OnPoint(0));
+        assert_eq!(frame2.contains_pt(&a), PointLoc::OnPoint(3));
+        assert_eq!(frame2.contains_pt(&b), PointLoc::OnPoint(2));
+        assert_eq!(frame2.contains_pt(&e), PointLoc::OnPoint(1));
+        assert_eq!(frame2.contains_pt(&d), PointLoc::OnPoint(0));
         for p in [c, f, i, h, g] {
-            assert_eq!(frame2.contains_pt(&p).unwrap(), PointLoc::Outside);
+            assert_eq!(frame2.contains_pt(&p), PointLoc::Outside);
         }
 
         let frame3 = Polygon([b, f, h, d]);
-        assert_eq!(frame3.contains_pt(&b).unwrap(), PointLoc::OnPoint(3));
-        assert_eq!(frame3.contains_pt(&f).unwrap(), PointLoc::OnPoint(2));
-        assert_eq!(frame3.contains_pt(&h).unwrap(), PointLoc::OnPoint(1));
-        assert_eq!(frame3.contains_pt(&d).unwrap(), PointLoc::OnPoint(0));
-        assert_eq!(frame3.contains_pt(&e).unwrap(), PointLoc::Inside);
+        assert_eq!(frame3.contains_pt(&b), PointLoc::OnPoint(3));
+        assert_eq!(frame3.contains_pt(&f), PointLoc::OnPoint(2));
+        assert_eq!(frame3.contains_pt(&h), PointLoc::OnPoint(1));
+        assert_eq!(frame3.contains_pt(&d), PointLoc::OnPoint(0));
+        assert_eq!(frame3.contains_pt(&e), PointLoc::Inside);
         for p in [a, c, g, i] {
-            assert_eq!(frame3.contains_pt(&p).unwrap(), PointLoc::Outside);
+            assert_eq!(frame3.contains_pt(&p), PointLoc::Outside);
         }
     }
 
@@ -846,7 +842,7 @@ mod tests {
             Pt(228.17, 202.35),
         ]);
         let suspicious_pt = Pt(228, 400);
-        assert_eq!(frame.contains_pt(&suspicious_pt), Ok(PointLoc::Outside));
+        assert_eq!(frame.contains_pt(&suspicious_pt), PointLoc::Outside);
     }
 
     #[test]

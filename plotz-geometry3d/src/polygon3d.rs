@@ -3,7 +3,6 @@
 use std::fmt::Debug;
 
 use float_ord::FloatOrd;
-use plotz_geometry::polygon::TryPolygon;
 
 use {
     crate::{camera::Oblique, point3d::Pt3d},

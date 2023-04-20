@@ -41,7 +41,7 @@ fn main() {
     dos.retain(|d_o| {
         if let Some(yp) = d_o.yield_pts() {
             yp.into_iter()
-                .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLoc::Inside)))
+                .all(|pt| matches!(frame_polygon.contains_pt(pt), PointLoc::Inside))
         } else {
             true
         }
