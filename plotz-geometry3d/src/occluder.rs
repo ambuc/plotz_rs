@@ -48,28 +48,6 @@ impl Occluder {
             }
             (Object2dInner::Segment(_sg), Object2dInner::Polygon(_pg)) => {
                 unimplemented!("no support for pg x sg yet");
-                // let is_collision = pg
-                //     .intersects_segment_detailed(&sg)
-                //     .iter()
-                //     .any(|isxn_result| match isxn_result {
-                //         IsxnResult::MultipleIntersections(_) => false,
-                //         IsxnResult::OneIntersection(isxn) => {
-                //             if isxn.on_points_of_either() {
-                //                 false
-                //             } else {
-                //                 true
-                //             }
-                //         }
-                //     });
-                // if is_collision {
-                //     sg.crop_excluding(pg)
-                //         .expect("crop failed")
-                //         .into_iter()
-                //         .map(|sg| Object2dInner::from(sg))
-                //         .collect()
-                // } else {
-                //     vec![incoming.clone()]
-                // }
             }
 
             //
@@ -85,9 +63,11 @@ impl Occluder {
 
     /// Incorporates an object.
     pub fn add(&mut self, incoming: Object2dInner, style3d: Option<Style3d>) {
+        info!("Adding {:?}", incoming);
+        let mut or = self.objects.clone();
+        // or.reverse();
         self.objects.extend(
-            self.objects
-                .iter()
+            or.iter()
                 .fold(
                     // One incoming object.
                     vec![incoming],

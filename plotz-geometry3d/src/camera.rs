@@ -22,7 +22,7 @@ impl Oblique {
     /// (1,1,1), with x going down-and-to-the-left, y going
     /// down-and-to-the-right, and z going straight up.
     pub fn standard() -> Oblique {
-        let spread = 0.8;
+        let spread = 0.7;
         Oblique {
             u_src: Pt3d(1.0, 0.0, 0.0),
             v_src: Pt3d(0.0, 1.0, 0.0),

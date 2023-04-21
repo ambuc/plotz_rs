@@ -12,8 +12,8 @@ use {
     float_ord::FloatOrd,
     itertools::Itertools,
     petgraph::{
+        dot::{Config, Dot},
         prelude::DiGraphMap,
-        // dot::{Config, Dot},
         Direction,
         Direction::{Incoming, Outgoing},
     },
@@ -342,6 +342,9 @@ impl<'a> CropGraph<'a> {
         let mut resultant = vec![];
 
         while let Some(pg) = self.extract_polygon() {
+            if pg.pts.len() == 3 {
+                info!("extracted: {:?}", pg);
+            }
             resultant.push(pg);
 
             // clean up in between extractions.
