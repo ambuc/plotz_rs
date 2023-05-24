@@ -82,18 +82,42 @@ fn main() {
         }
 
         if true {
-            objects.extend(
-                Cube(p3!(0, 0, 0), (0.7, 0.7, 1.0))
-                    .items
-                    .into_iter()
-                    .map(|face| Object3d::new(face).with_style(Style3d::new(&RED, 3.0))),
-            );
-            objects.extend(
-                Cube(p3!(1, 0, 0), (0.7, 0.7, 1.0))
-                    .items
-                    .into_iter()
-                    .map(|face| Object3d::new(face).with_style(Style3d::new(&YELLOW, 3.0))),
-            );
+            // objects.extend(
+            //     Cube(p3!(0, 0, 0), (0.7, 0.7, 1.0))
+            //         .items
+            //         .into_iter()
+            //         .map(|face| Object3d::new(face).with_style(Style3d::new(&RED, 3.0))),
+            // );
+
+            for pg3d in [
+                //Polygon3d([Pt3d(0.00,0.00,0.00), Pt3d(0.70,0.00,0.00), Pt3d(0.70,0.70,0.00), Pt3d(0.00,0.70,0.00), Pt3d(0.00,0.00,0.00)]),
+                //Polygon3d([Pt3d(0.00,0.00,0.00), Pt3d(0.70,0.00,0.00), Pt3d(0.70,0.00,1.00), Pt3d(0.00,0.00,1.00), Pt3d(0.00,0.00,0.00)]),
+                //Polygon3d([Pt3d(0.00,0.00,0.00), Pt3d(0.00,0.70,0.00), Pt3d(0.00,0.70,1.00), Pt3d(0.00,0.00,1.00), Pt3d(0.00,0.00,0.00)]),
+                Polygon3d([Pt3d(0.70,0.00,0.00), Pt3d(0.70,0.70,0.00), Pt3d(0.70,0.70,1.00), Pt3d(0.70,0.00,1.00), Pt3d(0.70,0.00,0.00)]),
+                //Polygon3d([Pt3d(0.00,0.70,0.00), Pt3d(0.00,0.70,1.00), Pt3d(0.70,0.70,1.00), Pt3d(0.70,0.70,0.00), Pt3d(0.00,0.70,0.00)]),
+                //Polygon3d([Pt3d(0.00,0.00,1.00), Pt3d(0.70,0.00,1.00), Pt3d(0.70,0.70,1.00), Pt3d(0.00,0.70,1.00), Pt3d(0.00,0.00,1.00)]),
+            ] {
+
+                objects.push(Object3d::new(pg3d).with_style(Style3d::new(&RED, 3.0)));
+            }
+
+
+            // objects.extend(
+            //     Cube(p3!(1, 0, 0), (0.7, 0.7, 1.0))
+            //         .items
+            //         .into_iter()
+            //         .map(|face| Object3d::new(face).with_style(Style3d::new(&YELLOW, 3.0))),
+            // );
+            for pg3d in [
+                // Polygon3d([ Pt3d(1.00, 0.00, 0.00), Pt3d(1.70, 0.00, 0.00), Pt3d(1.70, 0.70, 0.00), Pt3d(1.00, 0.70, 0.00), Pt3d(1.00, 0.00, 0.00), ]),
+                // Polygon3d([ Pt3d(1.00, 0.00, 0.00), Pt3d(1.70, 0.00, 0.00), Pt3d(1.70, 0.00, 1.00), Pt3d(1.00, 0.00, 1.00), Pt3d(1.00, 0.00, 0.00), ]),
+                // Polygon3d([ Pt3d(1.00, 0.00, 0.00), Pt3d(1.00, 0.70, 0.00), Pt3d(1.00, 0.70, 1.00), Pt3d(1.00, 0.00, 1.00), Pt3d(1.00, 0.00, 0.00), ]),
+                // Polygon3d([ Pt3d(1.70, 0.00, 0.00), Pt3d(1.70, 0.70, 0.00), Pt3d(1.70, 0.70, 1.00), Pt3d(1.70, 0.00, 1.00), Pt3d(1.70, 0.00, 0.00), ]),
+                 Polygon3d([ Pt3d(1.00, 0.70, 0.00), Pt3d(1.00, 0.70, 1.00), Pt3d(1.70, 0.70, 1.00), Pt3d(1.70, 0.70, 0.00), Pt3d(1.00, 0.70, 0.00), ]),
+                 Polygon3d([ Pt3d(1.00, 0.00, 1.00), Pt3d(1.70, 0.00, 1.00), Pt3d(1.70, 0.70, 1.00), Pt3d(1.00, 0.70, 1.00), Pt3d(1.00, 0.00, 1.00), ]),
+            ] {
+                objects.push(Object3d::new(pg3d).with_style(Style3d::new(&YELLOW, 3.0)));
+            }
         }
 
         let scene = Scene::builder()
