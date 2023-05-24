@@ -2,7 +2,7 @@ use {
     argh::FromArgs,
     itertools::iproduct,
     plotz_color::*,
-    plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
+    plotz_core::{canvas::Canvas, frame::*, svg::Size},
     plotz_geometry::{
         crop::Croppable,
         grid_layout::{GridLayout, GridLayoutSettings},
@@ -35,10 +35,7 @@ fn main() {
     let mut dos = vec![];
     let mgn = 25.0;
 
-    let frame: Object2d = make_frame(
-        (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
-        /*offset=*/ Pt(mgn, mgn),
-    );
+    let frame: Object2d = make_frame_with_margin((1000.0, 800.0), mgn);
 
     let mut gl = GridLayout::new(
         GridLayoutSettings::builder()

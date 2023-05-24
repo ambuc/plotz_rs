@@ -6,7 +6,7 @@ use {
     argh::FromArgs,
     itertools::iproduct,
     plotz_color::*,
-    plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
+    plotz_core::{canvas::Canvas, frame::*, svg::Size},
     plotz_geometry::{object2d::Object2d, point::Pt},
     plotz_geometry3d::{
         camera::{Oblique, Occlusion, Projection},
@@ -40,12 +40,9 @@ fn main() {
 
     let args: Args = argh::from_env();
 
-    let mgn = 25.0;
+    let margin = 25.0;
 
-    let frame: Object2d = make_frame(
-        (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
-        /*offset=*/ Pt(mgn, mgn),
-    );
+    let frame: Object2d = make_frame_with_margin((1000.0, 800.0), margin);
 
     let dos: Vec<Object2d> = {
         let origin_3d = Pt3d(0.0, 0.0, 0.0);

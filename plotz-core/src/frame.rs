@@ -19,3 +19,8 @@ pub fn make_frame(wh: (f64, f64), offset: Pt) -> Object2d {
         .with_color(&BLACK)
         .with_thickness(5.0)
 }
+
+/// Makes a frame at (0,0) with dims (w,h) which is set in on all faces by |margin|.
+pub fn make_frame_with_margin((w, h): (f64, f64), margin: f64) -> Object2d {
+    make_frame((w - 2.0 * margin, h - 2.0 * margin), Pt(margin, margin))
+}
