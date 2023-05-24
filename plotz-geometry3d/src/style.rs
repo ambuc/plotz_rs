@@ -21,6 +21,10 @@ impl Style3d {
     pub fn with_color(self, c: &'static ColorRGB) -> Style3d {
         Self { color: c, ..self }
     }
+    /// New with default args.
+    pub fn new(c: &'static ColorRGB, t: f64) -> Style3d {
+        Self::builder().color(c).thickness(t).build()
+    }
 }
 
 impl Debug for Style3d {
