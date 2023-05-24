@@ -428,7 +428,7 @@ impl Croppable for Polygon {
         crop_graph.remove_dual_edges();
         crop_graph.remove_nodes_with_no_neighbors_of_kind(Direction::Incoming);
         crop_graph.remove_nodes_with_no_neighbors_of_kind(Direction::Outgoing);
-        crop_graph.as_resultant_polygons()
+        crop_graph.trim_and_create_resultant_polygons()
     }
 }
 

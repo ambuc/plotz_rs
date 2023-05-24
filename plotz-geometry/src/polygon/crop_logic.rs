@@ -338,7 +338,7 @@ impl<'a> CropGraph<'a> {
         TryPolygon(pts).ok()
     }
 
-    pub fn as_resultant_polygons(mut self) -> Vec<Polygon> {
+    pub fn trim_and_create_resultant_polygons(mut self) -> Vec<Polygon> {
         let mut resultant = vec![];
 
         while let Some(pg) = self.extract_polygon() {
