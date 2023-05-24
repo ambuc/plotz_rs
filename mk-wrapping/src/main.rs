@@ -49,31 +49,31 @@ impl Tile {
 
     // scaled to a unit square.
     fn to_dois(&self) -> Vec<Object2dInner> {
-        let a = Pt(0.0, 0.0);
-        let b = Pt(0.25, 0.0);
+        let _a = Pt(0.0, 0.0);
+        let _b = Pt(0.25, 0.0);
         let c = Pt(0.5, 0.0);
-        let d = Pt(0.75, 0.0);
-        let e = Pt(1.0, 0.0);
-        let f = Pt(0.0, 0.25);
+        let _d = Pt(0.75, 0.0);
+        let _e = Pt(1.0, 0.0);
+        let _f = Pt(0.0, 0.25);
         let g = Pt(0.25, 0.25);
         let h = Pt(0.5, 0.25);
         let i = Pt(0.75, 0.25);
-        let j = Pt(1.0, 0.25);
+        let _j = Pt(1.0, 0.25);
         let k = Pt(0.0, 0.5);
         let l = Pt(0.25, 0.5);
-        let m = Pt(0.5, 0.5);
+        let _m = Pt(0.5, 0.5);
         let n = Pt(0.75, 0.5);
         let o = Pt(1.0, 0.5);
-        let p = Pt(0.0, 0.75);
+        let _p = Pt(0.0, 0.75);
         let q = Pt(0.25, 0.75);
         let r = Pt(0.5, 0.75);
         let s = Pt(0.75, 0.75);
-        let t = Pt(1.0, 0.75);
-        let u = Pt(0.0, 1.0);
-        let v = Pt(0.25, 1.0);
+        let _t = Pt(1.0, 0.75);
+        let _u = Pt(0.0, 1.0);
+        let _v = Pt(0.25, 1.0);
         let w = Pt(0.5, 1.0);
-        let x = Pt(0.75, 1.0);
-        let y = Pt(1.0, 1.0);
+        let _x = Pt(0.75, 1.0);
+        let _y = Pt(1.0, 1.0);
         match self {
             Tile::Cross => {
                 vec![Segment(k, o).into(), Segment(c, w).into()]

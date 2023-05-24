@@ -1,8 +1,6 @@
 //! A scene, i.e. a holder for 3d objects ready to be projected down onto a 2d
 //! plane.
 
-use plotz_geometry::{point::Pt, polygon::Polygon};
-
 use {
     crate::{
         camera::{Occlusion, Projection},
@@ -10,7 +8,6 @@ use {
         occluder::Occluder,
         style::Style3d,
     },
-    plotz_color::*,
     float_ord::FloatOrd,
     itertools::Itertools,
     plotz_geometry::{object2d::Object2d, traits::Annotatable, traits::AnnotationSettings},

@@ -64,7 +64,7 @@ impl Occluder {
     /// Incorporates an object.
     pub fn add(&mut self, incoming: Object2dInner, style3d: Option<Style3d>) {
         info!("Adding {:?}", incoming);
-        let mut or = self.objects.clone();
+        let or = self.objects.clone();
         // or.reverse();
         self.objects.extend(
             or.iter()

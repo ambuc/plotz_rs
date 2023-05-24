@@ -9,7 +9,6 @@ use plotz_core::{
     svg::Size,
 };
 use plotz_geometry::point::Pt;
-use plotz_geometry3d::*;
 
 #[derive(FromArgs, Debug)]
 #[argh(description = "...")]

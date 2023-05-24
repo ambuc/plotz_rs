@@ -12,7 +12,7 @@ use {
     float_ord::FloatOrd,
     itertools::Itertools,
     petgraph::{
-        dot::{Config, Dot},
+        // dot::{Config, Dot},
         prelude::DiGraphMap,
         Direction,
         Direction::{Incoming, Outgoing},

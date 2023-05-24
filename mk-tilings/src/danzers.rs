@@ -29,8 +29,10 @@ lazy_static! {
 }
 
 struct Scalene {
+    #[allow(dead_code)]
     angle_sm_rad: f64,
     angle_md_rad: f64,
+    #[allow(dead_code)]
     angle_lg_rad: f64,
 }
 impl Scalene {
