@@ -1,6 +1,9 @@
 //! A camera.
 
-use {crate::point3d::Pt3d, plotz_geometry::point::Pt};
+use {
+    crate::{p3, point3d::Pt3d},
+    plotz_geometry::point::Pt,
+};
 
 ////////////
 
@@ -24,13 +27,13 @@ impl Oblique {
     pub fn standard() -> Oblique {
         let spread = 0.7;
         Oblique {
-            u_src: Pt3d(1.0, 0.0, 0.0),
-            v_src: Pt3d(0.0, 1.0, 0.0),
-            w_src: Pt3d(0.0, 0.0, 1.0),
+            u_src: p3!(1, 0, 0),
+            v_src: p3!(0, 1, 0),
+            w_src: p3!(0, 0, 1),
             u_dst: Pt(-1.0, spread),
             v_dst: Pt(1.0, spread),
             w_dst: Pt(0.0, -1.0),
-            view_vector: Pt3d(-1.0, -1.0, -1.3),
+            view_vector: p3!(-1.0, -1.0, -1.3),
         }
     }
 

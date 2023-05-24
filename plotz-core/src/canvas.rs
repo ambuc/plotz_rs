@@ -158,7 +158,8 @@ impl Canvas {
     }
 
     /// writes out to a set of SVGs at a prefix.
-    pub fn write_to_svg(self, size: Size, prefix: &str) -> Result<(), Error> {
+    pub fn write_to_svg(self, size: impl Into<Size>, prefix: &str) -> Result<(), Error> {
+        let size = size.into();
         // all
         {
             trace!("Writing to all.");

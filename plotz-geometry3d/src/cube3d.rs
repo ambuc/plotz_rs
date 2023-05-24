@@ -1,13 +1,13 @@
 //! A cube in 3d.
 
-use crate::{face::Face, group::Group, point3d::Pt3d, polygon3d::Polygon3d};
+use crate::{face::Face, group::Group, p3, point3d::Pt3d, polygon3d::Polygon3d};
 
 /// make a cube of faces (no edges)
 #[allow(non_snake_case)]
 pub fn Cube(root: Pt3d, (dx, dy, dz): (f64, f64, f64)) -> Group<Face> {
-    let dx = Pt3d(dx, 0.0, 0.0);
-    let dy = Pt3d(0.0, dy, 0.0);
-    let dz = Pt3d(0.0, 0.0, dz);
+    let dx = p3!(dx, 0.0, 0.0);
+    let dy = p3!(0.0, dy, 0.0);
+    let dz = p3!(0.0, 0.0, dz);
 
     let o = root;
     let ox = o + dx;

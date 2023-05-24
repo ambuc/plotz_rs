@@ -89,7 +89,7 @@ fn main() {
                     .map(|face| Object3d::new(face).with_style(Style3d::new(&RED, 3.0))),
             );
             objects.extend(
-                Cube(p3!(0, 0, 0), (0.7, 0.7, 1.0))
+                Cube(p3!(1, 0, 0), (0.7, 0.7, 1.0))
                     .items
                     .into_iter()
                     .map(|face| Object3d::new(face).with_style(Style3d::new(&YELLOW, 3.0))),
@@ -99,7 +99,7 @@ fn main() {
         let scene = Scene::builder()
             .debug(
                 DebugSettings::builder()
-                    .draw_wireframes(Style3d::new(&GRAY, 0.1))
+                    .draw_wireframes(Style3d::new(&GRAY, 0.5))
                     .annotate(AnnotationSettings::builder().font_size(12.0).build())
                     .build(),
             )
@@ -112,12 +112,6 @@ fn main() {
     canvas.scale_to_fit_frame().unwrap();
 
     let () = canvas
-        .write_to_svg(
-            Size {
-                width: 800,
-                height: 1000,
-            },
-            &args.output_path_prefix,
-        )
+        .write_to_svg((800, 1000), &args.output_path_prefix)
         .expect("write");
 }

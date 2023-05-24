@@ -27,6 +27,15 @@ impl Size {
     }
 }
 
+impl From<(i64, i64)> for Size {
+    fn from((width, height): (i64, i64)) -> Self {
+        Size {
+            width: width.try_into().unwrap(),
+            height: height.try_into().unwrap(),
+        }
+    }
+}
+
 /// A general error which might be encountered while writing an SVG.
 #[derive(Debug, Error)]
 pub enum SvgWriteError {

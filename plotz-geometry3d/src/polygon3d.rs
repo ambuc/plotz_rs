@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use float_ord::FloatOrd;
 
 use {
-    crate::{camera::Oblique, point3d::Pt3d},
+    crate::{camera::Oblique, p3, point3d::Pt3d},
     plotz_geometry::polygon::Polygon,
     std::ops::*,
 };
@@ -41,7 +41,7 @@ impl Polygon3d {
         let sum_x: f64 = self.pts.iter().map(|pt| pt.x.0).sum();
         let sum_y: f64 = self.pts.iter().map(|pt| pt.y.0).sum();
         let sum_z: f64 = self.pts.iter().map(|pt| pt.z.0).sum();
-        Pt3d(sum_x / num, sum_y / num, sum_z / num)
+        p3!(sum_x, sum_y, sum_z) / num
     }
 
     /// The center of the object, projected along the view vector.
