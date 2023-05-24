@@ -48,6 +48,14 @@ where
     }
 }
 
+/// Pt3d shortcut.
+#[macro_export]
+macro_rules! p3 {
+    ($x:expr, $y:expr, $z:expr) => {
+        Pt3d($x, $y, $z)
+    };
+}
+
 impl From<(f64, f64, f64)> for Pt3d {
     fn from((x, y, z): (f64, f64, f64)) -> Pt3d {
         Pt3d(x, y, z)

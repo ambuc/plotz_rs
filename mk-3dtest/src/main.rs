@@ -13,6 +13,7 @@ use {
         cube3d::Cube,
         face::Face,
         object3d::Object3d,
+        p3,
         point3d::Pt3d,
         polygon3d::Polygon3d,
         scene::{DebugSettings, Scene},
@@ -43,16 +44,16 @@ fn main() {
     let frame: Object2d = make_frame_with_margin((1000.0, 800.0), margin);
 
     let dos: Vec<Object2d> = {
-        let origin_3d = Pt3d(0.0, 0.0, 0.0);
+        let origin_3d = p3!(0, 0, 0);
 
         let mut objects: Vec<Object3d> = vec![];
 
         if false {
             objects.extend(
                 vec![
-                    (Pt3d(1.0, 0.0, 0.0), &RED),
-                    (Pt3d(0.0, 1.0, 0.0), &BLUE),
-                    (Pt3d(0.0, 0.0, 1.0), &GREEN),
+                    (p3!(1, 0, 0), &RED),
+                    (p3!(0, 1, 0), &BLUE),
+                    (p3!(0, 0, 1), &GREEN),
                 ]
                 .iter()
                 .map(|(diff, color)| {
@@ -72,7 +73,7 @@ fn main() {
             ) {
                 let zh = 1.0;
                 objects.extend(
-                    Cube(Pt3d(i as f64, j as f64, 0.0), (e, e, zh))
+                    Cube(p3!(i, j, 0), (e, e, zh))
                         .items
                         .into_iter()
                         .map(|face| Object3d::new(face).with_style(Style3d::new(color, 3.0))),
@@ -82,13 +83,13 @@ fn main() {
 
         if true {
             objects.extend(
-                Cube(Pt3d(0.0, 0.0, 0.0), (0.7, 0.7, 1.0))
+                Cube(p3!(0, 0, 0), (0.7, 0.7, 1.0))
                     .items
                     .into_iter()
                     .map(|face| Object3d::new(face).with_style(Style3d::new(&RED, 3.0))),
             );
             objects.extend(
-                Cube(Pt3d(1.0, 0.0, 0.0), (0.7, 0.7, 1.0))
+                Cube(p3!(0, 0, 0), (0.7, 0.7, 1.0))
                     .items
                     .into_iter()
                     .map(|face| Object3d::new(face).with_style(Style3d::new(&YELLOW, 3.0))),
