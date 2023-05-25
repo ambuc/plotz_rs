@@ -1,5 +1,7 @@
 //! Crop logic for polygons.
 
+use float_cmp::approx_eq;
+
 use {
     super::TryPolygon,
     crate::{
@@ -213,6 +215,55 @@ impl<'a> CropGraph<'a> {
         }
     }
 
+    // pub fn remove_linear_cycles(&mut self) {
+    //     if let Some(node_with_many_children) = self.graph.nodes().find(|node| {
+    //         self.graph
+    //             .neighbors_directed(*node, Outgoing)
+    //             .collect::<Vec<_>>()
+    //             .len()
+    //             > 1
+    //     }) {
+    //         info!("AGAIN");
+    //         // found one. let's march (taking first child) until we find
+    //         // ourselves again, collecting all the way.  if all the nodes are
+    //         // colinear, remove all the rest of what we found (but not
+    //         // ourselves)
+    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
+    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
+    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
+    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
+    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
+    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
+    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
+    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
+    //         // let mut chain = vec![];
+    //         // let mut curr = node_with_many_children;
+    //         // 'l: loop {
+    //         //     if let Some(next) = self.graph.neighbors_directed(curr, Outgoing).next() {
+    //         //         info!(
+    //         //             "loop: found chain: {:?} curr; {:?}, next: {:?}",
+    //         //             chain, curr, next
+    //         //         );
+    //         //         if chain.contains(&next) {
+    //         //             break;
+    //         //         }
+    //         //         chain.push(curr);
+    //         //         curr = next;
+    //         //     } else {
+    //         //         break 'l;
+    //         //     }
+    //         // }
+    //         info!("chain: {:?}", chain);
+    //         if is_colinear_n(&chain) {
+    //             info!("removing");
+    //             for ch in &chain[1..] {
+    //                 // all but the first
+    //                 self.graph.remove_node(*ch);
+    //             }
+    //         }
+    //     }
+    // }
+
     pub fn remove_stubs(&mut self) {
         // a _stub_ is like this:
         //
@@ -338,6 +389,14 @@ impl<'a> CropGraph<'a> {
         TryPolygon(pts).ok()
     }
 
+    pub fn print(&self) {
+        use petgraph::dot::{Config, Dot};
+        println!(
+            "{:?}",
+            Dot::with_config(&self.graph, &[Config::EdgeNoLabel])
+        );
+    }
+
     pub fn trim_and_create_resultant_polygons(mut self) -> Vec<Polygon> {
         let mut resultant = vec![];
 
@@ -354,4 +413,22 @@ impl<'a> CropGraph<'a> {
 
         resultant
     }
+}
+
+fn is_colinear_n(ch: &[Pt]) -> bool {
+    if ch.len() <= 2 {
+        return false;
+    }
+    ch[2..].iter().any(|p| is_colinear_3(ch[0], ch[1], *p))
+}
+
+fn is_colinear_3(p1: Pt, p2: Pt, p3: Pt) -> bool {
+    let a = p1.x.0;
+    let b = p1.y.0;
+    let m = p2.x.0;
+    let n = p2.y.0;
+    let x = p3.x.0;
+    let y = p3.y.0;
+    // (𝑛−𝑏)(𝑥−𝑚)=(𝑦−𝑛)(𝑚−𝑎)
+    approx_eq!(f64, (n - b) * (x - m), (y - n) * (m - a))
 }

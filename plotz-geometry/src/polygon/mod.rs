@@ -1,9 +1,5 @@
 //! A 2D polygon (or multi&line).
 
-use petgraph::Direction;
-
-use crate::isxn::Which;
-
 mod crop_logic;
 
 use {
@@ -12,7 +8,7 @@ use {
         bounded::{Bounded, Bounds},
         crop::CropType,
         crop::{CropToPolygonError, Croppable, PointLoc},
-        isxn::IsxnResult,
+        isxn::{IsxnResult, Which},
         object2d::Object2d,
         point::Pt,
         segment::{Contains, Segment},
@@ -21,6 +17,7 @@ use {
     },
     float_cmp::approx_eq,
     itertools::{iproduct, zip},
+    petgraph::Direction,
     std::{
         cmp::{Eq, PartialEq},
         fmt::Debug,
@@ -364,6 +361,7 @@ impl Croppable for Polygon {
     /// Known bug: If multiple resultant polygons are present, this will return
     /// only one.
     fn crop(&self, b: &Polygon, crop_type: CropType) -> Vec<Self::Output> {
+        tracing::info!("Cropping self \n\t{:?} \n\tto b \n\t{:?}", self, b);
         let a: &Polygon = self;
 
         if a == b {
@@ -428,6 +426,8 @@ impl Croppable for Polygon {
         crop_graph.remove_dual_edges();
         crop_graph.remove_nodes_with_no_neighbors_of_kind(Direction::Incoming);
         crop_graph.remove_nodes_with_no_neighbors_of_kind(Direction::Outgoing);
+        // crop_graph.remove_linear_cycles();
+        crop_graph.print();
         crop_graph.trim_and_create_resultant_polygons()
     }
 }

@@ -3,7 +3,6 @@
 use {
     crate::style::Style3d,
     plotz_geometry::{crop::Croppable, object2d::Object2d, object2d_inner::Object2dInner},
-    tracing::*,
 };
 
 /// Occludes.
@@ -40,7 +39,6 @@ impl Occluder {
             }
 
             (Object2dInner::Polygon(pg1), Object2dInner::Polygon(pg2)) => {
-                trace!("cropping pg to pg");
                 pg1.crop_excluding(pg2)
                     .into_iter()
                     .map(Object2dInner::from)
@@ -63,26 +61,18 @@ impl Occluder {
 
     /// Incorporates an object.
     pub fn add(&mut self, incoming: Object2dInner, style3d: Option<Style3d>) {
-        info!("Adding {:?}", incoming);
-        let or = self.objects.clone();
-        // or.reverse();
+        let mut incoming_os = vec![incoming];
+        for (existing_o, _) in &self.objects {
+            incoming_os = incoming_os
+                .iter()
+                .map(|incoming_o| Occluder::hide_a_behind_b(incoming_o, &existing_o))
+                .flatten()
+                .collect::<Vec<_>>();
+        }
         self.objects.extend(
-            or.iter()
-                .fold(
-                    // One incoming object.
-                    vec![incoming],
-                    // a set of incoming (reduced) objects, and a single existing object.
-                    |acc, (existing, _)| -> Vec<Object2dInner> {
-                        acc.into_iter()
-                            .map(|reduced: Object2dInner| {
-                                Occluder::hide_a_behind_b(&reduced, &existing)
-                            })
-                            .flatten()
-                            .collect()
-                    },
-                )
+            incoming_os
                 .into_iter()
-                .map(|o: Object2dInner| (o, style3d)),
+                .map(|incoming_o| (incoming_o, style3d)),
         );
     }
 

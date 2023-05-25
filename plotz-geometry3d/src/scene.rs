@@ -57,17 +57,18 @@ impl Scene {
             (Projection::Oblique(obl), Occlusion::True) => {
                 let mut resultant = vec![];
 
-                // // add objects to the occluder in distance order.
-                let mut unmodified = vec![];
+                // add objects to the occluder in distance order.
+                // start at the front (so that the objects in the front can
+                // remain unmodified) and work backwards.
                 let mut occ = Occluder::new();
+
                 for obj3 in self.objects.iter().sorted_by(|o1, o2| {
                     Ord::cmp(
                         &FloatOrd(o1.min_dist_along(&obl.view_vector)),
-                        &FloatOrd(o2.max_dist_along(&obl.view_vector)),
+                        &FloatOrd(o2.min_dist_along(&obl.view_vector)),
                     )
                 }) {
                     let obj2 = obj3.project_oblique(&obl);
-                    unmodified.push(obj2.clone());
 
                     if let Some(DebugSettings {
                         draw_wireframes,
@@ -85,18 +86,6 @@ impl Scene {
 
                     occ.add(obj2.inner, obj3.style.clone());
                 }
-                // dbg!(&unmodified);
-
-                // // MINIMAL EXAMPLE !!!!
-                // occ = Occluder::new();
-                // for obj2 in vec![
-                // ] {
-                //     occ.add(
-                //         obj2.inner,
-                //         Some(Style3d::builder().color(obj2.color).build()),
-                //     );
-                // }
-
                 resultant.extend(occ.export());
                 resultant
             }
