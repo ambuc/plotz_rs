@@ -1,26 +1,6 @@
 //! Crop logic for polygons.
 
-use {
-    super::TryPolygon,
-    crate::{
-        crop::{CropType, PointLoc},
-        isxn::{Intersection, IsxnResult, Pair, Which},
-        point::Pt,
-        polygon::Polygon,
-    },
-    approx::*,
-    float_ord::FloatOrd,
-    itertools::Itertools,
-    petgraph::{
-        dot::{Config, Dot},
-        prelude::DiGraphMap,
-        Direction,
-        Direction::{Incoming, Outgoing},
-    },
-    std::fmt::Debug,
-    tracing::*,
-    typed_builder::TypedBuilder,
-};
+use {crate::isxn::IsxnResult, std::fmt::Debug};
 
 /// An IsxnResult which knows the polygon segments of its two lines.
 #[derive(PartialEq, Copy, Clone)]

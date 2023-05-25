@@ -1,10 +1,11 @@
 //! A 2D polygon (or multi&line).
 
-mod crop_logic;
-mod cropgraph;
+mod annotated_isxn_result;
+mod crop_graph;
+pub mod multiline;
 
 use {
-    self::{crop_logic::*, cropgraph::*},
+    self::{annotated_isxn_result::*, crop_graph::*},
     crate::{
         bounded::{Bounded, Bounds},
         crop::CropType,
@@ -93,34 +94,6 @@ impl PartialEq for Polygon {
 
         self_new_pts == other_new_pts && self.kind == other.kind
     }
-}
-
-/// A general error arising from trying to construct a Multiline.
-#[derive(Debug, Error, PartialEq, Eq)]
-pub enum MultilineConstructorError {
-    /// It is not possible to construct a multiline from one or fewer points.
-    #[error("It is not possible to construct a multiline from one or fewer points.")]
-    OneOrFewerPoints,
-}
-
-/// Constructor for multilines. Multilines must have at least one line, so they
-/// must have two or more points. Constructing a multiline from one or fewer
-/// points will result in a MultilineConstructorError.
-#[allow(non_snake_case)]
-pub fn Multiline(a: impl IntoIterator<Item = Pt>) -> Result<Polygon, MultilineConstructorError> {
-    let pts: Vec<Pt> = a.into_iter().collect();
-    if pts.len() <= 1 {
-        return Err(MultilineConstructorError::OneOrFewerPoints);
-    }
-
-    let mut p = Polygon {
-        pts,
-        kind: PolygonKind::Open,
-    };
-    if p.get_curve_orientation() == Some(CurveOrientation::Negative) {
-        p.orient_curve_positively();
-    }
-    Ok(p)
 }
 
 /// A general error arising from trying to construct a Polygon.
@@ -598,6 +571,8 @@ impl Annotatable for Polygon {
 
 #[cfg(test)]
 mod tests {
+    use crate::polygon::multiline::{Multiline, MultilineConstructorError};
+
     use super::*;
     use float_eq::assert_float_eq;
 

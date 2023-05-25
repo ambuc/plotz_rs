@@ -9,7 +9,10 @@ use {
     plotz_geometry::{
         object2d_inner::Object2dInner,
         point::Pt,
-        polygon::{Multiline, MultilineConstructorError, Polygon, PolygonConstructorError},
+        polygon::{
+            multiline::{Multiline, MultilineConstructorError},
+            Polygon, PolygonConstructorError,
+        },
     },
     serde_json::Value,
     std::collections::HashMap,

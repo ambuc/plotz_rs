@@ -6,7 +6,7 @@ use {
         object2d::Object2d,
         object2d_inner::Object2dInner,
         point::Pt,
-        polygon::{Multiline, Polygon},
+        polygon::{multiline::Multiline, Polygon},
         shading::{shade_polygon, ShadeConfig},
     },
     rand::prelude::SliceRandom,
