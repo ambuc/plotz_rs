@@ -1,7 +1,5 @@
 //! Crop logic for polygons.
 
-use float_cmp::approx_eq;
-
 use {
     super::TryPolygon,
     crate::{
@@ -413,22 +411,4 @@ impl<'a> CropGraph<'a> {
 
         resultant
     }
-}
-
-fn is_colinear_n(ch: &[Pt]) -> bool {
-    if ch.len() <= 2 {
-        return false;
-    }
-    ch[2..].iter().any(|p| is_colinear_3(ch[0], ch[1], *p))
-}
-
-fn is_colinear_3(p1: Pt, p2: Pt, p3: Pt) -> bool {
-    let a = p1.x.0;
-    let b = p1.y.0;
-    let m = p2.x.0;
-    let n = p2.y.0;
-    let x = p3.x.0;
-    let y = p3.y.0;
-    // (𝑛−𝑏)(𝑥−𝑚)=(𝑦−𝑛)(𝑚−𝑎)
-    approx_eq!(f64, (n - b) * (x - m), (y - n) * (m - a))
 }

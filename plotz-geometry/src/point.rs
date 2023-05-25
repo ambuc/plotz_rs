@@ -7,6 +7,7 @@ use crate::{
     traits::*,
 };
 use {
+    float_cmp::approx_eq,
     float_ord::FloatOrd,
     std::hash::Hash,
     std::{convert::From, fmt::Debug, ops::*},
@@ -19,6 +20,14 @@ pub struct Pt {
     pub x: FloatOrd<f64>,
     /// The y-coordinate of the point.
     pub y: FloatOrd<f64>,
+}
+
+/// Pt shortcut.
+#[macro_export]
+macro_rules! p2 {
+    ($x:expr, $y:expr) => {
+        Pt($x, $y)
+    };
 }
 
 impl Debug for Pt {
@@ -245,9 +254,28 @@ impl Nullable for Pt {
     }
 }
 
+fn is_colinear_n(ch: &[Pt]) -> bool {
+    if ch.len() <= 2 {
+        return false;
+    }
+    ch[2..].iter().all(|p| is_colinear_3(ch[0], ch[1], *p))
+}
+
+fn is_colinear_3(p1: Pt, p2: Pt, p3: Pt) -> bool {
+    let a = p1.x.0;
+    let b = p1.y.0;
+    let m = p2.x.0;
+    let n = p2.y.0;
+    let x = p3.x.0;
+    let y = p3.y.0;
+    // (𝑛−𝑏)(𝑥−𝑚)=(𝑦−𝑛)(𝑚−𝑎)
+    approx_eq!(f64, (n - b) * (x - m), (y - n) * (m - a))
+}
+
 #[cfg(test)]
 mod tests {
     use float_eq::assert_float_eq;
+    use test_case::test_case;
 
     use super::*;
 
@@ -326,5 +354,27 @@ mod tests {
     #[test]
     fn test_div() {
         assert_eq!(Pt(1.0, 2.0) / 2.0, Pt(0.5, 1.0)); // floats
+    }
+
+    #[test_case(p2!(0,0), p2!(1,1), p2!(2,2), true; "colinear diagonal")]
+    #[test_case(p2!(0,0), p2!(1,0), p2!(2,0), true; "colinear vert")]
+    #[test_case(p2!(0,0), p2!(0,1), p2!(0,2), true; "colinear horz")]
+    #[test_case(p2!(0,0), p2!(0,1), p2!(2,2), false; "not colinear")]
+    #[test_case(p2!(0,0), p2!(0,1), p2!(0.1, 0.1), false; "not colinear small")]
+    #[test_case(p2!(0,0), p2!(0,1), p2!(0.0001, 0.0001), false; "not colinear very small")]
+    fn test_is_colinear_3(a: Pt, b: Pt, c: Pt, expectation: bool) {
+        assert_eq!(is_colinear_3(a, b, c), expectation);
+    }
+
+    #[test_case(&[], false; "empty")]
+    #[test_case(&[p2!(0,0)], false; "one")]
+    #[test_case(&[p2!(0,0), p2!(0,1)], false; "two")]
+    #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2)], true; "three colinear")]
+    #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(0,3)], true; "four colinear")]
+    #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(1,3)], false; "four not colinear")]
+    #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(0,3), p2!(0,4)], true; "five colinear")]
+    #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(0,3), p2!(1,4)], false; "five not colinear")]
+    fn test_is_colinear_n(pts: &[Pt], expectation: bool) {
+        assert_eq!(is_colinear_n(pts), expectation);
     }
 }

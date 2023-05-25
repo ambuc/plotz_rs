@@ -38,12 +38,11 @@ impl Occluder {
                 unimplemented!("no support for curvearcs yet")
             }
 
-            (Object2dInner::Polygon(pg1), Object2dInner::Polygon(pg2)) => {
-                pg1.crop_excluding(pg2)
-                    .into_iter()
-                    .map(Object2dInner::from)
-                    .collect()
-            }
+            (Object2dInner::Polygon(pg1), Object2dInner::Polygon(pg2)) => pg1
+                .crop_excluding(pg2)
+                .into_iter()
+                .map(Object2dInner::from)
+                .collect(),
             (Object2dInner::Segment(_sg), Object2dInner::Polygon(_pg)) => {
                 unimplemented!("no support for pg x sg yet");
             }
