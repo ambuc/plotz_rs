@@ -1,9 +1,10 @@
 //! A 2D polygon (or multi&line).
 
 mod crop_logic;
+mod cropgraph;
 
 use {
-    self::crop_logic::*,
+    self::{crop_logic::*, cropgraph::*},
     crate::{
         bounded::{Bounded, Bounds},
         crop::CropType,
