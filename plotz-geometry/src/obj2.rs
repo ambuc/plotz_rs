@@ -7,7 +7,7 @@ use {
         crop::{Croppable, PointLoc},
         group::Group,
         shapes::{
-            curve::CurveArc, point::Pt, polygon::Polygon, polygon::PolygonKind, sg2::Sg2, txt::Txt,
+            curve::CurveArc, point::Pt, polygon::Pg2, polygon::PolygonKind, sg2::Sg2, txt::Txt,
         },
         traits::*,
     },
@@ -21,7 +21,7 @@ pub enum Obj2 {
     /// A point.
     Point(Pt),
     /// A polygon.
-    Polygon(Polygon),
+    Polygon(Pg2),
     /// A segment.
     Segment(Sg2),
     /// An arc.
@@ -286,7 +286,7 @@ impl TranslatableAssign for Obj2 {}
 
 impl Croppable for Obj2 {
     type Output = Obj2;
-    fn crop(&self, frame: &Polygon, crop_type: CropType) -> Vec<Self::Output> {
+    fn crop(&self, frame: &Pg2, crop_type: CropType) -> Vec<Self::Output> {
         match &self {
             Obj2::Point(pt) => {
                 assert_eq!(crop_type, CropType::Inclusive);
@@ -336,7 +336,7 @@ impl Croppable for Obj2 {
         }
     }
 
-    fn crop_excluding(&self, other: &Polygon) -> Vec<Self::Output>
+    fn crop_excluding(&self, other: &Pg2) -> Vec<Self::Output>
     where
         Self: Sized,
     {

@@ -9,7 +9,7 @@ use {
         group::Group,
         shapes::{
             point::Pt,
-            polygon::{Polygon, Rect},
+            polygon::{Pg2, Rect},
         },
         styled_obj2::StyledObj2,
     },
@@ -89,7 +89,7 @@ fn main() {
             vec![a, b, c, d, e, f, g, h, i, j, k, l, a]
         };
 
-        let subject_sq = StyledObj2::new(Polygon(pts))
+        let subject_sq = StyledObj2::new(Pg2(pts))
             .with_color(&RED)
             .with_thickness(1.0)
             + offset;

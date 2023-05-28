@@ -8,7 +8,7 @@ use {
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             point::{PolarPt, Pt},
-            polygon::Polygon,
+            polygon::Pg2,
         },
         styled_obj2::StyledObj2,
     },
@@ -252,7 +252,7 @@ pub fn make() -> Vec<StyledObj2> {
         .flat_map(|tile| {
             let color = tile.kind.color();
 
-            let p = Polygon(tile.pts);
+            let p = Pg2(tile.pts);
 
             let config = ShadeConfig::builder()
                 .gap(1.0)

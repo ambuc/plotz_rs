@@ -4,7 +4,7 @@ use {
     plotz_color::*,
     plotz_geometry::{
         shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{point::Pt, polygon::Polygon},
+        shapes::{point::Pt, polygon::Pg2},
         styled_obj2::StyledObj2,
     },
 };
@@ -143,7 +143,7 @@ pub fn make() -> Vec<StyledObj2> {
         .into_iter()
         .flat_map(|tile| {
             let color = tile.color();
-            let mut p = Polygon(tile.pts());
+            let mut p = Pg2(tile.pts());
             p *= Pt(1.0, -1.0); // flip
             p *= 530.0;
             p += Pt(-17.0, 240.0); // translate

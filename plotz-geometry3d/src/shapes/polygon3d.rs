@@ -6,7 +6,7 @@ use float_ord::FloatOrd;
 
 use {
     crate::{camera::Oblique, p3, shapes::point3d::Pt3},
-    plotz_geometry::shapes::polygon::Polygon,
+    plotz_geometry::shapes::polygon::Pg2,
     std::ops::*,
 };
 
@@ -24,13 +24,12 @@ impl Debug for Pg3 {
 }
 
 impl Pg3 {
-    pub fn project_oblique(&self, oblique_projection: &Oblique) -> Polygon {
-        Polygon(
-            self.pts
-                .iter()
-                .map(|pt3d| oblique_projection.project(&pt3d))
-                .collect::<Vec<_>>(),
-        )
+    pub fn project_oblique(&self, oblique_projection: &Oblique) -> Pg2 {
+        Pg2(self
+            .pts
+            .iter()
+            .map(|pt3d| oblique_projection.project(&pt3d))
+            .collect::<Vec<_>>())
     }
 
     // The average point of the polygon.

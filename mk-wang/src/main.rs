@@ -7,7 +7,7 @@ use {
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             point::Pt,
-            polygon::{multiline::Multiline, Polygon},
+            polygon::{multiline::Multiline, Pg2},
         },
         styled_obj2::StyledObj2,
     },
@@ -193,7 +193,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<StyledObj2> 
         ret.extend({
             shade_polygon(
                 &ShadeConfig::builder().gap(0.05).slope(0.0).build(),
-                &Polygon([Pt(0.1, 0.1), Pt(0.5, 0.5), Pt(0.9, 0.1)]),
+                &Pg2([Pt(0.1, 0.1), Pt(0.5, 0.5), Pt(0.9, 0.1)]),
             )
             .unwrap()
             .iter()

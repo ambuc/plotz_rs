@@ -8,7 +8,7 @@ use crate::{
     shading::shade_config::ShadeConfig,
     shapes::{
         point::Pt,
-        polygon::{Polygon, PolygonKind},
+        polygon::{Pg2, PolygonKind},
         sg2::Sg2,
     },
 };
@@ -33,10 +33,7 @@ fn compute_vertical_step(gap: f64, slope: f64) -> f64 {
 
 /// Gap controls how far to step between crosshatched lines
 /// Slope controls the angle of the lines.
-pub fn shade_polygon(
-    config: &ShadeConfig,
-    polygon: &Polygon,
-) -> Result<Vec<Sg2>, ShadePolygonError> {
+pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg2) -> Result<Vec<Sg2>, ShadePolygonError> {
     if polygon.kind == PolygonKind::Open {
         return Err(ShadePolygonError::PolygonIsOpen);
     }

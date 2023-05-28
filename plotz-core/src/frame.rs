@@ -3,14 +3,14 @@
 use {
     plotz_color::BLACK,
     plotz_geometry::{
-        shapes::{point::Pt, polygon::Polygon},
+        shapes::{point::Pt, polygon::Pg2},
         styled_obj2::StyledObj2,
     },
 };
 
 /// Makes a frame given (width, height) and (x,y) offset.
-pub fn make_frame_pg((w, h): (f64, f64), offset: Pt) -> Polygon {
-    let mut p = Polygon([Pt(0.0, 0.0), Pt(0.0, w), Pt(h, w), Pt(h, 0.0)]) + offset;
+pub fn make_frame_pg((w, h): (f64, f64), offset: Pt) -> Pg2 {
+    let mut p = Pg2([Pt(0.0, 0.0), Pt(0.0, w), Pt(h, w), Pt(h, 0.0)]) + offset;
     p.orient_curve_positively();
     p
 }

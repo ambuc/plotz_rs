@@ -5,7 +5,7 @@ use crate::{
     interpolate,
     interpolate::interpolate_2d_checked,
     isxn::{Intersection, IsxnResult, MultipleIntersections},
-    shapes::{point::Pt, polygon::Polygon},
+    shapes::{point::Pt, polygon::Pg2},
     traits::*,
 };
 use float_cmp::approx_eq;
@@ -284,7 +284,7 @@ impl Mutable for Sg2 {}
 impl Croppable for Sg2 {
     type Output = Sg2;
 
-    fn crop(&self, frame: &Polygon, crop_type: CropType) -> Vec<Self::Output>
+    fn crop(&self, frame: &Pg2, crop_type: CropType) -> Vec<Self::Output>
     where
         Self: Sized,
     {
@@ -356,7 +356,7 @@ impl Croppable for Sg2 {
         resultants
     }
 
-    fn crop_excluding(&self, _other: &Polygon) -> Vec<Self::Output>
+    fn crop_excluding(&self, _other: &Pg2) -> Vec<Self::Output>
     where
         Self: Sized,
     {

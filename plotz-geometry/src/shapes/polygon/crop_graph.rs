@@ -7,7 +7,7 @@ use {
         isxn::{Intersection, IsxnResult, Pair, Which},
         shapes::{
             point::{is_colinear_n, Pt},
-            polygon::Polygon,
+            polygon::Pg2,
         },
     },
     approx::*,
@@ -28,9 +28,9 @@ pub struct CropGraph<'a> {
     #[builder(default)]
     graph: DiGraphMap<Pt, ()>,
 
-    a: &'a Polygon,
+    a: &'a Pg2,
 
-    b: &'a Polygon,
+    b: &'a Pg2,
 
     // why do we have a known_pts vector?
     //
@@ -46,11 +46,7 @@ pub struct CropGraph<'a> {
 }
 
 impl<'a> CropGraph<'a> {
-    pub fn run(
-        a: &Polygon,
-        b: &Polygon,
-        crop_type: CropType,
-    ) -> (Vec<Polygon>, DiGraphMap<Pt, ()>) {
+    pub fn run(a: &Pg2, b: &Pg2, crop_type: CropType) -> (Vec<Pg2>, DiGraphMap<Pt, ()>) {
         let mut crop_graph = CropGraph::builder().a(a).b(b).build();
         crop_graph.build_from_polygons(crop_type);
         crop_graph.remove_nodes_outside_polygon(Which::A);
@@ -87,7 +83,7 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    fn get(&self, which: Which) -> &Polygon {
+    fn get(&self, which: Which) -> &Pg2 {
         Pair {
             a: &self.a,
             b: &self.b,
@@ -278,7 +274,7 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    fn extract_polygon(&mut self) -> Option<Polygon> {
+    fn extract_polygon(&mut self) -> Option<Pg2> {
         let mut pts: Vec<Pt> = vec![];
 
         if self.graph.node_count() == 0 {
@@ -356,7 +352,7 @@ impl<'a> CropGraph<'a> {
     }
 
     // NB: Destructive, walks and destroys graph.
-    fn trim_and_create_resultant_polygons(mut self) -> Vec<Polygon> {
+    fn trim_and_create_resultant_polygons(mut self) -> Vec<Pg2> {
         let mut resultant = vec![];
 
         while let Some(pg) = self.extract_polygon() {
@@ -376,7 +372,7 @@ mod test {
     use itertools::iproduct;
     use test_case::test_case;
 
-    fn u_shape() -> Polygon {
+    fn u_shape() -> Pg2 {
         let a = p2!(60, 60);
         let b = p2!(70, 60);
         let c = p2!(80, 60);
@@ -385,10 +381,10 @@ mod test {
         let f = p2!(80, 75);
         let g = p2!(60, 90);
         let h = p2!(90, 90);
-        Polygon([a, b, e, f, c, d, h, g, a])
+        Pg2([a, b, e, f, c, d, h, g, a])
     }
 
-    fn h_shape() -> Polygon {
+    fn h_shape() -> Pg2 {
         let a = p2!(60, 40);
         let b = p2!(70, 40);
         let c = p2!(70, 70);
@@ -401,14 +397,14 @@ mod test {
         let j = p2!(70, 80);
         let k = p2!(70, 110);
         let l = p2!(60, 110);
-        Polygon([a, b, c, d, e, f, g, h, i, j, k, l, a])
+        Pg2([a, b, c, d, e, f, g, h, i, j, k, l, a])
     }
 
     #[test_case(u_shape(), CropType::Exclusive; "u-shape, exclusive")]
     #[test_case(u_shape(), CropType::Inclusive; "u-shape, inclusive")]
     #[test_case(h_shape(), CropType::Exclusive; "h-shape, exclusive")]
     #[test_case(h_shape(), CropType::Inclusive; "h-shape, inclusive")]
-    fn test_all_crops(shape: Polygon, crop_type: CropType) {
+    fn test_all_crops(shape: Pg2, crop_type: CropType) {
         let boundary = Rect(p2!(50, 50), (50.0, 50.0)).unwrap();
         let margin = 10.0;
         for (_idx, offset) in iproduct!(0..=5, 0..=4).map(|(i, j)| {

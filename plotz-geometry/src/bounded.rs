@@ -3,7 +3,7 @@ use crate::{
     crop::PointLoc,
     shapes::{
         point::Pt,
-        polygon::{Polygon, PolygonConstructorError},
+        polygon::{Pg2, PolygonConstructorError},
     },
 };
 use float_ord::FloatOrd;
@@ -35,8 +35,8 @@ pub struct Bounds {
 
 impl Bounds {
     /// Creates a frame, suitable for cropping.
-    pub fn to_polygon(&self) -> Polygon {
-        Polygon([
+    pub fn to_polygon(&self) -> Pg2 {
+        Pg2([
             self.tl_bound(),
             self.tr_bound(),
             self.br_bound(),
@@ -199,14 +199,14 @@ pub fn streaming_bbox<'a, T: 'a + Bounded>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use crate::shapes::polygon::Polygon;
+    use crate::shapes::polygon::Pg2;
 
     #[test]
     fn test_streaming_bbox() {
         let polygons = vec![
-            Polygon([Pt(0, 0), Pt(1, 0), Pt(1, 1)]),
-            Polygon([Pt(2, 0), Pt(3, 0), Pt(3, 1)]),
-            Polygon([Pt(0, 2), Pt(1, 2), Pt(1, 3)]),
+            Pg2([Pt(0, 0), Pt(1, 0), Pt(1, 1)]),
+            Pg2([Pt(2, 0), Pt(3, 0), Pt(3, 1)]),
+            Pg2([Pt(0, 2), Pt(1, 2), Pt(1, 3)]),
         ];
         let bounds = streaming_bbox(&polygons).unwrap();
         assert_eq!(bounds.bl_bound(), Pt(0, 0));

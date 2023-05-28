@@ -5,7 +5,7 @@
 #![allow(unused)]
 
 use {
-    plotz_geometry::shapes::polygon::Polygon,
+    plotz_geometry::shapes::polygon::Pg2,
     shapefile::{Reader, Shape},
     std::path::Path,
     string_interner::{symbol::SymbolU32, StringInterner},
@@ -42,7 +42,7 @@ pub enum ShpConversionError {
 pub fn parse_shp<P: AsRef<Path>>(
     interner: &mut StringInterner,
     shp_path: P,
-) -> Result<Vec<(Polygon, TagsList)>, ShpConversionError> {
+) -> Result<Vec<(Pg2, TagsList)>, ShpConversionError> {
     let mut reader = Reader::from_path(shp_path).expect("quz");
     let retval = vec![];
     for (shape, record) in reader.iter_shapes_and_records().filter_map(Result::ok) {
@@ -53,7 +53,7 @@ pub fn parse_shp<P: AsRef<Path>>(
     Ok(retval)
 }
 
-fn to_polygon(shape: &Shape) -> Result<Option<Polygon>, PolygonError> {
+fn to_polygon(shape: &Shape) -> Result<Option<Pg2>, PolygonError> {
     match shape {
         Shape::NullShape => Err(PolygonError::NullShape),
         Shape::Point(_) | Shape::PointM(_) | Shape::PointZ(_) => Ok(None),

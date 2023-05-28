@@ -20,7 +20,7 @@ use {
         crop::Croppable,
         obj2::Obj2,
         shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{point::Pt, polygon::Polygon, sg2::Sg2},
+        shapes::{point::Pt, polygon::Pg2, sg2::Sg2},
         styled_obj2::StyledObj2,
         traits::*,
     },
@@ -386,7 +386,7 @@ impl Map {
 
     /// Crop everything everywhere to the frame polygon. (Passed in here for
     /// Flexibility.)
-    pub fn crop_to_frame(&mut self, frame: &Polygon) {
+    pub fn crop_to_frame(&mut self, frame: &Pg2) {
         trace!("Cropping all to frame.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             *dos = dos
@@ -611,7 +611,7 @@ mod tests {
                 [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
             ),
         ] {
-            let obj = Obj2::Polygon(Polygon(initial));
+            let obj = Obj2::Polygon(Pg2(initial));
             let mut map = Map {
                 canvas: {
                     let mut canvas = Canvas::new();
@@ -631,7 +631,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].inner, Obj2::Polygon(Polygon(expected)));
+            assert_eq!(x.next().unwrap()[0].inner, Obj2::Polygon(Pg2(expected)));
         }
     }
 
@@ -661,7 +661,7 @@ mod tests {
                 [Pt(0.0, 0.0), Pt(0.0, 900.0), Pt(900.0, 0.0)],
             ),
         ] {
-            let obj = Obj2::Polygon(Polygon(initial));
+            let obj = Obj2::Polygon(Pg2(initial));
             let mut map = Map {
                 center: None,
                 canvas: {
@@ -681,7 +681,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].inner, Obj2::Polygon(Polygon(expected)));
+            assert_eq!(x.next().unwrap()[0].inner, Obj2::Polygon(Pg2(expected)));
         }
     }
 }

@@ -10,7 +10,7 @@ use {
             point::Pt,
             polygon::{
                 multiline::{Multiline, MultilineConstructorError},
-                Polygon, PolygonConstructorError, TryPolygon,
+                Pg2, PolygonConstructorError, TryPolygon,
             },
         },
     },
@@ -189,7 +189,7 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj2>, GeoJsonConversionE
             }))
         })
         .collect::<Result<_, _>>()?)
-    .map(|v: Vec<Polygon>| v.into_iter().map(Obj2::from).collect::<Vec<_>>())
+    .map(|v: Vec<Pg2>| v.into_iter().map(Obj2::from).collect::<Vec<_>>())
 }
 
 fn parse_to_circle(_coords: &Value) -> Result<Vec<Obj2>, GeoJsonConversionError> {
@@ -238,7 +238,7 @@ mod tests {
         ]]);
         assert_eq!(
             parse_to_polygon(&geojson).unwrap(),
-            vec![Obj2::from(Polygon([
+            vec![Obj2::from(Pg2([
                 Pt(-74.015_651_1, 40.721_544_6),
                 Pt(-74.015_493_9, 40.721_526_2),
                 Pt(-74.014_280_9, 40.721_384_4),
@@ -282,7 +282,7 @@ mod tests {
         assert_eq!(polygons.len(), 4);
         assert_eq!(
             polygons[0].0,
-            Obj2::from(Polygon([Pt(0, 0), Pt(1.0, 2.5), Pt(2.0, 5.0)]))
+            Obj2::from(Pg2([Pt(0, 0), Pt(1.0, 2.5), Pt(2.0, 5.0)]))
         );
 
         // assert_symbol_tuple_list(
@@ -312,12 +312,12 @@ mod tests {
 
         assert_eq!(
             polygons[2].0,
-            Obj2::from(Polygon([Pt(2, 2), Pt(1.0, 2.5), Pt(2.0, 5.0)]))
+            Obj2::from(Pg2([Pt(2, 2), Pt(1.0, 2.5), Pt(2.0, 5.0)]))
         );
 
         assert_eq!(
             polygons[3].0,
-            Obj2::from(Polygon([Pt(3, 3), Pt(1.0, 2.5), Pt(2.0, 5.0)]))
+            Obj2::from(Pg2([Pt(3, 3), Pt(1.0, 2.5), Pt(2.0, 5.0)]))
         );
     }
 }

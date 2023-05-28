@@ -8,7 +8,7 @@ use {
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             point::{PolarPt, Pt},
-            polygon::Polygon,
+            polygon::Pg2,
         },
         styled_obj2::StyledObj2,
     },
@@ -288,7 +288,7 @@ pub fn make() -> Vec<StyledObj2> {
         .into_iter()
         .flat_map(|tile| {
             let color = tile.color();
-            let mut p = Polygon(tile.pts());
+            let mut p = Pg2(tile.pts());
             p *= Pt(1.0, -1.0); // flip
             p *= 3500.0;
             p += Pt(95.0, -300.0); // translate

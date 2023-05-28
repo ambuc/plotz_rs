@@ -4,7 +4,7 @@ use {
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{point::Pt, polygon::Polygon},
+        shapes::{point::Pt, polygon::Pg2},
         styled_obj2::StyledObj2,
     },
     rand::{prelude::SliceRandom, Rng},
@@ -83,11 +83,10 @@ fn main() {
         .build()
         .expect("build vornoi");
 
-    let polygons: Vec<Polygon> = vornoi
+    let polygons: Vec<Pg2> = vornoi
         .iter_cells()
         .map(|cell| {
-            Polygon(cell.iter_vertices().map(|vertex| Pt(vertex.x, vertex.y))) * DIM
-                + Pt(20.0, 20.0)
+            Pg2(cell.iter_vertices().map(|vertex| Pt(vertex.x, vertex.y))) * DIM + Pt(20.0, 20.0)
         })
         .collect();
 

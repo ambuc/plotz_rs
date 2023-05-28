@@ -5,7 +5,7 @@ use {
         bounded::Bounded,
         crop::{CropType, Croppable},
         obj2::Obj2,
-        shapes::{point::Pt, polygon::Polygon},
+        shapes::{point::Pt, polygon::Pg2},
         traits::*,
     },
     plotz_color::{ColorRGB, BLACK},
@@ -179,7 +179,7 @@ impl TranslatableAssign for StyledObj2 {}
 impl Croppable for StyledObj2 {
     type Output = StyledObj2;
 
-    fn crop(&self, other: &Polygon, crop_type: CropType) -> Vec<Self::Output>
+    fn crop(&self, other: &Pg2, crop_type: CropType) -> Vec<Self::Output>
     where
         Self: Sized,
     {

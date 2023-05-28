@@ -4,7 +4,7 @@ use {
     crate::{
         bounded::{Bounded, BoundsCollector},
         crop::{CropType, Croppable},
-        shapes::{point::Pt, polygon::Polygon},
+        shapes::{point::Pt, polygon::Pg2},
         styled_obj2::StyledObj2,
         traits::*,
     },
@@ -134,7 +134,7 @@ impl Scalable<f64> for Group {}
 
 impl Croppable for Group {
     type Output = Group;
-    fn crop(&self, frame: &Polygon, crop_type: CropType) -> Vec<Self::Output> {
+    fn crop(&self, frame: &Pg2, crop_type: CropType) -> Vec<Self::Output> {
         vec![Group::new(
             self.0
                 .iter()
@@ -142,7 +142,7 @@ impl Croppable for Group {
                 .collect::<Vec<_>>(),
         )]
     }
-    fn crop_excluding(&self, _other: &Polygon) -> Vec<Self::Output>
+    fn crop_excluding(&self, _other: &Pg2) -> Vec<Self::Output>
     where
         Self: Sized,
     {
