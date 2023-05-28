@@ -10,10 +10,9 @@ use {
     std::ops::*,
 };
 
-/// A multiline is a list of points rendered with connecting line segments.
+// A multiline is a list of points rendered with connecting line segments.
 #[derive(Clone)]
 pub struct Polygon3d {
-    /// The points which describe a polygon or multiline.
     pub pts: Vec<Pt3d>,
 }
 
@@ -25,7 +24,6 @@ impl Debug for Polygon3d {
 }
 
 impl Polygon3d {
-    /// Project oblique
     pub fn project_oblique(&self, oblique_projection: &Oblique) -> Polygon {
         Polygon(
             self.pts
@@ -35,7 +33,7 @@ impl Polygon3d {
         )
     }
 
-    /// The average point of the polygon.
+    // The average point of the polygon.
     pub fn average_pt(&self) -> Pt3d {
         let num: f64 = self.pts.len() as f64;
         let sum_x: f64 = self.pts.iter().map(|pt| pt.x.0).sum();
@@ -44,11 +42,11 @@ impl Polygon3d {
         p3!(sum_x, sum_y, sum_z) / num
     }
 
-    /// The center of the object, projected along the view vector.
+    // The center of the object, projected along the view vector.
     pub fn dist_along(&self, view_vector: &Pt3d) -> f64 {
         view_vector.dot(&self.average_pt())
     }
-    /// the minimum distance along a vector.
+    // the minimum distance along a vector.
     pub fn min_dist_along(&self, view_vector: &Pt3d) -> f64 {
         self.pts
             .iter()
@@ -57,7 +55,7 @@ impl Polygon3d {
             .unwrap()
             .0
     }
-    /// the maximum distance along a vector.
+    // the maximum distance along a vector.
     pub fn max_dist_along(&self, view_vector: &Pt3d) -> f64 {
         self.pts
             .iter()
@@ -68,8 +66,8 @@ impl Polygon3d {
     }
 }
 
-/// Constructor for multilines, which are by definition open. The first and last
-/// points must not be the same.
+// Constructor for multilines, which are by definition open. The first and last
+// points must not be the same.
 #[allow(non_snake_case)]
 pub fn Multiline3d(a: impl IntoIterator<Item = Pt3d>) -> Polygon3d {
     let pts: Vec<Pt3d> = a.into_iter().collect();
@@ -77,7 +75,7 @@ pub fn Multiline3d(a: impl IntoIterator<Item = Pt3d>) -> Polygon3d {
     Polygon3d { pts }
 }
 
-/// Constructor for polygons which are closed. The first and last points must be the same.
+// Constructor for polygons which are closed. The first and last points must be the same.
 #[allow(non_snake_case)]
 pub fn Polygon3d(a: impl IntoIterator<Item = Pt3d>) -> Polygon3d {
     let pts: Vec<Pt3d> = a.into_iter().collect();

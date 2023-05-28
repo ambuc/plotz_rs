@@ -66,13 +66,13 @@ fn main() {
 
         if true {
             let e = 0.65;
+            let n = 5;
             for ((i, j, k), color) in zip(
-                iproduct!(0..3, 0..3, 0..3),
+                iproduct!(0..n, 0..n, 0..n),
                 (vec![&RED, &YELLOW, &GREEN, &BLUE, &PLUM, &ORANGE])
                     .iter()
                     .cycle(),
             ) {
-                let zh = 1.0;
                 objects.extend(
                     Cube(p3!(i, j, k), (e, e, e))
                         .items
@@ -203,22 +203,6 @@ fn main() {
             .build();
         scene.project_with(Projection::Oblique(Oblique::standard()), Occlusion::True)
     };
-
-    // let dos = {
-    //     let p1 = Polygon([ Pt(-1.0000000000, 1.6800000000), Pt(-1.0000000000, 0.6800000000), Pt(-0.3000000000, 0.1900000000), Pt(-0.3000000000, 1.1900000000), ]);
-    //     let p2 = Polygon([ Pt(-0.7000000000, -0.5100000000), Pt(0.0000000000, -0.0200000000), Pt(0.0000000000, 0.9800000000), Pt(-0.7000000000, 0.4900000000), Pt(-0.7000000000, 0.4700000000), Pt(-0.3000000000, 0.1900000000), Pt(-0.7000000000, -0.0900000000), ]);
-
-    //     let mut o = Occluder::new();
-    //     o.add(p1.clone().into(), Some(Style3d::new(&YELLOW, 3.0)));
-    //     o.add(p2.clone().into(), Some(Style3d::new(&RED, 6.0)));
-
-    //     let mut dos = vec![];
-    //     dos.push(Object2d::new(p1).with_color(&ORANGE).with_thickness(9.0));
-    //     dos.push(Object2d::new(p2).with_color(&BROWN).with_thickness(12.0));
-    //     dos.extend(o.export());
-    //     dos
-
-    // };
 
     let mut canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
     canvas.scale_to_fit_frame().unwrap();

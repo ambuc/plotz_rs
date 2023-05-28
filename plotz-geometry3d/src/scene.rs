@@ -15,37 +15,29 @@ use {
     typed_builder::TypedBuilder,
 };
 
-/// Debug settings.
 #[derive(Debug, Clone, TypedBuilder)]
 pub struct DebugSettings {
-    /// A style for drawing wireframes, if configured.
     #[builder(default, setter(strip_option))]
     draw_wireframes: Option<Style3d>,
 
-    /// Whether or not to annotate everything.
     #[builder(default, setter(strip_option))]
     annotate: Option<AnnotationSettings>,
 }
 
-/// A scene of 3d objects ready to be projected down to a 2d plane.
 #[derive(Debug, Clone, TypedBuilder)]
 pub struct Scene {
-    /// Some objects.
     #[builder(default)]
     objects: Vec<Object3d>,
 
-    /// Some debug settings.
     #[builder(default, setter(strip_option))]
     debug: Option<DebugSettings>,
 }
 
 impl Scene {
-    /// A new scene.
     pub fn new() -> Scene {
         Scene::builder().build()
     }
 
-    /// Projects the scene onto a camera, renders to 2d, and returns a vector of object2ds.
     pub fn project_with(&self, projection: Projection, occlusion: Occlusion) -> Vec<Object2d> {
         match (projection, occlusion) {
             (Projection::Oblique(obl), Occlusion::False) => self

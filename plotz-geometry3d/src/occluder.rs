@@ -5,14 +5,11 @@ use {
     plotz_geometry::{crop::Croppable, object2d::Object2d, object2d_inner::Object2dInner},
 };
 
-/// Occludes.
 pub struct Occluder {
-    /// Incorporated objects.
     objects: Vec<(Object2dInner, Option<Style3d>)>,
 }
 
 impl Occluder {
-    /// new, empty occ.
     pub fn new() -> Occluder {
         Occluder { objects: vec![] }
     }
@@ -58,7 +55,7 @@ impl Occluder {
         }
     }
 
-    /// Incorporates an object.
+    // Incorporates an object.
     pub fn add(&mut self, incoming: Object2dInner, style3d: Option<Style3d>) {
         let mut incoming_os = vec![incoming];
         for (existing_o, _) in &self.objects {
@@ -75,7 +72,7 @@ impl Occluder {
         );
     }
 
-    /// Exports the occluded 2d objects.
+    // Exports the occluded 2d objects.
     pub fn export(mut self) -> Vec<Object2d> {
         // we store them front-to-back, but we want to render them to svg back-to-front.
         self.objects.reverse();

@@ -12,7 +12,7 @@ fn make_planar_face(origin: Pt3d, d1: Pt3d, d2: Pt3d) -> Face {
     ]))
 }
 
-/// make a cube of faces (no edges)
+// make a cube of faces (no edges)
 #[allow(non_snake_case)]
 pub fn Cube(root: Pt3d, (dx, dy, dz): (f64, f64, f64)) -> Group<Face> {
     let dx = p3!(dx, 0.0, 0.0);

@@ -1,6 +1,6 @@
 //! A general-purpose 3D geometry library.
 
-#![deny(missing_docs)]
+#![allow(missing_docs)]
 
 pub mod camera;
 pub mod cube3d;

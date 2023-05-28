@@ -9,15 +9,13 @@ use {
     std::ops::*,
 };
 
-/// A Face is a polygon which is opaque, i.e. the face of the polygon rather
-/// than its edges.
+// A Face is a polygon which is opaque, i.e. the face of the polygon rather than
+// its edges.
 #[derive(Clone, From)]
 pub struct Face {
-    /// The polygon.
     pub pg3d: Polygon3d,
 }
 
-/// Face constructor.
 #[allow(non_snake_case)]
 pub fn Face(pg3d: Polygon3d) -> Face {
     Face { pg3d }
@@ -31,7 +29,6 @@ impl Debug for Face {
 }
 
 impl Face {
-    /// Project oblique
     pub fn project_oblique(&self, oblique_projection: &Oblique) -> Polygon {
         self.pg3d.project_oblique(oblique_projection)
     }

@@ -4,24 +4,19 @@ use std::fmt::Debug;
 
 use {plotz_color::*, typed_builder::TypedBuilder};
 
-/// Styling information for the 3d representation.
 #[derive(Clone, Copy, TypedBuilder)]
 pub struct Style3d {
-    /// A color.
     #[builder(default=&BLACK)]
     pub color: &'static ColorRGB,
 
-    /// A thickness.
     #[builder(default = 1.0)]
     pub thickness: f64,
 }
 
 impl Style3d {
-    /// Modifier with color.
     pub fn with_color(self, c: &'static ColorRGB) -> Style3d {
         Self { color: c, ..self }
     }
-    /// New with default args.
     pub fn new(c: &'static ColorRGB, t: f64) -> Style3d {
         Self::builder().color(c).thickness(t).build()
     }

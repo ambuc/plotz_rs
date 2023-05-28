@@ -3,13 +3,10 @@
 use {crate::point3d::Pt3d, std::ops::*};
 
 #[derive(Debug, Clone)]
-/// Many things.
 pub struct Group<T> {
-    /// The things which make up this group.
     pub items: Vec<T>,
 }
 
-/// Constructor for group
 #[allow(non_snake_case)]
 pub fn Group<T>(a: impl IntoIterator<Item = T>) -> Group<T> {
     Group {

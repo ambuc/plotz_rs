@@ -6,14 +6,10 @@ use {
     std::{convert::From, fmt::Debug, hash::Hash, ops::*},
 };
 
-/// A point in 2D space.
 #[derive(Hash, Copy, Clone, PartialOrd, Ord)]
 pub struct Pt3d {
-    /// The x-coordinate of the point.
     pub x: FloatOrd<f64>,
-    /// The y-coordinate of the point.
     pub y: FloatOrd<f64>,
-    /// The z-coordinate of the point.
     pub z: FloatOrd<f64>,
 }
 
@@ -35,7 +31,7 @@ impl Debug for Pt3d {
     }
 }
 
-/// An alternate constructor for points.
+// An alternate constructor for points.
 #[allow(non_snake_case)]
 pub fn Pt3d<T>(x: T, y: T, z: T) -> Pt3d
 where
@@ -48,7 +44,7 @@ where
     }
 }
 
-/// Pt3d shortcut.
+// Pt3d shortcut.
 #[macro_export]
 macro_rules! p3 {
     ($x:expr, $y:expr, $z:expr) => {
@@ -147,11 +143,11 @@ impl SubAssign<Pt3d> for Pt3d {
 }
 
 impl Pt3d {
-    /// https://en.wikipedia.org/wiki/Dot_product
+    // https://en.wikipedia.org/wiki/Dot_product
     pub fn dot(&self, other: &Pt3d) -> f64 {
         (self.x.0 * other.x.0) + (self.y.0 * other.y.0) + (self.z.0 * other.z.0)
     }
-    /// average of two points.
+    // average of two points.
     pub fn avg(&self, other: &Pt3d) -> Pt3d {
         let avg_x = (self.x.0 + other.x.0) / 2.0;
         let avg_y = (self.y.0 + other.y.0) / 2.0;

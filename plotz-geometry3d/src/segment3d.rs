@@ -7,12 +7,10 @@ use {
     std::{fmt::Debug, ops::*},
 };
 
-/// A segment in 3d space, with initial and final points.
+// A segment in 3d space, with initial and final points.
 #[derive(Debug, Clone, Copy, Eq, Hash)]
 pub struct Segment3d {
-    /// The initial point of the segment.
     pub i: Pt3d,
-    /// The final point of the segment.
     pub f: Pt3d,
 }
 
@@ -22,14 +20,13 @@ impl PartialEq for Segment3d {
     }
 }
 
-/// An alternate constructor for segments.
 #[allow(non_snake_case)]
 pub fn Segment3d(i: Pt3d, f: Pt3d) -> Segment3d {
     Segment3d { i, f }
 }
 
 impl Segment3d {
-    /// Returns the absolute value of the length of this segment.
+    // Returns the absolute value of the length of this segment.
     pub fn abs(&self) -> f64 {
         let two = 2_f64;
         (0_f64
@@ -39,7 +36,6 @@ impl Segment3d {
         .sqrt()
     }
 
-    /// Project oblique
     pub fn project_oblique(&self, oblique_projection: &Oblique) -> Segment {
         Segment(
             oblique_projection.project(&self.i),
@@ -47,16 +43,16 @@ impl Segment3d {
         )
     }
 
-    /// The average point of the polygon.
+    // The average point of the polygon.
     pub fn average_pt(&self) -> Pt3d {
         self.i.avg(&self.f)
     }
 
-    /// The center of the object, projected along the view vector.
+    // The center of the object, projected along the view vector.
     pub fn dist_along(&self, view_vector: &Pt3d) -> f64 {
         self.average_pt().dot(view_vector)
     }
-    /// the maximum distance along a vector.
+    // the maximum distance along a vector.
     pub fn max_dist_along(&self, view_vector: &Pt3d) -> f64 {
         [self.i, self.f]
             .iter()
@@ -65,7 +61,7 @@ impl Segment3d {
             .unwrap()
             .0
     }
-    /// the minimum distance along a vector.
+    // the minimum distance along a vector.
     pub fn min_dist_along(&self, view_vector: &Pt3d) -> f64 {
         [self.i, self.f]
             .iter()

@@ -5,10 +5,7 @@ use {
     plotz_geometry::point::Pt,
 };
 
-////////////
-
-/// Any oblique projection.
-/// https://en.wikipedia.org/wiki/3D_projection#Oblique_projection
+// Any oblique projection.  https://en.wikipedia.org/wiki/3D_projection#Oblique_projection
 pub struct Oblique {
     u_src: Pt3d,
     v_src: Pt3d,
@@ -21,9 +18,9 @@ pub struct Oblique {
 }
 
 impl Oblique {
-    /// A standard oblique projection -- looking down at the origin from
-    /// (1,1,1), with x going down-and-to-the-left, y going
-    /// down-and-to-the-right, and z going straight up.
+    // A standard oblique projection -- looking down at the origin from (1,1,1),
+    // with x going down-and-to-the-left, y going down-and-to-the-right, and z
+    // going straight up.
     pub fn standard() -> Oblique {
         let spread = 0.7;
         Oblique {
@@ -37,7 +34,6 @@ impl Oblique {
         }
     }
 
-    /// Projects a 3d point down to a 3d point.
     pub fn project(&self, pt3d: &Pt3d) -> Pt {
         (self.u_dst * pt3d.dot(&self.u_src))
             + (self.v_dst * pt3d.dot(&self.v_src))
@@ -45,17 +41,12 @@ impl Oblique {
     }
 }
 
-/// https://en.wikipedia.org/wiki/3D_projection
 pub enum Projection {
     /// https://en.wikipedia.org/wiki/Pohlke%27s_theorem
     Oblique(Oblique),
-    // More to come
 }
 
-/// Whether or not to occlude.
 pub enum Occlusion {
-    /// false
     False,
-    /// true
     True,
 }
