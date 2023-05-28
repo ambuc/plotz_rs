@@ -4,7 +4,7 @@ use {
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         obj2::Obj2,
-        shapes::{curve::CurveArc, point::Pt, segment::Sg2},
+        shapes::{curve::CurveArc, point::Pt, sg2::Sg2},
         styled_obj2::StyledObj2,
     },
     rand::{distributions::Standard, prelude::Distribution, Rng},

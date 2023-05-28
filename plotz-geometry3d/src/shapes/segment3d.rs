@@ -3,7 +3,7 @@
 use {
     crate::{camera::Oblique, shapes::point3d::Pt3},
     float_ord::FloatOrd,
-    plotz_geometry::shapes::segment::Sg2,
+    plotz_geometry::shapes::sg2::Sg2,
     std::{fmt::Debug, ops::*},
 };
 

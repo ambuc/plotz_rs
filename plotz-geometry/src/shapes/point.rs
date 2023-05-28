@@ -2,7 +2,7 @@
 
 use crate::{
     bounded::{Bounded, Bounds},
-    shapes::{polygon::abp, segment::Sg2},
+    shapes::{polygon::abp, sg2::Sg2},
     traits::*,
 };
 use {

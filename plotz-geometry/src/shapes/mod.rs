@@ -3,5 +3,5 @@
 pub mod curve;
 pub mod point;
 pub mod polygon;
-pub mod segment;
+pub mod sg2;
 pub mod txt;

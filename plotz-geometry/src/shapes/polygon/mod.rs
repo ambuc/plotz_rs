@@ -13,7 +13,7 @@ use {
         isxn::IsxnResult,
         shapes::{
             point::Pt,
-            segment::{Contains, Sg2},
+            sg2::{Contains, Sg2},
             txt::Txt,
         },
         styled_obj2::StyledObj2,

@@ -2,7 +2,7 @@
 
 use {
     crate::{
-        shapes::{point::Pt, segment::Sg2},
+        shapes::{point::Pt, sg2::Sg2},
         styled_obj2::StyledObj2,
     },
     num::range_step,

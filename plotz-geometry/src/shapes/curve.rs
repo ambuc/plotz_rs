@@ -10,7 +10,7 @@ use {
         shapes::{
             point::{PolarPt, Pt},
             polygon::abp,
-            segment::Sg2,
+            sg2::Sg2,
         },
         traits::*,
     },
@@ -515,7 +515,7 @@ mod test {
         super::*,
         crate::shapes::{
             polygon::{Polygon, Rect},
-            segment::Sg2,
+            sg2::Sg2,
         },
         assert_matches::assert_matches,
         float_cmp::assert_approx_eq,

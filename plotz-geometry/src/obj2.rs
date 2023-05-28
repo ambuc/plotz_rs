@@ -7,8 +7,7 @@ use {
         crop::{Croppable, PointLoc},
         group::Group,
         shapes::{
-            curve::CurveArc, point::Pt, polygon::Polygon, polygon::PolygonKind, segment::Sg2,
-            txt::Txt,
+            curve::CurveArc, point::Pt, polygon::Polygon, polygon::PolygonKind, sg2::Sg2, txt::Txt,
         },
         traits::*,
     },

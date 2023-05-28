@@ -9,7 +9,7 @@ use crate::{
     shapes::{
         point::Pt,
         polygon::{Polygon, PolygonKind},
-        segment::Sg2,
+        sg2::Sg2,
     },
 };
 
