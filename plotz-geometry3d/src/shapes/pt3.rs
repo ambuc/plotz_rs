@@ -4,6 +4,7 @@ use {
     float_cmp::approx_eq,
     float_ord::FloatOrd,
     std::{convert::From, fmt::Debug, hash::Hash, ops::*},
+    crate::shapes::sg3::Sg3,
 };
 
 #[derive(Hash, Copy, Clone, PartialOrd, Ord)]
@@ -153,5 +154,10 @@ impl Pt3 {
         let avg_y = (self.y.0 + other.y.0) / 2.0;
         let avg_z = (self.z.0 + other.z.0) / 2.0;
         p3!(avg_x, avg_y, avg_z)
+    }
+
+    /// Distance between two points.
+    pub fn dist(&self, other: &Pt3) -> f64 {
+        Sg3(*self, *other).abs()
     }
 }

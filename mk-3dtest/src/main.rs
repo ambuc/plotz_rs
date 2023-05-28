@@ -56,7 +56,7 @@ fn main() {
                 }
 
                 if true {
-                    let e = 0.65;
+                    let e = 0.85;
                     let n = 5;
                     for ((i, j, k), color) in zip(
                         iproduct!(0..n, 0..n, 0..n),
