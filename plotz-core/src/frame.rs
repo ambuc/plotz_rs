@@ -3,7 +3,7 @@
 use {
     plotz_color::BLACK,
     plotz_geometry::{
-        shapes::{point::Pt, polygon::Pg2},
+        shapes::{pg2::Pg2, point::Pt},
         styled_obj2::StyledObj2,
     },
 };

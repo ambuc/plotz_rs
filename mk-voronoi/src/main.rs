@@ -4,7 +4,7 @@ use {
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{point::Pt, polygon::Pg2},
+        shapes::{pg2::Pg2, point::Pt},
         styled_obj2::StyledObj2,
     },
     rand::{prelude::SliceRandom, Rng},

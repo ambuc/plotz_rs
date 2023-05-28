@@ -8,8 +8,8 @@ use {
         grid_layout::{GridLayout, GridLayoutSettings},
         group::Group,
         shapes::{
+            pg2::{Pg2, Rect},
             point::Pt,
-            polygon::{Pg2, Rect},
         },
         styled_obj2::StyledObj2,
     },

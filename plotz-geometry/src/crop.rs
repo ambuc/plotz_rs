@@ -2,7 +2,7 @@
 use {
     crate::{
         bounded::Bounds,
-        shapes::polygon::{Pg2, PolygonConstructorError},
+        shapes::pg2::{Pg2, PolygonConstructorError},
     },
     thiserror::Error,
 };

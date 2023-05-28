@@ -6,7 +6,7 @@ use float_ord::FloatOrd;
 
 use {
     crate::{camera::Oblique, p3, shapes::point3d::Pt3},
-    plotz_geometry::shapes::polygon::Pg2,
+    plotz_geometry::shapes::pg2::Pg2,
     std::ops::*,
 };
 

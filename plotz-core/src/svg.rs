@@ -4,7 +4,7 @@ use {
     plotz_color::BLACK,
     plotz_geometry::{
         obj2::Obj2,
-        shapes::{polygon::PolygonKind, txt::Txt},
+        shapes::{pg2::PolygonKind, txt::Txt},
         styled_obj2::StyledObj2,
     },
     std::fmt::Debug,
@@ -143,7 +143,7 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
 mod test_super {
     use super::*;
     use plotz_geometry::{
-        shapes::{point::Pt, polygon::Pg2},
+        shapes::{pg2::Pg2, point::Pt},
         styled_obj2::StyledObj2,
     };
     use tempdir::TempDir;

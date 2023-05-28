@@ -577,7 +577,7 @@ impl Annotatable for Pg2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::shapes::polygon::multiline::{Multiline, MultilineConstructorError};
+    use crate::shapes::pg2::multiline::{Multiline, MultilineConstructorError};
 
     use super::*;
     use float_eq::assert_float_eq;

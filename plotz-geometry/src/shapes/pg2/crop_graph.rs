@@ -6,8 +6,8 @@ use {
         crop::{CropType, PointLoc},
         isxn::{Intersection, IsxnResult, Pair, Which},
         shapes::{
+            pg2::Pg2,
             point::{is_colinear_n, Pt},
-            polygon::Pg2,
         },
     },
     approx::*,
@@ -368,7 +368,7 @@ impl<'a> CropGraph<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{interpolate::extrapolate_2d, p2, shapes::polygon::Rect};
+    use crate::{interpolate::extrapolate_2d, p2, shapes::pg2::Rect};
     use itertools::iproduct;
     use test_case::test_case;
 

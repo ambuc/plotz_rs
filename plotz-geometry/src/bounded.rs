@@ -2,8 +2,8 @@
 use crate::{
     crop::PointLoc,
     shapes::{
+        pg2::{Pg2, PolygonConstructorError},
         point::Pt,
-        polygon::{Pg2, PolygonConstructorError},
     },
 };
 use float_ord::FloatOrd;
@@ -199,7 +199,7 @@ pub fn streaming_bbox<'a, T: 'a + Bounded>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use crate::shapes::polygon::Pg2;
+    use crate::shapes::pg2::Pg2;
 
     #[test]
     fn test_streaming_bbox() {

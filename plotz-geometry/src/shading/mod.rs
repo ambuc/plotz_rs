@@ -7,8 +7,8 @@ use crate::{
     crop::{CropToPolygonError, Croppable},
     shading::shade_config::ShadeConfig,
     shapes::{
+        pg2::{Pg2, PolygonKind},
         point::Pt,
-        polygon::{Pg2, PolygonKind},
         sg2::Sg2,
     },
 };

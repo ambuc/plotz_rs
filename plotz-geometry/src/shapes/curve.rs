@@ -6,8 +6,8 @@ use {
         crop::{CropType, Croppable, PointLoc},
         interpolate::interpolate_2d_checked,
         shapes::{
+            pg2::{abp, Pg2},
             point::{PolarPt, Pt},
-            polygon::{abp, Pg2},
             sg2::Sg2,
         },
         traits::*,
@@ -512,7 +512,7 @@ mod test {
     use {
         super::*,
         crate::shapes::{
-            polygon::{Pg2, Rect},
+            pg2::{Pg2, Rect},
             sg2::Sg2,
         },
         assert_matches::assert_matches,

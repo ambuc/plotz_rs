@@ -20,7 +20,7 @@ use {
         crop::Croppable,
         obj2::Obj2,
         shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{point::Pt, polygon::Pg2, sg2::Sg2},
+        shapes::{pg2::Pg2, point::Pt, sg2::Sg2},
         styled_obj2::StyledObj2,
         traits::*,
     },

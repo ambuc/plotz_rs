@@ -7,11 +7,11 @@ use {
     plotz_geometry::{
         obj2::Obj2,
         shapes::{
-            point::Pt,
-            polygon::{
+            pg2::{
                 multiline::{Multiline, MultilineConstructorError},
                 Pg2, PolygonConstructorError, TryPolygon,
             },
+            point::Pt,
         },
     },
     serde_json::Value,

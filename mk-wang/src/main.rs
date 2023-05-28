@@ -6,8 +6,8 @@ use {
         obj2::Obj2,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
+            pg2::{multiline::Multiline, Pg2},
             point::Pt,
-            polygon::{multiline::Multiline, Pg2},
         },
         styled_obj2::StyledObj2,
     },
