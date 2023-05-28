@@ -5,7 +5,8 @@ use crate::{
     interpolate,
     interpolate::interpolate_2d_checked,
     isxn::{Intersection, IsxnResult, MultipleIntersections},
-    shapes::{pg2::Pg2, pt2::Pt},
+    p2,
+    shapes::{pg2::Pg2, pt2::Pt2},
     traits::*,
 };
 use float_cmp::approx_eq;
@@ -32,9 +33,9 @@ pub enum Contains {
 #[derive(Debug, Clone, Copy, Eq, Hash)]
 pub struct Sg2 {
     /// The initial point of the segment.
-    pub i: Pt,
+    pub i: Pt2,
     /// The final point of the segment.
-    pub f: Pt,
+    pub f: Pt2,
 }
 
 impl PartialEq for Sg2 {
@@ -45,13 +46,13 @@ impl PartialEq for Sg2 {
 
 /// An alternate constructor for segments.
 #[allow(non_snake_case)]
-pub fn Sg2(i: Pt, f: Pt) -> Sg2 {
+pub fn Sg2(i: Pt2, f: Pt2) -> Sg2 {
     Sg2 { i, f }
 }
 
 impl Sg2 {
     // Internal helper function; see https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/.
-    fn _ccw(&self, other: &Pt) -> _Orientation {
+    fn _ccw(&self, other: &Pt2) -> _Orientation {
         use std::cmp::Ordering;
         match PartialOrd::partial_cmp(
             &((other.y.0 - self.i.y.0) * (self.f.x.0 - self.i.x.0)
@@ -72,13 +73,13 @@ impl Sg2 {
 
     /// A rotation operation, for rotating a line segment about a point. Accepts
     /// a |by| argument in radians.
-    pub fn rotate(&mut self, about: &Pt, by: f64) {
+    pub fn rotate(&mut self, about: &Pt2, by: f64) {
         self.i.rotate_inplace(about, by);
         self.f.rotate_inplace(about, by);
     }
 
     /// Returns true if this line segment has point |other| along it.
-    pub fn line_segment_contains_pt(&self, other: &Pt) -> Option<Contains> {
+    pub fn line_segment_contains_pt(&self, other: &Pt2) -> Option<Contains> {
         if *other == self.i {
             return Some(Contains::AtStart);
         }
@@ -147,7 +148,7 @@ impl Sg2 {
         (p1_x, p1_y): (f64, f64),
         (p2_x, p2_y): (f64, f64),
         (p3_x, p3_y): (f64, f64),
-    ) -> Option<Pt> {
+    ) -> Option<Pt2> {
         let s1_x = p1_x - p0_x;
         let s1_y = p1_y - p0_y;
         let s2_x = p3_x - p2_x;
@@ -159,7 +160,7 @@ impl Sg2 {
         if (0_f64..=1_f64).contains(&s) && (0_f64..=1_f64).contains(&t) {
             let i_x = p0_x + (t * s1_x);
             let i_y = p0_y + (t * s1_y);
-            return Some(Pt(i_x, i_y));
+            return Some(p2!(i_x, i_y));
         }
         None
     }
@@ -182,20 +183,20 @@ impl Sg2 {
     }
 }
 
-impl Add<Pt> for Sg2 {
+impl Add<Pt2> for Sg2 {
     type Output = Sg2;
-    fn add(self, rhs: Pt) -> Self::Output {
+    fn add(self, rhs: Pt2) -> Self::Output {
         Sg2(self.i + rhs, self.f + rhs)
     }
 }
-impl AddAssign<Pt> for Sg2 {
-    fn add_assign(&mut self, rhs: Pt) {
+impl AddAssign<Pt2> for Sg2 {
+    fn add_assign(&mut self, rhs: Pt2) {
         *self = Sg2(self.i + rhs, self.f + rhs);
     }
 }
-impl Div<Pt> for Sg2 {
+impl Div<Pt2> for Sg2 {
     type Output = Sg2;
-    fn div(self, rhs: Pt) -> Self::Output {
+    fn div(self, rhs: Pt2) -> Self::Output {
         Sg2(self.i / rhs, self.f / rhs)
     }
 }
@@ -205,8 +206,8 @@ impl Div<f64> for Sg2 {
         Sg2(self.i / rhs, self.f / rhs)
     }
 }
-impl DivAssign<Pt> for Sg2 {
-    fn div_assign(&mut self, rhs: Pt) {
+impl DivAssign<Pt2> for Sg2 {
+    fn div_assign(&mut self, rhs: Pt2) {
         *self = Sg2(self.i / rhs, self.f / rhs);
     }
 }
@@ -215,9 +216,9 @@ impl DivAssign<f64> for Sg2 {
         *self = Sg2(self.i / rhs, self.f / rhs)
     }
 }
-impl Mul<Pt> for Sg2 {
+impl Mul<Pt2> for Sg2 {
     type Output = Sg2;
-    fn mul(self, rhs: Pt) -> Self::Output {
+    fn mul(self, rhs: Pt2) -> Self::Output {
         Sg2(self.i * rhs, self.f * rhs)
     }
 }
@@ -227,8 +228,8 @@ impl Mul<f64> for Sg2 {
         Sg2(self.i * rhs, self.f * rhs)
     }
 }
-impl MulAssign<Pt> for Sg2 {
-    fn mul_assign(&mut self, rhs: Pt) {
+impl MulAssign<Pt2> for Sg2 {
+    fn mul_assign(&mut self, rhs: Pt2) {
         *self = Sg2(self.i * rhs, self.f * rhs);
     }
 }
@@ -237,22 +238,22 @@ impl MulAssign<f64> for Sg2 {
         *self = Sg2(self.i * rhs, self.f * rhs);
     }
 }
-impl Sub<Pt> for Sg2 {
+impl Sub<Pt2> for Sg2 {
     type Output = Sg2;
-    fn sub(self, rhs: Pt) -> Self::Output {
+    fn sub(self, rhs: Pt2) -> Self::Output {
         Sg2 {
             i: self.i - rhs,
             f: self.f - rhs,
         }
     }
 }
-impl SubAssign<Pt> for Sg2 {
-    fn sub_assign(&mut self, rhs: Pt) {
+impl SubAssign<Pt2> for Sg2 {
+    fn sub_assign(&mut self, rhs: Pt2) {
         *self = Sg2(self.i - rhs, self.f - rhs);
     }
 }
-impl RemAssign<Pt> for Sg2 {
-    fn rem_assign(&mut self, rhs: Pt) {
+impl RemAssign<Pt2> for Sg2 {
+    fn rem_assign(&mut self, rhs: Pt2) {
         self.i %= rhs;
         self.f %= rhs;
     }
@@ -270,12 +271,12 @@ impl Bounded for Sg2 {
 }
 
 impl YieldPoints for Sg2 {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
         Box::new([&self.i, &self.f].into_iter())
     }
 }
 impl YieldPointsMut for Sg2 {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
         Box::new([&mut self.i, &mut self.f].into_iter())
     }
 }
@@ -365,7 +366,7 @@ impl Croppable for Sg2 {
 }
 
 impl Translatable for Sg2 {}
-impl Scalable<Pt> for Sg2 {}
+impl Scalable<Pt2> for Sg2 {}
 impl Scalable<f64> for Sg2 {}
 
 impl Roundable for Sg2 {
@@ -395,15 +396,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0.0, 2.0);
-        let b = Pt(1.0, 2.0);
-        let c = Pt(2.0, 2.0);
-        let d = Pt(0.0, 1.0);
-        let e = Pt(1.0, 1.0);
-        let f = Pt(2.0, 1.0);
-        let g = Pt(0.0, 0.0);
-        let h = Pt(1.0, 0.0);
-        let i = Pt(2.0, 0.0);
+        let a = p2!(0.0, 2.0);
+        let b = p2!(1.0, 2.0);
+        let c = p2!(2.0, 2.0);
+        let d = p2!(0.0, 1.0);
+        let e = p2!(1.0, 1.0);
+        let f = p2!(2.0, 1.0);
+        let g = p2!(0.0, 0.0);
+        let h = p2!(1.0, 0.0);
+        let i = p2!(2.0, 0.0);
 
         // m=0
         assert_eq!(Sg2(g, h).slope(), 0.0);
@@ -453,7 +454,7 @@ mod tests {
         use float_eq::assert_float_eq;
         use std::f64::consts::PI;
 
-        let origin = Pt(0.0, 0.0);
+        let origin = p2!(0.0, 0.0);
 
         //      ^
         //      |
@@ -462,7 +463,7 @@ mod tests {
         //      |
         //      |
         //      v
-        let mut s = Sg2(Pt(1.0, 0.0), Pt(1.0, 0.5));
+        let mut s = Sg2(p2!(1.0, 0.0), p2!(1.0, 0.5));
 
         s.rotate(/*about=*/ &origin, PI / 2.0);
         //      ^
@@ -519,8 +520,8 @@ mod tests {
 
     #[test]
     fn test_equality() {
-        let a = Pt(0.0, 2.0);
-        let b = Pt(1.0, 2.0);
+        let a = p2!(0.0, 2.0);
+        let b = p2!(1.0, 2.0);
         assert!(Sg2(a, b) == Sg2(a, b));
         assert!(Sg2(a, b) != Sg2(b, a));
     }
@@ -535,12 +536,12 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0.0, 2.0);
-        let b = Pt(1.0, 2.0);
-        let c = Pt(2.0, 2.0);
-        let e = Pt(1.0, 1.0);
-        let g = Pt(0.0, 0.0);
-        let i = Pt(2.0, 0.0);
+        let a = p2!(0.0, 2.0);
+        let b = p2!(1.0, 2.0);
+        let c = p2!(2.0, 2.0);
+        let e = p2!(1.0, 1.0);
+        let g = p2!(0.0, 0.0);
+        let i = p2!(2.0, 0.0);
 
         // colinear
         assert_eq!(
@@ -644,11 +645,11 @@ mod tests {
 
     #[test]
     fn test_abs() {
-        assert_eq!(Sg2(Pt(0.0, 0.0), Pt(0.0, 1.0)).abs(), 1.0);
-        assert_eq!(Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0)).abs(), 2.0_f64.sqrt());
-        assert_eq!(Sg2(Pt(1.0, 1.0), Pt(1.0, 1.0)).abs(), 0.0);
+        assert_eq!(Sg2(p2!(0.0, 0.0), p2!(0.0, 1.0)).abs(), 1.0);
+        assert_eq!(Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0)).abs(), 2.0_f64.sqrt());
+        assert_eq!(Sg2(p2!(1.0, 1.0), p2!(1.0, 1.0)).abs(), 0.0);
         assert_eq!(
-            Sg2(Pt(-1.0, -1.0), Pt(1.0, 1.0)).abs(),
+            Sg2(p2!(-1.0, -1.0), p2!(1.0, 1.0)).abs(),
             2.0 * 2.0_f64.sqrt()
         );
     }
@@ -663,8 +664,8 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0.0, 2.0);
-        let c = Pt(2.0, 2.0);
+        let a = p2!(0.0, 2.0);
+        let c = p2!(2.0, 2.0);
 
         assert_eq!(
             Sg2(a, c).line_segment_contains_pt(&a).unwrap(),
@@ -675,81 +676,84 @@ mod tests {
     fn test_segment() {
         assert_eq!(
             Sg2 {
-                i: Pt(0, 0),
-                f: Pt(0, 1)
+                i: p2!(0, 0),
+                f: p2!(0, 1)
             },
-            Sg2(Pt(0, 0), Pt(0, 1))
+            Sg2(p2!(0, 0), p2!(0, 1))
         );
     }
 
     #[test]
     fn test_add() {
-        assert_eq!(Sg2(Pt(0, 0), Pt(1, 1)) + Pt(1, 0), Sg2(Pt(1, 0), Pt(2, 1)));
+        assert_eq!(
+            Sg2(p2!(0, 0), p2!(1, 1)) + p2!(1, 0),
+            Sg2(p2!(1, 0), p2!(2, 1))
+        );
     }
 
     #[test]
     fn test_add_assign() {
-        let mut s = Sg2(Pt(0, 0), Pt(1, 1));
-        s += Pt(1, 0);
-        assert_eq!(s, Sg2(Pt(1, 0), Pt(2, 1)));
+        let mut s = Sg2(p2!(0, 0), p2!(1, 1));
+        s += p2!(1, 0);
+        assert_eq!(s, Sg2(p2!(1, 0), p2!(2, 1)));
     }
 
     #[test]
     fn test_div() {
         assert_eq!(
-            Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0)) / 2.0,
-            Sg2(Pt(0.0, 0.0), Pt(0.5, 0.5))
+            Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0)) / 2.0,
+            Sg2(p2!(0.0, 0.0), p2!(0.5, 0.5))
         );
     }
 
     #[test]
     fn test_div_assign() {
-        let mut s = Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0));
+        let mut s = Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0));
         s /= 2.0;
-        assert_eq!(s, Sg2(Pt(0.0, 0.0), Pt(0.5, 0.5)));
+        assert_eq!(s, Sg2(p2!(0.0, 0.0), p2!(0.5, 0.5)));
     }
 
     #[test]
     fn test_mul() {
         assert_eq!(
-            Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0)) * 2.0,
-            Sg2(Pt(0.0, 0.0), Pt(2.0, 2.0))
+            Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0)) * 2.0,
+            Sg2(p2!(0.0, 0.0), p2!(2.0, 2.0))
         );
     }
 
     #[test]
     fn test_mul_assign() {
-        let mut s = Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0));
+        let mut s = Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0));
         s *= 2.0;
-        assert_eq!(s, Sg2(Pt(0.0, 0.0), Pt(2.0, 2.0)));
+        assert_eq!(s, Sg2(p2!(0.0, 0.0), p2!(2.0, 2.0)));
     }
 
     #[test]
     fn test_sub() {
         assert_eq!(
-            Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0)) - Pt(1.0, 2.0),
+            Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0)) - p2!(1.0, 2.0),
             // --------
-            Sg2(Pt(-1.0, -2.0), Pt(0.0, -1.0))
+            Sg2(p2!(-1.0, -2.0), p2!(0.0, -1.0))
         );
     }
 
     #[test]
     fn test_sub_assign() {
-        let mut s = Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0));
-        s -= Pt(1.0, 2.0);
-        assert_eq!(s, Sg2(Pt(-1.0, -2.0), Pt(0.0, -1.0)));
+        let mut s = Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0));
+        s -= p2!(1.0, 2.0);
+        assert_eq!(s, Sg2(p2!(-1.0, -2.0), p2!(0.0, -1.0)));
     }
 
     #[test]
     fn test_bounded_segment() {
-        let s = Sg2(Pt(0, 1), Pt(1, 2));
+        let s = Sg2(p2!(0, 1), p2!(1, 2));
         assert_eq!(s.bottom_bound(), 1.0);
         assert_eq!(s.top_bound(), 2.0);
         assert_eq!(s.left_bound(), 0.0);
         assert_eq!(s.right_bound(), 1.0);
-        assert_eq!(s.bl_bound(), Pt(0, 1));
-        assert_eq!(s.tl_bound(), Pt(0, 2));
-        assert_eq!(s.br_bound(), Pt(1, 1));
-        assert_eq!(s.tr_bound(), Pt(1, 2));
+        assert_eq!(s.bl_bound(), p2!(0, 1));
+        assert_eq!(s.tl_bound(), p2!(0, 2));
+        assert_eq!(s.br_bound(), p2!(1, 1));
+        assert_eq!(s.tr_bound(), p2!(1, 2));
     }
 }

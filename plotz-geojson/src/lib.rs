@@ -6,12 +6,13 @@
 use {
     plotz_geometry::{
         obj2::Obj2,
+        p2,
         shapes::{
             pg2::{
                 multiline::{Multiline, MultilineConstructorError},
                 Pg2, PolygonConstructorError, TryPolygon,
             },
-            pt2::Pt,
+            pt2::Pt2,
         },
     },
     serde_json::Value,
@@ -151,9 +152,9 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj2, TagsList)>, GeoJsonCo
 fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj2>, GeoJsonConversionError> {
     Ok(vec![Obj2::from(Multiline(
         coordinates.as_array().expect("not array").iter().map(|p| {
-            Pt(
+            p2!(
                 p[0].as_f64().expect("value not f64"),
-                p[1].as_f64().expect("value not f64"),
+                p[1].as_f64().expect("value not f64")
             )
         }),
     )?)])
@@ -182,9 +183,9 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj2>, GeoJsonConversionE
         .iter()
         .map(|points_list| {
             TryPolygon(points_list.as_array().expect("not array").iter().map(|p| {
-                Pt(
+                p2!(
                     p[0].as_f64().expect("value not f64"),
-                    p[1].as_f64().expect("value not f64"),
+                    p[1].as_f64().expect("value not f64")
                 )
             }))
         })
@@ -199,7 +200,7 @@ fn parse_to_circle(_coords: &Value) -> Result<Vec<Obj2>, GeoJsonConversionError>
     // if let Some(x) = array.get(0).and_then(|o| o.as_f64()) {
     //     if let Some(y) = array.get(1).and_then(|o| o.as_f64()) {
     //         return Ok(vec![Object2d::from(CurveArc(
-    //             Pt(x, y),
+    //             p2!(x, y),
     //             0.0..=TAU,
     //             0.0001,
     //         ))]);
@@ -239,11 +240,11 @@ mod tests {
         assert_eq!(
             parse_to_polygon(&geojson).unwrap(),
             vec![Obj2::from(Pg2([
-                Pt(-74.015_651_1, 40.721_544_6),
-                Pt(-74.015_493_9, 40.721_526_2),
-                Pt(-74.014_280_9, 40.721_384_4),
-                Pt(-74.014_248_1, 40.721_380_6),
-                Pt(-74.013_283_1, 40.721_267_8),
+                p2!(-74.015_651_1, 40.721_544_6),
+                p2!(-74.015_493_9, 40.721_526_2),
+                p2!(-74.014_280_9, 40.721_384_4),
+                p2!(-74.014_248_1, 40.721_380_6),
+                p2!(-74.013_283_1, 40.721_267_8),
             ]))]
         );
     }
@@ -261,11 +262,11 @@ mod tests {
             parse_to_linestring(&geojson).unwrap(),
             vec![Obj2::from(
                 Multiline([
-                    Pt(-74.015_651_1, 40.721_544_6),
-                    Pt(-74.015_493_9, 40.721_526_2),
-                    Pt(-74.014_280_9, 40.721_384_4),
-                    Pt(-74.014_248_1, 40.721_380_6),
-                    Pt(-74.013_283_1, 40.721_267_8),
+                    p2!(-74.015_651_1, 40.721_544_6),
+                    p2!(-74.015_493_9, 40.721_526_2),
+                    p2!(-74.014_280_9, 40.721_384_4),
+                    p2!(-74.014_248_1, 40.721_380_6),
+                    p2!(-74.013_283_1, 40.721_267_8),
                 ])
                 .unwrap()
             )]
@@ -282,7 +283,7 @@ mod tests {
         assert_eq!(polygons.len(), 4);
         assert_eq!(
             polygons[0].0,
-            Obj2::from(Pg2([Pt(0, 0), Pt(1.0, 2.5), Pt(2.0, 5.0)]))
+            Obj2::from(Pg2([p2!(0, 0), p2!(1.0, 2.5), p2!(2.0, 5.0)]))
         );
 
         // assert_symbol_tuple_list(
@@ -296,7 +297,7 @@ mod tests {
 
         assert_eq!(
             polygons[1].0,
-            Obj2::from(Multiline([Pt(1, 1), Pt(1.0, 2.5), Pt(2.0, 5.0)]).unwrap())
+            Obj2::from(Multiline([p2!(1, 1), p2!(1.0, 2.5), p2!(2.0, 5.0)]).unwrap())
         );
         // assert_symbol_tuple_list(
         //     polygons[1].1.clone(),
@@ -312,12 +313,12 @@ mod tests {
 
         assert_eq!(
             polygons[2].0,
-            Obj2::from(Pg2([Pt(2, 2), Pt(1.0, 2.5), Pt(2.0, 5.0)]))
+            Obj2::from(Pg2([p2!(2, 2), p2!(1.0, 2.5), p2!(2.0, 5.0)]))
         );
 
         assert_eq!(
             polygons[3].0,
-            Obj2::from(Pg2([Pt(3, 3), Pt(1.0, 2.5), Pt(2.0, 5.0)]))
+            Obj2::from(Pg2([p2!(3, 3), p2!(1.0, 2.5), p2!(2.0, 5.0)]))
         );
     }
 }

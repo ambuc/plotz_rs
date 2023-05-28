@@ -5,10 +5,11 @@ pub mod shade_config;
 use crate::{
     bounded::{Bounded, BoundingBoxError},
     crop::{CropToPolygonError, Croppable},
+    p2,
     shading::shade_config::ShadeConfig,
     shapes::{
         pg2::{Pg2, PolygonKind},
-        pt2::Pt,
+        pt2::Pt2,
         sg2::Sg2,
     },
 };
@@ -41,18 +42,18 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg2) -> Result<Vec<Sg2>, Sh
     let bounds = polygon.bounds();
     let mut segments: Vec<Sg2> = vec![];
 
-    let xnudge = Pt(1.0, -1.0);
-    let ynudge = Pt(-1.0, 1.0);
+    let xnudge = p2!(1.0, -1.0);
+    let ynudge = p2!(-1.0, 1.0);
     let mut line = if config.slope > 0.0 {
         Sg2(
             bounds.tl_bound() - xnudge,
-            bounds.tl_bound() + Pt(bounds.width(), bounds.width() * config.slope) + xnudge,
+            bounds.tl_bound() + p2!(bounds.width(), bounds.width() * config.slope) + xnudge,
         )
     } else {
         Sg2(
             bounds.tr_bound() - ynudge,
             bounds.tr_bound()
-                + Pt(-1.0 * bounds.width(), -1.0 * bounds.width() * config.slope)
+                + p2!(-1.0 * bounds.width(), -1.0 * bounds.width() * config.slope)
                 + ynudge,
         )
     };
@@ -66,7 +67,7 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg2) -> Result<Vec<Sg2>, Sh
         segments.extend(cropped_strokes.iter());
         // segments.push(line);
 
-        line -= Pt(0.0, step);
+        line -= p2!(0.0, step);
     }
 
     if config.switchback {

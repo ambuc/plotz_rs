@@ -11,7 +11,7 @@ use {
     plotz_geometry::{
         bounded::{streaming_bbox, Bounded, Bounds},
         obj2::Obj2,
-        shapes::pt2::Pt,
+        shapes::pt2::Pt2,
         styled_obj2::StyledObj2,
         traits::*,
     },
@@ -95,7 +95,7 @@ impl Canvas {
     }
 
     /// Mutates every object in the canvas according to some |f|.
-    pub fn mutate_all(&mut self, f: impl Fn(&mut Pt)) {
+    pub fn mutate_all(&mut self, f: impl Fn(&mut Pt2)) {
         self.objs_iter_mut().for_each(|obj| {
             obj.mutate(&f);
         })
@@ -146,7 +146,7 @@ impl Canvas {
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
                 dos.iter_mut().for_each(|obj| {
-                    obj.mutate(|pt: &mut Pt| {
+                    obj.mutate(|pt: &mut Pt2| {
                         *pt += translate_diff;
                     });
                 });

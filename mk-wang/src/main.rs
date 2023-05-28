@@ -4,10 +4,11 @@ use {
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         obj2::Obj2,
+        p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             pg2::{multiline::Multiline, Pg2},
-            pt2::Pt,
+            pt2::Pt2,
         },
         styled_obj2::StyledObj2,
     },
@@ -166,25 +167,28 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<StyledObj2> 
         let mut ret = vec![];
         ret.push({
             let shape = match cell {
-                Fill::Blue => Multiline([Pt(0.25, 0.0), Pt(0.5, 0.25), Pt(0.75, 0.0)]).unwrap(),
-                Fill::Green => {
-                    Multiline([Pt(0.25, 0.0), Pt(0.25, 0.25), Pt(0.75, 0.25), Pt(0.75, 0.0)])
-                        .unwrap()
-                }
+                Fill::Blue => Multiline([p2!(0.25, 0.0), p2!(0.5, 0.25), p2!(0.75, 0.0)]).unwrap(),
+                Fill::Green => Multiline([
+                    p2!(0.25, 0.0),
+                    p2!(0.25, 0.25),
+                    p2!(0.75, 0.25),
+                    p2!(0.75, 0.0),
+                ])
+                .unwrap(),
                 Fill::Red => Multiline([
-                    Pt(0.25, 0.0),
-                    Pt(5.0 / 16.0, 3.0 / 16.0),
-                    Pt(0.5, 0.25),
-                    Pt(11.0 / 16.0, 3.0 / 16.0),
-                    Pt(0.75, 0.0),
+                    p2!(0.25, 0.0),
+                    p2!(5.0 / 16.0, 3.0 / 16.0),
+                    p2!(0.5, 0.25),
+                    p2!(11.0 / 16.0, 3.0 / 16.0),
+                    p2!(0.75, 0.0),
                 ])
                 .unwrap(),
                 Fill::White => Multiline([
-                    Pt(0.25, 0.0),
-                    Pt(7.0 / 16.0, 1.0 / 16.0),
-                    Pt(0.5, 0.25),
-                    Pt(9.0 / 16.0, 1.0 / 16.0),
-                    Pt(0.75, 0.0),
+                    p2!(0.25, 0.0),
+                    p2!(7.0 / 16.0, 1.0 / 16.0),
+                    p2!(0.5, 0.25),
+                    p2!(9.0 / 16.0, 1.0 / 16.0),
+                    p2!(0.75, 0.0),
                 ])
                 .unwrap(),
             };
@@ -193,7 +197,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<StyledObj2> 
         ret.extend({
             shade_polygon(
                 &ShadeConfig::builder().gap(0.05).slope(0.0).build(),
-                &Pg2([Pt(0.1, 0.1), Pt(0.5, 0.5), Pt(0.9, 0.1)]),
+                &Pg2([p2!(0.1, 0.1), p2!(0.5, 0.5), p2!(0.9, 0.1)]),
             )
             .unwrap()
             .iter()
@@ -219,13 +223,13 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<StyledObj2> 
         ret.iter_mut().for_each(|d_o| match &mut d_o.inner {
             Obj2::Pg2(pg) => {
                 *pg *= 2.0;
-                pg.rotate(&Pt(1.0, 1.0), rot);
-                *pg += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
+                pg.rotate(&p2!(1.0, 1.0), rot);
+                *pg += p2!(2.0 * row_idx as f64, 2.0 * col_idx as f64);
             }
             Obj2::Sg2(sg) => {
                 *sg *= 2.0;
-                sg.rotate(&Pt(1.0, 1.0), rot);
-                *sg += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
+                sg.rotate(&p2!(1.0, 1.0), rot);
+                *sg += p2!(2.0 * row_idx as f64, 2.0 * col_idx as f64);
             }
             _ => {
                 unimplemented!()
@@ -254,7 +258,7 @@ fn main() {
     }
 
     let mut objs = Canvas::from_objs(obj_vec.into_iter(), /*autobucket=*/ false)
-        .with_frame(make_frame((image_width, image_width), Pt(margin, margin)));
+        .with_frame(make_frame((image_width, image_width), p2!(margin, margin)));
 
     let scale = image_width / 2.0 / (grid_cardinality as f64);
 
@@ -262,11 +266,11 @@ fn main() {
         layers.iter_mut().for_each(|d_o| match &mut d_o.inner {
             Obj2::Pg2(p) => {
                 *p *= scale;
-                *p += Pt(margin, margin);
+                *p += p2!(margin, margin);
             }
             Obj2::Sg2(s) => {
                 *s *= scale;
-                *s += Pt(margin, margin);
+                *s += p2!(margin, margin);
             }
             _ => {
                 unimplemented!()

@@ -143,7 +143,7 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
 mod test_super {
     use super::*;
     use plotz_geometry::{
-        shapes::{pg2::Pg2, pt2::Pt},
+        shapes::{pg2::Pg2, pt2::Pt2},
         styled_obj2::StyledObj2,
     };
     use tempdir::TempDir;
@@ -183,7 +183,7 @@ mod test_super {
             path.to_str().unwrap(),
             vec![&StyledObj2 {
                 color: &BLACK,
-                inner: Obj2::Pg2(Pg2([Pt(0, 0), Pt(0, 1), Pt(1, 0)])),
+                inner: Obj2::Pg2(Pg2([p2!(0, 0), p2!(0, 1), p2!(1, 0)])),
                 thickness: 1.0,
             }],
         )
@@ -210,12 +210,12 @@ mod test_super {
             vec![
                 &StyledObj2 {
                     color: &BLACK,
-                    inner: Obj2::Pg2(Pg2([Pt(0, 0), Pt(0, 1), Pt(1, 0)])),
+                    inner: Obj2::Pg2(Pg2([p2!(0, 0), p2!(0, 1), p2!(1, 0)])),
                     thickness: 1.0,
                 },
                 &StyledObj2 {
                     color: &BLACK,
-                    inner: Obj2::Pg2(Pg2([Pt(5, 5), Pt(5, 6), Pt(6, 5)])),
+                    inner: Obj2::Pg2(Pg2([p2!(5, 5), p2!(5, 6), p2!(6, 5)])),
                     thickness: 1.0,
                 },
             ],

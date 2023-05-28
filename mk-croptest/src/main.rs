@@ -7,9 +7,10 @@ use {
         crop::Croppable,
         grid_layout::{GridLayout, GridLayoutSettings},
         group::Group,
+        p2,
         shapes::{
             pg2::{Pg2, Rect},
-            pt2::Pt,
+            pt2::Pt2,
         },
         styled_obj2::StyledObj2,
     },
@@ -50,12 +51,12 @@ fn main() {
 
     let f = 10.0;
     for (idx, offset) in iproduct!(0..=5, 0..=4)
-        .map(|(i, j)| ((i, j), Pt((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
+        .map(|(i, j)| ((i, j), p2!((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
     // .filter(|(idx, _)| *idx == (1, 2))
     {
         let mut v: Vec<StyledObj2> = vec![];
 
-        let r = Rect(Pt(50.0, 50.0), (50.0, 50.0)).unwrap();
+        let r = Rect(p2!(50.0, 50.0), (50.0, 50.0)).unwrap();
 
         let base_sq = StyledObj2::new(r.clone())
             .with_color(&BLACK)
@@ -64,28 +65,28 @@ fn main() {
         // v.extend(base_sq.annotate(&AnnotationSettings::default()));
 
         let pts = if false {
-            let a = Pt(60.0, 60.0);
-            let b = Pt(70.0, 60.0);
-            let c = Pt(80.0, 60.0);
-            let d = Pt(90.0, 60.0);
-            let e = Pt(70.0, 75.0);
-            let f = Pt(80.0, 75.0);
-            let g = Pt(60.0, 90.0);
-            let h = Pt(90.0, 90.0);
+            let a = p2!(60.0, 60.0);
+            let b = p2!(70.0, 60.0);
+            let c = p2!(80.0, 60.0);
+            let d = p2!(90.0, 60.0);
+            let e = p2!(70.0, 75.0);
+            let f = p2!(80.0, 75.0);
+            let g = p2!(60.0, 90.0);
+            let h = p2!(90.0, 90.0);
             vec![a, b, e, f, c, d, h, g, a]
         } else {
-            let a = Pt(60.0, 40.0);
-            let b = Pt(70.0, 40.0);
-            let c = Pt(70.0, 70.0);
-            let d = Pt(80.0, 70.0);
-            let e = Pt(80.0, 40.0);
-            let f = Pt(90.0, 40.0);
-            let g = Pt(90.0, 110.0);
-            let h = Pt(80.0, 110.0);
-            let i = Pt(80.0, 80.0);
-            let j = Pt(70.0, 80.0);
-            let k = Pt(70.0, 110.0);
-            let l = Pt(60.0, 110.0);
+            let a = p2!(60.0, 40.0);
+            let b = p2!(70.0, 40.0);
+            let c = p2!(70.0, 70.0);
+            let d = p2!(80.0, 70.0);
+            let e = p2!(80.0, 40.0);
+            let f = p2!(90.0, 40.0);
+            let g = p2!(90.0, 110.0);
+            let h = p2!(80.0, 110.0);
+            let i = p2!(80.0, 80.0);
+            let j = p2!(70.0, 80.0);
+            let k = p2!(70.0, 110.0);
+            let l = p2!(60.0, 110.0);
             vec![a, b, c, d, e, f, g, h, i, j, k, l, a]
         };
 

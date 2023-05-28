@@ -7,7 +7,8 @@ use {
         crop::Croppable,
         grid::Grid,
         obj2::Obj2,
-        shapes::{curve::CurveArcs, pt2::Pt},
+        p2,
+        shapes::{curve::CurveArcs, pt2::Pt2},
         styled_obj2::StyledObj2,
     },
     rand::Rng,
@@ -31,7 +32,7 @@ fn main() {
 
     let frame: StyledObj2 = make_frame(
         (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
-        /*offset=*/ Pt(mgn, mgn),
+        /*offset=*/ p2!(mgn, mgn),
     );
     {
         let frame_polygon = match frame.inner {

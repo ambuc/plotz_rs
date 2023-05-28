@@ -6,7 +6,7 @@ use {
         crop::CropType,
         crop::{Croppable, PointLoc},
         group::Group,
-        shapes::{curve::CurveArc, pg2::Pg2, pg2::PolygonKind, pt2::Pt, sg2::Sg2, txt::Txt},
+        shapes::{curve::CurveArc, pg2::Pg2, pg2::PolygonKind, pt2::Pt2, sg2::Sg2, txt::Txt},
         traits::*,
     },
     derive_more::From,
@@ -17,7 +17,7 @@ use {
 #[derive(Debug, PartialEq, Clone, From)]
 pub enum Obj2 {
     /// A point.
-    Pt(Pt),
+    Pt(Pt2),
     /// A polygon.
     Pg2(Pg2),
     /// A segment.
@@ -81,13 +81,13 @@ impl Obj2 {
 }
 
 impl YieldPoints for Obj2 {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
         self.inner_impl_yield_points().yield_pts()
     }
 }
 
 impl YieldPointsMut for Obj2 {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
         self.inner_impl_yield_points_mut().yield_pts_mut()
     }
 }
@@ -100,8 +100,8 @@ impl Bounded for Obj2 {
     }
 }
 
-impl RemAssign<Pt> for Obj2 {
-    fn rem_assign(&mut self, rhs: Pt) {
+impl RemAssign<Pt2> for Obj2 {
+    fn rem_assign(&mut self, rhs: Pt2) {
         match self {
             Obj2::Pt(p) => {
                 *p %= rhs;
@@ -125,9 +125,9 @@ impl RemAssign<Pt> for Obj2 {
     }
 }
 
-impl Add<Pt> for Obj2 {
+impl Add<Pt2> for Obj2 {
     type Output = Obj2;
-    fn add(self, rhs: Pt) -> Self::Output {
+    fn add(self, rhs: Pt2) -> Self::Output {
         match self {
             Obj2::Pt(p) => Obj2::from(p + rhs),
             Obj2::Txt(ch) => Obj2::from(ch + rhs),
@@ -139,9 +139,9 @@ impl Add<Pt> for Obj2 {
     }
 }
 
-impl Sub<Pt> for Obj2 {
+impl Sub<Pt2> for Obj2 {
     type Output = Obj2;
-    fn sub(self, rhs: Pt) -> Self::Output {
+    fn sub(self, rhs: Pt2) -> Self::Output {
         match self {
             Obj2::Pt(p) => Obj2::from(p - rhs),
             Obj2::Txt(ch) => Obj2::from(ch - rhs),
@@ -178,8 +178,8 @@ impl Div<f64> for Obj2 {
         }
     }
 }
-impl AddAssign<Pt> for Obj2 {
-    fn add_assign(&mut self, rhs: Pt) {
+impl AddAssign<Pt2> for Obj2 {
+    fn add_assign(&mut self, rhs: Pt2) {
         match self {
             Obj2::Pt(p) => {
                 *p += rhs;
@@ -202,8 +202,8 @@ impl AddAssign<Pt> for Obj2 {
         }
     }
 }
-impl SubAssign<Pt> for Obj2 {
-    fn sub_assign(&mut self, rhs: Pt) {
+impl SubAssign<Pt2> for Obj2 {
+    fn sub_assign(&mut self, rhs: Pt2) {
         match self {
             Obj2::Pt(p) => {
                 *p -= rhs;

@@ -5,10 +5,11 @@ use {
     plotz_geometry::{
         group::Group,
         interpolate::extrapolate_2d as extrapolate,
+        p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             pg2::Pg2,
-            pt2::{PolarPt, Pt},
+            pt2::{PolarPt, Pt2},
         },
         styled_obj2::StyledObj2,
     },
@@ -16,7 +17,7 @@ use {
 };
 
 // kite, green
-struct T1([Pt; 4]);
+struct T1([Pt2; 4]);
 impl Tile for T1 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let T1([a, b, c, d]) = &self;
@@ -64,16 +65,16 @@ impl Tile for T1 {
     fn color(&self) -> &'static ColorRGB {
         &GREEN
     }
-    fn pts(&self) -> Vec<Pt> {
+    fn pts(&self) -> Vec<Pt2> {
         self.0.to_vec()
     }
-    fn pts_iter_mut<'a>(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt> + '_> {
+    fn pts_iter_mut<'a>(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt2> + '_> {
         Box::new(self.0.iter_mut())
     }
 }
 
 // diamond, blue
-struct T2([Pt; 4]);
+struct T2([Pt2; 4]);
 impl Tile for T2 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let T2([a, b, c, d]) = &self;
@@ -109,15 +110,15 @@ impl Tile for T2 {
     fn color(&self) -> &'static ColorRGB {
         &ORANGE
     }
-    fn pts(&self) -> Vec<Pt> {
+    fn pts(&self) -> Vec<Pt2> {
         self.0.to_vec()
     }
-    fn pts_iter_mut<'a>(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt> + '_> {
+    fn pts_iter_mut<'a>(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt2> + '_> {
         Box::new(self.0.iter_mut())
     }
 }
 // trapezoid, red
-struct T3([Pt; 4]);
+struct T3([Pt2; 4]);
 impl Tile for T3 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let T3([a, b, c, d]) = &self;
@@ -163,15 +164,15 @@ impl Tile for T3 {
     fn color(&self) -> &'static ColorRGB {
         &RED
     }
-    fn pts(&self) -> Vec<Pt> {
+    fn pts(&self) -> Vec<Pt2> {
         self.0.to_vec()
     }
-    fn pts_iter_mut<'a>(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt> + '_> {
+    fn pts_iter_mut<'a>(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt2> + '_> {
         Box::new(self.0.iter_mut())
     }
 }
 // trapezoid, blue
-struct T4([Pt; 4]);
+struct T4([Pt2; 4]);
 impl Tile for T4 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let T4([a, b, c, d]) = &self;
@@ -218,10 +219,10 @@ impl Tile for T4 {
     fn color(&self) -> &'static ColorRGB {
         &BLUE
     }
-    fn pts(&self) -> Vec<Pt> {
+    fn pts(&self) -> Vec<Pt2> {
         self.0.to_vec()
     }
-    fn pts_iter_mut<'a>(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt> + '_> {
+    fn pts_iter_mut<'a>(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt2> + '_> {
         Box::new(self.0.iter_mut())
     }
 }
@@ -229,23 +230,23 @@ impl Tile for T4 {
 trait Tile {
     fn expand(&self) -> Vec<Box<dyn Tile>>;
     fn color(&self) -> &'static ColorRGB;
-    fn pts(&self) -> Vec<Pt>;
-    fn pts_iter_mut(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt> + '_>;
+    fn pts(&self) -> Vec<Pt2>;
+    fn pts_iter_mut(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt2> + '_>;
 }
 
 pub fn make() -> Vec<StyledObj2> {
     let ell: f64 = (5.0_f64.sqrt() - 1.0) / 2.0;
 
     let t1 = {
-        let a = Pt(0.0, 0.0);
+        let a = p2!(0.0, 0.0);
         let b = a + PolarPt(ell, -1.0 * PI / 10.0);
-        let c = Pt(0.0, -1.0);
+        let c = p2!(0.0, -1.0);
         let d = a + PolarPt(ell, 11.0 * PI / 10.0);
         T1([a, b, c, d])
     };
 
     let _t2 = {
-        let a = Pt(0.0, 0.0);
+        let a = p2!(0.0, 0.0);
         let b = a + PolarPt(ell, -3.0 * PI / 10.0);
         let c = a + PolarPt(1.0, 15.0 * PI / 10.0);
         let d = a + PolarPt(ell, 13.0 * PI / 10.0);
@@ -253,10 +254,10 @@ pub fn make() -> Vec<StyledObj2> {
     };
 
     let _t3 = {
-        let a = Pt(0.0, 0.0);
-        let b = a + Pt(ell, 0.0);
+        let a = p2!(0.0, 0.0);
+        let b = a + p2!(ell, 0.0);
         let c = b + PolarPt(ell, 16.0 * PI / 10.0);
-        let d = c - Pt(1.0, 0.0);
+        let d = c - p2!(1.0, 0.0);
         let mut t = T3([a, b, c, d]);
         t.pts_iter_mut()
             .for_each(|pt| pt.rotate_inplace(&a, -1.0 * 3.0 * PI / 10.0));
@@ -264,10 +265,10 @@ pub fn make() -> Vec<StyledObj2> {
     };
 
     let _t4 = {
-        let a = Pt(0.0, 0.0);
-        let b = a - Pt(ell, 0.0);
+        let a = p2!(0.0, 0.0);
+        let b = a - p2!(ell, 0.0);
         let c = b + PolarPt(ell, 14.0 * PI / 10.0);
-        let d = c + Pt(1.0, 0.0);
+        let d = c + p2!(1.0, 0.0);
         let mut t = T4([a, b, c, d]);
         t.pts_iter_mut()
             .for_each(|pt| pt.rotate_inplace(&a, 1.0 * 3.0 * PI / 10.0));
@@ -289,9 +290,9 @@ pub fn make() -> Vec<StyledObj2> {
         .flat_map(|tile| {
             let color = tile.color();
             let mut p = Pg2(tile.pts());
-            p *= Pt(1.0, -1.0); // flip
+            p *= p2!(1.0, -1.0); // flip
             p *= 3500.0;
-            p += Pt(95.0, -300.0); // translate
+            p += p2!(95.0, -300.0); // translate
 
             let config = ShadeConfig::builder()
                 .gap(1.5)

@@ -4,7 +4,7 @@ use {
     crate::{
         bounded::{Bounded, BoundsCollector},
         crop::{CropType, Croppable},
-        shapes::{pg2::Pg2, pt2::Pt},
+        shapes::{pg2::Pg2, pt2::Pt2},
         styled_obj2::StyledObj2,
         traits::*,
     },
@@ -28,7 +28,7 @@ impl Group {
     }
 
     /// Mutates each point in each object in the group. See |Mutable|.
-    pub fn mutate(&mut self, f: impl Fn(&mut Pt)) {
+    pub fn mutate(&mut self, f: impl Fn(&mut Pt2)) {
         for obj in &mut self.0 {
             obj.mutate(&f);
         }
@@ -36,7 +36,7 @@ impl Group {
 }
 
 impl YieldPoints for Group {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
         Box::new(
             self.0
                 .iter()
@@ -45,7 +45,7 @@ impl YieldPoints for Group {
     }
 }
 impl YieldPointsMut for Group {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
         Box::new(
             self.0
                 .iter_mut()
@@ -64,31 +64,31 @@ impl Bounded for Group {
     }
 }
 
-impl AddAssign<Pt> for Group {
-    fn add_assign(&mut self, rhs: Pt) {
+impl AddAssign<Pt2> for Group {
+    fn add_assign(&mut self, rhs: Pt2) {
         self.0.iter_mut().for_each(|o| {
             *o += rhs;
         });
     }
 }
 
-impl SubAssign<Pt> for Group {
-    fn sub_assign(&mut self, rhs: Pt) {
+impl SubAssign<Pt2> for Group {
+    fn sub_assign(&mut self, rhs: Pt2) {
         self.0.iter_mut().for_each(|o| {
             *o -= rhs;
         });
     }
 }
 
-impl Add<Pt> for Group {
+impl Add<Pt2> for Group {
     type Output = Self;
-    fn add(self, rhs: Pt) -> Self::Output {
+    fn add(self, rhs: Pt2) -> Self::Output {
         Self::new(self.0.into_iter().map(|o| o + rhs))
     }
 }
-impl Sub<Pt> for Group {
+impl Sub<Pt2> for Group {
     type Output = Self;
-    fn sub(self, rhs: Pt) -> Self::Output {
+    fn sub(self, rhs: Pt2) -> Self::Output {
         Self::new(self.0.into_iter().map(|o| o - rhs))
     }
 }
@@ -123,8 +123,8 @@ impl DivAssign<f64> for Group {
     }
 }
 
-impl RemAssign<Pt> for Group {
-    fn rem_assign(&mut self, rhs: Pt) {
+impl RemAssign<Pt2> for Group {
+    fn rem_assign(&mut self, rhs: Pt2) {
         self.0.iter_mut().for_each(|o| *o %= rhs);
     }
 }

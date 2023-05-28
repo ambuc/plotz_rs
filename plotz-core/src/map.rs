@@ -19,8 +19,9 @@ use {
         bounded::{Bounded, BoundingBoxError},
         crop::Croppable,
         obj2::Obj2,
+        p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{pg2::Pg2, pt2::Pt, sg2::Sg2},
+        shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
         styled_obj2::StyledObj2,
         traits::*,
     },
@@ -190,12 +191,12 @@ pub struct Map {
     canvas: Canvas,
 
     // user-configurable, there might be a desired pt to put at the center of the output.
-    center: Option<Pt>,
+    center: Option<Pt2>,
 }
 impl Map {
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
     /// unadjusted Map instance.
-    pub fn new(map_config: &MapConfig, center: Option<Pt>) -> Result<Map, MapError> {
+    pub fn new(map_config: &MapConfig, center: Option<Pt2>) -> Result<Map, MapError> {
         let bucketer = DefaultBucketer2 {};
 
         let mut canvas = Canvas::new();
@@ -277,15 +278,15 @@ impl Map {
 
     fn adjust_centering(&mut self, dest_size: &Size) -> Result<(), MapError> {
         let shift = match self.center {
-            Some(desired_center) => Pt(
+            Some(desired_center) => p2!(
                 dest_size.width as f64 / 2.0 - desired_center.x.0,
-                dest_size.height as f64 / 2.0 - desired_center.y.0,
+                dest_size.height as f64 / 2.0 - desired_center.y.0
             ),
             None => {
                 let canvas_bounds = self.canvas.bounds();
-                Pt(
+                p2!(
                     (dest_size.width as f64 - canvas_bounds.right_bound()) / 2.0,
-                    (dest_size.height as f64 - canvas_bounds.top_bound()) / 2.0,
+                    (dest_size.height as f64 - canvas_bounds.top_bound()) / 2.0
                 )
             }
         };
@@ -375,9 +376,9 @@ impl Map {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             for d_o in dos.iter_mut() {
                 if let Obj2::CurveArc(ca) = &mut d_o.inner {
-                    ca.ctr += Pt(
+                    ca.ctr += p2!(
                         thread_rng().gen_range(-2.0..=2.0),
-                        thread_rng().gen_range(-2.0..=2.0),
+                        thread_rng().gen_range(-2.0..=2.0)
                     );
                 }
             }
@@ -488,7 +489,7 @@ impl Map {
                     config.size.height as f64 - 2.0 * margin,
                     config.size.width as f64 - 2.0 * margin,
                 ),
-                Pt(margin, margin),
+                p2!(margin, margin),
             );
             self.canvas.frame = Some(
                 StyledObj2::new(frame.clone())
@@ -597,18 +598,18 @@ mod tests {
         for (initial, expected) in [
             // no shift
             (
-                [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
-                [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
+                [p2!(0, 0), p2!(0, 1), p2!(1, 0)],
+                [p2!(0, 0), p2!(0, 1), p2!(1, 0)],
             ),
             // shift positive
             (
-                [Pt(-1, -1), Pt(-1, 0), Pt(0, -1)],
-                [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
+                [p2!(-1, -1), p2!(-1, 0), p2!(0, -1)],
+                [p2!(0, 0), p2!(0, 1), p2!(1, 0)],
             ),
             // shift negative
             (
-                [Pt(1, 1), Pt(1, 2), Pt(2, 1)],
-                [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
+                [p2!(1, 1), p2!(1, 2), p2!(2, 1)],
+                [p2!(0, 0), p2!(0, 1), p2!(1, 0)],
             ),
         ] {
             let obj = Obj2::Pg2(Pg2(initial));
@@ -647,8 +648,8 @@ mod tests {
                     height: 1024,
                 },
                 0.9,
-                [Pt(0.0, 0.0), Pt(0.0, 1.0), Pt(1.0, 0.0)],
-                [Pt(0.0, 0.0), Pt(0.0, 921.60), Pt(921.60, 0.0)],
+                [p2!(0.0, 0.0), p2!(0.0, 1.0), p2!(1.0, 0.0)],
+                [p2!(0.0, 0.0), p2!(0.0, 921.60), p2!(921.60, 0.0)],
             ),
             // rescale: 100 * 0.9 = 90
             (
@@ -657,8 +658,8 @@ mod tests {
                     height: 1000,
                 },
                 0.9,
-                [Pt(0.0, 0.0), Pt(0.0, 1.0), Pt(1.0, 0.0)],
-                [Pt(0.0, 0.0), Pt(0.0, 900.0), Pt(900.0, 0.0)],
+                [p2!(0.0, 0.0), p2!(0.0, 1.0), p2!(1.0, 0.0)],
+                [p2!(0.0, 0.0), p2!(0.0, 900.0), p2!(900.0, 0.0)],
             ),
         ] {
             let obj = Obj2::Pg2(Pg2(initial));

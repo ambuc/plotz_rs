@@ -1,7 +1,7 @@
 //! A character at a point.
 
 use {
-    crate::{bounded::Bounded, shapes::pt2::Pt, traits::*},
+    crate::{bounded::Bounded, shapes::pt2::Pt2, traits::*},
     std::ops::*,
 };
 
@@ -9,7 +9,7 @@ use {
 /// A character laid out at a point.
 pub struct Txt {
     /// the point.
-    pub pt: Pt,
+    pub pt: Pt2,
     /// the text.
     pub inner: String,
     /// The font size.
@@ -23,29 +23,29 @@ impl Bounded for Txt {
 }
 
 impl YieldPoints for Txt {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
         Box::new(std::iter::once(&self.pt))
     }
 }
 
 impl YieldPointsMut for Txt {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
         Box::new(std::iter::once(&mut self.pt))
     }
 }
 
-impl Add<Pt> for Txt {
+impl Add<Pt2> for Txt {
     type Output = Self;
-    fn add(self, rhs: Pt) -> Self::Output {
+    fn add(self, rhs: Pt2) -> Self::Output {
         Self {
             pt: self.pt + rhs,
             ..self
         }
     }
 }
-impl Sub<Pt> for Txt {
+impl Sub<Pt2> for Txt {
     type Output = Self;
-    fn sub(self, rhs: Pt) -> Self::Output {
+    fn sub(self, rhs: Pt2) -> Self::Output {
         Self {
             pt: self.pt - rhs,
             ..self
@@ -53,21 +53,21 @@ impl Sub<Pt> for Txt {
     }
 }
 
-impl AddAssign<Pt> for Txt {
-    fn add_assign(&mut self, rhs: Pt) {
+impl AddAssign<Pt2> for Txt {
+    fn add_assign(&mut self, rhs: Pt2) {
         self.pt += rhs;
     }
 }
 
-impl SubAssign<Pt> for Txt {
-    fn sub_assign(&mut self, rhs: Pt) {
+impl SubAssign<Pt2> for Txt {
+    fn sub_assign(&mut self, rhs: Pt2) {
         self.pt -= rhs;
     }
 }
 
-impl Mul<Pt> for Txt {
+impl Mul<Pt2> for Txt {
     type Output = Self;
-    fn mul(self, rhs: Pt) -> Self::Output {
+    fn mul(self, rhs: Pt2) -> Self::Output {
         Self {
             pt: self.pt * rhs,
             ..self
@@ -83,9 +83,9 @@ impl Mul<f64> for Txt {
         }
     }
 }
-impl Div<Pt> for Txt {
+impl Div<Pt2> for Txt {
     type Output = Self;
-    fn div(self, rhs: Pt) -> Self::Output {
+    fn div(self, rhs: Pt2) -> Self::Output {
         Self {
             pt: self.pt / rhs,
             ..self
@@ -107,8 +107,8 @@ impl MulAssign<f64> for Txt {
         self.pt *= rhs;
     }
 }
-impl MulAssign<Pt> for Txt {
-    fn mul_assign(&mut self, rhs: Pt) {
+impl MulAssign<Pt2> for Txt {
+    fn mul_assign(&mut self, rhs: Pt2) {
         self.pt *= rhs;
     }
 }
@@ -117,13 +117,13 @@ impl DivAssign<f64> for Txt {
         self.pt /= rhs;
     }
 }
-impl DivAssign<Pt> for Txt {
-    fn div_assign(&mut self, rhs: Pt) {
+impl DivAssign<Pt2> for Txt {
+    fn div_assign(&mut self, rhs: Pt2) {
         self.pt /= rhs;
     }
 }
-impl RemAssign<Pt> for Txt {
-    fn rem_assign(&mut self, rhs: Pt) {
+impl RemAssign<Pt2> for Txt {
+    fn rem_assign(&mut self, rhs: Pt2) {
         self.pt.x.0 %= rhs.x.0;
         self.pt.y.0 %= rhs.y.0;
     }
@@ -131,7 +131,7 @@ impl RemAssign<Pt> for Txt {
 
 impl Mutable for Txt {}
 impl Translatable for Txt {}
-impl Scalable<Pt> for Txt {}
+impl Scalable<Pt2> for Txt {}
 impl Scalable<f64> for Txt {}
 
 impl Nullable for Txt {

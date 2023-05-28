@@ -3,13 +3,14 @@
 use {
     plotz_color::*,
     plotz_geometry::{
+        p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{pg2::Pg2, pt2::Pt},
+        shapes::{pg2::Pg2, pt2::Pt2},
         styled_obj2::StyledObj2,
     },
 };
 
-struct T1([Pt; 3]);
+struct T1([Pt2; 3]);
 impl Tile for T1 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let sq2: f64 = 2.0_f64.sqrt();
@@ -31,7 +32,7 @@ impl Tile for T1 {
     fn color(&self) -> &'static ColorRGB {
         &WHITE
     }
-    fn pts(&self) -> Vec<Pt> {
+    fn pts(&self) -> Vec<Pt2> {
         self.0.to_vec()
     }
     fn slope(&self) -> f64 {
@@ -39,7 +40,7 @@ impl Tile for T1 {
         ((c.y.0 - a.y.0) / (c.x.0 - a.x.0)).atan()
     }
 }
-struct T2([Pt; 3]);
+struct T2([Pt2; 3]);
 impl Tile for T2 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let sq2: f64 = 2.0_f64.sqrt();
@@ -61,7 +62,7 @@ impl Tile for T2 {
     fn color(&self) -> &'static ColorRGB {
         &WHITE
     }
-    fn pts(&self) -> Vec<Pt> {
+    fn pts(&self) -> Vec<Pt2> {
         self.0.to_vec()
     }
     fn slope(&self) -> f64 {
@@ -69,7 +70,7 @@ impl Tile for T2 {
         ((c.y.0 - a.y.0) / (c.x.0 - a.x.0)).atan()
     }
 }
-struct T3([Pt; 4]);
+struct T3([Pt2; 4]);
 impl Tile for T3 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let T3([a, b, c, d]) = self.clone();
@@ -93,7 +94,7 @@ impl Tile for T3 {
     fn color(&self) -> &'static ColorRGB {
         &BLUE
     }
-    fn pts(&self) -> Vec<Pt> {
+    fn pts(&self) -> Vec<Pt2> {
         self.0.to_vec()
     }
     fn slope(&self) -> f64 {
@@ -105,28 +106,28 @@ impl Tile for T3 {
 trait Tile {
     fn expand(&self) -> Vec<Box<dyn Tile>>;
     fn color(&self) -> &'static ColorRGB;
-    fn pts(&self) -> Vec<Pt>;
+    fn pts(&self) -> Vec<Pt2>;
     fn slope(&self) -> f64;
 }
 
 pub fn make() -> Vec<StyledObj2> {
-    let origin = Pt(0.1, 0.1);
+    let origin = p2!(0.1, 0.1);
 
     let sq2: f64 = 2.0_f64.sqrt();
     let ell = 1.0;
     let x: f64 = ell / sq2;
 
-    let _t1 = T1([origin, origin + Pt(ell, ell), origin + Pt(2.0 * ell, 0.0)]);
+    let _t1 = T1([origin, origin + p2!(ell, ell), origin + p2!(2.0 * ell, 0.0)]);
     let _t2 = T2([
         origin,
-        origin + Pt(ell, -1.0 * ell),
-        origin + Pt(2.0 * ell, 0.0),
+        origin + p2!(ell, -1.0 * ell),
+        origin + p2!(2.0 * ell, 0.0),
     ]);
     let t3 = T3([
         origin,
-        origin + Pt(ell, 0.0),
-        origin + Pt(ell + x, -x),
-        origin + Pt(x, -x),
+        origin + p2!(ell, 0.0),
+        origin + p2!(ell + x, -x),
+        origin + p2!(x, -x),
     ]);
 
     let mut all_tiles: Vec<Box<dyn Tile>> = vec![Box::new(t3)];
@@ -144,9 +145,9 @@ pub fn make() -> Vec<StyledObj2> {
         .flat_map(|tile| {
             let color = tile.color();
             let mut p = Pg2(tile.pts());
-            p *= Pt(1.0, -1.0); // flip
+            p *= p2!(1.0, -1.0); // flip
             p *= 530.0;
-            p += Pt(-17.0, 240.0); // translate
+            p += p2!(-17.0, 240.0); // translate
 
             let config = ShadeConfig::builder()
                 .gap(1.5)

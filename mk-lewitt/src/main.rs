@@ -5,7 +5,8 @@ use {
     plotz_geometry::{
         crop::PointLoc,
         grid_layout::{GridLayout, GridLayoutSettings},
-        shapes::{curve::CurveArc, pt2::Pt},
+        p2,
+        shapes::{curve::CurveArc, pt2::Pt2},
         styled_obj2::StyledObj2,
     },
     rand::{seq::SliceRandom, thread_rng, Rng},
@@ -36,7 +37,7 @@ fn main() {
 
     let frame: StyledObj2 = make_frame(
         (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
-        /*offset=*/ Pt(mgn, mgn),
+        /*offset=*/ p2!(mgn, mgn),
     );
 
     {
@@ -55,9 +56,9 @@ fn main() {
                 let cubby = (i, j);
                 let bounds = grid_layout.get_cubby_bounds(cubby);
                 for color in COLORS[0..3].choose_multiple(&mut rng, 3) {
-                    let curve_arc_ctr: Pt = || -> Pt {
+                    let curve_arc_ctr: Pt2 = || -> Pt2 {
                         loop {
-                            let cand = Pt(rng.gen_range(0.0..800.0), rng.gen_range(0.0..1000.0));
+                            let cand = p2!(rng.gen_range(0.0..800.0), rng.gen_range(0.0..1000.0));
                             if !matches!(bounds.contains_pt(cand), PointLoc::Inside) {
                                 return cand;
                             }

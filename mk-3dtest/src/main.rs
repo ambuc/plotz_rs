@@ -7,7 +7,7 @@ use {
     plotz_core::{canvas::Canvas, frame::*, svg::Size},
     plotz_geometry::{
         obj2::Obj2,
-        shapes::{pg2::Pg2, pt2::Pt},
+        shapes::{pg2::Pg2, pt2::Pt2},
         styled_obj2::StyledObj2,
         traits::AnnotationSettings,
     },

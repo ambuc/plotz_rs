@@ -7,7 +7,7 @@ use {
         isxn::{Intersection, IsxnResult, Pair, Which},
         shapes::{
             pg2::Pg2,
-            pt2::{is_colinear_n, Pt},
+            pt2::{is_colinear_n, Pt2},
         },
     },
     approx::*,
@@ -26,7 +26,7 @@ use {
 #[derive(Debug, TypedBuilder)]
 pub struct CropGraph<'a> {
     #[builder(default)]
-    graph: DiGraphMap<Pt, ()>,
+    graph: DiGraphMap<Pt2, ()>,
 
     a: &'a Pg2,
 
@@ -42,11 +42,11 @@ pub struct CropGraph<'a> {
     // to one in this vec) before treating it as a hashable value. if it is
     // known,
     #[builder(default)]
-    known_pts: Vec<Pt>,
+    known_pts: Vec<Pt2>,
 }
 
 impl<'a> CropGraph<'a> {
-    pub fn run(a: &Pg2, b: &Pg2, crop_type: CropType) -> (Vec<Pg2>, DiGraphMap<Pt, ()>) {
+    pub fn run(a: &Pg2, b: &Pg2, crop_type: CropType) -> (Vec<Pg2>, DiGraphMap<Pt2, ()>) {
         let mut crop_graph = CropGraph::builder().a(a).b(b).build();
         crop_graph.build_from_polygons(crop_type);
         crop_graph.remove_nodes_outside_polygon(Which::A);
@@ -67,7 +67,7 @@ impl<'a> CropGraph<'a> {
         (crop_graph.trim_and_create_resultant_polygons(), graph)
     }
 
-    fn normalize_pt(&mut self, pt: &Pt) -> Pt {
+    fn normalize_pt(&mut self, pt: &Pt2) -> Pt2 {
         // if something in self.known_pts matches, return that instead.
         // otherwise insert pt into known_pts and return it.
 
@@ -275,12 +275,12 @@ impl<'a> CropGraph<'a> {
     }
 
     fn extract_polygon(&mut self) -> Option<Pg2> {
-        let mut pts: Vec<Pt> = vec![];
+        let mut pts: Vec<Pt2> = vec![];
 
         if self.graph.node_count() == 0 {
             return None;
         }
-        let mut curr_node: Pt = {
+        let mut curr_node: Pt2 = {
             //
             if let Some(pt) = self
                 .graph
@@ -302,7 +302,7 @@ impl<'a> CropGraph<'a> {
         while !pts.contains(&curr_node) {
             pts.push(curr_node);
 
-            let next_node: Option<Pt> = match self
+            let next_node: Option<Pt2> = match self
                 .graph
                 .neighbors_directed(curr_node, Outgoing)
                 .collect::<Vec<_>>()[..]
@@ -410,7 +410,7 @@ mod test {
         for (_idx, offset) in iproduct!(0..=5, 0..=4).map(|(i, j)| {
             (
                 (i, j),
-                Pt((i as f64 - 3.0) * margin, (j as f64 - 3.0) * margin),
+                p2!((i as f64 - 3.0) * margin, (j as f64 - 3.0) * margin),
             )
         })
         // .filter(|(idx, _)| *idx == (1, 2))

@@ -1,7 +1,7 @@
 //! A shortcut for constructing a multiline.
 
 use super::{CurveOrientation, Pg2, PolygonKind};
-use crate::shapes::pt2::Pt;
+use crate::shapes::pt2::Pt2;
 use thiserror::Error;
 
 /// A general error arising from trying to construct a Multiline.
@@ -16,8 +16,8 @@ pub enum MultilineConstructorError {
 /// must have two or more points. Constructing a multiline from one or fewer
 /// points will result in a MultilineConstructorError.
 #[allow(non_snake_case)]
-pub fn Multiline(a: impl IntoIterator<Item = Pt>) -> Result<Pg2, MultilineConstructorError> {
-    let pts: Vec<Pt> = a.into_iter().collect();
+pub fn Multiline(a: impl IntoIterator<Item = Pt2>) -> Result<Pg2, MultilineConstructorError> {
+    let pts: Vec<Pt2> = a.into_iter().collect();
     if pts.len() <= 1 {
         return Err(MultilineConstructorError::OneOrFewerPoints);
     }

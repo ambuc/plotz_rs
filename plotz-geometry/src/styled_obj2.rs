@@ -5,7 +5,7 @@ use {
         bounded::Bounded,
         crop::{CropType, Croppable},
         obj2::Obj2,
-        shapes::{pg2::Pg2, pt2::Pt},
+        shapes::{pg2::Pg2, pt2::Pt2},
         traits::*,
     },
     plotz_color::{ColorRGB, BLACK},
@@ -85,13 +85,13 @@ impl StyledObj2 {
 }
 
 impl YieldPoints for StyledObj2 {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
         self.inner.inner_impl_yield_points().yield_pts()
     }
 }
 
 impl YieldPointsMut for StyledObj2 {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
         self.inner.inner_impl_yield_points_mut().yield_pts_mut()
     }
 }
@@ -104,8 +104,8 @@ impl Bounded for StyledObj2 {
     }
 }
 
-impl RemAssign<Pt> for StyledObj2 {
-    fn rem_assign(&mut self, rhs: Pt) {
+impl RemAssign<Pt2> for StyledObj2 {
+    fn rem_assign(&mut self, rhs: Pt2) {
         self.inner %= rhs;
     }
 }
@@ -122,30 +122,30 @@ impl DivAssign<f64> for StyledObj2 {
     }
 }
 
-impl AddAssign<Pt> for StyledObj2 {
-    fn add_assign(&mut self, rhs: Pt) {
+impl AddAssign<Pt2> for StyledObj2 {
+    fn add_assign(&mut self, rhs: Pt2) {
         self.inner += rhs;
     }
 }
 
-impl SubAssign<Pt> for StyledObj2 {
-    fn sub_assign(&mut self, rhs: Pt) {
+impl SubAssign<Pt2> for StyledObj2 {
+    fn sub_assign(&mut self, rhs: Pt2) {
         self.inner -= rhs;
     }
 }
 
-impl Add<Pt> for StyledObj2 {
+impl Add<Pt2> for StyledObj2 {
     type Output = Self;
-    fn add(self, rhs: Pt) -> Self::Output {
+    fn add(self, rhs: Pt2) -> Self::Output {
         Self {
             inner: self.inner + rhs,
             ..self
         }
     }
 }
-impl Sub<Pt> for StyledObj2 {
+impl Sub<Pt2> for StyledObj2 {
     type Output = Self;
-    fn sub(self, rhs: Pt) -> Self::Output {
+    fn sub(self, rhs: Pt2) -> Self::Output {
         Self {
             inner: self.inner - rhs,
             ..self

@@ -5,10 +5,11 @@ use {
     lazy_static::lazy_static,
     plotz_color::*,
     plotz_geometry::{
+        p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             pg2::Pg2,
-            pt2::{PolarPt, Pt},
+            pt2::{PolarPt, Pt2},
         },
         styled_obj2::StyledObj2,
     },
@@ -87,11 +88,11 @@ impl Kind {
 #[derive(Debug, Clone, Copy)]
 struct Tile {
     kind: Kind,
-    pts: [Pt; 3],
+    pts: [Pt2; 3],
 }
 
 #[allow(non_snake_case)]
-fn Tile(kind: Kind, p1: Pt, p2: Pt, p3: Pt) -> Tile {
+fn Tile(kind: Kind, p1: Pt2, p2: Pt2, p3: Pt2) -> Tile {
     let e = 1000.0 * f64::EPSILON;
     match kind {
         Kind::T0 => {
@@ -188,20 +189,20 @@ fn expand_tile(tile: &Tile) -> Vec<Tile> {
 }
 
 pub fn make() -> Vec<StyledObj2> {
-    let origin = Pt(0.1, 0.1);
+    let origin = p2!(0.1, 0.1);
 
     let t0 = Tile(
         Kind::T0,
         origin,
         origin + PolarPt(*A, PI - T0.angle_md_rad),
-        origin + Pt(-1.0 * *C, 0.0),
+        origin + p2!(-1.0 * *C, 0.0),
     );
 
     let t1 = Tile(
         Kind::T1,
         origin,
         origin + PolarPt(*A, -1.0 * T1.angle_base_rad),
-        origin + Pt(*C, 0.0),
+        origin + p2!(*C, 0.0),
     );
 
     let t2 = Tile(
@@ -219,19 +220,19 @@ pub fn make() -> Vec<StyledObj2> {
 
             // centerings
             t_copy.pts.iter_mut().for_each(|pt| {
-                pt.rotate_inplace(&Pt(0.0, 0.0), 0.0 * PI);
-                *pt *= Pt(1.0, -1.0);
+                pt.rotate_inplace(&p2!(0.0, 0.0), 0.0 * PI);
+                *pt *= p2!(1.0, -1.0);
                 *pt *= 270.0;
-                *pt += Pt(40.0 + 270.0 * (jdx as f64), 150.0 + 150.0 * (idx as f64));
+                *pt += p2!(40.0 + 270.0 * (jdx as f64), 150.0 + 150.0 * (idx as f64));
                 match t.kind {
                     Kind::T0 => {
-                        *pt += Pt(230.0, 0.0);
+                        *pt += p2!(230.0, 0.0);
                     }
                     Kind::T1 => {
-                        *pt += Pt(-20.0, 25.0);
+                        *pt += p2!(-20.0, 25.0);
                     }
                     Kind::T2 => {
-                        *pt += Pt(0.0, 110.0);
+                        *pt += p2!(0.0, 110.0);
                     }
                 }
             });

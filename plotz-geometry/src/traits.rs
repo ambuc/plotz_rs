@@ -1,7 +1,7 @@
 //! Traits.
 
 use {
-    crate::{shapes::pt2::Pt, styled_obj2::StyledObj2},
+    crate::{shapes::pt2::Pt2, styled_obj2::StyledObj2},
     std::ops::*,
     typed_builder::TypedBuilder,
 };
@@ -9,32 +9,32 @@ use {
 /// A geometric figure made of points which might emit a boxed iterator of immutable points.
 pub trait YieldPoints {
     /// Possibly yields a boxed iterator of immutable points.
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_>;
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_>;
 }
 
 /// A geometric figure made of points which might emit a boxed iterator of mutable points.
 pub trait YieldPointsMut {
     /// Possibly yields a boxed iterator of mutable points.
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_>;
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_>;
 }
 
 /// A geometric figure made of points which can be maniuplated by passing f:
 /// impl Fn(&mut Pt) and mutating each one.
 pub trait Mutable: YieldPointsMut {
     /// Mutate the points of a geometric figure by applying f(pt) to each of them.
-    fn mutate(&mut self, f: impl Fn(&mut Pt)) {
+    fn mutate(&mut self, f: impl Fn(&mut Pt2)) {
         self.yield_pts_mut().for_each(f)
     }
 }
 
 /// A geometric figure which can be translated by an xy shift (represented by a Point).
-pub trait Translatable: Add<Pt> + AddAssign<Pt> + Sub<Pt> + SubAssign<Pt> + Sized {}
+pub trait Translatable: Add<Pt2> + AddAssign<Pt2> + Sub<Pt2> + SubAssign<Pt2> + Sized {}
 
 /// A geometric figure which can be scaled by a factor of |f|.
 pub trait Scalable<T>: Mul<T> + MulAssign<T> + Div<T> + DivAssign<T> + Sized {}
 
 /// The same as |Translatable|, but in-place. (See add vs. add_assign.)
-pub trait TranslatableAssign: AddAssign<Pt> + SubAssign<Pt> {}
+pub trait TranslatableAssign: AddAssign<Pt2> + SubAssign<Pt2> {}
 
 /// The same as |Scalable|, but in-place. (See add vs. add_assign.)
 pub trait ScalableAssign: MulAssign<f64> + DivAssign<f64> {}

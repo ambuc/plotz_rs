@@ -14,7 +14,7 @@ use {
 
 /// A point in 2D space.
 #[derive(Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
-pub struct Pt {
+pub struct Pt2 {
     /// The x-coordinate of the point.
     pub x: FloatOrd<f64>,
     /// The y-coordinate of the point.
@@ -25,24 +25,24 @@ pub struct Pt {
 #[macro_export]
 macro_rules! p2 {
     ($x:expr, $y:expr) => {
-        Pt($x, $y)
+        Pt2($x, $y)
     };
 }
 
-impl Debug for Pt {
+impl Debug for Pt2 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Pt { x, y } = self;
+        let Pt2 { x, y } = self;
         write!(f, "Pt({:.10},{:.10})", x.0, y.0)
     }
 }
 
 /// An alternate constructor for points.
 #[allow(non_snake_case)]
-pub fn Pt<T>(x: T, y: T) -> Pt
+pub fn Pt2<T>(x: T, y: T) -> Pt2
 where
     f64: From<T>,
 {
-    Pt {
+    Pt2 {
         x: FloatOrd(x.into()),
         y: FloatOrd(y.into()),
     }
@@ -50,39 +50,39 @@ where
 
 /// An alternate constructor for points which accepts an angle in radians.
 #[allow(non_snake_case)]
-pub fn PolarPt<T>(r: T, theta: T) -> Pt
+pub fn PolarPt<T>(r: T, theta: T) -> Pt2
 where
     f64: From<T>,
 {
     let theta: f64 = theta.into();
     let r: f64 = r.into();
-    Pt {
+    Pt2 {
         x: FloatOrd(r * theta.cos()),
         y: FloatOrd(r * theta.sin()),
     }
 }
 
-impl From<(f64, f64)> for Pt {
-    fn from((x, y): (f64, f64)) -> Pt {
-        Pt(x, y)
+impl From<(f64, f64)> for Pt2 {
+    fn from((x, y): (f64, f64)) -> Pt2 {
+        Pt2(x, y)
     }
 }
 
-impl Rem<(f64, f64)> for Pt {
+impl Rem<(f64, f64)> for Pt2 {
     type Output = Self;
 
     fn rem(self, modulus: (f64, f64)) -> Self::Output {
-        Pt(self.x.0 % modulus.0, self.y.0 % modulus.1)
+        Pt2(self.x.0 % modulus.0, self.y.0 % modulus.1)
     }
 }
 
-impl Add<Pt> for Pt {
+impl Add<Pt2> for Pt2 {
     type Output = Self;
-    fn add(self, rhs: Pt) -> Self::Output {
-        Pt(self.x.0 + rhs.x.0, self.y.0 + rhs.y.0)
+    fn add(self, rhs: Pt2) -> Self::Output {
+        Pt2(self.x.0 + rhs.x.0, self.y.0 + rhs.y.0)
     }
 }
-impl AddAssign<Pt> for Pt {
+impl AddAssign<Pt2> for Pt2 {
     fn add_assign(&mut self, other: Self) {
         *self = Self {
             x: FloatOrd(self.x.0 + other.x.0),
@@ -90,67 +90,67 @@ impl AddAssign<Pt> for Pt {
         };
     }
 }
-impl Div<Pt> for Pt {
+impl Div<Pt2> for Pt2 {
     type Output = Self;
-    fn div(self, rhs: Pt) -> Self::Output {
-        Pt(self.x.0 / rhs.x.0, self.y.0 / rhs.y.0)
+    fn div(self, rhs: Pt2) -> Self::Output {
+        Pt2(self.x.0 / rhs.x.0, self.y.0 / rhs.y.0)
     }
 }
-impl Div<f64> for Pt {
+impl Div<f64> for Pt2 {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
-        Pt(self.x.0 / rhs, self.y.0 / rhs)
+        Pt2(self.x.0 / rhs, self.y.0 / rhs)
     }
 }
-impl DivAssign<Pt> for Pt {
-    fn div_assign(&mut self, rhs: Pt) {
+impl DivAssign<Pt2> for Pt2 {
+    fn div_assign(&mut self, rhs: Pt2) {
         self.x.0 /= rhs.x.0;
         self.y.0 /= rhs.y.0;
     }
 }
-impl DivAssign<f64> for Pt {
+impl DivAssign<f64> for Pt2 {
     fn div_assign(&mut self, rhs: f64) {
         self.x.0 /= rhs;
         self.y.0 /= rhs;
     }
 }
-impl Mul<Pt> for Pt {
+impl Mul<Pt2> for Pt2 {
     type Output = Self;
-    fn mul(self, rhs: Pt) -> Self::Output {
-        Pt(self.x.0 * rhs.x.0, self.y.0 * rhs.y.0)
+    fn mul(self, rhs: Pt2) -> Self::Output {
+        Pt2(self.x.0 * rhs.x.0, self.y.0 * rhs.y.0)
     }
 }
-impl Mul<f64> for Pt {
+impl Mul<f64> for Pt2 {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
-        Pt(self.x.0 * rhs, self.y.0 * rhs)
+        Pt2(self.x.0 * rhs, self.y.0 * rhs)
     }
 }
-impl MulAssign<Pt> for Pt {
-    fn mul_assign(&mut self, rhs: Pt) {
+impl MulAssign<Pt2> for Pt2 {
+    fn mul_assign(&mut self, rhs: Pt2) {
         self.x.0 *= rhs.x.0;
         self.y.0 *= rhs.y.0;
     }
 }
-impl MulAssign<f64> for Pt {
+impl MulAssign<f64> for Pt2 {
     fn mul_assign(&mut self, rhs: f64) {
         self.x.0 *= rhs;
         self.y.0 *= rhs;
     }
 }
-impl RemAssign<Pt> for Pt {
-    fn rem_assign(&mut self, rhs: Pt) {
+impl RemAssign<Pt2> for Pt2 {
+    fn rem_assign(&mut self, rhs: Pt2) {
         self.x.0 = self.x.0.rem_euclid(rhs.x.0);
         self.y.0 = self.y.0.rem_euclid(rhs.y.0);
     }
 }
-impl Sub<Pt> for Pt {
+impl Sub<Pt2> for Pt2 {
     type Output = Self;
-    fn sub(self, rhs: Pt) -> Self::Output {
-        Pt(self.x.0 - rhs.x.0, self.y.0 - rhs.y.0)
+    fn sub(self, rhs: Pt2) -> Self::Output {
+        Pt2(self.x.0 - rhs.x.0, self.y.0 - rhs.y.0)
     }
 }
-impl SubAssign<Pt> for Pt {
+impl SubAssign<Pt2> for Pt2 {
     fn sub_assign(&mut self, other: Self) {
         *self = Self {
             x: FloatOrd(self.x.0 - other.x.0),
@@ -159,12 +159,12 @@ impl SubAssign<Pt> for Pt {
     }
 }
 
-impl Pt {
+impl Pt2 {
     /// A rotation operation, for rotating one point about another. Accepts a |by|
     /// argument in radians.
-    pub fn rotate_inplace(&mut self, about: &Pt, by: f64) {
+    pub fn rotate_inplace(&mut self, about: &Pt2, by: f64) {
         *self -= *about;
-        *self = Pt(
+        *self = Pt2(
             (by.cos() * self.x.0) - (by.sin() * self.y.0),
             (by.sin() * self.x.0) + (by.cos() * self.y.0),
         );
@@ -173,25 +173,25 @@ impl Pt {
 
     /// rotate
     #[must_use]
-    pub fn rotate(&self, about: &Pt, by: f64) -> Pt {
+    pub fn rotate(&self, about: &Pt2, by: f64) -> Pt2 {
         let mut n = *self;
         n.rotate_inplace(about, by);
         n
     }
 
     /// Dot prouduct of (origin, self) • (origin, other)
-    pub fn dot(&self, other: &Pt) -> f64 {
+    pub fn dot(&self, other: &Pt2) -> f64 {
         (self.x.0 * other.x.0) + (self.y.0 * other.y.0)
     }
 
     /// Distance between two points.
-    pub fn dist(&self, other: &Pt) -> f64 {
+    pub fn dist(&self, other: &Pt2) -> f64 {
         Sg2(*self, *other).abs()
     }
 
     /// Average of two points.
-    pub fn avg(&self, other: &Pt) -> Pt {
-        Pt((self.x.0 + other.x.0) / 2.0, (self.y.0 + other.y.0) / 2.0)
+    pub fn avg(&self, other: &Pt2) -> Pt2 {
+        Pt2((self.x.0 + other.x.0) / 2.0, (self.y.0 + other.y.0) / 2.0)
     }
 
     /// Flip x
@@ -205,27 +205,27 @@ impl Pt {
     }
 
     /// angle from here to there.
-    pub fn angle_to(&self, other: &Pt) -> f64 {
+    pub fn angle_to(&self, other: &Pt2) -> f64 {
         let o = self;
         let j = other;
-        let i = Pt(other.x.0, self.y.0);
+        let i = Pt2(other.x.0, self.y.0);
         abp(o, &i, j)
     }
 }
 
-impl YieldPoints for Pt {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+impl YieldPoints for Pt2 {
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
         Box::new(std::iter::once(self))
     }
 }
-impl YieldPointsMut for Pt {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+impl YieldPointsMut for Pt2 {
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
         Box::new(std::iter::once(self))
     }
 }
-impl Mutable for Pt {}
+impl Mutable for Pt2 {}
 
-impl Bounded for Pt {
+impl Bounded for Pt2 {
     fn bounds(&self) -> crate::bounded::Bounds {
         Bounds {
             top_bound: self.y.0,
@@ -236,32 +236,32 @@ impl Bounded for Pt {
     }
 }
 
-impl Translatable for Pt {}
-impl Scalable<Pt> for Pt {}
-impl Scalable<f64> for Pt {}
+impl Translatable for Pt2 {}
+impl Scalable<Pt2> for Pt2 {}
+impl Scalable<f64> for Pt2 {}
 
-impl Roundable for Pt {
+impl Roundable for Pt2 {
     fn round_to_nearest(&mut self, f: f64) {
         self.x.0 -= self.x.0 % f;
         self.y.0 -= self.y.0 % f;
     }
 }
 
-impl Nullable for Pt {
+impl Nullable for Pt2 {
     fn is_empty(&self) -> bool {
         false
     }
 }
 
 /// Returns true if all the points are colinear.
-pub fn is_colinear_n(ch: &Vec<Pt>) -> bool {
+pub fn is_colinear_n(ch: &Vec<Pt2>) -> bool {
     if ch.len() <= 2 {
         return false;
     }
     ch[2..].iter().all(|p| is_colinear_3(ch[0], ch[1], *p))
 }
 
-fn is_colinear_3(p1: Pt, p2: Pt, p3: Pt) -> bool {
+fn is_colinear_3(p1: Pt2, p2: Pt2, p3: Pt2) -> bool {
     let a = p1.x.0;
     let b = p1.y.0;
     let m = p2.x.0;
@@ -284,8 +284,8 @@ mod tests {
         use float_eq::assert_float_eq;
         use std::f64::consts::PI;
 
-        let origin = Pt(0.0, 0.0);
-        let mut p = Pt(1.0, 0.0);
+        let origin = Pt2(0.0, 0.0);
+        let mut p = Pt2(1.0, 0.0);
 
         p.rotate_inplace(/*about=*/ &origin, PI / 2.0);
         assert_float_eq!(p.x.0, 0.0, abs <= 0.000_1);
@@ -306,54 +306,54 @@ mod tests {
 
     #[test]
     fn test_dot() {
-        assert_float_eq!(Pt(1.0, 1.0).dot(&Pt(1.0, 0.0)), 1.0, abs <= 0.000_1);
-        assert_float_eq!(Pt(7.0, 2.0).dot(&Pt(3.0, 6.0)), 33.0, abs <= 0.000_1);
+        assert_float_eq!(Pt2(1.0, 1.0).dot(&Pt2(1.0, 0.0)), 1.0, abs <= 0.000_1);
+        assert_float_eq!(Pt2(7.0, 2.0).dot(&Pt2(3.0, 6.0)), 33.0, abs <= 0.000_1);
     }
 
     #[test]
     fn test_rem() {
-        assert_eq!(Pt(1.5, 1.5) % (1.0, 1.0), Pt(0.5, 0.5));
+        assert_eq!(Pt2(1.5, 1.5) % (1.0, 1.0), Pt2(0.5, 0.5));
     }
 
     #[test]
     fn test_div_assign() {
-        let mut p = Pt(1.5, 1.5);
+        let mut p = Pt2(1.5, 1.5);
         p /= 2.0;
-        assert_eq!(p, Pt(0.75, 0.75));
+        assert_eq!(p, Pt2(0.75, 0.75));
     }
 
     #[test]
     fn test_add() {
-        assert_eq!(Pt(1, 2) + Pt(3, 4), Pt(4, 6));
+        assert_eq!(Pt2(1, 2) + Pt2(3, 4), Pt2(4, 6));
     }
 
     #[test]
     fn test_add_assign() {
-        let mut p = Pt(2, 4);
-        p += Pt(1, 2);
-        assert_eq!(p, Pt(3, 6));
+        let mut p = Pt2(2, 4);
+        p += Pt2(1, 2);
+        assert_eq!(p, Pt2(3, 6));
     }
 
     #[test]
     fn test_sub() {
-        assert_eq!(Pt(1, 2) - Pt(3, 4), Pt(-2, -2));
+        assert_eq!(Pt2(1, 2) - Pt2(3, 4), Pt2(-2, -2));
     }
 
     #[test]
     fn test_sub_assign() {
-        let mut p = Pt(2, 4);
-        p -= Pt(1, 2);
-        assert_eq!(p, Pt(1, 2));
+        let mut p = Pt2(2, 4);
+        p -= Pt2(1, 2);
+        assert_eq!(p, Pt2(1, 2));
     }
 
     #[test]
     fn test_mul() {
-        assert_eq!(Pt(1.0, 2.0) * 2.0, Pt(2.0, 4.0));
+        assert_eq!(Pt2(1.0, 2.0) * 2.0, Pt2(2.0, 4.0));
     }
 
     #[test]
     fn test_div() {
-        assert_eq!(Pt(1.0, 2.0) / 2.0, Pt(0.5, 1.0)); // floats
+        assert_eq!(Pt2(1.0, 2.0) / 2.0, Pt2(0.5, 1.0)); // floats
     }
 
     #[test_case(p2!(0,0), p2!(1,1), p2!(2,2), true; "colinear diagonal")]
@@ -362,7 +362,7 @@ mod tests {
     #[test_case(p2!(0,0), p2!(0,1), p2!(2,2), false; "not colinear")]
     #[test_case(p2!(0,0), p2!(0,1), p2!(0.1, 0.1), false; "not colinear small")]
     #[test_case(p2!(0,0), p2!(0,1), p2!(0.0001, 0.0001), false; "not colinear very small")]
-    fn test_is_colinear_3(a: Pt, b: Pt, c: Pt, expectation: bool) {
+    fn test_is_colinear_3(a: Pt2, b: Pt2, c: Pt2, expectation: bool) {
         assert_eq!(is_colinear_3(a, b, c), expectation);
     }
 
@@ -374,7 +374,7 @@ mod tests {
     #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(1,3)], false; "four not colinear")]
     #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(0,3), p2!(0,4)], true; "five colinear")]
     #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(0,3), p2!(1,4)], false; "five not colinear")]
-    fn test_is_colinear_n(pts: &[Pt], expectation: bool) {
+    fn test_is_colinear_n(pts: &[Pt2], expectation: bool) {
         assert_eq!(is_colinear_n(&pts.to_vec()), expectation);
     }
 }

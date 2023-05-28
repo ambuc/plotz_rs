@@ -3,8 +3,9 @@ use {
     plotz_color::{ColorRGB, *},
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
+        p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{pg2::Pg2, pt2::Pt},
+        shapes::{pg2::Pg2, pt2::Pt2},
         styled_obj2::StyledObj2,
     },
     rand::{prelude::SliceRandom, Rng},
@@ -86,7 +87,7 @@ fn main() {
     let polygons: Vec<Pg2> = vornoi
         .iter_cells()
         .map(|cell| {
-            Pg2(cell.iter_vertices().map(|vertex| Pt(vertex.x, vertex.y))) * DIM + Pt(20.0, 20.0)
+            Pg2(cell.iter_vertices().map(|vertex| p2!(vertex.x, vertex.y))) * DIM + p2!(20.0, 20.0)
         })
         .collect();
 
@@ -115,7 +116,7 @@ fn main() {
     // TODO(ambuc): split by group color before printing
 
     let canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true)
-        .with_frame(make_frame((DIM, DIM), Pt(20.0, 20.0)));
+        .with_frame(make_frame((DIM, DIM), p2!(20.0, 20.0)));
 
     let () = canvas
         .write_to_svg(
