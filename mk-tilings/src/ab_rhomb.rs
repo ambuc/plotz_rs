@@ -4,7 +4,7 @@ use {
     plotz_color::*,
     plotz_geometry::{
         object2d::Object2d,
-        shading::{shade_polygon, ShadeConfig},
+        shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{point::Pt, polygon::Polygon},
     },
 };

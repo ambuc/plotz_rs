@@ -6,7 +6,7 @@ use {
         group::Group,
         interpolate::extrapolate_2d as extrapolate,
         object2d::Object2d,
-        shading::{shade_polygon, ShadeConfig},
+        shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             point::{PolarPt, Pt},
             polygon::Polygon,

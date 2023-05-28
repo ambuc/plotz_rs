@@ -5,7 +5,7 @@ use {
     plotz_geometry::{
         object2d::Object2d,
         object2d_inner::Object2dInner,
-        shading::{shade_polygon, ShadeConfig},
+        shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             point::Pt,
             polygon::{multiline::Multiline, Polygon},

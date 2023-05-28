@@ -1,15 +1,17 @@
 //! Shading and crosshatching algorithms. Updated version.
 
+pub mod shade_config;
+
 use crate::{
     bounded::{Bounded, BoundingBoxError},
     crop::{CropToPolygonError, Croppable},
+    shading::shade_config::ShadeConfig,
     shapes::{
         point::Pt,
         polygon::{Polygon, PolygonKind},
         segment::Segment,
     },
 };
-use typed_builder::TypedBuilder;
 
 /// A general error arising from shading a polygon.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -23,28 +25,6 @@ pub enum ShadePolygonError {
     /// An error arose trying to crop some stroke to a bounding polygon.
     #[error("An error arose trying to crop some stroke to a bounding polygon.")]
     CropError(#[from] CropToPolygonError),
-}
-
-/// Config for controlling crosshatching.
-#[derive(Debug, Clone, TypedBuilder)]
-pub struct ShadeConfig {
-    /// The gap between lines.
-    pub gap: f64,
-
-    /// The slope of a line.
-    /// zero is flat.
-    /// 1.0 is diagonal northeast (southwest).
-    /// -1.0 is diagonal northwest (southeast).
-    /// infinity is straight up-and-down.
-    pub slope: f64,
-
-    /// The thickness of a line (SVG only.)
-    #[builder(default = 1.0)]
-    pub thickness: f64,
-
-    /// whether or not to zig zag.
-    #[builder(default = false)]
-    pub switchback: bool,
 }
 
 fn compute_vertical_step(gap: f64, slope: f64) -> f64 {
