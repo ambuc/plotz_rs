@@ -4,8 +4,8 @@ use {
     crate::{
         bounded::{Bounded, Bounds},
         crop::Croppable,
-        object2d::Object2d,
         shapes::point::Pt,
+        styled_obj2::StyledObj2,
     },
     float_ord::FloatOrd,
     typed_builder::TypedBuilder,
@@ -31,7 +31,7 @@ pub struct GridLayout {
     /// the settings. See above.
     settings: GridLayoutSettings,
     /// A vector of objects. By default these will be empty vectors.
-    objs: Vec<Vec<Vec<Object2d>>>,
+    objs: Vec<Vec<Vec<StyledObj2>>>,
 }
 
 impl GridLayout {
@@ -90,7 +90,7 @@ impl GridLayout {
     }
 
     /// Returns a list of all inner objects.
-    pub fn to_object2ds(&self) -> Vec<Object2d> {
+    pub fn to_object2ds(&self) -> Vec<StyledObj2> {
         self.objs
             .clone()
             .into_iter()
@@ -101,7 +101,7 @@ impl GridLayout {
 
     /// Given an Object2d, crops it to the cubby at objs[i][j] and inserts that
     /// into the grid.
-    pub fn insert_and_crop_to_cubby(&mut self, (i, j): (usize, usize), d_o: Object2d) {
+    pub fn insert_and_crop_to_cubby(&mut self, (i, j): (usize, usize), d_o: StyledObj2) {
         let cropped = d_o.crop_to_bounds(self.get_cubby_bounds((i, j)));
 
         self.objs[i][j].extend(cropped);
@@ -111,7 +111,7 @@ impl GridLayout {
     pub fn insert_and_rescale_to_cubby(
         &mut self,
         (i, j): (usize, usize),
-        d_o: Object2d,
+        d_o: StyledObj2,
         buffer: f64,
     ) {
         let mut modified_obj = d_o;

@@ -3,13 +3,13 @@ use {
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        object2d::Object2d,
-        object2d_inner::Object2dInner,
+        obj2::Obj2,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             point::Pt,
             polygon::{multiline::Multiline, Polygon},
         },
+        styled_obj2::StyledObj2,
     },
     rand::prelude::SliceRandom,
     std::f64::consts::*,
@@ -154,7 +154,7 @@ fn fill_grid(x: usize, y: usize) -> Vec<Vec<Tile>> {
         .collect()
 }
 
-fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<Object2d> {
+fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<StyledObj2> {
     [
         (cell.id(), cell.n(), 0.0 * FRAC_PI_2),
         (cell.id(), cell.w(), -1.0 * FRAC_PI_2),
@@ -188,7 +188,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<Object2d> {
                 ])
                 .unwrap(),
             };
-            Object2d::new(shape).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
+            StyledObj2::new(shape).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
         });
         ret.extend({
             shade_polygon(
@@ -198,7 +198,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<Object2d> {
             .unwrap()
             .iter()
             .map(|sg| {
-                Object2d::new(*sg).with_color(
+                StyledObj2::new(*sg).with_color(
                     [
                         &ALICEBLUE,      // 1
                         &BLUEVIOLET,     // 2
@@ -217,12 +217,12 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<Object2d> {
             .collect::<Vec<_>>()
         });
         ret.iter_mut().for_each(|d_o| match &mut d_o.inner {
-            Object2dInner::Polygon(pg) => {
+            Obj2::Polygon(pg) => {
                 *pg *= 2.0;
                 pg.rotate(&Pt(1.0, 1.0), rot);
                 *pg += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
             }
-            Object2dInner::Segment(sg) => {
+            Obj2::Segment(sg) => {
                 *sg *= 2.0;
                 sg.rotate(&Pt(1.0, 1.0), rot);
                 *sg += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
@@ -260,11 +260,11 @@ fn main() {
 
     objs.dos_by_bucket.iter_mut().for_each(|(_bucket, layers)| {
         layers.iter_mut().for_each(|d_o| match &mut d_o.inner {
-            Object2dInner::Polygon(p) => {
+            Obj2::Polygon(p) => {
                 *p *= scale;
                 *p += Pt(margin, margin);
             }
-            Object2dInner::Segment(s) => {
+            Obj2::Segment(s) => {
                 *s *= scale;
                 *s += Pt(margin, margin);
             }

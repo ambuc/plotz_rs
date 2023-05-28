@@ -4,13 +4,13 @@
 use {
     crate::{
         camera::{Occlusion, Projection},
-        object3d::Object3d,
         occluder::Occluder,
         style::Style3d,
+        styled_obj3::StyledObj3,
     },
     float_ord::FloatOrd,
     itertools::Itertools,
-    plotz_geometry::{object2d::Object2d, traits::Annotatable, traits::AnnotationSettings},
+    plotz_geometry::{styled_obj2::StyledObj2, traits::Annotatable, traits::AnnotationSettings},
     std::fmt::Debug,
     typed_builder::TypedBuilder,
 };
@@ -27,7 +27,7 @@ pub struct DebugSettings {
 #[derive(Debug, Clone, TypedBuilder)]
 pub struct Scene {
     #[builder(default)]
-    objects: Vec<Object3d>,
+    objects: Vec<StyledObj3>,
 
     #[builder(default, setter(strip_option))]
     debug: Option<DebugSettings>,
@@ -38,7 +38,7 @@ impl Scene {
         Scene::builder().build()
     }
 
-    pub fn project_with(&self, projection: Projection, occlusion: Occlusion) -> Vec<Object2d> {
+    pub fn project_with(&self, projection: Projection, occlusion: Occlusion) -> Vec<StyledObj2> {
         match (projection, occlusion) {
             (Projection::Oblique(obl), Occlusion::False) => self
                 .objects

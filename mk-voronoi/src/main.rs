@@ -3,9 +3,9 @@ use {
     plotz_color::{ColorRGB, *},
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        object2d::Object2d,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{point::Pt, polygon::Polygon},
+        styled_obj2::StyledObj2,
     },
     rand::{prelude::SliceRandom, Rng},
     std::f64::consts::*,
@@ -100,7 +100,7 @@ fn main() {
                 .expect("failed to shade")
                 .iter()
                 .map(|sg| {
-                    Object2d::new(*sg)
+                    StyledObj2::new(*sg)
                         .with_color(shade.color)
                         .with_thickness(1.0)
                 })

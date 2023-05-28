@@ -1,35 +1,33 @@
 //! A 3d object.
 
 use {
-    crate::{
-        camera::Oblique, object3d_inner::Object3dInner, shapes::point3d::Pt3d, style::Style3d,
-    },
+    crate::{camera::Oblique, obj3::Obj3, shapes::point3d::Pt3d, style::Style3d},
     plotz_color::ColorRGB,
-    plotz_geometry::object2d::Object2d,
+    plotz_geometry::styled_obj2::StyledObj2,
     std::fmt::Debug,
 };
 
 #[derive(Clone)]
-pub struct Object3d {
-    pub inner: Object3dInner,
+pub struct StyledObj3 {
+    pub inner: Obj3,
     pub style: Option<Style3d>,
 }
 
-impl Object3d {
-    pub fn new(a: impl Into<Object3dInner>) -> Object3d {
-        Object3d {
+impl StyledObj3 {
+    pub fn new(a: impl Into<Obj3>) -> StyledObj3 {
+        StyledObj3 {
             inner: a.into(),
             style: None,
         }
     }
-    pub fn with_style(self, a: Style3d) -> Object3d {
-        Object3d {
+    pub fn with_style(self, a: Style3d) -> StyledObj3 {
+        StyledObj3 {
             style: Some(a),
             ..self
         }
     }
-    pub fn with_color(self, c: &'static ColorRGB) -> Object3d {
-        Object3d {
+    pub fn with_color(self, c: &'static ColorRGB) -> StyledObj3 {
+        StyledObj3 {
             style: match self.style {
                 None => Some(Style3d::builder().color(c).build()),
                 Some(s) => Some(s.with_color(c)),
@@ -39,8 +37,8 @@ impl Object3d {
     }
 
     // Project oblique.
-    pub fn project_oblique(&self, oblique_projection: &Oblique) -> Object2d {
-        let mut d_o = Object2d::new(self.inner.project_oblique(oblique_projection));
+    pub fn project_oblique(&self, oblique_projection: &Oblique) -> StyledObj2 {
+        let mut d_o = StyledObj2::new(self.inner.project_oblique(oblique_projection));
 
         if let Some(Style3d { color, thickness }) = self.style {
             d_o = d_o.with_color(color).with_thickness(thickness);
@@ -62,9 +60,9 @@ impl Object3d {
     }
 }
 
-impl Debug for Object3d {
+impl Debug for StyledObj3 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Object3d { inner, style } = self;
+        let StyledObj3 { inner, style } = self;
         match style {
             Some(style) => write!(f, "Object3d::new({:?}).with_style({:?})", inner, style),
             None => write!(f, "Object3d::new({:?})", inner),

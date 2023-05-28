@@ -3,9 +3,9 @@ use {
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        object2d::Object2d,
-        object2d_inner::Object2dInner,
+        obj2::Obj2,
         shapes::{curve::CurveArc, point::Pt, segment::Segment},
+        styled_obj2::StyledObj2,
     },
     rand::{distributions::Standard, prelude::Distribution, Rng},
     std::f64::consts::*,
@@ -43,15 +43,15 @@ enum Tile {
     Clover2,
 }
 impl Tile {
-    fn to_dos(&self) -> Vec<Object2d> {
+    fn to_dos(&self) -> Vec<StyledObj2> {
         self.to_dois()
             .into_iter()
-            .map(|doi| Object2d::new(doi).with_color(&BLACK).with_thickness(2.0))
+            .map(|doi| StyledObj2::new(doi).with_color(&BLACK).with_thickness(2.0))
             .collect::<Vec<_>>()
     }
 
     // scaled to a unit square.
-    fn to_dois(&self) -> Vec<Object2dInner> {
+    fn to_dois(&self) -> Vec<Obj2> {
         let _a = Pt(0.0, 0.0);
         let _b = Pt(0.25, 0.0);
         let c = Pt(0.5, 0.0);
@@ -151,7 +151,7 @@ fn main() {
     let image_width: f64 = 500.0;
     let margin = 10.0;
 
-    let mut obj_vec: Vec<Object2d> = vec![];
+    let mut obj_vec: Vec<StyledObj2> = vec![];
 
     let width = 10;
     let height = 10;

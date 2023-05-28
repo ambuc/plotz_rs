@@ -10,16 +10,16 @@ use {
     itertools::Itertools,
     plotz_geometry::{
         bounded::{streaming_bbox, Bounded, Bounds},
-        object2d::Object2d,
-        object2d_inner::Object2dInner,
+        obj2::Obj2,
         shapes::point::Pt,
+        styled_obj2::StyledObj2,
         traits::*,
     },
     std::collections::HashMap,
     tracing::trace,
 };
 
-type CanvasMap = HashMap<Option<Bucket>, Vec<Object2d>>;
+type CanvasMap = HashMap<Option<Bucket>, Vec<StyledObj2>>;
 
 /// Many objects.
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ pub struct Canvas {
     pub dos_by_bucket: CanvasMap,
 
     /// the frame, maybe.
-    pub frame: Option<Object2d>,
+    pub frame: Option<StyledObj2>,
 }
 
 impl Canvas {
@@ -41,7 +41,7 @@ impl Canvas {
     }
 
     /// ctor from objs
-    pub fn from_objs<O: IntoIterator<Item = Object2d> + ExactSizeIterator>(
+    pub fn from_objs<O: IntoIterator<Item = StyledObj2> + ExactSizeIterator>(
         objs: O,
         autobucket: bool,
     ) -> Canvas {
@@ -71,7 +71,7 @@ impl Canvas {
     }
 
     /// with a frame
-    pub fn with_frame(self, frame: Object2d) -> Canvas {
+    pub fn with_frame(self, frame: StyledObj2) -> Canvas {
         Canvas {
             frame: Some(frame),
             ..self
@@ -79,7 +79,7 @@ impl Canvas {
     }
 
     /// Returns an iterator of Object2dInner.
-    pub fn objs_iter(&self) -> impl Iterator<Item = &Object2dInner> {
+    pub fn objs_iter(&self) -> impl Iterator<Item = &Obj2> {
         self.dos_by_bucket
             .iter()
             .flat_map(|(_bucket, dos)| dos)
@@ -87,7 +87,7 @@ impl Canvas {
     }
 
     /// Returns an iterator of mutable Object2dInner.
-    pub fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut Object2dInner> {
+    pub fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut Obj2> {
         self.dos_by_bucket
             .iter_mut()
             .flat_map(|(_bucket, dos)| dos)
@@ -163,7 +163,7 @@ impl Canvas {
         {
             trace!("Writing to all.");
             let name = format!("{}_all.svg", prefix);
-            let mut all: Vec<Object2d> = vec![];
+            let mut all: Vec<StyledObj2> = vec![];
             if let Some(frame) = self.frame.clone() {
                 all.push(frame);
             }

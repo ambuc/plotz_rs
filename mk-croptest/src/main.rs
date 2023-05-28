@@ -7,11 +7,11 @@ use {
         crop::Croppable,
         grid_layout::{GridLayout, GridLayoutSettings},
         group::Group,
-        object2d::Object2d,
         shapes::{
             point::Pt,
             polygon::{Polygon, Rect},
         },
+        styled_obj2::StyledObj2,
     },
 };
 
@@ -37,7 +37,7 @@ fn main() {
     let mut dos = vec![];
     let mgn = 25.0;
 
-    let frame: Object2d = make_frame_with_margin((1000.0, 800.0), mgn);
+    let frame: StyledObj2 = make_frame_with_margin((1000.0, 800.0), mgn);
 
     let mut gl = GridLayout::new(
         GridLayoutSettings::builder()
@@ -53,11 +53,11 @@ fn main() {
         .map(|(i, j)| ((i, j), Pt((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
     // .filter(|(idx, _)| *idx == (1, 2))
     {
-        let mut v: Vec<Object2d> = vec![];
+        let mut v: Vec<StyledObj2> = vec![];
 
         let r = Rect(Pt(50.0, 50.0), (50.0, 50.0)).unwrap();
 
-        let base_sq = Object2d::new(r.clone())
+        let base_sq = StyledObj2::new(r.clone())
             .with_color(&BLACK)
             .with_thickness(2.0);
         v.push(base_sq.clone());
@@ -89,7 +89,7 @@ fn main() {
             vec![a, b, c, d, e, f, g, h, i, j, k, l, a]
         };
 
-        let subject_sq = Object2d::new(Polygon(pts))
+        let subject_sq = StyledObj2::new(Polygon(pts))
             .with_color(&RED)
             .with_thickness(1.0)
             + offset;
@@ -112,7 +112,7 @@ fn main() {
 
         let g = Group::new(v);
 
-        gl.insert_and_rescale_to_cubby(idx, Object2d::new(g), 1.00);
+        gl.insert_and_rescale_to_cubby(idx, StyledObj2::new(g), 1.00);
     }
 
     dos.extend(gl.to_object2ds());

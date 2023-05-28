@@ -6,19 +6,19 @@ use {
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::*, svg::Size},
     plotz_geometry::{
-        object2d::Object2d,
-        object2d_inner::Object2dInner,
+        obj2::Obj2,
         shapes::{point::Pt, polygon::Polygon},
+        styled_obj2::StyledObj2,
         traits::AnnotationSettings,
     },
     plotz_geometry3d::{
         camera::{Oblique, Occlusion, Projection},
-        object3d::Object3d,
         occluder::{self, Occluder},
         p3,
         scene::{DebugSettings, Scene},
         shapes::{cube3d::Cube, point3d::Pt3d, polygon3d::Polygon3d, segment3d::Segment3d},
         style::Style3d,
+        styled_obj3::StyledObj3,
     },
     tracing::*,
     tracing_subscriber::FmtSubscriber,
@@ -41,12 +41,12 @@ fn main() {
 
     let args: Args = argh::from_env();
     let margin = 25.0;
-    let frame: Object2d = make_frame_with_margin((1000.0, 800.0), margin);
+    let frame: StyledObj2 = make_frame_with_margin((1000.0, 800.0), margin);
 
-    let dos: Vec<Object2d> = {
+    let dos: Vec<StyledObj2> = {
         let origin_3d = p3!(0, 0, 0);
 
-        let mut objects: Vec<Object3d> = vec![];
+        let mut objects: Vec<StyledObj3> = vec![];
 
         if false {
             objects.extend(
@@ -57,7 +57,7 @@ fn main() {
                 ]
                 .iter()
                 .map(|(diff, color)| {
-                    Object3d::new(Segment3d(origin_3d, origin_3d + *diff))
+                    StyledObj3::new(Segment3d(origin_3d, origin_3d + *diff))
                         .with_style(Style3d::new(color, 2.0))
                 }),
             );
@@ -76,7 +76,7 @@ fn main() {
                     Cube(p3!(i, j, k), (e, e, e))
                         .items
                         .into_iter()
-                        .map(|face| Object3d::new(face).with_style(Style3d::new(color, 3.0))),
+                        .map(|face| StyledObj3::new(face).with_style(Style3d::new(color, 3.0))),
                 );
             }
         }
@@ -86,13 +86,13 @@ fn main() {
                 Cube(p3!(0, 0, 0), (0.7, 0.7, 1.0))
                     .items
                     .into_iter()
-                    .map(|face| Object3d::new(face).with_style(Style3d::new(&RED, 3.0))),
+                    .map(|face| StyledObj3::new(face).with_style(Style3d::new(&RED, 3.0))),
             );
             objects.extend(
                 Cube(p3!(1, 0, 0), (0.7, 0.7, 1.0))
                     .items
                     .into_iter()
-                    .map(|face| Object3d::new(face).with_style(Style3d::new(&YELLOW, 3.0))),
+                    .map(|face| StyledObj3::new(face).with_style(Style3d::new(&YELLOW, 3.0))),
             );
         }
         //
@@ -141,7 +141,7 @@ fn main() {
                     p3!(0.00, 0.00, 1.00),
                 ]),
             ] {
-                objects.push(Object3d::new(pg3d).with_style(Style3d::new(&RED, 6.0)));
+                objects.push(StyledObj3::new(pg3d).with_style(Style3d::new(&RED, 6.0)));
             }
             for pg3d in [
                 Polygon3d([
@@ -187,7 +187,7 @@ fn main() {
                     p3!(1.00, 0.70, 0.00),
                 ]),
             ] {
-                objects.push(Object3d::new(pg3d).with_style(Style3d::new(&YELLOW, 3.0)));
+                objects.push(StyledObj3::new(pg3d).with_style(Style3d::new(&YELLOW, 3.0)));
             }
         }
 

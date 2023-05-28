@@ -18,7 +18,7 @@ use {
 
 /// Either a polygon or a segment.
 #[derive(Debug, PartialEq, Clone, From)]
-pub enum Object2dInner {
+pub enum Obj2 {
     /// A point.
     Point(Pt),
     /// A polygon.
@@ -33,263 +33,263 @@ pub enum Object2dInner {
     Group(Group),
 }
 
-impl Object2dInner {
+impl Obj2 {
     /// Returns true if the object is empty (i.e. zero points)
     pub fn is_empty(&self) -> bool {
         match self {
-            Object2dInner::Polygon(p) => p.is_empty(),
-            Object2dInner::Group(dois) => dois.is_empty(),
-            Object2dInner::Point(pt) => pt.is_empty(),
-            Object2dInner::Segment(sg) => sg.is_empty(),
-            Object2dInner::Char(ch) => ch.is_empty(),
-            Object2dInner::CurveArc(ca) => ca.is_empty(),
+            Obj2::Polygon(p) => p.is_empty(),
+            Obj2::Group(dois) => dois.is_empty(),
+            Obj2::Point(pt) => pt.is_empty(),
+            Obj2::Segment(sg) => sg.is_empty(),
+            Obj2::Char(ch) => ch.is_empty(),
+            Obj2::CurveArc(ca) => ca.is_empty(),
         }
     }
 
     /// Casts each inner value to something which implements Bounded.
     pub fn inner_impl_bounded(&self) -> &dyn Bounded {
         match self {
-            Object2dInner::Char(ch) => ch,
-            Object2dInner::CurveArc(arc) => arc,
-            Object2dInner::Group(dos) => dos,
-            Object2dInner::Point(p) => p,
-            Object2dInner::Polygon(pg) => pg,
-            Object2dInner::Segment(s) => s,
+            Obj2::Char(ch) => ch,
+            Obj2::CurveArc(arc) => arc,
+            Obj2::Group(dos) => dos,
+            Obj2::Point(p) => p,
+            Obj2::Polygon(pg) => pg,
+            Obj2::Segment(s) => s,
         }
     }
 
     /// Casts each inner value to something which implements YieldPoints.
     pub fn inner_impl_yield_points(&self) -> &dyn YieldPoints {
         match self {
-            Object2dInner::Point(p) => p,
-            Object2dInner::Char(ch) => ch,
-            Object2dInner::CurveArc(ca) => ca,
-            Object2dInner::Group(g) => g,
-            Object2dInner::Polygon(pg) => pg,
-            Object2dInner::Segment(sg) => sg,
+            Obj2::Point(p) => p,
+            Obj2::Char(ch) => ch,
+            Obj2::CurveArc(ca) => ca,
+            Obj2::Group(g) => g,
+            Obj2::Polygon(pg) => pg,
+            Obj2::Segment(sg) => sg,
         }
     }
 
     /// Casts each inner value to something which implements YieldPointsMut.
     pub fn inner_impl_yield_points_mut(&mut self) -> &mut dyn YieldPointsMut {
         match self {
-            Object2dInner::Point(p) => p,
-            Object2dInner::Char(ch) => ch,
-            Object2dInner::CurveArc(ca) => ca,
-            Object2dInner::Group(g) => g,
-            Object2dInner::Polygon(pg) => pg,
-            Object2dInner::Segment(sg) => sg,
+            Obj2::Point(p) => p,
+            Obj2::Char(ch) => ch,
+            Obj2::CurveArc(ca) => ca,
+            Obj2::Group(g) => g,
+            Obj2::Polygon(pg) => pg,
+            Obj2::Segment(sg) => sg,
         }
     }
 }
 
-impl YieldPoints for Object2dInner {
+impl YieldPoints for Obj2 {
     fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
         self.inner_impl_yield_points().yield_pts()
     }
 }
 
-impl YieldPointsMut for Object2dInner {
+impl YieldPointsMut for Obj2 {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
         self.inner_impl_yield_points_mut().yield_pts_mut()
     }
 }
 
-impl Mutable for Object2dInner {}
+impl Mutable for Obj2 {}
 
-impl Bounded for Object2dInner {
+impl Bounded for Obj2 {
     fn bounds(&self) -> crate::bounded::Bounds {
         self.inner_impl_bounded().bounds()
     }
 }
 
-impl RemAssign<Pt> for Object2dInner {
+impl RemAssign<Pt> for Obj2 {
     fn rem_assign(&mut self, rhs: Pt) {
         match self {
-            Object2dInner::Point(p) => {
+            Obj2::Point(p) => {
                 *p %= rhs;
             }
-            Object2dInner::Char(ch) => {
+            Obj2::Char(ch) => {
                 *ch %= rhs;
             }
-            Object2dInner::CurveArc(ca) => {
+            Obj2::CurveArc(ca) => {
                 *ca %= rhs;
             }
-            Object2dInner::Group(g) => {
+            Obj2::Group(g) => {
                 *g %= rhs;
             }
-            Object2dInner::Polygon(pg) => {
+            Obj2::Polygon(pg) => {
                 *pg %= rhs;
             }
-            Object2dInner::Segment(sg) => {
+            Obj2::Segment(sg) => {
                 *sg %= rhs;
             }
         }
     }
 }
 
-impl Add<Pt> for Object2dInner {
-    type Output = Object2dInner;
+impl Add<Pt> for Obj2 {
+    type Output = Obj2;
     fn add(self, rhs: Pt) -> Self::Output {
         match self {
-            Object2dInner::Point(p) => Object2dInner::from(p + rhs),
-            Object2dInner::Char(ch) => Object2dInner::from(ch + rhs),
-            Object2dInner::CurveArc(ca) => Object2dInner::from(ca + rhs),
-            Object2dInner::Group(g) => Object2dInner::from(g + rhs),
-            Object2dInner::Polygon(pg) => Object2dInner::from(pg + rhs),
-            Object2dInner::Segment(sg) => Object2dInner::from(sg + rhs),
+            Obj2::Point(p) => Obj2::from(p + rhs),
+            Obj2::Char(ch) => Obj2::from(ch + rhs),
+            Obj2::CurveArc(ca) => Obj2::from(ca + rhs),
+            Obj2::Group(g) => Obj2::from(g + rhs),
+            Obj2::Polygon(pg) => Obj2::from(pg + rhs),
+            Obj2::Segment(sg) => Obj2::from(sg + rhs),
         }
     }
 }
 
-impl Sub<Pt> for Object2dInner {
-    type Output = Object2dInner;
+impl Sub<Pt> for Obj2 {
+    type Output = Obj2;
     fn sub(self, rhs: Pt) -> Self::Output {
         match self {
-            Object2dInner::Point(p) => Object2dInner::from(p - rhs),
-            Object2dInner::Char(ch) => Object2dInner::from(ch - rhs),
-            Object2dInner::CurveArc(ca) => Object2dInner::from(ca - rhs),
-            Object2dInner::Group(g) => Object2dInner::from(g - rhs),
-            Object2dInner::Polygon(pg) => Object2dInner::from(pg - rhs),
-            Object2dInner::Segment(sg) => Object2dInner::from(sg - rhs),
+            Obj2::Point(p) => Obj2::from(p - rhs),
+            Obj2::Char(ch) => Obj2::from(ch - rhs),
+            Obj2::CurveArc(ca) => Obj2::from(ca - rhs),
+            Obj2::Group(g) => Obj2::from(g - rhs),
+            Obj2::Polygon(pg) => Obj2::from(pg - rhs),
+            Obj2::Segment(sg) => Obj2::from(sg - rhs),
         }
     }
 }
-impl Mul<f64> for Object2dInner {
-    type Output = Object2dInner;
+impl Mul<f64> for Obj2 {
+    type Output = Obj2;
     fn mul(self, rhs: f64) -> Self::Output {
         match self {
-            Object2dInner::Point(p) => Object2dInner::from(p * rhs),
-            Object2dInner::Char(ch) => Object2dInner::from(ch * rhs),
-            Object2dInner::CurveArc(ca) => Object2dInner::from(ca * rhs),
-            Object2dInner::Group(g) => Object2dInner::from(g * rhs),
-            Object2dInner::Polygon(pg) => Object2dInner::from(pg * rhs),
-            Object2dInner::Segment(sg) => Object2dInner::from(sg * rhs),
+            Obj2::Point(p) => Obj2::from(p * rhs),
+            Obj2::Char(ch) => Obj2::from(ch * rhs),
+            Obj2::CurveArc(ca) => Obj2::from(ca * rhs),
+            Obj2::Group(g) => Obj2::from(g * rhs),
+            Obj2::Polygon(pg) => Obj2::from(pg * rhs),
+            Obj2::Segment(sg) => Obj2::from(sg * rhs),
         }
     }
 }
-impl Div<f64> for Object2dInner {
-    type Output = Object2dInner;
+impl Div<f64> for Obj2 {
+    type Output = Obj2;
     fn div(self, rhs: f64) -> Self::Output {
         match self {
-            Object2dInner::Point(p) => Object2dInner::from(p / rhs),
-            Object2dInner::Char(ch) => Object2dInner::from(ch / rhs),
-            Object2dInner::CurveArc(ca) => Object2dInner::from(ca / rhs),
-            Object2dInner::Group(g) => Object2dInner::from(g / rhs),
-            Object2dInner::Polygon(pg) => Object2dInner::from(pg / rhs),
-            Object2dInner::Segment(sg) => Object2dInner::from(sg / rhs),
+            Obj2::Point(p) => Obj2::from(p / rhs),
+            Obj2::Char(ch) => Obj2::from(ch / rhs),
+            Obj2::CurveArc(ca) => Obj2::from(ca / rhs),
+            Obj2::Group(g) => Obj2::from(g / rhs),
+            Obj2::Polygon(pg) => Obj2::from(pg / rhs),
+            Obj2::Segment(sg) => Obj2::from(sg / rhs),
         }
     }
 }
-impl AddAssign<Pt> for Object2dInner {
+impl AddAssign<Pt> for Obj2 {
     fn add_assign(&mut self, rhs: Pt) {
         match self {
-            Object2dInner::Point(p) => {
+            Obj2::Point(p) => {
                 *p += rhs;
             }
-            Object2dInner::Char(ch) => {
+            Obj2::Char(ch) => {
                 *ch += rhs;
             }
-            Object2dInner::CurveArc(ca) => {
+            Obj2::CurveArc(ca) => {
                 *ca += rhs;
             }
-            Object2dInner::Group(g) => {
+            Obj2::Group(g) => {
                 *g += rhs;
             }
-            Object2dInner::Polygon(pg) => {
+            Obj2::Polygon(pg) => {
                 *pg += rhs;
             }
-            Object2dInner::Segment(sg) => {
+            Obj2::Segment(sg) => {
                 *sg += rhs;
             }
         }
     }
 }
-impl SubAssign<Pt> for Object2dInner {
+impl SubAssign<Pt> for Obj2 {
     fn sub_assign(&mut self, rhs: Pt) {
         match self {
-            Object2dInner::Point(p) => {
+            Obj2::Point(p) => {
                 *p -= rhs;
             }
-            Object2dInner::Char(ch) => {
+            Obj2::Char(ch) => {
                 *ch -= rhs;
             }
-            Object2dInner::CurveArc(ca) => {
+            Obj2::CurveArc(ca) => {
                 *ca -= rhs;
             }
-            Object2dInner::Group(g) => {
+            Obj2::Group(g) => {
                 *g -= rhs;
             }
-            Object2dInner::Polygon(pg) => {
+            Obj2::Polygon(pg) => {
                 *pg -= rhs;
             }
-            Object2dInner::Segment(sg) => {
+            Obj2::Segment(sg) => {
                 *sg -= rhs;
             }
         }
     }
 }
 
-impl MulAssign<f64> for Object2dInner {
+impl MulAssign<f64> for Obj2 {
     fn mul_assign(&mut self, rhs: f64) {
         match self {
-            Object2dInner::Point(p) => {
+            Obj2::Point(p) => {
                 *p *= rhs;
             }
-            Object2dInner::Char(ch) => {
+            Obj2::Char(ch) => {
                 *ch *= rhs;
             }
-            Object2dInner::CurveArc(ca) => {
+            Obj2::CurveArc(ca) => {
                 *ca *= rhs;
             }
-            Object2dInner::Group(g) => {
+            Obj2::Group(g) => {
                 *g *= rhs;
             }
-            Object2dInner::Polygon(pg) => {
+            Obj2::Polygon(pg) => {
                 *pg *= rhs;
             }
-            Object2dInner::Segment(sg) => {
+            Obj2::Segment(sg) => {
                 *sg *= rhs;
             }
         }
     }
 }
 
-impl DivAssign<f64> for Object2dInner {
+impl DivAssign<f64> for Obj2 {
     fn div_assign(&mut self, rhs: f64) {
         match self {
-            Object2dInner::Point(p) => {
+            Obj2::Point(p) => {
                 *p /= rhs;
             }
-            Object2dInner::Char(ch) => {
+            Obj2::Char(ch) => {
                 *ch /= rhs;
             }
-            Object2dInner::CurveArc(ca) => {
+            Obj2::CurveArc(ca) => {
                 *ca /= rhs;
             }
-            Object2dInner::Group(g) => {
+            Obj2::Group(g) => {
                 *g /= rhs;
             }
-            Object2dInner::Polygon(pg) => {
+            Obj2::Polygon(pg) => {
                 *pg /= rhs;
             }
-            Object2dInner::Segment(sg) => {
+            Obj2::Segment(sg) => {
                 *sg /= rhs;
             }
         }
     }
 }
 
-impl Translatable for Object2dInner {}
-impl Scalable<f64> for Object2dInner {}
-impl ScalableAssign for Object2dInner {}
-impl TranslatableAssign for Object2dInner {}
+impl Translatable for Obj2 {}
+impl Scalable<f64> for Obj2 {}
+impl ScalableAssign for Obj2 {}
+impl TranslatableAssign for Obj2 {}
 
-impl Croppable for Object2dInner {
-    type Output = Object2dInner;
+impl Croppable for Obj2 {
+    type Output = Obj2;
     fn crop(&self, frame: &Polygon, crop_type: CropType) -> Vec<Self::Output> {
         match &self {
-            Object2dInner::Point(pt) => {
+            Obj2::Point(pt) => {
                 assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(pt), PointLoc::Outside) {
                     vec![self.clone()]
@@ -297,31 +297,31 @@ impl Croppable for Object2dInner {
                     vec![]
                 }
             }
-            Object2dInner::Polygon(pg) => match pg.kind {
+            Obj2::Polygon(pg) => match pg.kind {
                 PolygonKind::Open => pg
                     .to_segments()
                     .into_iter()
                     .flat_map(|sg| sg.crop(frame, crop_type))
                     .into_iter()
-                    .map(Object2dInner::from)
+                    .map(Obj2::from)
                     .collect::<Vec<_>>(),
                 PolygonKind::Closed => pg
                     .crop(frame, crop_type)
                     .into_iter()
-                    .map(Object2dInner::from)
+                    .map(Obj2::from)
                     .collect::<Vec<_>>(),
             },
-            Object2dInner::Segment(sg) => sg
+            Obj2::Segment(sg) => sg
                 .crop(frame, crop_type)
                 .into_iter()
-                .map(Object2dInner::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>(),
-            Object2dInner::CurveArc(ca) => ca
+            Obj2::CurveArc(ca) => ca
                 .crop(frame, crop_type)
                 .into_iter()
-                .map(Object2dInner::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>(),
-            Object2dInner::Char(ch) => {
+            Obj2::Char(ch) => {
                 assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(&ch.pt), PointLoc::Outside) {
                     vec![self.clone()]
@@ -329,10 +329,10 @@ impl Croppable for Object2dInner {
                     vec![]
                 }
             }
-            Object2dInner::Group(g) => g
+            Obj2::Group(g) => g
                 .crop(frame, crop_type)
                 .into_iter()
-                .map(Object2dInner::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>(),
         }
     }
@@ -342,62 +342,59 @@ impl Croppable for Object2dInner {
         Self: Sized,
     {
         match &self {
-            Object2dInner::Point(pt) => {
+            Obj2::Point(pt) => {
                 if matches!(other.contains_pt(pt), PointLoc::Outside) {
                     vec![]
                 } else {
                     vec![self.clone()]
                 }
             }
-            Object2dInner::Polygon(pg) => match pg.kind {
+            Obj2::Polygon(pg) => match pg.kind {
                 PolygonKind::Open => pg
                     .to_segments()
                     .into_iter()
                     .flat_map(|sg| sg.crop_excluding(other))
                     .into_iter()
-                    .map(Object2dInner::from)
+                    .map(Obj2::from)
                     .collect::<Vec<_>>(),
                 PolygonKind::Closed => pg
                     .crop_excluding(other)
                     .into_iter()
-                    .map(Object2dInner::from)
+                    .map(Obj2::from)
                     .collect::<Vec<_>>(),
             },
-            Object2dInner::Segment(sg) => sg
+            Obj2::Segment(sg) => sg
                 .crop_excluding(other)
                 .into_iter()
-                .map(Object2dInner::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>(),
-            Object2dInner::CurveArc(ca) => ca
+            Obj2::CurveArc(ca) => ca
                 .crop_excluding(other)
                 .into_iter()
-                .map(Object2dInner::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>(),
-            Object2dInner::Char(ch) => {
+            Obj2::Char(ch) => {
                 if matches!(other.contains_pt(&ch.pt), PointLoc::Outside) {
                     vec![]
                 } else {
                     vec![self.clone()]
                 }
             }
-            Object2dInner::Group(g) => g
+            Obj2::Group(g) => g
                 .crop_excluding(other)
                 .into_iter()
-                .map(Object2dInner::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>(),
         }
     }
 }
 
-impl Annotatable for Object2dInner {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<crate::object2d::Object2d> {
+impl Annotatable for Obj2 {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<crate::styled_obj2::StyledObj2> {
         match self {
-            Object2dInner::Polygon(pg) => pg.annotate(settings),
-            Object2dInner::Group(g) => g.annotate(settings),
-            Object2dInner::Point(_)
-            | Object2dInner::Segment(_)
-            | Object2dInner::CurveArc(_)
-            | Object2dInner::Char(_) => vec![],
+            Obj2::Polygon(pg) => pg.annotate(settings),
+            Obj2::Group(g) => g.annotate(settings),
+            Obj2::Point(_) | Obj2::Segment(_) | Obj2::CurveArc(_) | Obj2::Char(_) => vec![],
         }
     }
 }

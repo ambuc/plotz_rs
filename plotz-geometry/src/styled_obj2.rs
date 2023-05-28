@@ -4,7 +4,7 @@ use {
     crate::{
         bounded::Bounded,
         crop::{CropType, Croppable},
-        object2d_inner::Object2dInner,
+        obj2::Obj2,
         shapes::{point::Pt, polygon::Polygon},
         traits::*,
     },
@@ -14,9 +14,9 @@ use {
 
 /// An object with a color and thickness.
 #[derive(PartialEq, Clone)]
-pub struct Object2d {
+pub struct StyledObj2 {
     /// The object.
-    pub inner: Object2dInner,
+    pub inner: Obj2,
 
     /// The color.
     pub color: &'static ColorRGB,
@@ -25,20 +25,20 @@ pub struct Object2d {
     pub thickness: f64,
 }
 
-impl Debug for Object2d {
+impl Debug for StyledObj2 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Object2d {
+        let StyledObj2 {
             inner,
             color,
             thickness,
         } = self;
         let inner_fmt = match inner {
-            Object2dInner::Point(p) => format!("{:?}", p),
-            Object2dInner::Polygon(pg) => format!("{:?}", pg),
-            Object2dInner::Segment(sg) => format!("{:?}", sg),
-            Object2dInner::CurveArc(ca) => format!("{:?}", ca),
-            Object2dInner::Char(ch) => format!("{:?}", ch),
-            Object2dInner::Group(g) => format!("{:?}", g),
+            Obj2::Point(p) => format!("{:?}", p),
+            Obj2::Polygon(pg) => format!("{:?}", pg),
+            Obj2::Segment(sg) => format!("{:?}", sg),
+            Obj2::CurveArc(ca) => format!("{:?}", ca),
+            Obj2::Char(ch) => format!("{:?}", ch),
+            Obj2::Group(g) => format!("{:?}", g),
         };
         write!(
             f,
@@ -48,10 +48,10 @@ impl Debug for Object2d {
     }
 }
 
-impl Object2d {
+impl StyledObj2 {
     /// from an object.
-    pub fn new(obj: impl Into<Object2dInner>) -> Object2d {
-        Object2d {
+    pub fn new(obj: impl Into<Obj2>) -> StyledObj2 {
+        StyledObj2 {
             inner: obj.into(),
             color: &BLACK,
             thickness: 0.1,
@@ -59,13 +59,13 @@ impl Object2d {
     }
 
     /// with a color.
-    pub fn with_color(self, color: &'static ColorRGB) -> Object2d {
-        Object2d { color, ..self }
+    pub fn with_color(self, color: &'static ColorRGB) -> StyledObj2 {
+        StyledObj2 { color, ..self }
     }
 
     /// with a thickness.
-    pub fn with_thickness(self, thickness: f64) -> Object2d {
-        Object2d { thickness, ..self }
+    pub fn with_thickness(self, thickness: f64) -> StyledObj2 {
+        StyledObj2 { thickness, ..self }
     }
 
     /// Casts each inner value to something which implements Bounded.
@@ -84,57 +84,57 @@ impl Object2d {
     }
 }
 
-impl YieldPoints for Object2d {
+impl YieldPoints for StyledObj2 {
     fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
         self.inner.inner_impl_yield_points().yield_pts()
     }
 }
 
-impl YieldPointsMut for Object2d {
+impl YieldPointsMut for StyledObj2 {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
         self.inner.inner_impl_yield_points_mut().yield_pts_mut()
     }
 }
 
-impl Mutable for Object2d {}
+impl Mutable for StyledObj2 {}
 
-impl Bounded for Object2d {
+impl Bounded for StyledObj2 {
     fn bounds(&self) -> crate::bounded::Bounds {
         self.inner.bounds()
     }
 }
 
-impl RemAssign<Pt> for Object2d {
+impl RemAssign<Pt> for StyledObj2 {
     fn rem_assign(&mut self, rhs: Pt) {
         self.inner %= rhs;
     }
 }
 
-impl MulAssign<f64> for Object2d {
+impl MulAssign<f64> for StyledObj2 {
     fn mul_assign(&mut self, rhs: f64) {
         self.inner *= rhs;
     }
 }
 
-impl DivAssign<f64> for Object2d {
+impl DivAssign<f64> for StyledObj2 {
     fn div_assign(&mut self, rhs: f64) {
         self.inner /= rhs;
     }
 }
 
-impl AddAssign<Pt> for Object2d {
+impl AddAssign<Pt> for StyledObj2 {
     fn add_assign(&mut self, rhs: Pt) {
         self.inner += rhs;
     }
 }
 
-impl SubAssign<Pt> for Object2d {
+impl SubAssign<Pt> for StyledObj2 {
     fn sub_assign(&mut self, rhs: Pt) {
         self.inner -= rhs;
     }
 }
 
-impl Add<Pt> for Object2d {
+impl Add<Pt> for StyledObj2 {
     type Output = Self;
     fn add(self, rhs: Pt) -> Self::Output {
         Self {
@@ -143,7 +143,7 @@ impl Add<Pt> for Object2d {
         }
     }
 }
-impl Sub<Pt> for Object2d {
+impl Sub<Pt> for StyledObj2 {
     type Output = Self;
     fn sub(self, rhs: Pt) -> Self::Output {
         Self {
@@ -152,7 +152,7 @@ impl Sub<Pt> for Object2d {
         }
     }
 }
-impl Div<f64> for Object2d {
+impl Div<f64> for StyledObj2 {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
         Self {
@@ -161,7 +161,7 @@ impl Div<f64> for Object2d {
         }
     }
 }
-impl Mul<f64> for Object2d {
+impl Mul<f64> for StyledObj2 {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
         Self {
@@ -171,13 +171,13 @@ impl Mul<f64> for Object2d {
     }
 }
 
-impl Translatable for Object2d {}
-impl Scalable<f64> for Object2d {}
-impl ScalableAssign for Object2d {}
-impl TranslatableAssign for Object2d {}
+impl Translatable for StyledObj2 {}
+impl Scalable<f64> for StyledObj2 {}
+impl ScalableAssign for StyledObj2 {}
+impl TranslatableAssign for StyledObj2 {}
 
-impl Croppable for Object2d {
-    type Output = Object2d;
+impl Croppable for StyledObj2 {
+    type Output = StyledObj2;
 
     fn crop(&self, other: &Polygon, crop_type: CropType) -> Vec<Self::Output>
     where
@@ -188,7 +188,7 @@ impl Croppable for Object2d {
                 .inner
                 .crop_to(other)
                 .into_iter()
-                .map(|doi| Object2d {
+                .map(|doi| StyledObj2 {
                     inner: doi,
                     ..(*self)
                 })
@@ -197,7 +197,7 @@ impl Croppable for Object2d {
                 .inner
                 .crop_excluding(other)
                 .into_iter()
-                .map(|doi| Object2d {
+                .map(|doi| StyledObj2 {
                     inner: doi,
                     ..(*self)
                 })
@@ -206,8 +206,8 @@ impl Croppable for Object2d {
     }
 }
 
-impl Annotatable for Object2d {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<Object2d> {
+impl Annotatable for StyledObj2 {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<StyledObj2> {
         self.inner
             .annotate(settings)
             .into_iter()

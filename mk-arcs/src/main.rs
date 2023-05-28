@@ -6,9 +6,9 @@ use {
         bounded::Bounded,
         crop::Croppable,
         grid::Grid,
-        object2d::Object2d,
-        object2d_inner::Object2dInner,
+        obj2::Obj2,
         shapes::{curve::CurveArcs, point::Pt},
+        styled_obj2::StyledObj2,
     },
     rand::Rng,
     std::f64::consts::*,
@@ -29,13 +29,13 @@ fn main() {
 
     let mut rng = rand::thread_rng();
 
-    let frame: Object2d = make_frame(
+    let frame: StyledObj2 = make_frame(
         (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
         /*offset=*/ Pt(mgn, mgn),
     );
     {
         let frame_polygon = match frame.inner {
-            Object2dInner::Polygon(ref pg) => pg.clone(),
+            Obj2::Polygon(ref pg) => pg.clone(),
             _ => unimplemented!(),
         };
 
@@ -58,7 +58,7 @@ fn main() {
                 cas.iter()
                     .flat_map(|ca| ca.crop_to(&frame_polygon))
                     .into_iter()
-                    .map(|ca| Object2d::new(ca).with_color(&GREEN).with_thickness(0.30))
+                    .map(|ca| StyledObj2::new(ca).with_color(&GREEN).with_thickness(0.30))
                     .into_iter(),
             );
         }

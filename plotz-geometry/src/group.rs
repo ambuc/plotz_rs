@@ -4,8 +4,8 @@ use {
     crate::{
         bounded::{Bounded, BoundsCollector},
         crop::{CropType, Croppable},
-        object2d::Object2d,
         shapes::{point::Pt, polygon::Polygon},
+        styled_obj2::StyledObj2,
         traits::*,
     },
     std::ops::*,
@@ -13,17 +13,17 @@ use {
 
 #[derive(Debug, PartialEq, Clone)]
 /// A group of objects.
-pub struct Group(Vec<Object2d>);
+pub struct Group(Vec<StyledObj2>);
 
 impl Group {
     /// Creates a new group.
-    pub fn new(objs: impl IntoIterator<Item = Object2d>) -> Group {
+    pub fn new(objs: impl IntoIterator<Item = StyledObj2>) -> Group {
         Group(objs.into_iter().collect::<Vec<_>>())
     }
 
     /// Returns a boxed iterator of immutable Object2dInners, the members of this
     /// group.
-    pub fn iter_objects(&self) -> Box<dyn Iterator<Item = &Object2d> + '_> {
+    pub fn iter_objects(&self) -> Box<dyn Iterator<Item = &StyledObj2> + '_> {
         Box::new(self.0.iter())
     }
 
@@ -157,7 +157,7 @@ impl Nullable for Group {
 }
 
 impl Annotatable for Group {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<Object2d> {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<StyledObj2> {
         self.0.iter().flat_map(|o| o.annotate(settings)).collect()
     }
 }

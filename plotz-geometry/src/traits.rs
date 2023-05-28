@@ -1,7 +1,7 @@
 //! Traits.
 
 use {
-    crate::{object2d::Object2d, shapes::point::Pt},
+    crate::{shapes::point::Pt, styled_obj2::StyledObj2},
     std::ops::*,
     typed_builder::TypedBuilder,
 };
@@ -65,7 +65,7 @@ pub struct AnnotationSettings {
 /// Something which can have its points and segments labelled.
 pub trait Annotatable {
     /// Return the labelled points and segments.
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<Object2d>;
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<StyledObj2>;
 }
 
 impl Default for AnnotationSettings {

@@ -11,12 +11,12 @@ use {
         crop::CropType,
         crop::{CropToPolygonError, Croppable, PointLoc},
         isxn::IsxnResult,
-        object2d::Object2d,
         shapes::{
             point::Pt,
             segment::{Contains, Segment},
             txt::Txt,
         },
+        styled_obj2::StyledObj2,
         traits::*,
     },
     float_cmp::approx_eq,
@@ -547,7 +547,7 @@ impl Nullable for Polygon {
 }
 
 impl Annotatable for Polygon {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<Object2d> {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<StyledObj2> {
         let mut a = vec![];
 
         let AnnotationSettings {
@@ -557,7 +557,7 @@ impl Annotatable for Polygon {
         for (_idx, pt) in self.pts.iter().enumerate() {
             let x = format!("{:.1$}", pt.x.0, precision);
             let y = format!("{:.1$}", pt.y.0, precision);
-            a.push(Object2d::new(Txt {
+            a.push(StyledObj2::new(Txt {
                 pt: *pt,
                 inner: format!("({}, {})", x, y),
                 font_size: *font_size,

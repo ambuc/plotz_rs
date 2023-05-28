@@ -5,8 +5,8 @@ use {
     plotz_geometry::{
         crop::PointLoc,
         grid_layout::{GridLayout, GridLayoutSettings},
-        object2d::Object2d,
         shapes::{curve::CurveArc, point::Pt},
+        styled_obj2::StyledObj2,
     },
     rand::{seq::SliceRandom, thread_rng, Rng},
     std::f64::consts::*,
@@ -34,7 +34,7 @@ fn main() {
     let mut dos = vec![];
     let mgn = 25.0;
 
-    let frame: Object2d = make_frame(
+    let frame: StyledObj2 = make_frame(
         (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
         /*offset=*/ Pt(mgn, mgn),
     );
@@ -66,7 +66,7 @@ fn main() {
                     let rstep = rng.gen_range(10..20);
                     for r in (0..2000).step_by(rstep) {
                         let ca = CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64);
-                        let d_o = Object2d::new(ca).with_thickness(1.0).with_color(color);
+                        let d_o = StyledObj2::new(ca).with_thickness(1.0).with_color(color);
                         grid_layout.insert_and_crop_to_cubby(cubby, d_o);
                     }
                 }

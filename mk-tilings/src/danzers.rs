@@ -5,12 +5,12 @@ use {
     lazy_static::lazy_static,
     plotz_color::*,
     plotz_geometry::{
-        object2d::Object2d,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             point::{PolarPt, Pt},
             polygon::Polygon,
         },
+        styled_obj2::StyledObj2,
     },
     std::f64::consts::PI,
 };
@@ -187,7 +187,7 @@ fn expand_tile(tile: &Tile) -> Vec<Tile> {
     }
 }
 
-pub fn make() -> Vec<Object2d> {
+pub fn make() -> Vec<StyledObj2> {
     let origin = Pt(0.1, 0.1);
 
     let t0 = Tile(
@@ -247,7 +247,7 @@ pub fn make() -> Vec<Object2d> {
         }
     }
 
-    let dos: Vec<Object2d> = all_tiles
+    let dos: Vec<StyledObj2> = all_tiles
         .into_iter()
         .flat_map(|tile| {
             let color = tile.kind.color();
@@ -262,11 +262,11 @@ pub fn make() -> Vec<Object2d> {
             let segments = shade_polygon(&config, &p).unwrap();
 
             let mut ret = vec![];
-            ret.push(Object2d::new(p));
+            ret.push(StyledObj2::new(p));
             ret.extend(
                 segments
                     .into_iter()
-                    .map(|s| Object2d::new(s).with_color(color)),
+                    .map(|s| StyledObj2::new(s).with_color(color)),
             );
 
             ret

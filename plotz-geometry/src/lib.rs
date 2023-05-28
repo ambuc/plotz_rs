@@ -9,8 +9,8 @@ pub mod grid_layout;
 pub mod group;
 pub mod interpolate;
 pub mod isxn;
-pub mod object2d;
-pub mod object2d_inner;
+pub mod obj2;
+pub mod styled_obj2;
 pub mod traits;
 
 pub mod shading;

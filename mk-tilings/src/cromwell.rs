@@ -5,12 +5,12 @@ use {
     plotz_geometry::{
         group::Group,
         interpolate::extrapolate_2d as extrapolate,
-        object2d::Object2d,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             point::{PolarPt, Pt},
             polygon::Polygon,
         },
+        styled_obj2::StyledObj2,
     },
     std::f64::consts::PI,
 };
@@ -233,7 +233,7 @@ trait Tile {
     fn pts_iter_mut(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt> + '_>;
 }
 
-pub fn make() -> Vec<Object2d> {
+pub fn make() -> Vec<StyledObj2> {
     let ell: f64 = (5.0_f64.sqrt() - 1.0) / 2.0;
 
     let t1 = {
@@ -301,9 +301,9 @@ pub fn make() -> Vec<Object2d> {
             let segments = shade_polygon(&config, &p).unwrap();
 
             // std::iter::empty() //
-            std::iter::once(Object2d::new(p).with_color(color)).chain([Object2d::new(Group::new(
-                segments.into_iter().map(Object2d::new),
-            ))
+            std::iter::once(StyledObj2::new(p).with_color(color)).chain([StyledObj2::new(
+                Group::new(segments.into_iter().map(StyledObj2::new)),
+            )
             .with_color(color)])
         })
         .collect()

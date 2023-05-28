@@ -2,8 +2,7 @@ use {
     argh::FromArgs,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        crop::PointLoc, object2d::Object2d, object2d_inner::Object2dInner, shapes::point::Pt,
-        traits::YieldPoints,
+        crop::PointLoc, obj2::Obj2, shapes::point::Pt, styled_obj2::StyledObj2, traits::YieldPoints,
     },
 };
 
@@ -31,9 +30,9 @@ fn main() {
         _ => vec![],
     };
 
-    let frame: Object2d = make_frame((720.0, 720.0 * 1.3), /*offset=*/ Pt(20.0, 20.0));
+    let frame: StyledObj2 = make_frame((720.0, 720.0 * 1.3), /*offset=*/ Pt(20.0, 20.0));
     let frame_polygon = match frame.inner {
-        Object2dInner::Polygon(ref pg) => pg.clone(),
+        Obj2::Polygon(ref pg) => pg.clone(),
         _ => unimplemented!(),
     };
 
