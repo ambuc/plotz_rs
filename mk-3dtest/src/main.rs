@@ -141,7 +141,12 @@ fn main() {
             .debug(
                 DebugSettings::builder()
                     .draw_wireframes(Style3d::new(&GRAY, 0.5))
-                    .annotate(AnnotationSettings::builder().font_size(12.0).build())
+                    .annotate(
+                        AnnotationSettings::builder()
+                            .font_size(12.0)
+                            .precision(3)
+                            .build(),
+                    )
                     .build(),
             )
             .objects(objects)

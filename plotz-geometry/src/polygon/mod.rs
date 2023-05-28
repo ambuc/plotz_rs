@@ -347,7 +347,7 @@ impl Croppable for Polygon {
     /// Known bug: If multiple resultant polygons are present, this will return
     /// only one.
     fn crop(&self, b: &Polygon, crop_type: CropType) -> Vec<Self::Output> {
-        tracing::info!("Cropping self \n\t{:?} \n\tto b \n\t{:?}", self, b);
+        // tracing::info!("Cropping self \n\t{:?} \n\tto b \n\t{:?}", self, b);
         let a: &Polygon = self;
 
         if a == b {
@@ -543,11 +543,16 @@ impl Annotatable for Polygon {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<Object2d> {
         let mut a = vec![];
 
-        let AnnotationSettings { font_size } = settings;
+        let AnnotationSettings {
+            font_size,
+            precision,
+        } = settings;
         for (_idx, pt) in self.pts.iter().enumerate() {
+            let x = format!("{:.1$}", pt.x.0, precision);
+            let y = format!("{:.1$}", pt.y.0, precision);
             a.push(Object2d::new(Txt {
                 pt: *pt,
-                inner: format!("{:?}", pt),
+                inner: format!("({}, {})", x, y),
                 font_size: *font_size,
             }));
         }

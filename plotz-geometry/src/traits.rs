@@ -62,6 +62,8 @@ pub trait Nullable {
 pub struct AnnotationSettings {
     /// Font size.
     pub font_size: f64,
+    /// Decimals of precision:
+    pub precision: usize,
 }
 
 /// Something which can have its points and segments labelled.
@@ -72,6 +74,9 @@ pub trait Annotatable {
 
 impl Default for AnnotationSettings {
     fn default() -> Self {
-        Self { font_size: 10.0 }
+        Self {
+            font_size: 10.0,
+            precision: 0,
+        }
     }
 }

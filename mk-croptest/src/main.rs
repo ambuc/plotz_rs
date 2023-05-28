@@ -6,13 +6,13 @@ use {
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::*, svg::Size},
     plotz_geometry::{
-        traits::Annotatable,
         crop::Croppable,
         grid_layout::{GridLayout, GridLayoutSettings},
         group::Group,
         object2d::Object2d,
         point::Pt,
         polygon::{Polygon, Rect},
+        traits::Annotatable,
     },
 };
 
@@ -61,9 +61,7 @@ fn main() {
             .with_thickness(2.0);
         let base_sq_annotations = base_sq.annotate(&AnnotationSettings::default());
 
-        let mut pts = vec![];
-
-        if true {
+        let pts = if false {
             let a = Pt(60.0, 60.0);
             let b = Pt(70.0, 60.0);
             let c = Pt(80.0, 60.0);
@@ -72,7 +70,7 @@ fn main() {
             let f = Pt(80.0, 75.0);
             let g = Pt(60.0, 90.0);
             let h = Pt(90.0, 90.0);
-            pts = vec![a, b, e, f, c, d, h, g, a];
+            vec![a, b, e, f, c, d, h, g, a]
         } else {
             let a = Pt(60.0, 40.0);
             let b = Pt(70.0, 40.0);
@@ -86,8 +84,8 @@ fn main() {
             let j = Pt(70.0, 80.0);
             let k = Pt(70.0, 110.0);
             let l = Pt(60.0, 110.0);
-            pts = vec![a, b, c, d, e, f, g, h, i, j, k, l, a];
-        }
+            vec![a, b, c, d, e, f, g, h, i, j, k, l, a]
+        };
 
         let subject_sq = Object2d::new(Polygon(pts))
             .with_color(&RED)
@@ -102,7 +100,12 @@ fn main() {
         // v.extend(subject_sq_annotations);
 
         // v.extend( subject_sq .crop_to(&r) .into_iter() .map(|o| o.with_color(&GREEN).with_thickness(2.0)),);
-        v.extend( subject_sq .crop_excluding(&r.clone()) .into_iter() .map(|o| o.with_color(&BLUE).with_thickness(2.0)),);
+        v.extend(
+            subject_sq
+                .crop_excluding(&r.clone())
+                .into_iter()
+                .map(|o| o.with_color(&BLUE).with_thickness(2.0)),
+        );
 
         let g = Group::new(v);
 
