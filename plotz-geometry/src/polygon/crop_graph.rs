@@ -65,9 +65,7 @@ impl<'a> CropGraph<'a> {
         }
         crop_graph.remove_stubs();
         crop_graph.remove_dual_edges();
-        crop_graph.remove_nodes_with_no_neighbors_of_kind(Incoming);
-        crop_graph.remove_nodes_with_no_neighbors_of_kind(Outgoing);
-        // crop_graph.remove_linear_cycles();
+        crop_graph.remove_nodes_with_no_neighbors_of_any_kind();
         let graph = crop_graph.graph.clone();
         (crop_graph.trim_and_create_resultant_polygons(), graph)
     }
@@ -217,54 +215,10 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    // fn remove_linear_cycles(&mut self) {
-    //     if let Some(node_with_many_children) = self.graph.nodes().find(|node| {
-    //         self.graph
-    //             .neighbors_directed(*node, Outgoing)
-    //             .collect::<Vec<_>>()
-    //             .len()
-    //             > 1
-    //     }) {
-    //         info!("AGAIN");
-    //         // found one. let's march (taking first child) until we find
-    //         // ourselves again, collecting all the way.  if all the nodes are
-    //         // colinear, remove all the rest of what we found (but not
-    //         // ourselves)
-    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
-    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
-    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
-    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
-    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
-    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
-    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
-    //         // needs to be BFS? track history, stop at cycle, that sort of thing.
-    //         // let mut chain = vec![];
-    //         // let mut curr = node_with_many_children;
-    //         // 'l: loop {
-    //         //     if let Some(next) = self.graph.neighbors_directed(curr, Outgoing).next() {
-    //         //         info!(
-    //         //             "loop: found chain: {:?} curr; {:?}, next: {:?}",
-    //         //             chain, curr, next
-    //         //         );
-    //         //         if chain.contains(&next) {
-    //         //             break;
-    //         //         }
-    //         //         chain.push(curr);
-    //         //         curr = next;
-    //         //     } else {
-    //         //         break 'l;
-    //         //     }
-    //         // }
-    //         info!("chain: {:?}", chain);
-    //         if is_colinear_n(&chain) {
-    //             info!("removing");
-    //             for ch in &chain[1..] {
-    //                 // all but the first
-    //                 self.graph.remove_node(*ch);
-    //             }
-    //         }
-    //     }
-    // }
+    fn remove_nodes_with_no_neighbors_of_any_kind(&mut self) {
+        self.remove_nodes_with_no_neighbors_of_kind(Outgoing);
+        self.remove_nodes_with_no_neighbors_of_kind(Incoming);
+    }
 
     fn remove_stubs(&mut self) {
         // a _stub_ is like this:
@@ -336,23 +290,7 @@ impl<'a> CropGraph<'a> {
         if self.nodes_count() == 0 {
             return None;
         }
-        let mut curr_node: Pt = {
-            if let Some(pt) = self
-                .graph
-                .nodes()
-                .find(|node| self.graph.neighbors_directed(*node, Outgoing).count() != 0)
-            {
-                pt
-            } else if let Some(pt) = self
-                .graph
-                .nodes()
-                .find(|node| self.graph.neighbors_directed(*node, Incoming).count() != 0)
-            {
-                pt
-            } else {
-                self.graph.nodes().next().unwrap()
-            }
-        };
+        let mut curr_node: Pt = { self.graph.nodes().next().unwrap() };
 
         while !pts.contains(&curr_node) {
             pts.push(curr_node);
@@ -395,8 +333,7 @@ impl<'a> CropGraph<'a> {
         }
 
         // and the nodes later.
-        self.remove_nodes_with_no_neighbors_of_kind(Incoming);
-        self.remove_nodes_with_no_neighbors_of_kind(Outgoing);
+        self.remove_nodes_with_no_neighbors_of_any_kind();
 
         TryPolygon(pts).ok()
     }
@@ -414,14 +351,7 @@ impl<'a> CropGraph<'a> {
         let mut resultant = vec![];
 
         while let Some(pg) = self.extract_polygon() {
-            if pg.pts.len() == 3 {
-                info!("extracted: {:?}", pg);
-            }
             resultant.push(pg);
-
-            // clean up in between extractions.
-            self.remove_nodes_with_no_neighbors_of_kind(Incoming);
-            self.remove_nodes_with_no_neighbors_of_kind(Outgoing);
         }
 
         resultant
