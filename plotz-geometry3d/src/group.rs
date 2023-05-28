@@ -14,6 +14,15 @@ pub fn Group<T>(a: impl IntoIterator<Item = T>) -> Group<T> {
     }
 }
 
+impl<T> IntoIterator for Group<T> {
+    type Item = T;
+    type IntoIter = std::vec::IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.items.into_iter()
+    }
+}
+
 impl<T> Add<Pt3> for Group<T>
 where
     T: Add<Pt3, Output = T>,
