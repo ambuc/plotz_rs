@@ -36,33 +36,29 @@ impl Group {
 }
 
 impl YieldPoints for Group {
-    fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
-        Some(Box::new(
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        Box::new(
             self.0
                 .iter()
-                .flat_map(|obj| obj.inner_impl_yield_points().yield_pts())
-                .flatten(),
-        ))
+                .flat_map(|obj| obj.inner_impl_yield_points().yield_pts()),
+        )
     }
 }
 impl YieldPointsMut for Group {
-    fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
-        Some(Box::new(
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        Box::new(
             self.0
                 .iter_mut()
-                .flat_map(|obj| obj.inner_impl_yield_points_mut().yield_pts_mut())
-                .flatten(),
-        ))
+                .flat_map(|obj| obj.inner_impl_yield_points_mut().yield_pts_mut()),
+        )
     }
 }
 
 impl Bounded for Group {
     fn bounds(&self) -> crate::bounded::Bounds {
         let mut bc = BoundsCollector::default();
-        if let Some(iter) = self.yield_pts() {
-            for pt in iter {
-                bc.incorporate(pt);
-            }
+        for pt in self.yield_pts() {
+            bc.incorporate(pt);
         }
         bc.bounds()
     }

@@ -9,13 +9,13 @@ use {
 /// A geometric figure made of points which might emit a boxed iterator of immutable points.
 pub trait YieldPoints {
     /// Possibly yields a boxed iterator of immutable points.
-    fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>>;
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_>;
 }
 
 /// A geometric figure made of points which might emit a boxed iterator of mutable points.
 pub trait YieldPointsMut {
     /// Possibly yields a boxed iterator of mutable points.
-    fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>>;
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_>;
 }
 
 /// A geometric figure made of points which can be maniuplated by passing f:
@@ -23,11 +23,8 @@ pub trait YieldPointsMut {
 pub trait Mutable: YieldPointsMut {
     /// Mutate the points of a geometric figure by applying f(pt) to each of them.
     fn mutate(&mut self, f: impl Fn(&mut Pt)) -> bool {
-        if let Some(yp) = self.yield_pts_mut() {
-            yp.for_each(f);
-            return true;
-        }
-        false
+        self.yield_pts_mut().for_each(f);
+        true
     }
 }
 

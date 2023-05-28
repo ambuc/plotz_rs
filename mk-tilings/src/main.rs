@@ -39,12 +39,9 @@ fn main() {
 
     // drain things not in frame
     dos.retain(|d_o| {
-        if let Some(yp) = d_o.yield_pts() {
-            yp.into_iter()
-                .all(|pt| matches!(frame_polygon.contains_pt(pt), PointLoc::Inside))
-        } else {
-            true
-        }
+        d_o.yield_pts()
+            .into_iter()
+            .all(|pt| matches!(frame_polygon.contains_pt(pt), PointLoc::Inside))
     });
 
     let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);

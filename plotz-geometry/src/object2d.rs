@@ -85,13 +85,13 @@ impl Object2d {
 }
 
 impl YieldPoints for Object2d {
-    fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
         self.inner.inner_impl_yield_points().yield_pts()
     }
 }
 
 impl YieldPointsMut for Object2d {
-    fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
         self.inner.inner_impl_yield_points_mut().yield_pts_mut()
     }
 }

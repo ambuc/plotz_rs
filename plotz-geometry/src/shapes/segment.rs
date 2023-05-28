@@ -270,13 +270,13 @@ impl Bounded for Segment {
 }
 
 impl YieldPoints for Segment {
-    fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
-        Some(Box::new([&self.i, &self.f].into_iter()))
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        Box::new([&self.i, &self.f].into_iter())
     }
 }
 impl YieldPointsMut for Segment {
-    fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
-        Some(Box::new([&mut self.i, &mut self.f].into_iter()))
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        Box::new([&mut self.i, &mut self.f].into_iter())
     }
 }
 impl Mutable for Segment {}

@@ -492,13 +492,13 @@ impl Croppable for CurveArc {
 }
 
 impl YieldPoints for CurveArc {
-    fn yield_pts(&self) -> Option<Box<dyn Iterator<Item = &Pt> + '_>> {
-        Some(Box::new(std::iter::once(&self.ctr)))
+    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        Box::new(std::iter::once(&self.ctr))
     }
 }
 impl YieldPointsMut for CurveArc {
-    fn yield_pts_mut(&mut self) -> Option<Box<dyn Iterator<Item = &mut Pt> + '_>> {
-        Some(Box::new(std::iter::once(&mut self.ctr)))
+    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        Box::new(std::iter::once(&mut self.ctr))
     }
 }
 
