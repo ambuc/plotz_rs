@@ -10,7 +10,7 @@ use {
         bounded::{Bounded, Bounds},
         crop::CropType,
         crop::{CropToPolygonError, Croppable, PointLoc},
-        isxn::{IsxnResult, Which},
+        isxn::IsxnResult,
         object2d::Object2d,
         point::Pt,
         segment::{Contains, Segment},
@@ -19,7 +19,6 @@ use {
     },
     float_cmp::approx_eq,
     itertools::{iproduct, zip},
-    petgraph::Direction,
     std::{
         cmp::{Eq, PartialEq},
         fmt::Debug,

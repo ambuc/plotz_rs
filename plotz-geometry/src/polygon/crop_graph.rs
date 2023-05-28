@@ -420,98 +420,94 @@ mod test {
     use crate::{crop, p2, polygon::Rect};
     use assert_matches::assert_matches;
     use itertools::iproduct;
+    use test_case::test_case;
 
-    #[test]
-    fn test_all_crops() {
-        let u_shape: Vec<Pt> = {
-            let a = p2!(60, 60);
-            let b = p2!(70, 60);
-            let c = p2!(80, 60);
-            let d = p2!(90, 60);
-            let e = p2!(70, 75);
-            let f = p2!(80, 75);
-            let g = p2!(60, 90);
-            let h = p2!(90, 90);
-            vec![a, b, e, f, c, d, h, g, a]
-        };
+    fn u_shape() -> Polygon {
+        let a = p2!(60, 60);
+        let b = p2!(70, 60);
+        let c = p2!(80, 60);
+        let d = p2!(90, 60);
+        let e = p2!(70, 75);
+        let f = p2!(80, 75);
+        let g = p2!(60, 90);
+        let h = p2!(90, 90);
+        Polygon([a, b, e, f, c, d, h, g, a])
+    }
 
-        let h_shape: Vec<Pt> = {
-            let a = p2!(60, 40);
-            let b = p2!(70, 40);
-            let c = p2!(70, 70);
-            let d = p2!(80, 70);
-            let e = p2!(80, 40);
-            let f = p2!(90, 40);
-            let g = p2!(90, 110);
-            let h = p2!(80, 110);
-            let i = p2!(80, 80);
-            let j = p2!(70, 80);
-            let k = p2!(70, 110);
-            let l = p2!(60, 110);
-            vec![a, b, c, d, e, f, g, h, i, j, k, l, a]
-        };
+    fn h_shape() -> Polygon {
+        let a = p2!(60, 40);
+        let b = p2!(70, 40);
+        let c = p2!(70, 70);
+        let d = p2!(80, 70);
+        let e = p2!(80, 40);
+        let f = p2!(90, 40);
+        let g = p2!(90, 110);
+        let h = p2!(80, 110);
+        let i = p2!(80, 80);
+        let j = p2!(70, 80);
+        let k = p2!(70, 110);
+        let l = p2!(60, 110);
+        Polygon([a, b, c, d, e, f, g, h, i, j, k, l, a])
+    }
 
+    #[test_case(u_shape(), CropType::Inclusive; "u-shape, inclusive")]
+    #[test_case(u_shape(), CropType::Exclusive; "u-shape, exclusive")]
+    #[test_case(h_shape(), CropType::Inclusive; "h-shape, inclusive")]
+    #[test_case(h_shape(), CropType::Exclusive; "h-shape, exclusive")]
+    fn test_all_crops(shape: Polygon, crop_type: CropType) {
         let boundary = Rect(p2!(50, 50), (50.0, 50.0)).unwrap();
         let margin = 10.0;
-        for shape in [h_shape, u_shape] {
-            for offset in iproduct!(0..=5, 0..=4)
-                .map(|(i, j)| Pt((i as f64 - 3.0) * margin, (j as f64 - 3.0) * margin))
-            {
-                let inner = Polygon(shape.clone()) + offset;
-                for crop_type in [CropType::Inclusive, CropType::Exclusive] {
-                    let (resultants, graph) = CropGraph::run(&inner, &boundary, crop_type);
+        for offset in iproduct!(0..=5, 0..=4)
+            .map(|(i, j)| Pt((i as f64 - 3.0) * margin, (j as f64 - 3.0) * margin))
+        {
+            let inner = shape.clone() + offset;
+            let (_resultants, graph) = CropGraph::run(&inner, &boundary, crop_type);
 
-                    // Assert some stuff about the resultant polygon graphs.
+            // Assert some stuff about the resultant polygon graphs.
+            for node in graph.nodes() {
+                // Each node should have only one outgoing and only one incoming edge.
+                assert_eq!(
+                    graph
+                        .neighbors_directed(node, Direction::Outgoing)
+                        .collect::<Vec<_>>()
+                        .len(),
+                    1
+                );
+                assert_eq!(
+                    graph
+                        .neighbors_directed(node, Direction::Incoming)
+                        .collect::<Vec<_>>()
+                        .len(),
+                    1
+                );
+            }
+
+            match crop_type {
+                // If crop_type == CropType::Inclusive,  we should make
+                // sure that no resultant points are 100% outside of
+                // boundary.
+                CropType::Inclusive => {
                     for node in graph.nodes() {
-                        // Each node should have only one outgoing and only one incoming edge.
-                        assert_eq!(
-                            graph
-                                .neighbors_directed(node, Direction::Outgoing)
-                                .collect::<Vec<_>>()
-                                .len(),
-                            1
+                        assert_matches!(
+                            boundary.contains_pt(&node),
+                            PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_)
                         );
-                        assert_eq!(
-                            graph
-                                .neighbors_directed(node, Direction::Incoming)
-                                .collect::<Vec<_>>()
-                                .len(),
-                            1
-                        );
-                    }
-
-                    match crop_type {
-                        // If crop_type == CropType::Inclusive,  we should make
-                        // sure that no resultant points are 100% outside of
-                        // boundary.
-                        CropType::Inclusive => {
-                            for node in graph.nodes() {
-                                assert_matches!(
-                                    boundary.contains_pt(&node),
-                                    PointLoc::Inside
-                                        | PointLoc::OnPoint(_)
-                                        | PointLoc::OnSegment(_)
-                                );
-                            }
-                        }
-                        // If crop_type == CropType::Exclusive, we should make
-                        // sure that no resultant points are 100% inside of the
-                        // boundary.
-                        CropType::Exclusive => {
-                            for node in graph.nodes() {
-                                assert_matches!(
-                                    boundary.contains_pt(&node),
-                                    PointLoc::Outside
-                                        | PointLoc::OnPoint(_)
-                                        | PointLoc::OnSegment(_)
-                                )
-                            }
-                        }
                     }
                 }
-
-                //
+                // If crop_type == CropType::Exclusive, we should make
+                // sure that no resultant points are 100% inside of the
+                // boundary.
+                CropType::Exclusive => {
+                    for node in graph.nodes() {
+                        assert_matches!(
+                            boundary.contains_pt(&node),
+                            PointLoc::Outside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_)
+                        )
+                    }
+                }
             }
+
+            //
         }
     }
 }

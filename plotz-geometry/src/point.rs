@@ -254,6 +254,7 @@ impl Nullable for Pt {
     }
 }
 
+#[allow(unused)]
 fn is_colinear_n(ch: &[Pt]) -> bool {
     if ch.len() <= 2 {
         return false;
@@ -261,6 +262,7 @@ fn is_colinear_n(ch: &[Pt]) -> bool {
     ch[2..].iter().all(|p| is_colinear_3(ch[0], ch[1], *p))
 }
 
+#[allow(unused)]
 fn is_colinear_3(p1: Pt, p2: Pt, p3: Pt) -> bool {
     let a = p1.x.0;
     let b = p1.y.0;
