@@ -254,15 +254,14 @@ impl Nullable for Pt {
     }
 }
 
-#[allow(unused)]
-fn is_colinear_n(ch: &[Pt]) -> bool {
+/// Returns true if all the points are colinear.
+pub fn is_colinear_n(ch: &Vec<Pt>) -> bool {
     if ch.len() <= 2 {
         return false;
     }
     ch[2..].iter().all(|p| is_colinear_3(ch[0], ch[1], *p))
 }
 
-#[allow(unused)]
 fn is_colinear_3(p1: Pt, p2: Pt, p3: Pt) -> bool {
     let a = p1.x.0;
     let b = p1.y.0;
@@ -377,6 +376,6 @@ mod tests {
     #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(0,3), p2!(0,4)], true; "five colinear")]
     #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(0,3), p2!(1,4)], false; "five not colinear")]
     fn test_is_colinear_n(pts: &[Pt], expectation: bool) {
-        assert_eq!(is_colinear_n(pts), expectation);
+        assert_eq!(is_colinear_n(&pts.to_vec()), expectation);
     }
 }

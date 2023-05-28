@@ -31,7 +31,7 @@ impl Eq for Pt3d {}
 impl Debug for Pt3d {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Pt3d { x, y, z } = self;
-        write!(f, "Pt3d({:.2},{:.2},{:.2})", x.0, y.0, z.0)
+        write!(f, "p3!({:.2},{:.2},{:.2})", x.0, y.0, z.0)
     }
 }
 

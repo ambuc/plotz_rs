@@ -5,7 +5,7 @@ use {
     crate::{
         crop::{CropType, PointLoc},
         isxn::{Intersection, IsxnResult, Pair, Which},
-        point::Pt,
+        point::{is_colinear_n, Pt},
         polygon::Polygon,
     },
     approx::*,
@@ -282,7 +282,24 @@ impl<'a> CropGraph<'a> {
         if self.graph.node_count() == 0 {
             return None;
         }
-        let mut curr_node: Pt = { self.graph.nodes().next().unwrap() };
+        let mut curr_node: Pt = {
+            //
+            if let Some(pt) = self
+                .graph
+                .nodes()
+                .find(|node| self.graph.neighbors_directed(*node, Outgoing).count() > 1)
+            {
+                pt
+            } else if let Some(pt) = self
+                .graph
+                .nodes()
+                .find(|node| self.graph.neighbors_directed(*node, Incoming).count() > 1)
+            {
+                pt
+            } else {
+                self.graph.nodes().next().unwrap()
+            }
+        };
 
         while !pts.contains(&curr_node) {
             pts.push(curr_node);
@@ -299,9 +316,7 @@ impl<'a> CropGraph<'a> {
                     _ => match (self.a.pts.contains(&i), self.a.pts.contains(&j)) {
                         (true, _) => Some(i),
                         (_, true) => Some(j),
-                        _ => {
-                            panic!("DEAD END");
-                        }
+                        _ => None,
                     },
                 },
                 _ => {
@@ -343,7 +358,9 @@ impl<'a> CropGraph<'a> {
         let mut resultant = vec![];
 
         while let Some(pg) = self.extract_polygon() {
-            resultant.push(pg);
+            if !is_colinear_n(&pg.pts) {
+                resultant.push(pg);
+            }
         }
 
         resultant
