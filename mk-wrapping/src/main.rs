@@ -1,9 +1,12 @@
-use plotz_geometry::object2d_inner::Object2dInner;
 use {
     argh::FromArgs,
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{curve::CurveArc, object2d::Object2d, point::Pt, segment::Segment},
+    plotz_geometry::{
+        object2d::Object2d,
+        object2d_inner::Object2dInner,
+        shapes::{curve::CurveArc, point::Pt, segment::Segment},
+    },
     rand::{distributions::Standard, prelude::Distribution, Rng},
     std::f64::consts::*,
 };

@@ -4,10 +4,9 @@ use {
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         crop::PointLoc,
-        curve::CurveArc,
         grid_layout::{GridLayout, GridLayoutSettings},
         object2d::Object2d,
-        point::Pt,
+        shapes::{curve::CurveArc, point::Pt},
     },
     rand::{seq::SliceRandom, thread_rng, Rng},
     std::f64::consts::*,

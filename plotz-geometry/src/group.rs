@@ -1,10 +1,11 @@
 //! A group of objects.
 
-use crate::{bounded::BoundsCollector, crop::CropType};
-
 use {
     crate::{
-        bounded::Bounded, crop::Croppable, object2d::Object2d, point::Pt, polygon::Polygon,
+        bounded::{Bounded, BoundsCollector},
+        crop::{CropType, Croppable},
+        object2d::Object2d,
+        shapes::{point::Pt, polygon::Polygon},
         traits::*,
     },
     std::ops::*,

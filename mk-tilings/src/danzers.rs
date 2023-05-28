@@ -6,9 +6,11 @@ use {
     plotz_color::*,
     plotz_geometry::{
         object2d::Object2d,
-        point::{PolarPt, Pt},
-        polygon::Polygon,
         shading::{shade_polygon, ShadeConfig},
+        shapes::{
+            point::{PolarPt, Pt},
+            polygon::Polygon,
+        },
     },
     std::f64::consts::PI,
 };

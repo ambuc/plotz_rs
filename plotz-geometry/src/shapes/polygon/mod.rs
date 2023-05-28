@@ -12,10 +12,12 @@ use {
         crop::{CropToPolygonError, Croppable, PointLoc},
         isxn::IsxnResult,
         object2d::Object2d,
-        point::Pt,
-        segment::{Contains, Segment},
+        shapes::{
+            point::Pt,
+            segment::{Contains, Segment},
+            txt::Txt,
+        },
         traits::*,
-        txt::Txt,
     },
     float_cmp::approx_eq,
     itertools::{iproduct, zip},
@@ -575,7 +577,7 @@ impl Annotatable for Polygon {
 
 #[cfg(test)]
 mod tests {
-    use crate::polygon::multiline::{Multiline, MultilineConstructorError};
+    use crate::shapes::polygon::multiline::{Multiline, MultilineConstructorError};
 
     use super::*;
     use float_eq::assert_float_eq;

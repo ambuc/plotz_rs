@@ -2,8 +2,11 @@
 //!
 use {
     plotz_color::BLACK,
-    plotz_geometry::polygon::PolygonKind,
-    plotz_geometry::{object2d::Object2d, object2d_inner::Object2dInner, txt::Txt},
+    plotz_geometry::{
+        object2d::Object2d,
+        object2d_inner::Object2dInner,
+        shapes::{polygon::PolygonKind, txt::Txt},
+    },
     std::fmt::Debug,
     thiserror::Error,
 };
@@ -139,8 +142,10 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use plotz_geometry::object2d::Object2d;
-    use plotz_geometry::{point::Pt, polygon::Polygon};
+    use plotz_geometry::{
+        object2d::Object2d,
+        shapes::{point::Pt, polygon::Polygon},
+    };
     use tempdir::TempDir;
 
     #[test]

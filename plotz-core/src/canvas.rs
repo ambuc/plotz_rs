@@ -1,7 +1,5 @@
 //! Many objects.
 
-use itertools::Itertools;
-
 use {
     crate::{
         bucket::Bucket,
@@ -9,11 +7,12 @@ use {
     },
     anyhow::{anyhow, Error},
     float_ord::FloatOrd,
+    itertools::Itertools,
     plotz_geometry::{
         bounded::{streaming_bbox, Bounded, Bounds},
         object2d::Object2d,
         object2d_inner::Object2dInner,
-        point::Pt,
+        shapes::point::Pt,
         traits::*,
     },
     std::collections::HashMap,

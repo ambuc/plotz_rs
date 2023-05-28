@@ -2,7 +2,7 @@
 
 use {
     crate::{p3, shapes::point3d::Pt3d},
-    plotz_geometry::point::Pt,
+    plotz_geometry::shapes::point::Pt,
 };
 
 // Any oblique projection.  https://en.wikipedia.org/wiki/3D_projection#Oblique_projection

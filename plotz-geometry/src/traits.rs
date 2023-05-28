@@ -1,10 +1,10 @@
 //! Traits.
 
-use typed_builder::TypedBuilder;
-
-use crate::object2d::Object2d;
-
-use {crate::point::Pt, std::ops::*};
+use {
+    crate::{object2d::Object2d, shapes::point::Pt},
+    std::ops::*,
+    typed_builder::TypedBuilder,
+};
 
 /// A geometric figure made of points which might emit a boxed iterator of immutable points.
 pub trait YieldPoints {

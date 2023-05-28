@@ -3,15 +3,15 @@
 //! A crate for reading GeoJSON files and parsing them to plotz_geometry
 //! structs.
 
-use plotz_geometry::polygon::TryPolygon;
-
 use {
     plotz_geometry::{
         object2d_inner::Object2dInner,
-        point::Pt,
-        polygon::{
-            multiline::{Multiline, MultilineConstructorError},
-            Polygon, PolygonConstructorError,
+        shapes::{
+            point::Pt,
+            polygon::{
+                multiline::{Multiline, MultilineConstructorError},
+                Polygon, PolygonConstructorError, TryPolygon,
+            },
         },
     },
     serde_json::Value,

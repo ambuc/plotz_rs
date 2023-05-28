@@ -1,15 +1,17 @@
 //! A curve.
 
-use crate::{crop::CropType, polygon::Polygon};
+use crate::{crop::CropType, shapes::polygon::Polygon};
 
 use {
     crate::{
         bounded::{Bounded, Bounds},
         crop::{Croppable, PointLoc},
         interpolate::interpolate_2d_checked,
-        point::{PolarPt, Pt},
-        polygon::abp,
-        segment::Segment,
+        shapes::{
+            point::{PolarPt, Pt},
+            polygon::abp,
+            segment::Segment,
+        },
         traits::*,
     },
     float_cmp::approx_eq,
@@ -514,7 +516,7 @@ impl Nullable for CurveArc {
 mod test {
     use {
         super::*,
-        crate::{
+        crate::shapes::{
             polygon::{Polygon, Rect},
             segment::Segment,
         },

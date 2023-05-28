@@ -3,9 +3,11 @@
 use crate::{
     bounded::{Bounded, BoundingBoxError},
     crop::{CropToPolygonError, Croppable},
-    point::Pt,
-    polygon::{Polygon, PolygonKind},
-    segment::Segment,
+    shapes::{
+        point::Pt,
+        polygon::{Polygon, PolygonKind},
+        segment::Segment,
+    },
 };
 use typed_builder::TypedBuilder;
 

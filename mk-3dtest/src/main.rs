@@ -1,17 +1,20 @@
 #![allow(unused_imports)]
 
-use itertools::zip;
-use plotz_geometry::{object2d_inner::Object2dInner, polygon::Polygon, traits::AnnotationSettings};
-use plotz_geometry3d::occluder::{self, Occluder};
 use {
     argh::FromArgs,
-    itertools::iproduct,
+    itertools::{iproduct, zip},
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::*, svg::Size},
-    plotz_geometry::{object2d::Object2d, point::Pt},
+    plotz_geometry::{
+        object2d::Object2d,
+        object2d_inner::Object2dInner,
+        shapes::{point::Pt, polygon::Polygon},
+        traits::AnnotationSettings,
+    },
     plotz_geometry3d::{
         camera::{Oblique, Occlusion, Projection},
         object3d::Object3d,
+        occluder::{self, Occluder},
         p3,
         scene::{DebugSettings, Scene},
         shapes::{

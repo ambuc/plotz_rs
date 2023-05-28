@@ -2,7 +2,7 @@ use {
     argh::FromArgs,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        crop::PointLoc, object2d::Object2d, object2d_inner::Object2dInner, point::Pt,
+        crop::PointLoc, object2d::Object2d, object2d_inner::Object2dInner, shapes::point::Pt,
         traits::YieldPoints,
     },
 };

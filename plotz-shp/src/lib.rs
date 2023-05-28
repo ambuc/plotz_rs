@@ -5,7 +5,7 @@
 #![allow(unused)]
 
 use {
-    plotz_geometry::polygon::Polygon,
+    plotz_geometry::shapes::polygon::Polygon,
     shapefile::{Reader, Shape},
     std::path::Path,
     string_interner::{symbol::SymbolU32, StringInterner},

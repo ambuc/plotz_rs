@@ -8,7 +8,7 @@ use {
         shapes::{point3d::Pt3d, polygon3d::Polygon3d},
     },
     derive_more::From,
-    plotz_geometry::polygon::Polygon,
+    plotz_geometry::shapes::polygon::Polygon,
     std::ops::*,
 };
 

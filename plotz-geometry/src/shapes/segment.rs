@@ -5,8 +5,7 @@ use crate::{
     interpolate,
     interpolate::interpolate_2d_checked,
     isxn::{Intersection, IsxnResult, MultipleIntersections},
-    point::Pt,
-    polygon::Polygon,
+    shapes::{point::Pt, polygon::Polygon},
     traits::*,
 };
 use float_cmp::approx_eq;

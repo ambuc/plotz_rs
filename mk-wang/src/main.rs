@@ -5,9 +5,11 @@ use {
     plotz_geometry::{
         object2d::Object2d,
         object2d_inner::Object2dInner,
-        point::Pt,
-        polygon::{multiline::Multiline, Polygon},
         shading::{shade_polygon, ShadeConfig},
+        shapes::{
+            point::Pt,
+            polygon::{multiline::Multiline, Polygon},
+        },
     },
     rand::prelude::SliceRandom,
     std::f64::consts::*,

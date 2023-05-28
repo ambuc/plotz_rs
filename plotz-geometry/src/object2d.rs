@@ -1,16 +1,15 @@
 //! An annotated object with color and thickness.
 
-use std::fmt::Debug;
-
-use crate::crop::CropType;
-
 use {
     crate::{
-        bounded::Bounded, crop::Croppable, object2d_inner::Object2dInner, point::Pt,
-        polygon::Polygon, traits::*,
+        bounded::Bounded,
+        crop::{CropType, Croppable},
+        object2d_inner::Object2dInner,
+        shapes::{point::Pt, polygon::Polygon},
+        traits::*,
     },
     plotz_color::{ColorRGB, BLACK},
-    std::ops::*,
+    std::{fmt::Debug, ops::*},
 };
 
 /// An object with a color and thickness.

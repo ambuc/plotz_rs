@@ -8,8 +8,10 @@ use {
         grid_layout::{GridLayout, GridLayoutSettings},
         group::Group,
         object2d::Object2d,
-        point::Pt,
-        polygon::{Polygon, Rect},
+        shapes::{
+            point::Pt,
+            polygon::{Polygon, Rect},
+        },
     },
 };
 

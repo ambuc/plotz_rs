@@ -4,9 +4,8 @@ use {
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         object2d::Object2d,
-        point::Pt,
-        polygon::Polygon,
         shading::{shade_polygon, ShadeConfig},
+        shapes::{point::Pt, polygon::Polygon},
     },
     rand::{prelude::SliceRandom, Rng},
     std::f64::consts::*,

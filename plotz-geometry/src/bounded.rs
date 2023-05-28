@@ -1,8 +1,10 @@
 //! A trait representing the bounds and bounding box for an object.
 use crate::{
     crop::PointLoc,
-    point::Pt,
-    polygon::{Polygon, PolygonConstructorError},
+    shapes::{
+        point::Pt,
+        polygon::{Polygon, PolygonConstructorError},
+    },
 };
 use float_ord::FloatOrd;
 
@@ -197,7 +199,7 @@ pub fn streaming_bbox<'a, T: 'a + Bounded>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use crate::polygon::Polygon;
+    use crate::shapes::polygon::Polygon;
 
     #[test]
     fn test_streaming_bbox() {

@@ -2,8 +2,7 @@
 
 use crate::{
     bounded::{Bounded, Bounds},
-    polygon::abp,
-    segment::Segment,
+    shapes::{polygon::abp, segment::Segment},
     traits::*,
 };
 use {

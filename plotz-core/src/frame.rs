@@ -2,8 +2,10 @@
 
 use {
     plotz_color::BLACK,
-    plotz_geometry::object2d::Object2d,
-    plotz_geometry::{point::Pt, polygon::Polygon},
+    plotz_geometry::{
+        object2d::Object2d,
+        shapes::{point::Pt, polygon::Polygon},
+    },
 };
 
 /// Makes a frame given (width, height) and (x,y) offset.

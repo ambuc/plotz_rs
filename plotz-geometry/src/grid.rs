@@ -1,7 +1,10 @@
 //! Grid (for debugging, mostly)
 
 use {
-    crate::{object2d::Object2d, point::Pt, segment::Segment},
+    crate::{
+        object2d::Object2d,
+        shapes::{point::Pt, segment::Segment},
+    },
     num::range_step,
     plotz_color::*,
     typed_builder::TypedBuilder,

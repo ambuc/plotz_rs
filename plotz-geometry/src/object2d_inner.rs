@@ -1,23 +1,19 @@
 //! The inner value of a Object2d, i.e. the enum which holds some geometric thingy.
 
-use std::fmt::Debug;
-
-use crate::{crop::CropType, polygon::PolygonKind};
-
 use {
     crate::{
         bounded::Bounded,
+        crop::CropType,
         crop::{Croppable, PointLoc},
-        curve::CurveArc,
         group::Group,
-        point::Pt,
-        polygon::Polygon,
-        segment::Segment,
+        shapes::{
+            curve::CurveArc, point::Pt, polygon::Polygon, polygon::PolygonKind, segment::Segment,
+            txt::Txt,
+        },
         traits::*,
-        txt::Txt,
     },
     derive_more::From,
-    std::ops::*,
+    std::{fmt::Debug, ops::*},
 };
 
 /// Either a polygon or a segment.

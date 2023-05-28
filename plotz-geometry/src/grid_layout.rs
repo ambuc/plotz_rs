@@ -1,11 +1,13 @@
 //! GridLayout for grid...layouts... what do you want from me.
 
-use float_ord::FloatOrd;
-
-use crate::{bounded::Bounded, point::Pt};
-
 use {
-    crate::{bounded::Bounds, crop::Croppable, object2d::Object2d},
+    crate::{
+        bounded::{Bounded, Bounds},
+        crop::Croppable,
+        object2d::Object2d,
+        shapes::point::Pt,
+    },
+    float_ord::FloatOrd,
     typed_builder::TypedBuilder,
 };
 

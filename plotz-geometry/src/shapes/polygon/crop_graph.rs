@@ -5,8 +5,10 @@ use {
     crate::{
         crop::{CropType, PointLoc},
         isxn::{Intersection, IsxnResult, Pair, Which},
-        point::{is_colinear_n, Pt},
-        polygon::Polygon,
+        shapes::{
+            point::{is_colinear_n, Pt},
+            polygon::Polygon,
+        },
     },
     approx::*,
     float_ord::FloatOrd,
@@ -370,7 +372,7 @@ impl<'a> CropGraph<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{crop, interpolate::extrapolate_2d, p2, polygon::Rect};
+    use crate::{interpolate::extrapolate_2d, p2, shapes::polygon::Rect};
     use itertools::iproduct;
     use test_case::test_case;
 

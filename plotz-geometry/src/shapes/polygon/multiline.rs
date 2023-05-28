@@ -1,7 +1,7 @@
 //! A shortcut for constructing a multiline.
 
 use super::{CurveOrientation, Polygon, PolygonKind};
-use crate::point::Pt;
+use crate::shapes::point::Pt;
 use thiserror::Error;
 
 /// A general error arising from trying to construct a Multiline.
