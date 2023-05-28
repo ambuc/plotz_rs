@@ -217,12 +217,12 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<StyledObj2> 
             .collect::<Vec<_>>()
         });
         ret.iter_mut().for_each(|d_o| match &mut d_o.inner {
-            Obj2::Polygon(pg) => {
+            Obj2::Pg2(pg) => {
                 *pg *= 2.0;
                 pg.rotate(&Pt(1.0, 1.0), rot);
                 *pg += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
             }
-            Obj2::Segment(sg) => {
+            Obj2::Sg2(sg) => {
                 *sg *= 2.0;
                 sg.rotate(&Pt(1.0, 1.0), rot);
                 *sg += Pt(2.0 * row_idx as f64, 2.0 * col_idx as f64);
@@ -260,11 +260,11 @@ fn main() {
 
     objs.dos_by_bucket.iter_mut().for_each(|(_bucket, layers)| {
         layers.iter_mut().for_each(|d_o| match &mut d_o.inner {
-            Obj2::Polygon(p) => {
+            Obj2::Pg2(p) => {
                 *p *= scale;
                 *p += Pt(margin, margin);
             }
-            Obj2::Segment(s) => {
+            Obj2::Sg2(s) => {
                 *s *= scale;
                 *s += Pt(margin, margin);
             }

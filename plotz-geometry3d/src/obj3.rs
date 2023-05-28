@@ -19,8 +19,8 @@ pub enum Obj3 {
 impl Obj3 {
     pub fn project_oblique(&self, oblique_projection: &Oblique) -> Obj2 {
         match self {
-            Obj3::Pg3(pg3d) => Obj2::Polygon(pg3d.project_oblique(oblique_projection)),
-            Obj3::Sg3(sg3d) => Obj2::Segment(sg3d.project_oblique(oblique_projection)),
+            Obj3::Pg3(pg3d) => Obj2::Pg2(pg3d.project_oblique(oblique_projection)),
+            Obj3::Sg3(sg3d) => Obj2::Sg2(sg3d.project_oblique(oblique_projection)),
         }
     }
 

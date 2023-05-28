@@ -323,13 +323,13 @@ impl Map {
                     let crosshatchings: Vec<StyledObj2> = layers
                         .iter()
                         .filter_map(|co| match &co.inner {
-                            Obj2::Polygon(p) => match shade_polygon(shade_config, &p) {
+                            Obj2::Pg2(p) => match shade_polygon(shade_config, &p) {
                                 Err(_) => None,
                                 Ok(segments) => Some(
                                     segments
                                         .into_iter()
                                         .map(|s| StyledObj2 {
-                                            inner: Obj2::Segment(s),
+                                            inner: Obj2::Sg2(s),
                                             color: co.color,
                                             thickness: shade_config.thickness,
                                         })
@@ -407,7 +407,7 @@ impl Map {
                 .into_iter()
                 .flat_map(|d_o| {
                     match d_o.inner.clone() {
-                        Obj2::Polygon(pg) => pg.to_segments().into_iter().map(Obj2::from).collect(),
+                        Obj2::Pg2(pg) => pg.to_segments().into_iter().map(Obj2::from).collect(),
                         x => vec![x],
                     }
                     .into_iter()
@@ -425,10 +425,10 @@ impl Map {
             let q = 0.5;
             for d_o in dos.iter_mut() {
                 match &mut d_o.inner {
-                    Obj2::Segment(sg) => {
+                    Obj2::Sg2(sg) => {
                         sg.round_to_nearest(q);
                     }
-                    Obj2::Polygon(pg) => {
+                    Obj2::Pg2(pg) => {
                         pg.round_to_nearest(q);
                     }
                     _ => {}
@@ -455,7 +455,7 @@ impl Map {
                 .unwrap();
             let mut hs = HashSet::<Sg2>::new();
             for d_o in dos.iter() {
-                if let Obj2::Segment(sg) = d_o.inner {
+                if let Obj2::Sg2(sg) = d_o.inner {
                     hs.insert(sg);
                     // TODO(ambuc): really, deduplicate this way but then store and restore the original.
                 }
@@ -611,7 +611,7 @@ mod tests {
                 [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
             ),
         ] {
-            let obj = Obj2::Polygon(Pg2(initial));
+            let obj = Obj2::Pg2(Pg2(initial));
             let mut map = Map {
                 canvas: {
                     let mut canvas = Canvas::new();
@@ -631,7 +631,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].inner, Obj2::Polygon(Pg2(expected)));
+            assert_eq!(x.next().unwrap()[0].inner, Obj2::Pg2(Pg2(expected)));
         }
     }
 
@@ -661,7 +661,7 @@ mod tests {
                 [Pt(0.0, 0.0), Pt(0.0, 900.0), Pt(900.0, 0.0)],
             ),
         ] {
-            let obj = Obj2::Polygon(Pg2(initial));
+            let obj = Obj2::Pg2(Pg2(initial));
             let mut map = Map {
                 center: None,
                 canvas: {
@@ -681,7 +681,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].inner, Obj2::Polygon(Pg2(expected)));
+            assert_eq!(x.next().unwrap()[0].inner, Obj2::Pg2(Pg2(expected)));
         }
     }
 }

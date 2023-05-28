@@ -32,7 +32,7 @@ fn main() {
 
     let frame: StyledObj2 = make_frame((720.0, 720.0 * 1.3), /*offset=*/ Pt(20.0, 20.0));
     let frame_polygon = match frame.inner {
-        Obj2::Polygon(ref pg) => pg.clone(),
+        Obj2::Pg2(ref pg) => pg.clone(),
         _ => unimplemented!(),
     };
 

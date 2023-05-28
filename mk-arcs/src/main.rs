@@ -35,7 +35,7 @@ fn main() {
     );
     {
         let frame_polygon = match frame.inner {
-            Obj2::Polygon(ref pg) => pg.clone(),
+            Obj2::Pg2(ref pg) => pg.clone(),
             _ => unimplemented!(),
         };
 

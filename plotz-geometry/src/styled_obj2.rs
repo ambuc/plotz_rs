@@ -33,11 +33,11 @@ impl Debug for StyledObj2 {
             thickness,
         } = self;
         let inner_fmt = match inner {
-            Obj2::Point(p) => format!("{:?}", p),
-            Obj2::Polygon(pg) => format!("{:?}", pg),
-            Obj2::Segment(sg) => format!("{:?}", sg),
+            Obj2::Pt(p) => format!("{:?}", p),
+            Obj2::Pg2(pg) => format!("{:?}", pg),
+            Obj2::Sg2(sg) => format!("{:?}", sg),
             Obj2::CurveArc(ca) => format!("{:?}", ca),
-            Obj2::Char(ch) => format!("{:?}", ch),
+            Obj2::Txt(ch) => format!("{:?}", ch),
             Obj2::Group(g) => format!("{:?}", g),
         };
         write!(

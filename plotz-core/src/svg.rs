@@ -49,11 +49,11 @@ pub enum SvgWriteError {
 
 fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), SvgWriteError> {
     match &doi {
-        Obj2::Point(p) => {
+        Obj2::Pt(p) => {
             context.line_to(p.x.0, p.y.0);
             context.line_to(p.x.0 + 1.0, p.y.0 + 1.0);
         }
-        Obj2::Polygon(polygon) => {
+        Obj2::Pg2(polygon) => {
             //
             for p in &polygon.pts {
                 context.line_to(p.x.0, p.y.0);
@@ -62,11 +62,11 @@ fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), 
                 context.line_to(polygon.pts[0].x.0, polygon.pts[0].y.0);
             }
         }
-        Obj2::Segment(segment) => {
+        Obj2::Sg2(segment) => {
             context.line_to(segment.i.x.0, segment.i.y.0);
             context.line_to(segment.f.x.0, segment.f.y.0);
         }
-        Obj2::Char(Txt {
+        Obj2::Txt(Txt {
             pt,
             inner: txt,
             font_size,
@@ -183,7 +183,7 @@ mod test_super {
             path.to_str().unwrap(),
             vec![&StyledObj2 {
                 color: &BLACK,
-                inner: Obj2::Polygon(Pg2([Pt(0, 0), Pt(0, 1), Pt(1, 0)])),
+                inner: Obj2::Pg2(Pg2([Pt(0, 0), Pt(0, 1), Pt(1, 0)])),
                 thickness: 1.0,
             }],
         )
@@ -210,12 +210,12 @@ mod test_super {
             vec![
                 &StyledObj2 {
                     color: &BLACK,
-                    inner: Obj2::Polygon(Pg2([Pt(0, 0), Pt(0, 1), Pt(1, 0)])),
+                    inner: Obj2::Pg2(Pg2([Pt(0, 0), Pt(0, 1), Pt(1, 0)])),
                     thickness: 1.0,
                 },
                 &StyledObj2 {
                     color: &BLACK,
-                    inner: Obj2::Polygon(Pg2([Pt(5, 5), Pt(5, 6), Pt(6, 5)])),
+                    inner: Obj2::Pg2(Pg2([Pt(5, 5), Pt(5, 6), Pt(6, 5)])),
                     thickness: 1.0,
                 },
             ],

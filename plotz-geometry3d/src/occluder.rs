@@ -19,11 +19,11 @@ impl Occluder {
 
         match (&incoming, &existing) {
             // points can/should be occluded, not handled yet.
-            (Obj2::Point(_), _) => {
+            (Obj2::Pt(_), _) => {
                 unimplemented!("no support for points yet")
             }
             // chars are points, see above.
-            (Obj2::Char(_), _) => {
+            (Obj2::Txt(_), _) => {
                 unimplemented!("no support for chars yet")
             }
             // groups are not handled yet.
@@ -35,18 +35,18 @@ impl Occluder {
                 unimplemented!("no support for curvearcs yet")
             }
 
-            (Obj2::Polygon(pg1), Obj2::Polygon(pg2)) => pg1
+            (Obj2::Pg2(pg1), Obj2::Pg2(pg2)) => pg1
                 .crop_excluding(pg2)
                 .into_iter()
                 .map(Obj2::from)
                 .collect(),
-            (Obj2::Segment(_sg), Obj2::Polygon(_pg)) => {
+            (Obj2::Sg2(_sg), Obj2::Pg2(_pg)) => {
                 unimplemented!("no support for pg x sg yet");
             }
 
             //
             // you can't hide something behind a segment or a point or a char. don't be daft.
-            (incoming, Obj2::Segment(_) | Obj2::Point(_) | Obj2::Char(_)) => {
+            (incoming, Obj2::Sg2(_) | Obj2::Pt(_) | Obj2::Txt(_)) => {
                 vec![(**incoming).clone()]
             }
         }
