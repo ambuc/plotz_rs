@@ -156,8 +156,8 @@ impl Canvas {
         Ok(())
     }
 
-    /// writes out to a set of SVGs at a prefix.
-    pub fn write_to_svg(self, size: impl Into<Size>, prefix: &str) -> Result<(), Error> {
+    // writes out to a set of SVGs at a prefix.
+    fn write_to_svg(self, size: impl Into<Size>, prefix: &str) -> Result<(), Error> {
         let size = size.into();
         // all
         {
@@ -191,6 +191,11 @@ impl Canvas {
         }
 
         Ok(())
+    }
+
+    /// writes out to a set of SVGs at a prefix, or dies.
+    pub fn write_to_svg_or_die(self, size: impl Into<Size>, prefix: &str) {
+        self.write_to_svg(size, prefix).expect("write")
     }
 }
 

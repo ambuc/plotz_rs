@@ -118,13 +118,11 @@ fn main() {
     let canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true)
         .with_frame(make_frame((DIM, DIM), p2!(20.0, 20.0)));
 
-    let () = canvas
-        .write_to_svg(
-            Size {
-                width: 800,
-                height: 1000,
-            },
-            &args.output_path_prefix,
-        )
-        .expect("write");
+    canvas.write_to_svg_or_die(
+        Size {
+            width: 800,
+            height: 1000,
+        },
+        &args.output_path_prefix,
+    );
 }

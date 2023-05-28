@@ -499,12 +499,9 @@ impl Map {
             let () = self.crop_to_frame(&frame);
         }
 
-        let () = self
+        Ok(self
             .canvas
-            .write_to_svg(config.size, config.output_directory.to_str().unwrap())
-            .expect("failed to write");
-
-        Ok(())
+            .write_to_svg_or_die(config.size, config.output_directory.to_str().unwrap()))
     }
 }
 

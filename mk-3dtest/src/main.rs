@@ -197,7 +197,5 @@ fn main() {
 
     let mut canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
     canvas.scale_to_fit_frame().unwrap();
-    let () = canvas
-        .write_to_svg((800, 1000), &args.output_path_prefix)
-        .expect("write");
+    canvas.write_to_svg_or_die((800, 1000), &args.output_path_prefix);
 }

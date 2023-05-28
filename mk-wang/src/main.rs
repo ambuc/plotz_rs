@@ -278,13 +278,11 @@ fn main() {
         });
     });
 
-    let () = objs
-        .write_to_svg(
-            Size {
-                width: (image_width + 2.0 * margin) as usize,
-                height: (image_width + 2.0 * margin) as usize,
-            },
-            &args.output_path_prefix,
-        )
-        .expect("write");
+    objs.write_to_svg_or_die(
+        Size {
+            width: (image_width + 2.0 * margin) as usize,
+            height: (image_width + 2.0 * margin) as usize,
+        },
+        &args.output_path_prefix,
+    );
 }

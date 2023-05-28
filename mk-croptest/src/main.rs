@@ -120,13 +120,11 @@ fn main() {
 
     let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
 
-    let () = objs
-        .write_to_svg(
-            Size {
-                width: 800,
-                height: 1000,
-            },
-            &args.output_path_prefix,
-        )
-        .expect("write");
+    objs.write_to_svg_or_die(
+        Size {
+            width: 800,
+            height: 1000,
+        },
+        &args.output_path_prefix,
+    );
 }

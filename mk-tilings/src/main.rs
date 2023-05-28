@@ -48,13 +48,11 @@ fn main() {
 
     //objs.join_adjacent_segments();
 
-    let () = objs
-        .write_to_svg(
-            Size {
-                width: (750.0 * 1.3) as usize,
-                height: 750,
-            },
-            &args.output_path_prefix,
-        )
-        .expect("write");
+    objs.write_to_svg_or_die(
+        Size {
+            width: (750.0 * 1.3) as usize,
+            height: 750,
+        },
+        &args.output_path_prefix,
+    );
 }
