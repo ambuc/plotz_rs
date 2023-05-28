@@ -7,7 +7,7 @@ use {
         crop::Croppable,
         grid::Grid,
         obj2::Obj2,
-        shapes::{curve::CurveArcs, point::Pt},
+        shapes::{curve::CurveArcs, pt2::Pt},
         styled_obj2::StyledObj2,
     },
     rand::Rng,

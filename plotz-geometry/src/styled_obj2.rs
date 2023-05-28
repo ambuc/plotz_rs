@@ -5,7 +5,7 @@ use {
         bounded::Bounded,
         crop::{CropType, Croppable},
         obj2::Obj2,
-        shapes::{pg2::Pg2, point::Pt},
+        shapes::{pg2::Pg2, pt2::Pt},
         traits::*,
     },
     plotz_color::{ColorRGB, BLACK},

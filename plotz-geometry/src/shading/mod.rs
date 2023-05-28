@@ -8,7 +8,7 @@ use crate::{
     shading::shade_config::ShadeConfig,
     shapes::{
         pg2::{Pg2, PolygonKind},
-        point::Pt,
+        pt2::Pt,
         sg2::Sg2,
     },
 };

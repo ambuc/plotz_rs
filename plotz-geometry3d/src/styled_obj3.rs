@@ -1,7 +1,7 @@
 //! A 3d object.
 
 use {
-    crate::{camera::Oblique, obj3::Obj3, shapes::point3d::Pt3, style::Style3d},
+    crate::{camera::Oblique, obj3::Obj3, shapes::pt3::Pt3, style::Style3d},
     plotz_color::ColorRGB,
     plotz_geometry::styled_obj2::StyledObj2,
     std::fmt::Debug,

@@ -1,8 +1,8 @@
 //! A camera.
 
 use {
-    crate::{p3, shapes::point3d::Pt3},
-    plotz_geometry::shapes::point::Pt,
+    crate::{p3, shapes::pt3::Pt3},
+    plotz_geometry::shapes::pt2::Pt,
 };
 
 // Any oblique projection.  https://en.wikipedia.org/wiki/3D_projection#Oblique_projection

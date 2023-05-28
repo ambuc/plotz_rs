@@ -12,7 +12,7 @@ use {
         crop::{CropToPolygonError, Croppable, PointLoc},
         isxn::IsxnResult,
         shapes::{
-            point::Pt,
+            pt2::Pt,
             sg2::{Contains, Sg2},
             txt::Txt,
         },

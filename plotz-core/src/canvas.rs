@@ -11,7 +11,7 @@ use {
     plotz_geometry::{
         bounded::{streaming_bbox, Bounded, Bounds},
         obj2::Obj2,
-        shapes::point::Pt,
+        shapes::pt2::Pt,
         styled_obj2::StyledObj2,
         traits::*,
     },

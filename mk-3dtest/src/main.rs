@@ -7,7 +7,7 @@ use {
     plotz_core::{canvas::Canvas, frame::*, svg::Size},
     plotz_geometry::{
         obj2::Obj2,
-        shapes::{pg2::Pg2, point::Pt},
+        shapes::{pg2::Pg2, pt2::Pt},
         styled_obj2::StyledObj2,
         traits::AnnotationSettings,
     },
@@ -16,7 +16,7 @@ use {
         occluder::{self, Occluder},
         p3,
         scene::{DebugSettings, Scene},
-        shapes::{cube3d::Cube, point3d::Pt3, polygon3d::Pg3, segment3d::Sg3},
+        shapes::{cube3d::Cube, pg3::Pg3, pt3::Pt3, sg3::Sg3},
         style::Style3d,
         styled_obj3::StyledObj3,
     },

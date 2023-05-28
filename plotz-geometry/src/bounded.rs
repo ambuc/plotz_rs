@@ -3,7 +3,7 @@ use crate::{
     crop::PointLoc,
     shapes::{
         pg2::{Pg2, PolygonConstructorError},
-        point::Pt,
+        pt2::Pt,
     },
 };
 use float_ord::FloatOrd;

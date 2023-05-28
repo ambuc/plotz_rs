@@ -1,5 +1,5 @@
 //! General 1D and 2D interpolation and extrapolation algorithms.
-use crate::shapes::point::Pt;
+use crate::shapes::pt2::Pt;
 use float_cmp::approx_eq;
 
 /// A general error arising from trying to interpolate a value some percentage

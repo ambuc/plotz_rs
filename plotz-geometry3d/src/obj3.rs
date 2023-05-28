@@ -3,7 +3,7 @@
 use {
     crate::{
         camera::Oblique,
-        shapes::{point3d::Pt3, polygon3d::Pg3, segment3d::Sg3},
+        shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
     },
     derive_more::From,
     plotz_geometry::obj2::Obj2,

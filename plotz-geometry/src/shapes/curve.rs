@@ -7,7 +7,7 @@ use {
         interpolate::interpolate_2d_checked,
         shapes::{
             pg2::{abp, Pg2},
-            point::{PolarPt, Pt},
+            pt2::{PolarPt, Pt},
             sg2::Sg2,
         },
         traits::*,

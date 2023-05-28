@@ -9,7 +9,7 @@ use {
         group::Group,
         shapes::{
             pg2::{Pg2, Rect},
-            point::Pt,
+            pt2::Pt,
         },
         styled_obj2::StyledObj2,
     },

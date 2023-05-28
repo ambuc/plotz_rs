@@ -7,7 +7,7 @@ use {
         isxn::{Intersection, IsxnResult, Pair, Which},
         shapes::{
             pg2::Pg2,
-            point::{is_colinear_n, Pt},
+            pt2::{is_colinear_n, Pt},
         },
     },
     approx::*,

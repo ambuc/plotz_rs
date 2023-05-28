@@ -7,7 +7,7 @@ use {
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             pg2::{multiline::Multiline, Pg2},
-            point::Pt,
+            pt2::Pt,
         },
         styled_obj2::StyledObj2,
     },

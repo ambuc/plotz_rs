@@ -5,7 +5,7 @@ use {
     plotz_geometry::{
         crop::PointLoc,
         grid_layout::{GridLayout, GridLayoutSettings},
-        shapes::{curve::CurveArc, point::Pt},
+        shapes::{curve::CurveArc, pt2::Pt},
         styled_obj2::StyledObj2,
     },
     rand::{seq::SliceRandom, thread_rng, Rng},

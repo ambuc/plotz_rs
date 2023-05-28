@@ -8,7 +8,7 @@ use {
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             pg2::Pg2,
-            point::{PolarPt, Pt},
+            pt2::{PolarPt, Pt},
         },
         styled_obj2::StyledObj2,
     },

@@ -1,7 +1,7 @@
 //! Traits.
 
 use {
-    crate::{shapes::point::Pt, styled_obj2::StyledObj2},
+    crate::{shapes::pt2::Pt, styled_obj2::StyledObj2},
     std::ops::*,
     typed_builder::TypedBuilder,
 };

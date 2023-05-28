@@ -4,7 +4,7 @@ use {
     crate::{
         bounded::{Bounded, BoundsCollector},
         crop::{CropType, Croppable},
-        shapes::{pg2::Pg2, point::Pt},
+        shapes::{pg2::Pg2, pt2::Pt},
         styled_obj2::StyledObj2,
         traits::*,
     },

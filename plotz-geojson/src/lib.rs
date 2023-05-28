@@ -11,7 +11,7 @@ use {
                 multiline::{Multiline, MultilineConstructorError},
                 Pg2, PolygonConstructorError, TryPolygon,
             },
-            point::Pt,
+            pt2::Pt,
         },
     },
     serde_json::Value,

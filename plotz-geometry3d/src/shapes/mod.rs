@@ -1,4 +1,4 @@
 pub mod cube3d;
-pub mod point3d;
-pub mod polygon3d;
-pub mod segment3d;
+pub mod pg3;
+pub mod pt3;
+pub mod sg3;

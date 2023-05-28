@@ -1,6 +1,6 @@
 //! A group of like things in 3d.
 
-use {crate::shapes::point3d::Pt3, std::ops::*};
+use {crate::shapes::pt3::Pt3, std::ops::*};
 
 #[derive(Debug, Clone)]
 pub struct Group<T> {

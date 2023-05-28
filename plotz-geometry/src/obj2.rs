@@ -6,7 +6,7 @@ use {
         crop::CropType,
         crop::{Croppable, PointLoc},
         group::Group,
-        shapes::{curve::CurveArc, pg2::Pg2, pg2::PolygonKind, point::Pt, sg2::Sg2, txt::Txt},
+        shapes::{curve::CurveArc, pg2::Pg2, pg2::PolygonKind, pt2::Pt, sg2::Sg2, txt::Txt},
         traits::*,
     },
     derive_more::From,
