@@ -1,6 +1,6 @@
 //! A group of like things in 3d.
 
-use {crate::shapes::point3d::Pt3d, std::ops::*};
+use {crate::shapes::point3d::Pt3, std::ops::*};
 
 #[derive(Debug, Clone)]
 pub struct Group<T> {
@@ -14,32 +14,32 @@ pub fn Group<T>(a: impl IntoIterator<Item = T>) -> Group<T> {
     }
 }
 
-impl<T> Add<Pt3d> for Group<T>
+impl<T> Add<Pt3> for Group<T>
 where
-    T: Add<Pt3d, Output = T>,
+    T: Add<Pt3, Output = T>,
 {
     type Output = Group<T>;
-    fn add(self, rhs: Pt3d) -> Self::Output {
+    fn add(self, rhs: Pt3) -> Self::Output {
         Group {
             items: self.items.into_iter().map(|i| i + rhs).collect(),
             ..self
         }
     }
 }
-impl<T> AddAssign<Pt3d> for Group<T>
+impl<T> AddAssign<Pt3> for Group<T>
 where
-    T: AddAssign<Pt3d>,
+    T: AddAssign<Pt3>,
 {
-    fn add_assign(&mut self, rhs: Pt3d) {
+    fn add_assign(&mut self, rhs: Pt3) {
         self.items.iter_mut().for_each(|p| *p += rhs);
     }
 }
-impl<T> Div<Pt3d> for Group<T>
+impl<T> Div<Pt3> for Group<T>
 where
-    T: Div<Pt3d, Output = T>,
+    T: Div<Pt3, Output = T>,
 {
     type Output = Group<T>;
-    fn div(self, rhs: Pt3d) -> Self::Output {
+    fn div(self, rhs: Pt3) -> Self::Output {
         Group {
             items: self.items.into_iter().map(|p| p / rhs).collect(),
             ..self
@@ -58,11 +58,11 @@ where
         }
     }
 }
-impl<T> DivAssign<Pt3d> for Group<T>
+impl<T> DivAssign<Pt3> for Group<T>
 where
-    T: DivAssign<Pt3d>,
+    T: DivAssign<Pt3>,
 {
-    fn div_assign(&mut self, rhs: Pt3d) {
+    fn div_assign(&mut self, rhs: Pt3) {
         self.items.iter_mut().for_each(|p| *p /= rhs);
     }
 }
@@ -74,12 +74,12 @@ where
         self.items.iter_mut().for_each(|p| *p /= rhs);
     }
 }
-impl<T> Mul<Pt3d> for Group<T>
+impl<T> Mul<Pt3> for Group<T>
 where
-    T: Mul<Pt3d, Output = T>,
+    T: Mul<Pt3, Output = T>,
 {
     type Output = Group<T>;
-    fn mul(self, rhs: Pt3d) -> Self::Output {
+    fn mul(self, rhs: Pt3) -> Self::Output {
         Group {
             items: self.items.into_iter().map(|p| p * rhs).collect(),
             ..self
@@ -98,11 +98,11 @@ where
         }
     }
 }
-impl<T> MulAssign<Pt3d> for Group<T>
+impl<T> MulAssign<Pt3> for Group<T>
 where
-    T: MulAssign<Pt3d>,
+    T: MulAssign<Pt3>,
 {
-    fn mul_assign(&mut self, rhs: Pt3d) {
+    fn mul_assign(&mut self, rhs: Pt3) {
         self.items.iter_mut().for_each(|p| *p *= rhs);
     }
 }
@@ -114,23 +114,23 @@ where
         self.items.iter_mut().for_each(|p| *p *= rhs);
     }
 }
-impl<T> Sub<Pt3d> for Group<T>
+impl<T> Sub<Pt3> for Group<T>
 where
-    T: Sub<Pt3d, Output = T>,
+    T: Sub<Pt3, Output = T>,
 {
     type Output = Group<T>;
-    fn sub(self, rhs: Pt3d) -> Self::Output {
+    fn sub(self, rhs: Pt3) -> Self::Output {
         Group {
             items: self.items.into_iter().map(|p| p - rhs).collect(),
             ..self
         }
     }
 }
-impl<T> SubAssign<Pt3d> for Group<T>
+impl<T> SubAssign<Pt3> for Group<T>
 where
-    T: SubAssign<Pt3d>,
+    T: SubAssign<Pt3>,
 {
-    fn sub_assign(&mut self, rhs: Pt3d) {
+    fn sub_assign(&mut self, rhs: Pt3) {
         self.items.iter_mut().for_each(|p| *p -= rhs);
     }
 }

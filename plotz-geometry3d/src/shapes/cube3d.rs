@@ -3,16 +3,16 @@
 use crate::{
     group::Group,
     p3,
-    shapes::{point3d::Pt3d, polygon3d::Polygon3d},
+    shapes::{point3d::Pt3, polygon3d::Pg3},
 };
 
-fn make_planar_face(origin: Pt3d, d1: Pt3d, d2: Pt3d) -> Polygon3d {
-    Polygon3d([origin, origin + d1, origin + d1 + d2, origin + d2, origin])
+fn make_planar_face(origin: Pt3, d1: Pt3, d2: Pt3) -> Pg3 {
+    Pg3([origin, origin + d1, origin + d1 + d2, origin + d2, origin])
 }
 
 // make a cube of faces (no edges)
 #[allow(non_snake_case)]
-pub fn Cube(root: Pt3d, (dx, dy, dz): (f64, f64, f64)) -> Group<Polygon3d> {
+pub fn Cube(root: Pt3, (dx, dy, dz): (f64, f64, f64)) -> Group<Pg3> {
     let dx = p3!(dx, 0.0, 0.0);
     let dy = p3!(0.0, dy, 0.0);
     let dz = p3!(0.0, 0.0, dz);

@@ -1,20 +1,20 @@
 //! A camera.
 
 use {
-    crate::{p3, shapes::point3d::Pt3d},
+    crate::{p3, shapes::point3d::Pt3},
     plotz_geometry::shapes::point::Pt,
 };
 
 // Any oblique projection.  https://en.wikipedia.org/wiki/3D_projection#Oblique_projection
 pub struct Oblique {
-    u_src: Pt3d,
-    v_src: Pt3d,
-    w_src: Pt3d,
+    u_src: Pt3,
+    v_src: Pt3,
+    w_src: Pt3,
     u_dst: Pt,
     v_dst: Pt,
     w_dst: Pt,
     /// the angle from which to view 3d objects (for dist along projection)
-    pub view_vector: Pt3d,
+    pub view_vector: Pt3,
 }
 
 impl Oblique {
@@ -34,7 +34,7 @@ impl Oblique {
         }
     }
 
-    pub fn project(&self, pt3d: &Pt3d) -> Pt {
+    pub fn project(&self, pt3d: &Pt3) -> Pt {
         (self.u_dst * pt3d.dot(&self.u_src))
             + (self.v_dst * pt3d.dot(&self.v_src))
             + (self.w_dst * pt3d.dot(&self.w_src))
