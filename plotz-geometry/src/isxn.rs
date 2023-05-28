@@ -8,7 +8,7 @@ use float_ord::FloatOrd;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 /// Guaranteed to be 0.0 <= f <= 1.0. Witness type.
-pub enum Pct {
+enum Pct {
     /// Zero.
     Zero,
     /// Another value.
@@ -85,9 +85,9 @@ pub struct Intersection {
     /// pt
     pub pt: Pt,
     /// a_pct
-    pub a_pct: Pct,
+    a_pct: Pct,
     /// b_pct
-    pub b_pct: Pct,
+    b_pct: Pct,
 }
 
 impl Intersection {
