@@ -161,8 +161,7 @@ fn main() {
 
     Canvas::from_objs(obj_vec.into_iter(), /*autobucket=*/ false)
         .with_frame(make_frame((image_width, image_width), p2!(margin, margin)))
-        .scale_to_fit_frame()
-        .unwrap()
+        .scale_to_fit_frame_or_die()
         .write_to_svg_or_die(
             Size {
                 width: (image_width + 2.0 * margin) as usize,

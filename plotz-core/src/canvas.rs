@@ -115,8 +115,8 @@ impl Canvas {
         });
     }
 
-    /// returns true on success
-    pub fn scale_to_fit_frame(mut self) -> Result<Self, Error> {
+    // returns true on success
+    fn scale_to_fit_frame(mut self) -> Result<Self, Error> {
         {
             let frame_bounds = self.frame.clone().ok_or(anyhow!("no frame"))?.bounds();
             let inner_bounds = streaming_bbox(
@@ -153,6 +153,12 @@ impl Canvas {
             });
         }
         Ok(self)
+    }
+
+    /// Scales the contents to fit the frame, or dies.
+    pub fn scale_to_fit_frame_or_die(self) -> Self {
+        self.scale_to_fit_frame()
+            .expect("failed to scale to fit frame")
     }
 
     // writes out to a set of SVGs at a prefix.

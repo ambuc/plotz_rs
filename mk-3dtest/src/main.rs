@@ -197,7 +197,6 @@ fn main() {
 
     Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false)
         .with_frame(frame)
-        .scale_to_fit_frame()
-        .unwrap()
+        .scale_to_fit_frame_or_die()
         .write_to_svg_or_die((800, 1000), &args.output_path_prefix);
 }
