@@ -13,16 +13,14 @@ pub struct Oblique {
     u_dst: Pt2,
     v_dst: Pt2,
     w_dst: Pt2,
-    /// the angle from which to view 3d objects (for dist along projection)
-    pub view_vector: Pt3,
 }
 
-impl Oblique {
+impl Default for Oblique {
     // A standard oblique projection -- looking down at the origin from (1,1,1),
     // with x going down-and-to-the-left, y going down-and-to-the-right, and z
     // going straight up.
-    pub fn standard() -> Oblique {
-        let spread = 0.7;
+    fn default() -> Self {
+        let spread = 1.0 / 2.0_f64.sqrt(); // 0.7071...
         Oblique {
             u_src: p3!(1, 0, 0),
             v_src: p3!(0, 1, 0),
@@ -30,8 +28,13 @@ impl Oblique {
             u_dst: p2!(-1.0, spread),
             v_dst: p2!(1.0, spread),
             w_dst: p2!(0.0, -1.0),
-            view_vector: p3!(-1.0, -1.0, -1.0),
         }
+    }
+}
+
+impl Oblique {
+    pub fn view_vector(&self) -> Pt3 {
+        p3!(0, 0, 0) - self.u_src - self.v_src - self.w_src
     }
 
     pub fn project(&self, pt3d: &Pt3) -> Pt2 {
@@ -44,6 +47,12 @@ impl Oblique {
 pub enum Projection {
     /// https://en.wikipedia.org/wiki/Pohlke%27s_theorem
     Oblique(Oblique),
+}
+
+impl Default for Projection {
+    fn default() -> Self {
+        Projection::Oblique(Oblique::default())
+    }
 }
 
 pub enum Occlusion {
