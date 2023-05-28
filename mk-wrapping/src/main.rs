@@ -159,16 +159,15 @@ fn main() {
         }
     }
 
-    let mut canvas = Canvas::from_objs(obj_vec.into_iter(), /*autobucket=*/ false)
-        .with_frame(make_frame((image_width, image_width), p2!(margin, margin)));
-
-    canvas.scale_to_fit_frame().unwrap();
-
-    canvas.write_to_svg_or_die(
-        Size {
-            width: (image_width + 2.0 * margin) as usize,
-            height: (image_width + 2.0 * margin) as usize,
-        },
-        &args.output_path_prefix,
-    );
+    Canvas::from_objs(obj_vec.into_iter(), /*autobucket=*/ false)
+        .with_frame(make_frame((image_width, image_width), p2!(margin, margin)))
+        .scale_to_fit_frame()
+        .unwrap()
+        .write_to_svg_or_die(
+            Size {
+                width: (image_width + 2.0 * margin) as usize,
+                height: (image_width + 2.0 * margin) as usize,
+            },
+            &args.output_path_prefix,
+        );
 }

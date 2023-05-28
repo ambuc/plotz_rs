@@ -195,7 +195,9 @@ fn main() {
                 .project_with(Projection::default(), Occlusion::True)
         };
 
-    let mut canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
-    canvas.scale_to_fit_frame().unwrap();
-    canvas.write_to_svg_or_die((800, 1000), &args.output_path_prefix);
+    Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false)
+        .with_frame(frame)
+        .scale_to_fit_frame()
+        .unwrap()
+        .write_to_svg_or_die((800, 1000), &args.output_path_prefix);
 }
