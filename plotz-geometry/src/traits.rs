@@ -69,3 +69,9 @@ pub trait Annotatable {
     /// Return the labelled points and segments.
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<Object2d>;
 }
+
+impl Default for AnnotationSettings {
+    fn default() -> Self {
+        Self { font_size: 10.0 }
+    }
+}

@@ -65,12 +65,12 @@ impl<'a> CropGraph<'a> {
         }
         crop_graph.remove_stubs();
         crop_graph.remove_dual_edges();
-        crop_graph.remove_nodes_with_no_neighbors_of_kind(Direction::Incoming);
-        crop_graph.remove_nodes_with_no_neighbors_of_kind(Direction::Outgoing);
+        crop_graph.remove_nodes_with_no_neighbors_of_kind(Incoming);
+        crop_graph.remove_nodes_with_no_neighbors_of_kind(Outgoing);
         // crop_graph.remove_linear_cycles();
-        crop_graph.print();
-        let resultant = crop_graph.trim_and_create_resultant_polygons();
-        return (resultant, crop_graph.graph);
+        // crop_graph.print();
+        let graph = crop_graph.graph.clone();
+        (crop_graph.trim_and_create_resultant_polygons(), graph)
     }
 
     fn normalize_pt(&mut self, pt: &Pt) -> Pt {
@@ -383,8 +383,8 @@ impl<'a> CropGraph<'a> {
         }
 
         // and the nodes later.
-        self.remove_nodes_with_no_neighbors_of_kind(Direction::Incoming);
-        self.remove_nodes_with_no_neighbors_of_kind(Direction::Outgoing);
+        self.remove_nodes_with_no_neighbors_of_kind(Incoming);
+        self.remove_nodes_with_no_neighbors_of_kind(Outgoing);
 
         TryPolygon(pts).ok()
     }
@@ -396,7 +396,8 @@ impl<'a> CropGraph<'a> {
         );
     }
 
-    fn trim_and_create_resultant_polygons(&mut self) -> Vec<Polygon> {
+    // NB: Destructive, walks and destroys graph.
+    fn trim_and_create_resultant_polygons(mut self) -> Vec<Polygon> {
         let mut resultant = vec![];
 
         while let Some(pg) = self.extract_polygon() {
@@ -406,8 +407,8 @@ impl<'a> CropGraph<'a> {
             resultant.push(pg);
 
             // clean up in between extractions.
-            self.remove_nodes_with_no_neighbors_of_kind(Direction::Incoming);
-            self.remove_nodes_with_no_neighbors_of_kind(Direction::Outgoing);
+            self.remove_nodes_with_no_neighbors_of_kind(Incoming);
+            self.remove_nodes_with_no_neighbors_of_kind(Outgoing);
         }
 
         resultant
@@ -417,7 +418,7 @@ impl<'a> CropGraph<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{crop, p2, polygon::Rect};
+    use crate::{crop, interpolate::extrapolate_2d, p2, polygon::Rect};
     use assert_matches::assert_matches;
     use itertools::iproduct;
     use test_case::test_case;
@@ -450,10 +451,10 @@ mod test {
         Polygon([a, b, c, d, e, f, g, h, i, j, k, l, a])
     }
 
-    #[test_case(u_shape(), CropType::Inclusive; "u-shape, inclusive")]
     #[test_case(u_shape(), CropType::Exclusive; "u-shape, exclusive")]
-    #[test_case(h_shape(), CropType::Inclusive; "h-shape, inclusive")]
+    #[test_case(u_shape(), CropType::Inclusive; "u-shape, inclusive")]
     #[test_case(h_shape(), CropType::Exclusive; "h-shape, exclusive")]
+    #[test_case(h_shape(), CropType::Inclusive; "h-shape, inclusive")]
     fn test_all_crops(shape: Polygon, crop_type: CropType) {
         let boundary = Rect(p2!(50, 50), (50.0, 50.0)).unwrap();
         let margin = 10.0;
@@ -461,53 +462,37 @@ mod test {
             .map(|(i, j)| Pt((i as f64 - 3.0) * margin, (j as f64 - 3.0) * margin))
         {
             let inner = shape.clone() + offset;
+
             let (_resultants, graph) = CropGraph::run(&inner, &boundary, crop_type);
 
             // Assert some stuff about the resultant polygon graphs.
             for node in graph.nodes() {
                 // Each node should have only one outgoing and only one incoming edge.
-                assert_eq!(
-                    graph
-                        .neighbors_directed(node, Direction::Outgoing)
-                        .collect::<Vec<_>>()
-                        .len(),
-                    1
-                );
-                assert_eq!(
-                    graph
-                        .neighbors_directed(node, Direction::Incoming)
-                        .collect::<Vec<_>>()
-                        .len(),
-                    1
-                );
+                assert_eq!(graph.neighbors_directed(node, Outgoing).count(), 1);
+                assert_eq!(graph.neighbors_directed(node, Incoming).count(), 1);
             }
 
-            match crop_type {
-                // If crop_type == CropType::Inclusive,  we should make
-                // sure that no resultant points are 100% outside of
-                // boundary.
-                CropType::Inclusive => {
-                    for node in graph.nodes() {
-                        assert_matches!(
-                            boundary.contains_pt(&node),
-                            PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_)
-                        );
-                    }
+            // we should make sure that no resultant points are 100%
+            // outside of boundary.
+            for node in graph.nodes() {
+                match crop_type {
+                    CropType::Inclusive => assert!(boundary.area_or_edge_contains_pt(&node)),
+                    CropType::Exclusive => assert!(!boundary.area_contains_pt(&node)),
                 }
-                // If crop_type == CropType::Exclusive, we should make
-                // sure that no resultant points are 100% inside of the
-                // boundary.
-                CropType::Exclusive => {
-                    for node in graph.nodes() {
-                        assert_matches!(
-                            boundary.contains_pt(&node),
-                            PointLoc::Outside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_)
-                        )
+            }
+            // we should also make sure that, along each line, no
+            // intermediate points are 100% outside of boundary.
+            // we should also make sure that, along each line, no
+            // intermediate points are 100% inside of the boundary
+            for (a, b, _) in graph.all_edges() {
+                for i in 0..=100 {
+                    let p = extrapolate_2d(a, b, (i as f64) / 100.0);
+                    match crop_type {
+                        CropType::Inclusive => assert!(boundary.area_or_edge_contains_pt(&p)),
+                        CropType::Exclusive => assert!(!boundary.area_contains_pt(&p)),
                     }
                 }
             }
-
-            //
         }
     }
 }

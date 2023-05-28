@@ -1,9 +1,12 @@
+use plotz_geometry::traits::AnnotationSettings;
+
 use {
     argh::FromArgs,
     itertools::iproduct,
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::*, svg::Size},
     plotz_geometry::{
+        traits::Annotatable,
         crop::Croppable,
         grid_layout::{GridLayout, GridLayoutSettings},
         group::Group,
@@ -56,7 +59,7 @@ fn main() {
         let base_sq = Object2d::new(r.clone())
             .with_color(&BLACK)
             .with_thickness(2.0);
-        // let base_sq_annotations = base_sq.annotate();
+        let base_sq_annotations = base_sq.annotate(&AnnotationSettings::default());
 
         let mut pts = vec![];
 
@@ -93,24 +96,13 @@ fn main() {
         // let subject_sq_annotations = subject_sq.annotate();
 
         let mut v: Vec<Object2d> = vec![];
-        v.push(base_sq);
+        // v.push(base_sq);
         // v.push(subject_sq.clone());
-        // v.extend(base_sq_annotations);
+        v.extend(base_sq_annotations);
         // v.extend(subject_sq_annotations);
 
-        v.extend(
-            subject_sq
-                .crop_to(&r)
-                .into_iter()
-                .map(|o| o.with_color(&GREEN).with_thickness(2.0)),
-        );
-
-        v.extend(
-            subject_sq
-                .crop_excluding(&r.clone())
-                .into_iter()
-                .map(|o| o.with_color(&BLUE).with_thickness(2.0)),
-        );
+        // v.extend( subject_sq .crop_to(&r) .into_iter() .map(|o| o.with_color(&GREEN).with_thickness(2.0)),);
+        v.extend( subject_sq .crop_excluding(&r.clone()) .into_iter() .map(|o| o.with_color(&BLUE).with_thickness(2.0)),);
 
         let g = Group::new(v);
 
