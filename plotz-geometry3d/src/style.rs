@@ -1,8 +1,6 @@
 //! A style.
 
-use std::fmt::Debug;
-
-use {plotz_color::*, typed_builder::TypedBuilder};
+use {plotz_color::*, std::fmt::Debug, typed_builder::TypedBuilder};
 
 #[derive(Clone, Copy, TypedBuilder)]
 pub struct Style3d {
