@@ -2,7 +2,7 @@
 
 use float_ord::FloatOrd;
 use {
-    crate::{camera::Oblique, point3d::Pt3d},
+    crate::{camera::Oblique, shapes::point3d::Pt3d},
     plotz_geometry::segment::Segment,
     std::{fmt::Debug, ops::*},
 };

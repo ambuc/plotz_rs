@@ -1,6 +1,10 @@
 //! A cube in 3d.
 
-use crate::{face::Face, group::Group, p3, point3d::Pt3d, polygon3d::Polygon3d};
+use crate::{
+    group::Group,
+    p3,
+    shapes::{face::Face, point3d::Pt3d, polygon3d::Polygon3d},
+};
 
 fn make_planar_face(origin: Pt3d, d1: Pt3d, d2: Pt3d) -> Face {
     Face::from(Polygon3d([

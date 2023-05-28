@@ -1,9 +1,10 @@
 //! An inner object.
 
-use crate::point3d::Pt3d;
-
 use {
-    crate::{camera::Oblique, face::Face, polygon3d::Polygon3d, segment3d::Segment3d},
+    crate::{
+        camera::Oblique,
+        shapes::{face::Face, point3d::Pt3d, polygon3d::Polygon3d, segment3d::Segment3d},
+    },
     derive_more::From,
     plotz_geometry::object2d_inner::Object2dInner,
 };

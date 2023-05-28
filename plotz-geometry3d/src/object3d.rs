@@ -1,14 +1,12 @@
 //! A 3d object.
 
-use std::fmt::Debug;
-
-use plotz_color::ColorRGB;
-
-use crate::point3d::Pt3d;
-
 use {
-    crate::{camera::Oblique, object3d_inner::Object3dInner, style::Style3d},
+    crate::{
+        camera::Oblique, object3d_inner::Object3dInner, shapes::point3d::Pt3d, style::Style3d,
+    },
+    plotz_color::ColorRGB,
     plotz_geometry::object2d::Object2d,
+    std::fmt::Debug,
 };
 
 #[derive(Clone)]

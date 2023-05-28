@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use float_ord::FloatOrd;
 
 use {
-    crate::{camera::Oblique, p3, point3d::Pt3d},
+    crate::{camera::Oblique, p3, shapes::point3d::Pt3d},
     plotz_geometry::polygon::Polygon,
     std::ops::*,
 };

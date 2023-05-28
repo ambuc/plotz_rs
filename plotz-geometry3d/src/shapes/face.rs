@@ -3,7 +3,10 @@
 use std::fmt::Debug;
 
 use {
-    crate::{camera::Oblique, point3d::Pt3d, polygon3d::Polygon3d},
+    crate::{
+        camera::Oblique,
+        shapes::{point3d::Pt3d, polygon3d::Polygon3d},
+    },
     derive_more::From,
     plotz_geometry::polygon::Polygon,
     std::ops::*,

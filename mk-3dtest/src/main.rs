@@ -11,14 +11,12 @@ use {
     plotz_geometry::{object2d::Object2d, point::Pt},
     plotz_geometry3d::{
         camera::{Oblique, Occlusion, Projection},
-        cube3d::Cube,
-        face::Face,
         object3d::Object3d,
         p3,
-        point3d::Pt3d,
-        polygon3d::Polygon3d,
         scene::{DebugSettings, Scene},
-        segment3d::Segment3d,
+        shapes::{
+            cube3d::Cube, face::Face, point3d::Pt3d, polygon3d::Polygon3d, segment3d::Segment3d,
+        },
         style::Style3d,
     },
     tracing::*,
