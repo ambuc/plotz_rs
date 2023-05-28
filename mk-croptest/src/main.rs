@@ -5,7 +5,7 @@ use {
     plotz_core::{canvas::Canvas, frame::*, svg::Size},
     plotz_geometry::{
         crop::Croppable,
-        grid_layout::{GridLayout, GridLayoutSettings},
+        grid::grid_layout::{GridLayout, GridLayoutSettings},
         group::Group,
         p2,
         shapes::{

@@ -4,7 +4,7 @@ use {
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         crop::PointLoc,
-        grid_layout::{GridLayout, GridLayoutSettings},
+        grid::grid_layout::{GridLayout, GridLayoutSettings},
         p2,
         shapes::{curve::CurveArc, pt2::Pt2},
         styled_obj2::StyledObj2,

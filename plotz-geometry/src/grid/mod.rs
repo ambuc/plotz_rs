@@ -1,5 +1,7 @@
 //! Grid (for debugging, mostly)
 
+pub mod grid_layout;
+
 use {
     crate::{
         p2,

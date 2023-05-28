@@ -2,7 +2,7 @@
 
 use {
     crate::{
-        bounded::{Bounded, BoundsCollector},
+        bounded::{Bounded, Bounds, BoundsCollector},
         crop::{CropType, Croppable},
         shapes::{pg2::Pg2, pt2::Pt2},
         styled_obj2::StyledObj2,
@@ -55,7 +55,7 @@ impl YieldPointsMut for Group {
 }
 
 impl Bounded for Group {
-    fn bounds(&self) -> crate::bounded::Bounds {
+    fn bounds(&self) -> Bounds {
         let mut bc = BoundsCollector::default();
         for pt in self.yield_pts() {
             bc.incorporate(pt);
