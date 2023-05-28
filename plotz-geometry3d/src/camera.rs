@@ -30,7 +30,7 @@ impl Oblique {
             u_dst: p2!(-1.0, spread),
             v_dst: p2!(1.0, spread),
             w_dst: p2!(0.0, -1.0),
-            view_vector: p3!(-1.0, -1.0, -1.3),
+            view_vector: p3!(-1.0, -1.0, -1.0),
         }
     }
 
