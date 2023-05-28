@@ -22,9 +22,8 @@ pub trait YieldPointsMut {
 /// impl Fn(&mut Pt) and mutating each one.
 pub trait Mutable: YieldPointsMut {
     /// Mutate the points of a geometric figure by applying f(pt) to each of them.
-    fn mutate(&mut self, f: impl Fn(&mut Pt)) -> bool {
-        self.yield_pts_mut().for_each(f);
-        true
+    fn mutate(&mut self, f: impl Fn(&mut Pt)) {
+        self.yield_pts_mut().for_each(f)
     }
 }
 
