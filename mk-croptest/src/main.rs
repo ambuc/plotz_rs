@@ -1,5 +1,3 @@
-use plotz_geometry::traits::AnnotationSettings;
-
 use {
     argh::FromArgs,
     itertools::iproduct,
@@ -12,7 +10,6 @@ use {
         object2d::Object2d,
         point::Pt,
         polygon::{Polygon, Rect},
-        traits::Annotatable,
     },
 };
 

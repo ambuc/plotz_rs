@@ -18,7 +18,6 @@ use {
         Direction::{Incoming, Outgoing},
     },
     std::fmt::Debug,
-    tracing::*,
     typed_builder::TypedBuilder,
 };
 
@@ -86,22 +85,19 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    fn pair(&self) -> Pair<Polygon> {
+    fn get(&self, which: Which) -> &Polygon {
         Pair {
-            a: self.a,
-            b: self.b,
+            a: &self.a,
+            b: &self.b,
         }
+        .get(which)
     }
 
     fn build_from_polygons(&mut self, crop_type: CropType) {
         // inelegant way to run a against b, then b against a. oops
-        let pair = Pair {
-            a: self.a,
-            b: self.b,
-        };
         for which in [Which::A, Which::B] {
-            let this = pair.get(which);
-            let that = pair.get(which.flip());
+            let this = self.get(which).clone();
+            let that = self.get(which.flip()).clone();
 
             for sg in this.to_segments() {
                 let sg = match (which, crop_type) {
@@ -189,7 +185,7 @@ impl<'a> CropGraph<'a> {
         while let Some(node) = self
             .graph
             .nodes()
-            .find(|node| matches!(self.pair().get(which).contains_pt(node), PointLoc::Inside))
+            .find(|node| self.get(which).point_is_inside(node))
         {
             self.graph.remove_node(node);
         }
@@ -199,7 +195,7 @@ impl<'a> CropGraph<'a> {
         while let Some(node) = self
             .graph
             .nodes()
-            .find(|node| matches!(self.pair().get(which).contains_pt(node), PointLoc::Outside))
+            .find(|node| self.get(which).point_is_outside(node))
         {
             self.graph.remove_node(node);
         }
@@ -252,21 +248,17 @@ impl<'a> CropGraph<'a> {
         while let Some((i, j, ())) = self
             .graph
             .all_edges()
-            .find(|edge| self.graph.contains_edge(edge.1, edge.0))
+            .find(|(a, b, _)| self.graph.contains_edge(*b, *a))
         {
             self.graph.remove_edge(i, j);
             self.graph.remove_edge(j, i);
         }
     }
 
-    fn nodes_count(&self) -> usize {
-        self.graph.node_count()
-    }
-
     fn remove_edges_outside(&mut self, which: Which) {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
-                self.pair().get(which).contains_pt(&edge.0.avg(&edge.1)),
+                self.get(which).contains_pt(&edge.0.avg(&edge.1)),
                 PointLoc::Outside,
             )
         }) {
@@ -276,7 +268,7 @@ impl<'a> CropGraph<'a> {
     fn remove_edges_inside(&mut self, which: Which) {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
-                self.pair().get(which).contains_pt(&edge.0.avg(&edge.1)),
+                self.get(which).contains_pt(&edge.0.avg(&edge.1)),
                 PointLoc::Inside
             )
         }) {
@@ -287,7 +279,7 @@ impl<'a> CropGraph<'a> {
     fn extract_polygon(&mut self) -> Option<Polygon> {
         let mut pts: Vec<Pt> = vec![];
 
-        if self.nodes_count() == 0 {
+        if self.graph.node_count() == 0 {
             return None;
         }
         let mut curr_node: Pt = { self.graph.nodes().next().unwrap() };
@@ -362,7 +354,6 @@ impl<'a> CropGraph<'a> {
 mod test {
     use super::*;
     use crate::{crop, interpolate::extrapolate_2d, p2, polygon::Rect};
-    use assert_matches::assert_matches;
     use itertools::iproduct;
     use test_case::test_case;
 
@@ -424,8 +415,8 @@ mod test {
             // outside of boundary.
             for node in graph.nodes() {
                 match crop_type {
-                    CropType::Inclusive => assert!(boundary.area_or_edge_contains_pt(&node)),
-                    CropType::Exclusive => assert!(!boundary.area_contains_pt(&node)),
+                    CropType::Inclusive => assert!(boundary.point_is_inside_or_on_border(&node)),
+                    CropType::Exclusive => assert!(!boundary.point_is_inside(&node)),
                 }
             }
             // we should also make sure that, along each line, no
@@ -436,8 +427,8 @@ mod test {
                 for i in 0..=10 {
                     let p = extrapolate_2d(a, b, (i as f64) / 10.0);
                     match crop_type {
-                        CropType::Inclusive => assert!(boundary.area_or_edge_contains_pt(&p)),
-                        CropType::Exclusive => assert!(!boundary.area_contains_pt(&p)),
+                        CropType::Inclusive => assert!(boundary.point_is_inside_or_on_border(&p)),
+                        CropType::Exclusive => assert!(!boundary.point_is_inside(&p)),
                     }
                 }
             }

@@ -222,19 +222,6 @@ impl Polygon {
             .collect::<Vec<_>>()
     }
 
-    /// True if the area or points/edges of this polygon contain a point.
-    pub fn area_or_edge_contains_pt(&self, other: &Pt) -> bool {
-        matches!(
-            self.contains_pt(other),
-            PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_)
-        )
-    }
-
-    /// True if the area of this polygon contains a point.
-    pub fn area_contains_pt(&self, other: &Pt) -> bool {
-        matches!(self.contains_pt(other), PointLoc::Inside)
-    }
-
     /// Calculates whether a point is within, without, or along a closed polygon
     /// using the https://en.wikipedia.org/wiki/Winding_number method.
     pub fn contains_pt(&self, other: &Pt) -> PointLoc {
@@ -269,6 +256,24 @@ impl Polygon {
             true => PointLoc::Outside,
             false => PointLoc::Inside,
         }
+    }
+
+    /// True if the area or points/edges of this polygon contain a point.
+    pub fn point_is_inside_or_on_border(&self, other: &Pt) -> bool {
+        matches!(
+            self.contains_pt(other),
+            PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_)
+        )
+    }
+
+    /// True if the area of this polygon contains a point.
+    pub fn point_is_inside(&self, other: &Pt) -> bool {
+        matches!(self.contains_pt(other), PointLoc::Inside)
+    }
+
+    /// True if the point is totally outside the polygon.
+    pub fn point_is_outside(&self, pt: &Pt) -> bool {
+        matches!(self.contains_pt(pt), PointLoc::Outside)
     }
 
     /// Which curve orientation a polygon has. Curve orientation refers to
