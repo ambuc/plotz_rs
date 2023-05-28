@@ -45,6 +45,34 @@ pub struct CropGraph<'a> {
 }
 
 impl<'a> CropGraph<'a> {
+    pub fn run(
+        a: &Polygon,
+        b: &Polygon,
+        crop_type: CropType,
+    ) -> (Vec<Polygon>, DiGraphMap<Pt, ()>) {
+        let mut crop_graph = CropGraph::builder().a(a).b(b).build();
+        crop_graph.build_from_polygons(crop_type);
+        crop_graph.remove_nodes_outside_polygon(Which::A);
+        match crop_type {
+            CropType::Inclusive => {
+                crop_graph.remove_nodes_outside_polygon(Which::B);
+                crop_graph.remove_edges_outside(Which::A);
+            }
+            CropType::Exclusive => {
+                crop_graph.remove_nodes_inside_polygon(Which::B);
+                crop_graph.remove_edges_inside(Which::B);
+            }
+        }
+        crop_graph.remove_stubs();
+        crop_graph.remove_dual_edges();
+        crop_graph.remove_nodes_with_no_neighbors_of_kind(Direction::Incoming);
+        crop_graph.remove_nodes_with_no_neighbors_of_kind(Direction::Outgoing);
+        // crop_graph.remove_linear_cycles();
+        crop_graph.print();
+        let resultant = crop_graph.trim_and_create_resultant_polygons();
+        return (resultant, crop_graph.graph);
+    }
+
     fn normalize_pt(&mut self, pt: &Pt) -> Pt {
         // if something in self.known_pts matches, return that instead.
         // otherwise insert pt into known_pts and return it.
@@ -68,7 +96,7 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    pub fn build_from_polygons(&mut self, crop_type: CropType) {
+    fn build_from_polygons(&mut self, crop_type: CropType) {
         // inelegant way to run a against b, then b against a. oops
         let pair = Pair {
             a: self.a,
@@ -160,7 +188,7 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    pub fn remove_nodes_inside_polygon(&mut self, which: Which) {
+    fn remove_nodes_inside_polygon(&mut self, which: Which) {
         while let Some(node) = self
             .graph
             .nodes()
@@ -170,7 +198,7 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    pub fn remove_nodes_outside_polygon(&mut self, which: Which) {
+    fn remove_nodes_outside_polygon(&mut self, which: Which) {
         while let Some(node) = self
             .graph
             .nodes()
@@ -180,7 +208,7 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    pub fn remove_nodes_with_no_neighbors_of_kind(&mut self, direction: Direction) {
+    fn remove_nodes_with_no_neighbors_of_kind(&mut self, direction: Direction) {
         while let Some(node_to_remove) = self
             .graph
             .nodes()
@@ -190,7 +218,7 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    // pub fn remove_linear_cycles(&mut self) {
+    // fn remove_linear_cycles(&mut self) {
     //     if let Some(node_with_many_children) = self.graph.nodes().find(|node| {
     //         self.graph
     //             .neighbors_directed(*node, Outgoing)
@@ -239,7 +267,7 @@ impl<'a> CropGraph<'a> {
     //     }
     // }
 
-    pub fn remove_stubs(&mut self) {
+    fn remove_stubs(&mut self) {
         // a _stub_ is like this:
         //
         // a -> b <-> s
@@ -267,7 +295,7 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    pub fn remove_dual_edges(&mut self) {
+    fn remove_dual_edges(&mut self) {
         while let Some((i, j, ())) = self
             .graph
             .all_edges()
@@ -278,11 +306,11 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    pub fn nodes_count(&self) -> usize {
+    fn nodes_count(&self) -> usize {
         self.graph.node_count()
     }
 
-    pub fn remove_edges_outside(&mut self, which: Which) {
+    fn remove_edges_outside(&mut self, which: Which) {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
                 self.pair().get(which).contains_pt(&edge.0.avg(&edge.1)),
@@ -292,7 +320,7 @@ impl<'a> CropGraph<'a> {
             self.graph.remove_edge(i, j);
         }
     }
-    pub fn remove_edges_inside(&mut self, which: Which) {
+    fn remove_edges_inside(&mut self, which: Which) {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
                 self.pair().get(which).contains_pt(&edge.0.avg(&edge.1)),
@@ -303,7 +331,7 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    pub fn extract_polygon(&mut self) -> Option<Polygon> {
+    fn extract_polygon(&mut self) -> Option<Polygon> {
         let mut pts: Vec<Pt> = vec![];
 
         if self.nodes_count() == 0 {
@@ -361,14 +389,14 @@ impl<'a> CropGraph<'a> {
         TryPolygon(pts).ok()
     }
 
-    pub fn print(&self) {
+    fn print(&self) {
         println!(
             "{:?}",
             Dot::with_config(&self.graph, &[Config::EdgeNoLabel])
         );
     }
 
-    pub fn trim_and_create_resultant_polygons(mut self) -> Vec<Polygon> {
+    fn trim_and_create_resultant_polygons(&mut self) -> Vec<Polygon> {
         let mut resultant = vec![];
 
         while let Some(pg) = self.extract_polygon() {
@@ -383,5 +411,107 @@ impl<'a> CropGraph<'a> {
         }
 
         resultant
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{crop, p2, polygon::Rect};
+    use assert_matches::assert_matches;
+    use itertools::iproduct;
+
+    #[test]
+    fn test_all_crops() {
+        let u_shape: Vec<Pt> = {
+            let a = p2!(60, 60);
+            let b = p2!(70, 60);
+            let c = p2!(80, 60);
+            let d = p2!(90, 60);
+            let e = p2!(70, 75);
+            let f = p2!(80, 75);
+            let g = p2!(60, 90);
+            let h = p2!(90, 90);
+            vec![a, b, e, f, c, d, h, g, a]
+        };
+
+        let h_shape: Vec<Pt> = {
+            let a = p2!(60, 40);
+            let b = p2!(70, 40);
+            let c = p2!(70, 70);
+            let d = p2!(80, 70);
+            let e = p2!(80, 40);
+            let f = p2!(90, 40);
+            let g = p2!(90, 110);
+            let h = p2!(80, 110);
+            let i = p2!(80, 80);
+            let j = p2!(70, 80);
+            let k = p2!(70, 110);
+            let l = p2!(60, 110);
+            vec![a, b, c, d, e, f, g, h, i, j, k, l, a]
+        };
+
+        let boundary = Rect(p2!(50, 50), (50.0, 50.0)).unwrap();
+        let margin = 10.0;
+        for shape in [h_shape, u_shape] {
+            for offset in iproduct!(0..=5, 0..=4)
+                .map(|(i, j)| Pt((i as f64 - 3.0) * margin, (j as f64 - 3.0) * margin))
+            {
+                let inner = Polygon(shape.clone()) + offset;
+                for crop_type in [CropType::Inclusive, CropType::Exclusive] {
+                    let (resultants, graph) = CropGraph::run(&inner, &boundary, crop_type);
+
+                    // Assert some stuff about the resultant polygon graphs.
+                    for node in graph.nodes() {
+                        // Each node should have only one outgoing and only one incoming edge.
+                        assert_eq!(
+                            graph
+                                .neighbors_directed(node, Direction::Outgoing)
+                                .collect::<Vec<_>>()
+                                .len(),
+                            1
+                        );
+                        assert_eq!(
+                            graph
+                                .neighbors_directed(node, Direction::Incoming)
+                                .collect::<Vec<_>>()
+                                .len(),
+                            1
+                        );
+                    }
+
+                    match crop_type {
+                        // If crop_type == CropType::Inclusive,  we should make
+                        // sure that no resultant points are 100% outside of
+                        // boundary.
+                        CropType::Inclusive => {
+                            for node in graph.nodes() {
+                                assert_matches!(
+                                    boundary.contains_pt(&node),
+                                    PointLoc::Inside
+                                        | PointLoc::OnPoint(_)
+                                        | PointLoc::OnSegment(_)
+                                );
+                            }
+                        }
+                        // If crop_type == CropType::Exclusive, we should make
+                        // sure that no resultant points are 100% inside of the
+                        // boundary.
+                        CropType::Exclusive => {
+                            for node in graph.nodes() {
+                                assert_matches!(
+                                    boundary.contains_pt(&node),
+                                    PointLoc::Outside
+                                        | PointLoc::OnPoint(_)
+                                        | PointLoc::OnSegment(_)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                //
+            }
+        }
     }
 }

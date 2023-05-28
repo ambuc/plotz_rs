@@ -383,26 +383,8 @@ impl Croppable for Polygon {
             }
         }
 
-        let mut crop_graph = CropGraph::builder().a(a).b(b).build();
-        crop_graph.build_from_polygons(crop_type);
-        crop_graph.remove_nodes_outside_polygon(Which::A);
-        match crop_type {
-            CropType::Inclusive => {
-                crop_graph.remove_nodes_outside_polygon(Which::B);
-                crop_graph.remove_edges_outside(Which::A);
-            }
-            CropType::Exclusive => {
-                crop_graph.remove_nodes_inside_polygon(Which::B);
-                crop_graph.remove_edges_inside(Which::B);
-            }
-        }
-        crop_graph.remove_stubs();
-        crop_graph.remove_dual_edges();
-        crop_graph.remove_nodes_with_no_neighbors_of_kind(Direction::Incoming);
-        crop_graph.remove_nodes_with_no_neighbors_of_kind(Direction::Outgoing);
-        // crop_graph.remove_linear_cycles();
-        crop_graph.print();
-        crop_graph.trim_and_create_resultant_polygons()
+        let (resultant, _crop_graph) = CropGraph::run(a, b, crop_type);
+        resultant
     }
 }
 
