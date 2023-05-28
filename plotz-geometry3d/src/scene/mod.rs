@@ -61,7 +61,10 @@ impl Scene {
                         annotate: should_annotate,
                     }) = &self.debug
                     {
-                        if let Some(Style3d { color, thickness }) = draw_wireframes {
+                        if let Some(Style3d {
+                            color, thickness, ..
+                        }) = draw_wireframes
+                        {
                             resultant
                                 .push(obj2.clone().with_color(color).with_thickness(*thickness));
                         }

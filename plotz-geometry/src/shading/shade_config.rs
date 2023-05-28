@@ -3,7 +3,7 @@
 use typed_builder::TypedBuilder;
 
 /// Config for controlling crosshatching.
-#[derive(Debug, Clone, TypedBuilder)]
+#[derive(Debug, Copy, Clone, TypedBuilder)]
 pub struct ShadeConfig {
     /// The gap between lines.
     pub gap: f64,

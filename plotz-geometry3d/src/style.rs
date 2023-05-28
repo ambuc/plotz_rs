@@ -1,5 +1,7 @@
 //! A style.
 
+use plotz_geometry::shading::shade_config::ShadeConfig;
+
 use crate::{obj3::Obj3, styled_obj3::StyledObj3};
 
 use {plotz_color::*, std::fmt::Debug, typed_builder::TypedBuilder};
@@ -11,6 +13,9 @@ pub struct Style3d {
 
     #[builder(default = 1.0)]
     pub thickness: f64,
+
+    #[builder(default = None, setter(strip_option))]
+    pub shading: Option<ShadeConfig>,
 }
 
 impl Style3d {
@@ -28,11 +33,15 @@ impl Style3d {
 
 impl Debug for Style3d {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Style3d { color, thickness } = self;
+        let Style3d {
+            color,
+            thickness,
+            shading,
+        } = self;
         write!(
             f,
-            "Style3d::builder().color({:?}).thickness({:?}).build()",
-            color, thickness
+            "Style3d::builder().color({:?}).thickness({:?}).shading({:?}).build()",
+            color, thickness, shading
         )
     }
 }

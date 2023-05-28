@@ -1,5 +1,7 @@
 //! Occludes things. Cmon.
 
+use plotz_geometry::shading::shade_polygon;
+
 use {
     crate::style::Style3d,
     plotz_geometry::{crop::Croppable, obj2::Obj2, styled_obj2::StyledObj2},
@@ -74,14 +76,39 @@ impl Occluder {
         // we store them front-to-back, but we want to render them to svg back-to-front.
         self.objects.reverse();
 
+        // Now is the time to apply shading.
+
         self.objects
             .into_iter()
-            .map(|(obj, style)| {
-                let mut o = StyledObj2::new(obj);
-                if let Some(Style3d { color, thickness }) = style {
-                    o = o.with_color(color).with_thickness(thickness);
+            .flat_map(|(obj2, style)| match style {
+                None => vec![StyledObj2::new(obj2)],
+                Some(Style3d {
+                    color,
+                    thickness,
+                    shading: None,
+                }) => {
+                    vec![StyledObj2::new(obj2)
+                        .with_color(color)
+                        .with_thickness(thickness)]
                 }
-                o
+                Some(Style3d {
+                    color,
+                    thickness,
+                    shading: Some(shade_config),
+                }) => match obj2 {
+                    Obj2::Pg2(pg2) => shade_polygon(&shade_config, &pg2)
+                        .unwrap()
+                        .into_iter()
+                        .map(|sg2| {
+                            StyledObj2::new(sg2)
+                                .with_color(color)
+                                .with_thickness(thickness)
+                        })
+                        .collect::<Vec<_>>(),
+                    _ => {
+                        panic!("can't shade not a polygon.")
+                    }
+                },
             })
             .collect()
     }

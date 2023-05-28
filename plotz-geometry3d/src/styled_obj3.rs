@@ -40,7 +40,10 @@ impl StyledObj3 {
     pub fn project_oblique(&self, oblique_projection: &Oblique) -> StyledObj2 {
         let mut d_o = StyledObj2::new(self.inner.project_oblique(oblique_projection));
 
-        if let Some(Style3d { color, thickness }) = self.style {
+        if let Some(Style3d {
+            color, thickness, ..
+        }) = self.style
+        {
             d_o = d_o.with_color(color).with_thickness(thickness);
         }
         d_o

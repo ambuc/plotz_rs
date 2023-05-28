@@ -1,10 +1,10 @@
 //! A 3D point.
 //!
 use {
+    crate::shapes::sg3::Sg3,
     float_cmp::approx_eq,
     float_ord::FloatOrd,
     std::{convert::From, fmt::Debug, hash::Hash, ops::*},
-    crate::shapes::sg3::Sg3,
 };
 
 #[derive(Hash, Copy, Clone, PartialOrd, Ord)]

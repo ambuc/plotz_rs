@@ -33,7 +33,7 @@ fn main() {
     let args: Args = argh::from_env();
     let dos: Vec<StyledObj2> = {
         let objects: Vec<StyledObj3> = {
-            let mut objects = vec![];
+            let mut objects: Vec<StyledObj3> = vec![];
             if false {
                 let origin_3d = p3!(0, 0, 0);
                 objects.extend(
@@ -51,15 +51,19 @@ fn main() {
             }
 
             if true {
-                let e = 0.85;
-                let n = 5;
+                let e = 0.70;
+                let n = 7;
                 for ((i, j, k), color) in zip(
                     iproduct!(0..n, 0..n, 0..n),
                     (vec![&RED, &YELLOW, &GREEN, &BLUE, &PLUM, &ORANGE])
                         .iter()
                         .cycle(),
                 ) {
-                    let style = Style3d::new(color, 3.0);
+                    let style = Style3d::builder()
+                        .color(color)
+                        .thickness(1.0)
+                        // .shading( plotz_geometry::shading::shade_config::ShadeConfig::builder() .gap(0.1) .slope(0.07) .build(),)
+                        .build();
                     objects.extend(
                         Cube(p3!(i, j, k), (e, e, e))
                             .into_iter()
