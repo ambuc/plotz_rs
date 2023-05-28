@@ -9,7 +9,7 @@ use crate::{
     shapes::{
         point::Pt,
         polygon::{Polygon, PolygonKind},
-        segment::Segment,
+        segment::Sg2,
     },
 };
 
@@ -36,23 +36,23 @@ fn compute_vertical_step(gap: f64, slope: f64) -> f64 {
 pub fn shade_polygon(
     config: &ShadeConfig,
     polygon: &Polygon,
-) -> Result<Vec<Segment>, ShadePolygonError> {
+) -> Result<Vec<Sg2>, ShadePolygonError> {
     if polygon.kind == PolygonKind::Open {
         return Err(ShadePolygonError::PolygonIsOpen);
     }
 
     let bounds = polygon.bounds();
-    let mut segments: Vec<Segment> = vec![];
+    let mut segments: Vec<Sg2> = vec![];
 
     let xnudge = Pt(1.0, -1.0);
     let ynudge = Pt(-1.0, 1.0);
     let mut line = if config.slope > 0.0 {
-        Segment(
+        Sg2(
             bounds.tl_bound() - xnudge,
             bounds.tl_bound() + Pt(bounds.width(), bounds.width() * config.slope) + xnudge,
         )
     } else {
-        Segment(
+        Sg2(
             bounds.tr_bound() - ynudge,
             bounds.tr_bound()
                 + Pt(-1.0 * bounds.width(), -1.0 * bounds.width() * config.slope)
@@ -79,9 +79,9 @@ pub fn shade_polygon(
             .zip([true, false].iter().cycle())
             .map(|((sa, sb), should_alternate)| {
                 if *should_alternate {
-                    Segment(sa.i, sb.f)
+                    Sg2(sa.i, sb.f)
                 } else {
-                    Segment(sb.i, sa.f)
+                    Sg2(sb.i, sa.f)
                 }
             })
             .collect())

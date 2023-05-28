@@ -30,14 +30,14 @@ pub enum Contains {
 }
 /// A segment in 2D space, with initial and final points.
 #[derive(Debug, Clone, Copy, Eq, Hash)]
-pub struct Segment {
+pub struct Sg2 {
     /// The initial point of the segment.
     pub i: Pt,
     /// The final point of the segment.
     pub f: Pt,
 }
 
-impl PartialEq for Segment {
+impl PartialEq for Sg2 {
     fn eq(&self, other: &Self) -> bool {
         self.i == other.i && self.f == other.f
     }
@@ -45,11 +45,11 @@ impl PartialEq for Segment {
 
 /// An alternate constructor for segments.
 #[allow(non_snake_case)]
-pub fn Segment(i: Pt, f: Pt) -> Segment {
-    Segment { i, f }
+pub fn Sg2(i: Pt, f: Pt) -> Sg2 {
+    Sg2 { i, f }
 }
 
-impl Segment {
+impl Sg2 {
     // Internal helper function; see https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/.
     fn _ccw(&self, other: &Pt) -> _Orientation {
         use std::cmp::Ordering;
@@ -86,7 +86,7 @@ impl Segment {
             return Some(Contains::AtEnd);
         }
         let d1: f64 = self.abs();
-        let d2: f64 = Segment(self.i, *other).abs() + Segment(self.f, *other).abs();
+        let d2: f64 = Sg2(self.i, *other).abs() + Sg2(self.f, *other).abs();
         if approx_eq!(f64, d1, d2) {
             return Some(Contains::Within);
         }
@@ -94,8 +94,8 @@ impl Segment {
     }
 
     /// sometimes you just have to flip it.
-    pub fn flip(&self) -> Segment {
-        Segment {
+    pub fn flip(&self) -> Sg2 {
+        Sg2 {
             i: self.f,
             f: self.i,
         }
@@ -105,12 +105,12 @@ impl Segment {
     /// If two line segments share a point, returns false.
     /// If two line segments are parallel and overlapping, returns false.
     /// If two line segments are the same, returns false.
-    pub fn intersects(&self, other: &Segment) -> Option<IsxnResult> {
+    pub fn intersects(&self, other: &Sg2) -> Option<IsxnResult> {
         if self == other {
             Some(IsxnResult::MultipleIntersections(
                 MultipleIntersections::LineSegmentsAreTheSame,
             ))
-        } else if *self == Segment(other.f, other.i) {
+        } else if *self == Sg2(other.f, other.i) {
             Some(IsxnResult::MultipleIntersections(
                 MultipleIntersections::LineSegmentsAreTheSameButReversed,
             ))
@@ -171,7 +171,7 @@ impl Segment {
     }
 
     /// Takes a lossy cross product of this with another segment (oriented tail-to-tail).
-    pub fn cross_z(&self, other: &Segment) -> f64 {
+    pub fn cross_z(&self, other: &Sg2) -> f64 {
         let d1 = self.f - self.i;
         let d2 = other.f - other.i;
         let x1 = d1.x.0;
@@ -182,83 +182,83 @@ impl Segment {
     }
 }
 
-impl Add<Pt> for Segment {
-    type Output = Segment;
+impl Add<Pt> for Sg2 {
+    type Output = Sg2;
     fn add(self, rhs: Pt) -> Self::Output {
-        Segment(self.i + rhs, self.f + rhs)
+        Sg2(self.i + rhs, self.f + rhs)
     }
 }
-impl AddAssign<Pt> for Segment {
+impl AddAssign<Pt> for Sg2 {
     fn add_assign(&mut self, rhs: Pt) {
-        *self = Segment(self.i + rhs, self.f + rhs);
+        *self = Sg2(self.i + rhs, self.f + rhs);
     }
 }
-impl Div<Pt> for Segment {
-    type Output = Segment;
+impl Div<Pt> for Sg2 {
+    type Output = Sg2;
     fn div(self, rhs: Pt) -> Self::Output {
-        Segment(self.i / rhs, self.f / rhs)
+        Sg2(self.i / rhs, self.f / rhs)
     }
 }
-impl Div<f64> for Segment {
-    type Output = Segment;
+impl Div<f64> for Sg2 {
+    type Output = Sg2;
     fn div(self, rhs: f64) -> Self::Output {
-        Segment(self.i / rhs, self.f / rhs)
+        Sg2(self.i / rhs, self.f / rhs)
     }
 }
-impl DivAssign<Pt> for Segment {
+impl DivAssign<Pt> for Sg2 {
     fn div_assign(&mut self, rhs: Pt) {
-        *self = Segment(self.i / rhs, self.f / rhs);
+        *self = Sg2(self.i / rhs, self.f / rhs);
     }
 }
-impl DivAssign<f64> for Segment {
+impl DivAssign<f64> for Sg2 {
     fn div_assign(&mut self, rhs: f64) {
-        *self = Segment(self.i / rhs, self.f / rhs)
+        *self = Sg2(self.i / rhs, self.f / rhs)
     }
 }
-impl Mul<Pt> for Segment {
-    type Output = Segment;
+impl Mul<Pt> for Sg2 {
+    type Output = Sg2;
     fn mul(self, rhs: Pt) -> Self::Output {
-        Segment(self.i * rhs, self.f * rhs)
+        Sg2(self.i * rhs, self.f * rhs)
     }
 }
-impl Mul<f64> for Segment {
-    type Output = Segment;
+impl Mul<f64> for Sg2 {
+    type Output = Sg2;
     fn mul(self, rhs: f64) -> Self::Output {
-        Segment(self.i * rhs, self.f * rhs)
+        Sg2(self.i * rhs, self.f * rhs)
     }
 }
-impl MulAssign<Pt> for Segment {
+impl MulAssign<Pt> for Sg2 {
     fn mul_assign(&mut self, rhs: Pt) {
-        *self = Segment(self.i * rhs, self.f * rhs);
+        *self = Sg2(self.i * rhs, self.f * rhs);
     }
 }
-impl MulAssign<f64> for Segment {
+impl MulAssign<f64> for Sg2 {
     fn mul_assign(&mut self, rhs: f64) {
-        *self = Segment(self.i * rhs, self.f * rhs);
+        *self = Sg2(self.i * rhs, self.f * rhs);
     }
 }
-impl Sub<Pt> for Segment {
-    type Output = Segment;
+impl Sub<Pt> for Sg2 {
+    type Output = Sg2;
     fn sub(self, rhs: Pt) -> Self::Output {
-        Segment {
+        Sg2 {
             i: self.i - rhs,
             f: self.f - rhs,
         }
     }
 }
-impl SubAssign<Pt> for Segment {
+impl SubAssign<Pt> for Sg2 {
     fn sub_assign(&mut self, rhs: Pt) {
-        *self = Segment(self.i - rhs, self.f - rhs);
+        *self = Sg2(self.i - rhs, self.f - rhs);
     }
 }
-impl RemAssign<Pt> for Segment {
+impl RemAssign<Pt> for Sg2 {
     fn rem_assign(&mut self, rhs: Pt) {
         self.i %= rhs;
         self.f %= rhs;
     }
 }
 
-impl Bounded for Segment {
+impl Bounded for Sg2 {
     fn bounds(&self) -> Bounds {
         Bounds {
             top_bound: std::cmp::max(self.i.y, self.f.y).0,
@@ -269,20 +269,20 @@ impl Bounded for Segment {
     }
 }
 
-impl YieldPoints for Segment {
+impl YieldPoints for Sg2 {
     fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
         Box::new([&self.i, &self.f].into_iter())
     }
 }
-impl YieldPointsMut for Segment {
+impl YieldPointsMut for Sg2 {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
         Box::new([&mut self.i, &mut self.f].into_iter())
     }
 }
-impl Mutable for Segment {}
+impl Mutable for Sg2 {}
 
-impl Croppable for Segment {
-    type Output = Segment;
+impl Croppable for Sg2 {
+    type Output = Sg2;
 
     fn crop(&self, frame: &Polygon, crop_type: CropType) -> Vec<Self::Output>
     where
@@ -291,7 +291,7 @@ impl Croppable for Segment {
         assert_eq!(crop_type, CropType::Inclusive);
 
         let frame_segments = frame.to_segments();
-        let mut resultants: Vec<Segment> = vec![];
+        let mut resultants: Vec<Sg2> = vec![];
         let mut curr_pt = self.i;
         let mut curr_pen_down = !matches!(frame.contains_pt(&self.i), PointLoc::Outside);
 
@@ -342,7 +342,7 @@ impl Croppable for Segment {
                     }
 
                     if !matches!(frame.contains_pt(&new_pt), PointLoc::Outside) && curr_pen_down {
-                        resultants.push(Segment(curr_pt, new_pt));
+                        resultants.push(Sg2(curr_pt, new_pt));
                     }
                     curr_pt = new_pt;
                     curr_pen_down = !curr_pen_down;
@@ -364,18 +364,18 @@ impl Croppable for Segment {
     }
 }
 
-impl Translatable for Segment {}
-impl Scalable<Pt> for Segment {}
-impl Scalable<f64> for Segment {}
+impl Translatable for Sg2 {}
+impl Scalable<Pt> for Sg2 {}
+impl Scalable<f64> for Sg2 {}
 
-impl Roundable for Segment {
+impl Roundable for Sg2 {
     fn round_to_nearest(&mut self, f: f64) {
         self.i.round_to_nearest(f);
         self.f.round_to_nearest(f);
     }
 }
 
-impl Nullable for Segment {
+impl Nullable for Sg2 {
     fn is_empty(&self) -> bool {
         false
     }
@@ -406,46 +406,46 @@ mod tests {
         let i = Pt(2.0, 0.0);
 
         // m=0
-        assert_eq!(Segment(g, h).slope(), 0.0);
-        assert_eq!(Segment(g, i).slope(), 0.0);
+        assert_eq!(Sg2(g, h).slope(), 0.0);
+        assert_eq!(Sg2(g, i).slope(), 0.0);
 
         // m=0.5
-        assert_eq!(Segment(g, f).slope(), 0.5);
-        assert_eq!(Segment(d, c).slope(), 0.5);
+        assert_eq!(Sg2(g, f).slope(), 0.5);
+        assert_eq!(Sg2(d, c).slope(), 0.5);
 
         // m=1
-        assert_eq!(Segment(g, e).slope(), 1.0);
-        assert_eq!(Segment(g, c).slope(), 1.0);
+        assert_eq!(Sg2(g, e).slope(), 1.0);
+        assert_eq!(Sg2(g, c).slope(), 1.0);
 
         // m=2.0
-        assert_eq!(Segment(h, c).slope(), 2.0);
-        assert_eq!(Segment(g, b).slope(), 2.0);
+        assert_eq!(Sg2(h, c).slope(), 2.0);
+        assert_eq!(Sg2(g, b).slope(), 2.0);
 
         // m=inf
-        assert_eq!(Segment(g, a).slope(), std::f64::INFINITY);
-        assert_eq!(Segment(g, d).slope(), std::f64::INFINITY);
+        assert_eq!(Sg2(g, a).slope(), std::f64::INFINITY);
+        assert_eq!(Sg2(g, d).slope(), std::f64::INFINITY);
 
         // m=-0.5
-        assert_eq!(Segment(a, f).slope(), -0.5);
-        assert_eq!(Segment(d, i).slope(), -0.5);
+        assert_eq!(Sg2(a, f).slope(), -0.5);
+        assert_eq!(Sg2(d, i).slope(), -0.5);
 
         // m=-1.0
-        assert_eq!(Segment(a, e).slope(), -1.0);
-        assert_eq!(Segment(a, i).slope(), -1.0);
+        assert_eq!(Sg2(a, e).slope(), -1.0);
+        assert_eq!(Sg2(a, i).slope(), -1.0);
 
         // m=-2.0
-        assert_eq!(Segment(b, i).slope(), -2.0);
-        assert_eq!(Segment(a, h).slope(), -2.0);
+        assert_eq!(Sg2(b, i).slope(), -2.0);
+        assert_eq!(Sg2(a, h).slope(), -2.0);
 
         // m=-inf
-        assert_eq!(Segment(a, g).slope(), -1.0 * std::f64::INFINITY);
-        assert_eq!(Segment(d, g).slope(), -1.0 * std::f64::INFINITY);
+        assert_eq!(Sg2(a, g).slope(), -1.0 * std::f64::INFINITY);
+        assert_eq!(Sg2(d, g).slope(), -1.0 * std::f64::INFINITY);
 
         // slope is independent of start/end
-        assert_eq!(Segment(a, c).slope(), Segment(c, a).slope());
-        assert_eq!(Segment(a, f).slope(), Segment(f, a).slope());
-        assert_eq!(Segment(a, i).slope(), Segment(i, a).slope());
-        assert_eq!(Segment(a, h).slope(), Segment(h, a).slope());
+        assert_eq!(Sg2(a, c).slope(), Sg2(c, a).slope());
+        assert_eq!(Sg2(a, f).slope(), Sg2(f, a).slope());
+        assert_eq!(Sg2(a, i).slope(), Sg2(i, a).slope());
+        assert_eq!(Sg2(a, h).slope(), Sg2(h, a).slope());
     }
 
     #[test]
@@ -462,7 +462,7 @@ mod tests {
         //      |
         //      |
         //      v
-        let mut s = Segment(Pt(1.0, 0.0), Pt(1.0, 0.5));
+        let mut s = Sg2(Pt(1.0, 0.0), Pt(1.0, 0.5));
 
         s.rotate(/*about=*/ &origin, PI / 2.0);
         //      ^
@@ -521,8 +521,8 @@ mod tests {
     fn test_equality() {
         let a = Pt(0.0, 2.0);
         let b = Pt(1.0, 2.0);
-        assert!(Segment(a, b) == Segment(a, b));
-        assert!(Segment(a, b) != Segment(b, a));
+        assert!(Sg2(a, b) == Sg2(a, b));
+        assert!(Sg2(a, b) != Sg2(b, a));
     }
 
     #[test]
@@ -544,38 +544,38 @@ mod tests {
 
         // colinear
         assert_eq!(
-            Segment(a, c).intersects(&Segment(a, c)),
+            Sg2(a, c).intersects(&Sg2(a, c)),
             Some(IsxnResult::MultipleIntersections(
                 MultipleIntersections::LineSegmentsAreTheSame
             ))
         );
         assert_eq!(
-            Segment(a, c).intersects(&Segment(c, a)),
+            Sg2(a, c).intersects(&Sg2(c, a)),
             Some(IsxnResult::MultipleIntersections(
                 MultipleIntersections::LineSegmentsAreTheSameButReversed
             ))
         );
         // induce colinear
         assert_eq!(
-            Segment(a, b).intersects(&Segment(b, c)),
+            Sg2(a, b).intersects(&Sg2(b, c)),
             Some(IsxnResult::MultipleIntersections(
                 MultipleIntersections::LineSegmentsAreColinear
             ))
         );
         assert_eq!(
-            Segment(a, b).intersects(&Segment(c, b)),
+            Sg2(a, b).intersects(&Sg2(c, b)),
             Some(IsxnResult::MultipleIntersections(
                 MultipleIntersections::LineSegmentsAreColinear
             ))
         );
         assert_eq!(
-            Segment(b, a).intersects(&Segment(b, c)),
+            Sg2(b, a).intersects(&Sg2(b, c)),
             Some(IsxnResult::MultipleIntersections(
                 MultipleIntersections::LineSegmentsAreColinear
             ))
         );
         assert_eq!(
-            Segment(b, a).intersects(&Segment(c, b)),
+            Sg2(b, a).intersects(&Sg2(c, b)),
             Some(IsxnResult::MultipleIntersections(
                 MultipleIntersections::LineSegmentsAreColinear
             ))
@@ -583,25 +583,25 @@ mod tests {
 
         // (s,w), (e,w), (w,s), (w,e)
         assert_eq!(
-            Segment(e, i).intersects(&Segment(c, g)),
+            Sg2(e, i).intersects(&Sg2(c, g)),
             Some(IsxnResult::OneIntersection(
                 Intersection::new(e, 0.0, 0.5).unwrap()
             ))
         );
         assert_eq!(
-            Segment(a, e).intersects(&Segment(c, g)),
+            Sg2(a, e).intersects(&Sg2(c, g)),
             Some(IsxnResult::OneIntersection(
                 Intersection::new(e, 1.0, 0.5).unwrap()
             ))
         );
         assert_eq!(
-            Segment(c, g).intersects(&Segment(e, i)),
+            Sg2(c, g).intersects(&Sg2(e, i)),
             Some(IsxnResult::OneIntersection(
                 Intersection::new(e, 0.5, 0.0).unwrap()
             ))
         );
         assert_eq!(
-            Segment(c, g).intersects(&Segment(a, e)),
+            Sg2(c, g).intersects(&Sg2(a, e)),
             Some(IsxnResult::OneIntersection(
                 Intersection::new(e, 0.5, 1.0).unwrap()
             ))
@@ -609,25 +609,25 @@ mod tests {
 
         // // (s,s), (s,e), (e,s), (e,e)
         assert_eq!(
-            Segment(a, c).intersects(&Segment(c, i)),
+            Sg2(a, c).intersects(&Sg2(c, i)),
             Some(IsxnResult::OneIntersection(
                 Intersection::new(c, 1.0, -0.0).unwrap()
             ))
         );
         assert_eq!(
-            Segment(a, c).intersects(&Segment(i, c)),
+            Sg2(a, c).intersects(&Sg2(i, c)),
             Some(IsxnResult::OneIntersection(
                 Intersection::new(c, 1.0, 1.0).unwrap()
             ))
         );
         assert_eq!(
-            Segment(a, c).intersects(&Segment(g, a)),
+            Sg2(a, c).intersects(&Sg2(g, a)),
             Some(IsxnResult::OneIntersection(
                 Intersection::new(a, 0.0, 1.0).unwrap()
             )),
         );
         assert_eq!(
-            Segment(a, c).intersects(&Segment(a, g)),
+            Sg2(a, c).intersects(&Sg2(a, g)),
             Some(IsxnResult::OneIntersection(
                 Intersection::new(a, 0.0, -0.0).unwrap()
             ))
@@ -635,7 +635,7 @@ mod tests {
 
         // // (w,w)
         assert_eq!(
-            Segment(a, i).intersects(&Segment(c, g)),
+            Sg2(a, i).intersects(&Sg2(c, g)),
             Some(IsxnResult::OneIntersection(
                 Intersection::new(e, 0.5, 0.5).unwrap()
             ))
@@ -644,11 +644,11 @@ mod tests {
 
     #[test]
     fn test_abs() {
-        assert_eq!(Segment(Pt(0.0, 0.0), Pt(0.0, 1.0)).abs(), 1.0);
-        assert_eq!(Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)).abs(), 2.0_f64.sqrt());
-        assert_eq!(Segment(Pt(1.0, 1.0), Pt(1.0, 1.0)).abs(), 0.0);
+        assert_eq!(Sg2(Pt(0.0, 0.0), Pt(0.0, 1.0)).abs(), 1.0);
+        assert_eq!(Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0)).abs(), 2.0_f64.sqrt());
+        assert_eq!(Sg2(Pt(1.0, 1.0), Pt(1.0, 1.0)).abs(), 0.0);
         assert_eq!(
-            Segment(Pt(-1.0, -1.0), Pt(1.0, 1.0)).abs(),
+            Sg2(Pt(-1.0, -1.0), Pt(1.0, 1.0)).abs(),
             2.0 * 2.0_f64.sqrt()
         );
     }
@@ -667,85 +667,82 @@ mod tests {
         let c = Pt(2.0, 2.0);
 
         assert_eq!(
-            Segment(a, c).line_segment_contains_pt(&a).unwrap(),
+            Sg2(a, c).line_segment_contains_pt(&a).unwrap(),
             Contains::AtStart
         );
     }
     #[test]
     fn test_segment() {
         assert_eq!(
-            Segment {
+            Sg2 {
                 i: Pt(0, 0),
                 f: Pt(0, 1)
             },
-            Segment(Pt(0, 0), Pt(0, 1))
+            Sg2(Pt(0, 0), Pt(0, 1))
         );
     }
 
     #[test]
     fn test_add() {
-        assert_eq!(
-            Segment(Pt(0, 0), Pt(1, 1)) + Pt(1, 0),
-            Segment(Pt(1, 0), Pt(2, 1))
-        );
+        assert_eq!(Sg2(Pt(0, 0), Pt(1, 1)) + Pt(1, 0), Sg2(Pt(1, 0), Pt(2, 1)));
     }
 
     #[test]
     fn test_add_assign() {
-        let mut s = Segment(Pt(0, 0), Pt(1, 1));
+        let mut s = Sg2(Pt(0, 0), Pt(1, 1));
         s += Pt(1, 0);
-        assert_eq!(s, Segment(Pt(1, 0), Pt(2, 1)));
+        assert_eq!(s, Sg2(Pt(1, 0), Pt(2, 1)));
     }
 
     #[test]
     fn test_div() {
         assert_eq!(
-            Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)) / 2.0,
-            Segment(Pt(0.0, 0.0), Pt(0.5, 0.5))
+            Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0)) / 2.0,
+            Sg2(Pt(0.0, 0.0), Pt(0.5, 0.5))
         );
     }
 
     #[test]
     fn test_div_assign() {
-        let mut s = Segment(Pt(0.0, 0.0), Pt(1.0, 1.0));
+        let mut s = Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0));
         s /= 2.0;
-        assert_eq!(s, Segment(Pt(0.0, 0.0), Pt(0.5, 0.5)));
+        assert_eq!(s, Sg2(Pt(0.0, 0.0), Pt(0.5, 0.5)));
     }
 
     #[test]
     fn test_mul() {
         assert_eq!(
-            Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)) * 2.0,
-            Segment(Pt(0.0, 0.0), Pt(2.0, 2.0))
+            Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0)) * 2.0,
+            Sg2(Pt(0.0, 0.0), Pt(2.0, 2.0))
         );
     }
 
     #[test]
     fn test_mul_assign() {
-        let mut s = Segment(Pt(0.0, 0.0), Pt(1.0, 1.0));
+        let mut s = Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0));
         s *= 2.0;
-        assert_eq!(s, Segment(Pt(0.0, 0.0), Pt(2.0, 2.0)));
+        assert_eq!(s, Sg2(Pt(0.0, 0.0), Pt(2.0, 2.0)));
     }
 
     #[test]
     fn test_sub() {
         assert_eq!(
-            Segment(Pt(0.0, 0.0), Pt(1.0, 1.0)) - Pt(1.0, 2.0),
+            Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0)) - Pt(1.0, 2.0),
             // --------
-            Segment(Pt(-1.0, -2.0), Pt(0.0, -1.0))
+            Sg2(Pt(-1.0, -2.0), Pt(0.0, -1.0))
         );
     }
 
     #[test]
     fn test_sub_assign() {
-        let mut s = Segment(Pt(0.0, 0.0), Pt(1.0, 1.0));
+        let mut s = Sg2(Pt(0.0, 0.0), Pt(1.0, 1.0));
         s -= Pt(1.0, 2.0);
-        assert_eq!(s, Segment(Pt(-1.0, -2.0), Pt(0.0, -1.0)));
+        assert_eq!(s, Sg2(Pt(-1.0, -2.0), Pt(0.0, -1.0)));
     }
 
     #[test]
     fn test_bounded_segment() {
-        let s = Segment(Pt(0, 1), Pt(1, 2));
+        let s = Sg2(Pt(0, 1), Pt(1, 2));
         assert_eq!(s.bottom_bound(), 1.0);
         assert_eq!(s.top_bound(), 2.0);
         assert_eq!(s.left_bound(), 0.0);

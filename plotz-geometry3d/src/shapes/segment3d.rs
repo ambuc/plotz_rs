@@ -3,7 +3,7 @@
 use {
     crate::{camera::Oblique, shapes::point3d::Pt3},
     float_ord::FloatOrd,
-    plotz_geometry::shapes::segment::Segment,
+    plotz_geometry::shapes::segment::Sg2,
     std::{fmt::Debug, ops::*},
 };
 
@@ -36,8 +36,8 @@ impl Sg3 {
         .sqrt()
     }
 
-    pub fn project_oblique(&self, oblique_projection: &Oblique) -> Segment {
-        Segment(
+    pub fn project_oblique(&self, oblique_projection: &Oblique) -> Sg2 {
+        Sg2(
             oblique_projection.project(&self.i),
             oblique_projection.project(&self.f),
         )

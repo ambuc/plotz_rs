@@ -7,7 +7,7 @@ use {
         crop::{Croppable, PointLoc},
         group::Group,
         shapes::{
-            curve::CurveArc, point::Pt, polygon::Polygon, polygon::PolygonKind, segment::Segment,
+            curve::CurveArc, point::Pt, polygon::Polygon, polygon::PolygonKind, segment::Sg2,
             txt::Txt,
         },
         traits::*,
@@ -24,7 +24,7 @@ pub enum Obj2 {
     /// A polygon.
     Polygon(Polygon),
     /// A segment.
-    Segment(Segment),
+    Segment(Sg2),
     /// An arc.
     CurveArc(CurveArc),
     /// A character to be printed in SVG, at a point.

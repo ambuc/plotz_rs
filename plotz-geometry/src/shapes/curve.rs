@@ -10,7 +10,7 @@ use {
         shapes::{
             point::{PolarPt, Pt},
             polygon::abp,
-            segment::Segment,
+            segment::Sg2,
         },
         traits::*,
     },
@@ -267,10 +267,7 @@ enum IntersectionResult {
 }
 
 /// how to find intersection of segment and curve.
-fn intersections_of_line_and_curvearc(
-    segment: &Segment,
-    curve_arc: &CurveArc,
-) -> IntersectionResult {
+fn intersections_of_line_and_curvearc(segment: &Sg2, curve_arc: &CurveArc) -> IntersectionResult {
     let (x_0, y_0) = (curve_arc.ctr.x.0, curve_arc.ctr.y.0);
     let (x_1, y_1) = (segment.i.x.0, segment.i.y.0);
     let (x_2, y_2) = (segment.f.x.0, segment.f.y.0);
@@ -518,7 +515,7 @@ mod test {
         super::*,
         crate::shapes::{
             polygon::{Polygon, Rect},
-            segment::Segment,
+            segment::Sg2,
         },
         assert_matches::assert_matches,
         float_cmp::assert_approx_eq,
@@ -529,7 +526,7 @@ mod test {
     fn test_curve_zero_intersections() {
         assert_matches!(
             intersections_of_line_and_curvearc(
-                &Segment(Pt(0.0, 0.0), Pt(3.0, 0.0)),
+                &Sg2(Pt(0.0, 0.0), Pt(3.0, 0.0)),
                 &CurveArc(Pt(1.0, 1.0), 0.0..=PI, 0.5)
             ),
             IntersectionResult::None
@@ -577,7 +574,7 @@ mod test {
         expected_segment_loc: SegmentLoc,
         expected_curve_loc: CurveLoc,
     ) {
-        let segment = Segment(Pt(0.0, 0.0), Pt(2.0, 0.0));
+        let segment = Sg2(Pt(0.0, 0.0), Pt(2.0, 0.0));
 
         let (sl, cl) = assert_matches!(
             intersections_of_line_and_curvearc(&segment, &curve_arc),
@@ -588,19 +585,19 @@ mod test {
     }
 
     #[test_case(
-        Segment(Pt(0.0, 0.0), Pt(2.0, 0.0)),
+        Sg2(Pt(0.0, 0.0), Pt(2.0, 0.0)),
         CurveArc(Pt(1.0, 0.0), FRAC_PI_2..=3.0 * FRAC_PI_2, 0.5),
         (Pt(0.50, 0.0), SegmentLoc::M(0.25), CurveLoc::M(0.5));
         "intersection 1"
     )]
     #[test_case(
-        Segment(Pt(2.0, 0.0), Pt(2.0, 2.0)),
+        Sg2(Pt(2.0, 0.0), Pt(2.0, 2.0)),
         CurveArc(Pt(2.0, 0.0), 0.0..=3.0 * FRAC_PI_2, 1.0),
         (Pt(2.0, 1.0), SegmentLoc::M(0.5), CurveLoc::M(1.0 / 3.0));
         "intersection 2"
     )]
     fn test_curve_one_intersection_crossing(
-        segment: Segment,
+        segment: Sg2,
         curve_arc: CurveArc,
         (expected_point_loc, expected_segment_loc, expected_curve_loc): (Pt, SegmentLoc, CurveLoc),
     ) {
@@ -614,25 +611,20 @@ mod test {
     }
 
     #[test_case(
-        Segment(Pt(0., 0.), Pt(3., 0.)),
+        Sg2(Pt(0., 0.), Pt(3., 0.)),
         CurveArc(Pt(1.5, 0.0), 0.0..=PI, 0.5),
         PtLoc(Pt(1.0, 0.0), SegmentLoc::M(1.0 / 3.0), CurveLoc::F),
         PtLoc(Pt(2.0, 0.0), SegmentLoc::M(2.0 / 3.0), CurveLoc::I);
         "segment m curve i, segment m curve f"
     )]
     #[test_case(
-        Segment(Pt(0.0, 2.0), Pt(0.0, 0.18)),
+        Sg2(Pt(0.0, 2.0), Pt(0.0, 0.18)),
         CurveArc(Pt(1.0, 1.0), 0.0..=TAU, 1.1),
         PtLoc(Pt(0.0, 0.5417424305044158), SegmentLoc::M(0.8012404227997715), CurveLoc::M(0.5683888259129364)),
         PtLoc(Pt(0.0, 1.4582575694955842), SegmentLoc::M(0.29766067610132735), CurveLoc::M(0.4316111740870635));
         "vertical")
     ]
-    fn test_curve_two_intersections(
-        segment: Segment,
-        curve_arc: CurveArc,
-        e_pl1: PtLoc,
-        e_pl2: PtLoc,
-    ) {
+    fn test_curve_two_intersections(segment: Sg2, curve_arc: CurveArc, e_pl1: PtLoc, e_pl2: PtLoc) {
         let (pl1, pl2) = assert_matches!(
             intersections_of_line_and_curvearc(&segment, &curve_arc),
             IntersectionResult::Two(pl1, pl2) => (pl1, pl2)

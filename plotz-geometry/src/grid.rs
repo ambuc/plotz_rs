@@ -2,7 +2,7 @@
 
 use {
     crate::{
-        shapes::{point::Pt, segment::Segment},
+        shapes::{point::Pt, segment::Sg2},
         styled_obj2::StyledObj2,
     },
     num::range_step,
@@ -51,7 +51,7 @@ impl Grid {
             let i = Pt((self.x_init + x) as f64, (self.y_init) as f64);
             let f = i + Pt(0.0, h);
             v.push(
-                StyledObj2::new(Segment(i, f))
+                StyledObj2::new(Sg2(i, f))
                     .with_color(self.minor_color)
                     .with_thickness(self.minor_thickness),
             );
@@ -60,7 +60,7 @@ impl Grid {
             let i = Pt((self.x_init + x) as f64, (self.y_init) as f64);
             let f = i + Pt(0.0, h);
             v.push(
-                StyledObj2::new(Segment(i, f))
+                StyledObj2::new(Sg2(i, f))
                     .with_color(self.major_color)
                     .with_thickness(self.major_thickness),
             );
@@ -69,7 +69,7 @@ impl Grid {
             let i = Pt((self.x_init) as f64, (self.y_init + y) as f64);
             let f = i + Pt(w, 0.0);
             v.push(
-                StyledObj2::new(Segment(i, f))
+                StyledObj2::new(Sg2(i, f))
                     .with_color(self.minor_color)
                     .with_thickness(self.minor_thickness),
             )
@@ -78,7 +78,7 @@ impl Grid {
             let i = Pt((self.x_init) as f64, (self.y_init + y) as f64);
             let f = i + Pt(w, 0.0);
             v.push(
-                StyledObj2::new(Segment(i, f))
+                StyledObj2::new(Sg2(i, f))
                     .with_color(self.major_color)
                     .with_thickness(self.major_thickness),
             )

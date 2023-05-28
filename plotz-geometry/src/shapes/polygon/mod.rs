@@ -13,7 +13,7 @@ use {
         isxn::IsxnResult,
         shapes::{
             point::Pt,
-            segment::{Contains, Segment},
+            segment::{Contains, Sg2},
             txt::Txt,
         },
         styled_obj2::StyledObj2,
@@ -160,13 +160,13 @@ impl Polygon {
     ///
     /// See test_multiline_to_segments() and test_polygon_to_segments() for
     /// examples.
-    pub fn to_segments(&self) -> Vec<Segment> {
+    pub fn to_segments(&self) -> Vec<Sg2> {
         match self.kind {
             PolygonKind::Open => zip(self.pts.iter(), self.pts.iter().skip(1))
-                .map(|(x, y)| Segment(*x, *y))
+                .map(|(x, y)| Sg2(*x, *y))
                 .collect(),
             PolygonKind::Closed => zip(self.pts.iter(), self.pts.iter().cycle().skip(1))
-                .map(|(x, y)| Segment(*x, *y))
+                .map(|(x, y)| Sg2(*x, *y))
                 .collect(),
         }
     }
@@ -179,7 +179,7 @@ impl Polygon {
             .for_each(|pt| pt.rotate_inplace(about, by))
     }
 
-    /// Returns true if any line segment from this polygon intersects any line
+    /// Returns true if any line Sg2 from this polygon intersects any line
     /// segment from the other polygon.
     pub fn intersects(&self, other: &Polygon) -> bool {
         !self.intersects_detailed(other).is_empty()
@@ -209,7 +209,7 @@ impl Polygon {
     }
 
     /// Returns true if any line segment from this polygon intersects other.
-    pub fn intersects_segment(&self, other: &Segment) -> bool {
+    pub fn intersects_segment(&self, other: &Sg2) -> bool {
         self.to_segments()
             .iter()
             .any(|l| l.intersects(other).is_some())
@@ -217,7 +217,7 @@ impl Polygon {
 
     /// Returns the detailed set of intersection outcomes between this polygon's
     /// segments and another segment.
-    pub fn intersects_segment_detailed(&self, other: &Segment) -> Vec<IsxnResult> {
+    pub fn intersects_segment_detailed(&self, other: &Sg2) -> Vec<IsxnResult> {
         self.to_segments()
             .iter()
             .flat_map(|l| l.intersects(other))
@@ -590,22 +590,22 @@ mod tests {
         );
         assert_eq!(
             Multiline([Pt(0, 0), Pt(0, 1)]).unwrap().to_segments(),
-            [Segment(Pt(0, 0), Pt(0, 1)),]
+            [Sg2(Pt(0, 0), Pt(0, 1)),]
         );
         assert_eq!(
             Multiline([Pt(0, 0), Pt(0, 1), Pt(0, 2)])
                 .unwrap()
                 .to_segments(),
-            [Segment(Pt(0, 0), Pt(0, 1)), Segment(Pt(0, 1), Pt(0, 2)),]
+            [Sg2(Pt(0, 0), Pt(0, 1)), Sg2(Pt(0, 1), Pt(0, 2)),]
         );
         assert_eq!(
             Multiline([Pt(0, 0), Pt(0, 1), Pt(0, 2), Pt(0, 3)])
                 .unwrap()
                 .to_segments(),
             [
-                Segment(Pt(0, 0), Pt(0, 1)),
-                Segment(Pt(0, 1), Pt(0, 2)),
-                Segment(Pt(0, 2), Pt(0, 3)),
+                Sg2(Pt(0, 0), Pt(0, 1)),
+                Sg2(Pt(0, 1), Pt(0, 2)),
+                Sg2(Pt(0, 2), Pt(0, 3)),
             ]
         );
     }
@@ -620,19 +620,19 @@ mod tests {
         assert_eq!(
             Polygon([Pt(0, 0), Pt(0, 1), Pt(0, 2)]).to_segments(),
             [
-                Segment(Pt(0, 0), Pt(0, 1)),
-                Segment(Pt(0, 1), Pt(0, 2)),
-                Segment(Pt(0, 2), Pt(0, 0)),
+                Sg2(Pt(0, 0), Pt(0, 1)),
+                Sg2(Pt(0, 1), Pt(0, 2)),
+                Sg2(Pt(0, 2), Pt(0, 0)),
             ]
         );
 
         assert_eq!(
             Polygon([Pt(0, 0), Pt(0, 1), Pt(0, 2), Pt(0, 3)]).to_segments(),
             [
-                Segment(Pt(0, 0), Pt(0, 1)),
-                Segment(Pt(0, 1), Pt(0, 2)),
-                Segment(Pt(0, 2), Pt(0, 3)),
-                Segment(Pt(0, 3), Pt(0, 0)),
+                Sg2(Pt(0, 0), Pt(0, 1)),
+                Sg2(Pt(0, 1), Pt(0, 2)),
+                Sg2(Pt(0, 2), Pt(0, 3)),
+                Sg2(Pt(0, 3), Pt(0, 0)),
             ]
         );
     }
@@ -1188,13 +1188,13 @@ mod tests {
             Pt(3, 5),
             Pt(0, 5),
         ]);
-        let segment = Segment(Pt(0, 2), Pt(5, 2));
+        let segment = Sg2(Pt(0, 2), Pt(5, 2));
         assert_eq!(
             segment.crop_to(&frame),
             vec![
-                Segment(Pt(0, 2), Pt(1, 2)),
-                Segment(Pt(2, 2), Pt(3, 2)),
-                Segment(Pt(4, 2), Pt(5, 2)),
+                Sg2(Pt(0, 2), Pt(1, 2)),
+                Sg2(Pt(2, 2), Pt(3, 2)),
+                Sg2(Pt(4, 2), Pt(5, 2)),
             ]
         );
     }
@@ -1203,29 +1203,29 @@ mod tests {
     fn test_frame_to_segment_crop() {
         let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]);
         assert_eq!(
-            Segment(Pt(0, 2), Pt(2, 0)).crop_to(&frame),
-            vec![Segment(Pt(0.5, 1.5), Pt(1.5, 0.5))]
+            Sg2(Pt(0, 2), Pt(2, 0)).crop_to(&frame),
+            vec![Sg2(Pt(0.5, 1.5), Pt(1.5, 0.5))]
         );
     }
     #[test]
     fn test_frame_to_segment_crop_02() {
         let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]);
         assert_eq!(
-            Segment(Pt(0, 0), Pt(2, 2)).crop_to(&frame),
-            vec![Segment(Pt(0.5, 0.5), Pt(1.5, 1.5))]
+            Sg2(Pt(0, 0), Pt(2, 2)).crop_to(&frame),
+            vec![Sg2(Pt(0.5, 0.5), Pt(1.5, 1.5))]
         );
     }
     #[test]
     fn test_frame_to_segment_crop_empty() {
         let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]);
-        assert_eq!(Segment(Pt(0, 2), Pt(2, 2)).crop_to(&frame), vec![]);
+        assert_eq!(Sg2(Pt(0, 2), Pt(2, 2)).crop_to(&frame), vec![]);
     }
     #[test]
     fn test_frame_to_segment_crop_unchanged() {
         let frame = Polygon([Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]);
         assert_eq!(
-            Segment(Pt(0, 1), Pt(2, 1)).crop_to(&frame),
-            vec![Segment(Pt(0, 1), Pt(2, 1))]
+            Sg2(Pt(0, 1), Pt(2, 1)).crop_to(&frame),
+            vec![Sg2(Pt(0, 1), Pt(2, 1))]
         );
     }
 }

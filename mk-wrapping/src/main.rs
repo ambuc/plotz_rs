@@ -4,7 +4,7 @@ use {
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         obj2::Obj2,
-        shapes::{curve::CurveArc, point::Pt, segment::Segment},
+        shapes::{curve::CurveArc, point::Pt, segment::Sg2},
         styled_obj2::StyledObj2,
     },
     rand::{distributions::Standard, prelude::Distribution, Rng},
@@ -79,31 +79,27 @@ impl Tile {
         let _y = Pt(1.0, 1.0);
         match self {
             Tile::Cross => {
-                vec![Segment(k, o).into(), Segment(c, w).into()]
+                vec![Sg2(k, o).into(), Sg2(c, w).into()]
             }
             Tile::OverUnder => {
-                vec![
-                    Segment(k, l).into(),
-                    Segment(n, o).into(),
-                    Segment(c, w).into(),
-                ]
+                vec![Sg2(k, l).into(), Sg2(n, o).into(), Sg2(c, w).into()]
             }
             Tile::Swerve => {
                 vec![
-                    Segment(k, l).into(),
+                    Sg2(k, l).into(),
                     CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
-                    Segment(c, h).into(),
-                    Segment(n, o).into(),
+                    Sg2(c, h).into(),
+                    Sg2(n, o).into(),
                     CurveArc(s, PI..=(3.0 * FRAC_PI_2), 0.25).into(),
-                    Segment(r, w).into(),
+                    Sg2(r, w).into(),
                 ]
             }
             Tile::Clover => {
                 vec![
-                    Segment(c, h).into(),
-                    Segment(k, l).into(),
-                    Segment(n, o).into(),
-                    Segment(r, w).into(),
+                    Sg2(c, h).into(),
+                    Sg2(k, l).into(),
+                    Sg2(n, o).into(),
+                    Sg2(r, w).into(),
                     CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
                     CurveArc(i, FRAC_PI_2..=PI, 0.25).into(),
                     CurveArc(s, PI..=(3.0 * FRAC_PI_2), 0.25).into(),
@@ -114,19 +110,19 @@ impl Tile {
             Tile::CloverIn => {
                 vec![
                     //
-                    Segment(k, o).into(),
-                    Segment(c, h).into(),
-                    Segment(r, w).into(),
+                    Sg2(k, o).into(),
+                    Sg2(c, h).into(),
+                    Sg2(r, w).into(),
                     CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
                     CurveArc(q, (3.0 * FRAC_PI_2)..=TAU, 0.25).into(),
                 ]
             }
             Tile::Clover3 => {
                 vec![
-                    Segment(c, h).into(),
-                    Segment(k, l).into(),
-                    Segment(n, o).into(),
-                    Segment(r, w).into(),
+                    Sg2(c, h).into(),
+                    Sg2(k, l).into(),
+                    Sg2(n, o).into(),
+                    Sg2(r, w).into(),
                     CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
                     CurveArc(i, FRAC_PI_2..=PI, 0.25).into(),
                     CurveArc(s, PI..=(3.0 * FRAC_PI_2), 0.25).into(),
@@ -134,9 +130,9 @@ impl Tile {
             }
             Tile::Clover2 => {
                 vec![
-                    Segment(c, w).into(),
-                    Segment(k, l).into(),
-                    Segment(n, o).into(),
+                    Sg2(c, w).into(),
+                    Sg2(k, l).into(),
+                    Sg2(n, o).into(),
                     CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
                     CurveArc(s, PI..=(3.0 * FRAC_PI_2), 0.25).into(),
                 ]

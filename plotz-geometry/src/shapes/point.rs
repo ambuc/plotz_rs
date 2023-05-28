@@ -2,7 +2,7 @@
 
 use crate::{
     bounded::{Bounded, Bounds},
-    shapes::{polygon::abp, segment::Segment},
+    shapes::{polygon::abp, segment::Sg2},
     traits::*,
 };
 use {
@@ -186,7 +186,7 @@ impl Pt {
 
     /// Distance between two points.
     pub fn dist(&self, other: &Pt) -> f64 {
-        Segment(*self, *other).abs()
+        Sg2(*self, *other).abs()
     }
 
     /// Average of two points.

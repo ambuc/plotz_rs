@@ -20,7 +20,7 @@ use {
         crop::Croppable,
         obj2::Obj2,
         shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{point::Pt, polygon::Polygon, segment::Segment},
+        shapes::{point::Pt, polygon::Polygon, segment::Sg2},
         styled_obj2::StyledObj2,
         traits::*,
     },
@@ -453,7 +453,7 @@ impl Map {
                 .map(|bucket| map_bucket_to_color(&bucket))
                 .unwrap_or(Some(&BLACK))
                 .unwrap();
-            let mut hs = HashSet::<Segment>::new();
+            let mut hs = HashSet::<Sg2>::new();
             for d_o in dos.iter() {
                 if let Obj2::Segment(sg) = d_o.inner {
                     hs.insert(sg);
