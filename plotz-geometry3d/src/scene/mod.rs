@@ -1,28 +1,22 @@
 //! A scene, i.e. a holder for 3d objects ready to be projected down onto a 2d
 //! plane.
 
+pub mod debug;
+mod occluder;
+
 use {
     crate::{
         camera::{Occlusion, Projection},
-        occluder::Occluder,
+        scene::{debug::SceneDebug, occluder::Occluder},
         style::Style3d,
         styled_obj3::StyledObj3,
     },
     float_ord::FloatOrd,
     itertools::Itertools,
-    plotz_geometry::{styled_obj2::StyledObj2, traits::Annotatable, traits::AnnotationSettings},
+    plotz_geometry::{styled_obj2::StyledObj2, traits::Annotatable},
     std::fmt::Debug,
     typed_builder::TypedBuilder,
 };
-
-#[derive(Debug, Clone, TypedBuilder)]
-pub struct DebugSettings {
-    #[builder(default, setter(strip_option))]
-    draw_wireframes: Option<Style3d>,
-
-    #[builder(default, setter(strip_option))]
-    annotate: Option<AnnotationSettings>,
-}
 
 #[derive(Debug, Clone, TypedBuilder)]
 pub struct Scene {
@@ -30,7 +24,7 @@ pub struct Scene {
     objects: Vec<StyledObj3>,
 
     #[builder(default, setter(strip_option))]
-    debug: Option<DebugSettings>,
+    debug: Option<SceneDebug>,
 }
 
 impl Scene {
@@ -62,7 +56,7 @@ impl Scene {
                 }) {
                     let obj2 = obj3.project_oblique(&obl);
 
-                    if let Some(DebugSettings {
+                    if let Some(SceneDebug {
                         draw_wireframes,
                         annotate: should_annotate,
                     }) = &self.debug
