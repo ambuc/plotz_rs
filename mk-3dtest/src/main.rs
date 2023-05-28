@@ -17,9 +17,7 @@ use {
         occluder::{self, Occluder},
         p3,
         scene::{DebugSettings, Scene},
-        shapes::{
-            cube3d::Cube, face::Face, point3d::Pt3d, polygon3d::Polygon3d, segment3d::Segment3d,
-        },
+        shapes::{cube3d::Cube, point3d::Pt3d, polygon3d::Polygon3d, segment3d::Segment3d},
         style::Style3d,
     },
     tracing::*,
