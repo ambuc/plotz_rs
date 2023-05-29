@@ -49,8 +49,8 @@ impl Scene {
 
                 for obj3 in self.objects.iter().sorted_by(|o1, o2| {
                     Ord::cmp(
-                        &FloatOrd(o1.min_dist_along(&obl.view_vector())),
-                        &FloatOrd(o2.min_dist_along(&obl.view_vector())),
+                        &FloatOrd(o1.inner.min_dist_along(&obl.view_vector())),
+                        &FloatOrd(o2.inner.min_dist_along(&obl.view_vector())),
                     )
                 }) {
                     let obj2 = obj3.project_oblique(&obl);

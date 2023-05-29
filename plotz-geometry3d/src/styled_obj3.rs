@@ -1,7 +1,7 @@
 //! A 3d object.
 
 use {
-    crate::{camera::Oblique, obj3::Obj3, shapes::pt3::Pt3},
+    crate::{camera::Oblique, obj3::Obj3},
     plotz_color::ColorRGB,
     plotz_geometry::{style::Style, styled_obj2::StyledObj2},
     std::fmt::Debug,
@@ -47,19 +47,6 @@ impl StyledObj3 {
             d_o = d_o.with_color(color).with_thickness(thickness);
         }
         d_o
-    }
-
-    // The center of the object, projected along the view vector.
-    pub fn dist_along(&self, view_vector: &Pt3) -> f64 {
-        self.inner.dist_along(view_vector)
-    }
-    // The maximum distance of this object, projected along the view vector.
-    pub fn max_dist_along(&self, view_vector: &Pt3) -> f64 {
-        self.inner.max_dist_along(view_vector)
-    }
-    // The minimum distance of this object, projected along the view vector.
-    pub fn min_dist_along(&self, view_vector: &Pt3) -> f64 {
-        self.inner.min_dist_along(view_vector)
     }
 }
 
