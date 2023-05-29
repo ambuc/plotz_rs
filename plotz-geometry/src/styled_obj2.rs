@@ -6,6 +6,7 @@ use {
         crop::{CropType, Croppable},
         obj2::Obj2,
         shapes::{pg2::Pg2, pt2::Pt2},
+        style::Style,
         traits::*,
     },
     plotz_color::{ColorRGB, BLACK},
@@ -18,20 +19,13 @@ pub struct StyledObj2 {
     /// The object.
     pub inner: Obj2,
 
-    /// The color.
-    pub color: &'static ColorRGB,
-
-    /// The thickness.
-    pub thickness: f64,
+    /// The style.
+    pub style: Style,
 }
 
 impl Debug for StyledObj2 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let StyledObj2 {
-            inner,
-            color,
-            thickness,
-        } = self;
+        let StyledObj2 { inner, style } = self;
         let inner_fmt = match inner {
             Obj2::Pt(p) => format!("{:?}", p),
             Obj2::Pg2(pg) => format!("{:?}", pg),
@@ -40,11 +34,7 @@ impl Debug for StyledObj2 {
             Obj2::Txt(ch) => format!("{:?}", ch),
             Obj2::Group(g) => format!("{:?}", g),
         };
-        write!(
-            f,
-            "Object2d::new({}).with_color({:?}).with_thickness({:?})",
-            inner_fmt, color, thickness
-        )
+        write!(f, "Object2d::new({}).with_style({:?})", inner_fmt, style)
     }
 }
 
@@ -53,19 +43,24 @@ impl StyledObj2 {
     pub fn new(obj: impl Into<Obj2>) -> StyledObj2 {
         StyledObj2 {
             inner: obj.into(),
-            color: &BLACK,
-            thickness: 0.1,
+            style: Style::builder().color(&BLACK).thickness(0.1).build(),
         }
     }
 
     /// with a color.
     pub fn with_color(self, color: &'static ColorRGB) -> StyledObj2 {
-        StyledObj2 { color, ..self }
+        StyledObj2 {
+            style: self.style.with_color(color),
+            ..self
+        }
     }
 
     /// with a thickness.
     pub fn with_thickness(self, thickness: f64) -> StyledObj2 {
-        StyledObj2 { thickness, ..self }
+        StyledObj2 {
+            style: self.style.with_thickness(thickness),
+            ..self
+        }
     }
 
     /// Casts each inner value to something which implements Bounded.
@@ -211,7 +206,7 @@ impl Annotatable for StyledObj2 {
         self.inner
             .annotate(settings)
             .into_iter()
-            .map(|o| o.with_color(self.color))
+            .map(|o| o.with_color(self.style.color))
             .collect()
     }
 }

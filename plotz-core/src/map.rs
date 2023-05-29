@@ -22,6 +22,7 @@ use {
         p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
+        style::Style,
         styled_obj2::StyledObj2,
         traits::*,
     },
@@ -331,8 +332,10 @@ impl Map {
                                         .into_iter()
                                         .map(|s| StyledObj2 {
                                             inner: Obj2::Sg2(s),
-                                            color: co.color,
-                                            thickness: shade_config.thickness,
+                                            style: Style::builder()
+                                                .color(co.style.color)
+                                                .thickness(shade_config.thickness)
+                                                .build(),
                                         })
                                         .collect::<Vec<_>>(),
                                 ),
@@ -617,8 +620,7 @@ mod tests {
                         Some(Bucket::Area(Area::Beach)),
                         vec![StyledObj2 {
                             inner: obj,
-                            color: &ALICEBLUE,
-                            thickness: 1.0,
+                            style: Style::builder().color(&ALICEBLUE).thickness(1.0).build(),
                         }],
                     );
                     canvas
@@ -668,8 +670,7 @@ mod tests {
                         Some(Bucket::Area(Area::Beach)),
                         vec![StyledObj2 {
                             inner: obj,
-                            color: &ALICEBLUE,
-                            thickness: 1.0,
+                            style: Style::builder().color(&ALICEBLUE).thickness(1.0).build(),
                         }],
                     );
                     canvas

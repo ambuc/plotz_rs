@@ -51,7 +51,7 @@ impl Canvas {
                 objs.len()
             );
             let mut c = Canvas::new();
-            for (b, objs) in &objs.into_iter().group_by(|d_o| d_o.color) {
+            for (b, objs) in &objs.into_iter().group_by(|d_o| d_o.style.color) {
                 c.dos_by_bucket
                     .entry(Some(Bucket::Color(b)))
                     .or_default()

@@ -105,8 +105,8 @@ fn write_obj_to_context(
 
     write_doi_to_context(&co.inner, context)?;
 
-    context.set_source_rgb(co.color.r, co.color.g, co.color.b);
-    context.set_line_width(co.thickness);
+    context.set_source_rgb(co.style.color.r, co.style.color.g, co.style.color.b);
+    context.set_line_width(co.style.thickness);
     context.stroke()?;
     context.set_source_rgb(BLACK.r, BLACK.g, BLACK.b);
     Ok(())
@@ -145,6 +145,7 @@ mod test_super {
     use plotz_geometry::{
         p2,
         shapes::{pg2::Pg2, pt2::Pt2},
+        style::Style,
         styled_obj2::StyledObj2,
     };
     use tempdir::TempDir;
@@ -183,9 +184,8 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![&StyledObj2 {
-                color: &BLACK,
                 inner: Obj2::Pg2(Pg2([p2!(0, 0), p2!(0, 1), p2!(1, 0)])),
-                thickness: 1.0,
+                style: Style::builder().color(&BLACK).thickness(1.0).build(),
             }],
         )
         .unwrap();
@@ -210,14 +210,12 @@ mod test_super {
             path.to_str().unwrap(),
             vec![
                 &StyledObj2 {
-                    color: &BLACK,
                     inner: Obj2::Pg2(Pg2([p2!(0, 0), p2!(0, 1), p2!(1, 0)])),
-                    thickness: 1.0,
+                    style: Style::builder().color(&BLACK).thickness(1.0).build(),
                 },
                 &StyledObj2 {
-                    color: &BLACK,
                     inner: Obj2::Pg2(Pg2([p2!(5, 5), p2!(5, 6), p2!(6, 5)])),
-                    thickness: 1.0,
+                    style: Style::builder().color(&BLACK).thickness(1.0).build(),
                 },
             ],
         )

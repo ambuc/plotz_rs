@@ -5,7 +5,7 @@ use {
     typed_builder::TypedBuilder,
 };
 
-#[derive(Clone, Copy, TypedBuilder)]
+#[derive(Clone, Copy, PartialEq, TypedBuilder)]
 pub struct Style {
     #[builder(default=&BLACK)]
     pub color: &'static ColorRGB,
@@ -20,6 +20,12 @@ pub struct Style {
 impl Style {
     pub fn with_color(self, c: &'static ColorRGB) -> Style {
         Self { color: c, ..self }
+    }
+    pub fn with_thickness(self, t: f64) -> Style {
+        Self {
+            thickness: t,
+            ..self
+        }
     }
     pub fn new(c: &'static ColorRGB, t: f64) -> Style {
         Self::builder().color(c).thickness(t).build()
