@@ -66,7 +66,8 @@ fn main() {
                         .build();
                     objects.extend(
                         Cube(p3!(i, j, k), (e, e, e))
-                            .into_iter()
+                            .iter_objects()
+                            .cloned()
                             .map(|o| style.apply(o)),
                     );
                 }
@@ -78,14 +79,14 @@ fn main() {
 
                 objects.extend(
                     Cube(p3!(0, 0, 0), (0.7, 0.7, 1.0))
-                        .items
-                        .into_iter()
+                        .iter_objects()
+                        .cloned()
                         .map(|face| StyledObj3::new(face).with_style(red)),
                 );
                 objects.extend(
                     Cube(p3!(1, 0, 0), (0.7, 0.7, 1.0))
-                        .items
-                        .into_iter()
+                        .iter_objects()
+                        .cloned()
                         .map(|face| StyledObj3::new(face).with_style(yellow)),
                 );
             }

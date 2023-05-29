@@ -1,10 +1,11 @@
 //! A cube in 3d.
 
 use crate::{
-    group::Group,
+    // group::Group,
     p3,
     shapes::{pg3::Pg3, pt3::Pt3},
 };
+use plotz_geometry::group::Group;
 
 fn make_planar_face(origin: Pt3, d1: Pt3, d2: Pt3) -> Pg3 {
     Pg3([origin, origin + d1, origin + d1 + d2, origin + d2, origin])
@@ -17,7 +18,7 @@ pub fn Cube(root: Pt3, (dx, dy, dz): (f64, f64, f64)) -> Group<Pg3> {
     let dy = p3!(0.0, dy, 0.0);
     let dz = p3!(0.0, 0.0, dz);
 
-    Group(vec![
+    Group::<Pg3>::new([
         make_planar_face(root, dx, dy),
         make_planar_face(root, dx, dz),
         make_planar_face(root, dy, dz),
