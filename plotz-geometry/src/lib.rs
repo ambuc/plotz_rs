@@ -8,6 +8,7 @@ pub mod group;
 pub mod interpolate;
 pub mod isxn;
 pub mod obj2;
+pub mod style;
 pub mod styled_obj2;
 pub mod traits;
 
