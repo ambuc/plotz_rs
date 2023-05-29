@@ -8,12 +8,11 @@ use {
     crate::{
         camera::{Occlusion, Projection},
         scene::{debug::SceneDebug, occluder::Occluder},
-        style::Style3d,
         styled_obj3::StyledObj3,
     },
     float_ord::FloatOrd,
     itertools::Itertools,
-    plotz_geometry::{styled_obj2::StyledObj2, traits::Annotatable},
+    plotz_geometry::{style::Style, styled_obj2::StyledObj2, traits::Annotatable},
     std::fmt::Debug,
     typed_builder::TypedBuilder,
 };
@@ -61,7 +60,7 @@ impl Scene {
                         annotate: should_annotate,
                     }) = &self.debug
                     {
-                        if let Some(Style3d {
+                        if let Some(Style {
                             color, thickness, ..
                         }) = draw_wireframes
                         {

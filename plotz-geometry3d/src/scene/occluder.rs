@@ -2,13 +2,10 @@
 
 use plotz_geometry::shading::shade_polygon;
 
-use {
-    crate::style::Style3d,
-    plotz_geometry::{crop::Croppable, obj2::Obj2, styled_obj2::StyledObj2},
-};
+use plotz_geometry::{crop::Croppable, obj2::Obj2, style::Style, styled_obj2::StyledObj2};
 
 pub struct Occluder {
-    objects: Vec<(Obj2, Option<Style3d>)>,
+    objects: Vec<(Obj2, Option<Style>)>,
 }
 
 impl Occluder {
@@ -55,7 +52,7 @@ impl Occluder {
     }
 
     // Incorporates an object.
-    pub fn add(&mut self, incoming: Obj2, style3d: Option<Style3d>) {
+    pub fn add(&mut self, incoming: Obj2, style: Option<Style>) {
         let mut incoming_os = vec![incoming];
         for (existing_o, _) in &self.objects {
             incoming_os = incoming_os
@@ -67,7 +64,7 @@ impl Occluder {
         self.objects.extend(
             incoming_os
                 .into_iter()
-                .map(|incoming_o| (incoming_o, style3d)),
+                .map(|incoming_o| (incoming_o, style)),
         );
     }
 
@@ -82,7 +79,7 @@ impl Occluder {
             .into_iter()
             .flat_map(|(obj2, style)| match style {
                 None => vec![StyledObj2::new(obj2)],
-                Some(Style3d {
+                Some(Style {
                     color,
                     thickness,
                     shading: None,
@@ -91,7 +88,7 @@ impl Occluder {
                         .with_color(color)
                         .with_thickness(thickness)]
                 }
-                Some(Style3d {
+                Some(Style {
                     color,
                     thickness,
                     shading: Some(shade_config),

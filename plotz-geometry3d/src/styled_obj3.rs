@@ -1,16 +1,16 @@
 //! A 3d object.
 
 use {
-    crate::{camera::Oblique, obj3::Obj3, shapes::pt3::Pt3, style::Style3d},
+    crate::{camera::Oblique, obj3::Obj3, shapes::pt3::Pt3},
     plotz_color::ColorRGB,
-    plotz_geometry::styled_obj2::StyledObj2,
+    plotz_geometry::{style::Style, styled_obj2::StyledObj2},
     std::fmt::Debug,
 };
 
 #[derive(Clone)]
 pub struct StyledObj3 {
     pub inner: Obj3,
-    pub style: Option<Style3d>,
+    pub style: Option<Style>,
 }
 
 impl StyledObj3 {
@@ -20,7 +20,7 @@ impl StyledObj3 {
             style: None,
         }
     }
-    pub fn with_style(self, a: Style3d) -> StyledObj3 {
+    pub fn with_style(self, a: Style) -> StyledObj3 {
         StyledObj3 {
             style: Some(a),
             ..self
@@ -29,7 +29,7 @@ impl StyledObj3 {
     pub fn with_color(self, c: &'static ColorRGB) -> StyledObj3 {
         StyledObj3 {
             style: match self.style {
-                None => Some(Style3d::builder().color(c).build()),
+                None => Some(Style::builder().color(c).build()),
                 Some(s) => Some(s.with_color(c)),
             },
             ..self
@@ -40,7 +40,7 @@ impl StyledObj3 {
     pub fn project_oblique(&self, oblique_projection: &Oblique) -> StyledObj2 {
         let mut d_o = StyledObj2::new(self.inner.project_oblique(oblique_projection));
 
-        if let Some(Style3d {
+        if let Some(Style {
             color, thickness, ..
         }) = self.style
         {
