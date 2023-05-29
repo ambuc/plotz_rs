@@ -1,3 +1,5 @@
+use plotz_geometry::traits::AnnotationSettings;
+
 use {
     argh::FromArgs,
     itertools::{iproduct, zip},
@@ -8,7 +10,7 @@ use {
         camera::{Occlusion, Projection},
         p3,
         scene::{debug::SceneDebug, Scene},
-        shapes::{cube3d::Cube, pg3::Pg3, pt3::Pt3, sg3::Sg3},
+        shapes::{cube3d::Cube, pt3::Pt3},
         styled_obj3::StyledObj3,
     },
     tracing::*,
@@ -21,189 +23,69 @@ struct Args {
     output_path_prefix: String,
 }
 
+fn cubes() -> Vec<StyledObj3> {
+    let shading = plotz_geometry::shading::shade_config::ShadeConfig::builder()
+        .gap(0.1)
+        .slope(0.07)
+        .build();
+
+    let mut objects = vec![];
+    let e = 0.70;
+    let n = 7;
+
+    for ((i, j, k), color) in zip(
+        iproduct!(0..n, 0..n, 0..n),
+        (vec![&RED, &YELLOW, &GREEN, &BLUE, &PLUM, &ORANGE])
+            .iter()
+            .cycle(),
+    ) {
+        let style = Style::builder()
+            .color(color)
+            .thickness(1.0)
+            // .shading(shading)
+            .build();
+        objects.extend(
+            Cube(p3!(i, j, k), (e, e, e))
+                .iter_objects()
+                .cloned()
+                .map(|o| StyledObj3::new(o).with_style(style)),
+        );
+    }
+    objects
+}
+
 fn main() {
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
         .compact()
         .with_max_level(Level::INFO)
         .without_time()
         .finish();
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    tracing::subscriber::set_global_default(subscriber).unwrap();
+
+    let annotation = AnnotationSettings::builder()
+        .font_size(12.0)
+        .precision(3)
+        .build();
+    let scenedebug = SceneDebug::builder()
+        .draw_wireframes(Style::new(&GRAY, 0.5))
+        .annotate(annotation)
+        .build();
 
     let args: Args = argh::from_env();
-    let dos: Vec<StyledObj2> = {
-        let objects: Vec<StyledObj3> = {
-            let mut objects: Vec<StyledObj3> = vec![];
-            if false {
-                let origin_3d = p3!(0, 0, 0);
-                objects.extend(
-                    vec![
-                        (p3!(1, 0, 0), &RED),
-                        (p3!(0, 1, 0), &BLUE),
-                        (p3!(0, 0, 1), &GREEN),
-                    ]
-                    .iter()
-                    .map(|(diff, color)| {
-                        StyledObj3::new(Sg3(origin_3d, origin_3d + *diff))
-                            .with_style(Style::new(color, 2.0))
-                    }),
-                );
-            }
-
-            if true {
-                let e = 0.70;
-                let n = 7;
-                for ((i, j, k), color) in zip(
-                    iproduct!(0..n, 0..n, 0..n),
-                    (vec![&RED, &YELLOW, &GREEN, &BLUE, &PLUM, &ORANGE])
-                        .iter()
-                        .cycle(),
-                ) {
-                    let style = Style::builder()
-                        .color(color)
-                        .thickness(1.0)
-                        // .shading( plotz_geometry::shading::shade_config::ShadeConfig::builder() .gap(0.1) .slope(0.07) .build(),)
-                        .build();
-                    objects.extend(
-                        Cube(p3!(i, j, k), (e, e, e))
-                            .iter_objects()
-                            .cloned()
-                            .map(|o| StyledObj3::new(o).with_style(style)),
-                    );
-                }
-            }
-
-            if false {
-                let red = Style::new(&RED, 3.0);
-                let yellow = Style::new(&YELLOW, 3.0);
-
-                objects.extend(
-                    Cube(p3!(0, 0, 0), (0.7, 0.7, 1.0))
-                        .iter_objects()
-                        .cloned()
-                        .map(|face| StyledObj3::new(face).with_style(red)),
-                );
-                objects.extend(
-                    Cube(p3!(1, 0, 0), (0.7, 0.7, 1.0))
-                        .iter_objects()
-                        .cloned()
-                        .map(|face| StyledObj3::new(face).with_style(yellow)),
-                );
-            }
-            //
-            if false {
-                for pg3d in [
-                    Pg3([
-                        p3!(0.00, 0.00, 0.00),
-                        p3!(0.70, 0.00, 0.00),
-                        p3!(0.70, 0.70, 0.00),
-                        p3!(0.00, 0.70, 0.00),
-                        p3!(0.00, 0.00, 0.00),
-                    ]),
-                    Pg3([
-                        p3!(0.00, 0.00, 0.00),
-                        p3!(0.70, 0.00, 0.00),
-                        p3!(0.70, 0.00, 1.00),
-                        p3!(0.00, 0.00, 1.00),
-                        p3!(0.00, 0.00, 0.00),
-                    ]),
-                    Pg3([
-                        p3!(0.00, 0.00, 0.00),
-                        p3!(0.00, 0.70, 0.00),
-                        p3!(0.00, 0.70, 1.00),
-                        p3!(0.00, 0.00, 1.00),
-                        p3!(0.00, 0.00, 0.00),
-                    ]),
-                    Pg3([
-                        p3!(0.70, 0.00, 0.00),
-                        p3!(0.70, 0.70, 0.00),
-                        p3!(0.70, 0.70, 1.00),
-                        p3!(0.70, 0.00, 1.00),
-                        p3!(0.70, 0.00, 0.00),
-                    ]),
-                    Pg3([
-                        p3!(0.00, 0.70, 0.00),
-                        p3!(0.00, 0.70, 1.00),
-                        p3!(0.70, 0.70, 1.00),
-                        p3!(0.70, 0.70, 0.00),
-                        p3!(0.00, 0.70, 0.00),
-                    ]),
-                    Pg3([
-                        p3!(0.00, 0.00, 1.00),
-                        p3!(0.70, 0.00, 1.00),
-                        p3!(0.70, 0.70, 1.00),
-                        p3!(0.00, 0.70, 1.00),
-                        p3!(0.00, 0.00, 1.00),
-                    ]),
-                ] {
-                    objects.push(StyledObj3::new(pg3d).with_style(Style::new(&RED, 6.0)));
-                }
-                for pg3d in [
-                    Pg3([
-                        p3!(1.00, 0.00, 0.00),
-                        p3!(1.70, 0.00, 0.00),
-                        p3!(1.70, 0.70, 0.00),
-                        p3!(1.00, 0.70, 0.00),
-                        p3!(1.00, 0.00, 0.00),
-                    ]),
-                    Pg3([
-                        p3!(1.00, 0.00, 0.00),
-                        p3!(1.70, 0.00, 0.00),
-                        p3!(1.70, 0.00, 1.00),
-                        p3!(1.00, 0.00, 1.00),
-                        p3!(1.00, 0.00, 0.00),
-                    ]),
-                    Pg3([
-                        p3!(1.00, 0.00, 0.00),
-                        p3!(1.00, 0.70, 0.00),
-                        p3!(1.00, 0.70, 1.00),
-                        p3!(1.00, 0.00, 1.00),
-                        p3!(1.00, 0.00, 0.00),
-                    ]),
-                    Pg3([
-                        p3!(1.70, 0.00, 0.00),
-                        p3!(1.70, 0.70, 0.00),
-                        p3!(1.70, 0.70, 1.00),
-                        p3!(1.70, 0.00, 1.00),
-                        p3!(1.70, 0.00, 0.00),
-                    ]),
-                    Pg3([
-                        p3!(1.00, 0.00, 1.00),
-                        p3!(1.70, 0.00, 1.00),
-                        p3!(1.70, 0.70, 1.00),
-                        p3!(1.00, 0.70, 1.00),
-                        p3!(1.00, 0.00, 1.00),
-                    ]),
-                    Pg3([
-                        p3!(1.00, 0.70, 0.00),
-                        p3!(1.00, 0.70, 1.00),
-                        p3!(1.70, 0.70, 1.00),
-                        p3!(1.70, 0.70, 0.00),
-                        p3!(1.00, 0.70, 0.00),
-                    ]),
-                ] {
-                    objects.push(StyledObj3::new(pg3d).with_style(Style::new(&YELLOW, 3.0)));
-                }
-            }
-            objects
-        };
-
+    Canvas::from_objs(
+        /*objs=*/
         Scene::builder()
-            .debug(
-                SceneDebug::builder()
-                    // .draw_wireframes(Style::new(&GRAY, 0.5))
-                    // .annotate( AnnotationSettings::builder() .font_size(12.0) .precision(3) .build(),)
-                    .build(),
-            )
-            .objects(objects)
+            // .debug(scenedebug)
+            .objects(cubes())
             .build()
             .project_with(Projection::default(), Occlusion::True)
-    };
-
-    Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false)
-        .with_frame(make_frame_with_margin(
-            (1000.0, 800.0),
-            /*margin=*/ 25.0,
-        ))
-        .scale_to_fit_frame_or_die()
-        .write_to_svg_or_die((800, 1000), &args.output_path_prefix);
+            .into_iter(),
+        /*autobucket=*/ false,
+    )
+    .with_frame(make_frame_with_margin(
+        (1000.0, 800.0),
+        /*margin=*/ 25.0,
+    ))
+    .scale_to_fit_frame_or_die()
+    .write_to_svg_or_die((800, 1000), &args.output_path_prefix);
 }

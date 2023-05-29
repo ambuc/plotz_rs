@@ -62,32 +62,17 @@ impl StyledObj2 {
             ..self
         }
     }
-
-    /// Casts each inner value to something which implements Bounded.
-    pub fn inner_impl_bounded(&self) -> &dyn Bounded {
-        self.inner.inner_impl_bounded()
-    }
-
-    /// Casts each inner value to something which implements YieldPoints.
-    pub fn inner_impl_yield_points(&self) -> &dyn YieldPoints {
-        self.inner.inner_impl_yield_points()
-    }
-
-    /// Casts each inner value to something which implements YieldPointsMut.
-    pub fn inner_impl_yield_points_mut(&mut self) -> &mut dyn YieldPointsMut {
-        self.inner.inner_impl_yield_points_mut()
-    }
 }
 
 impl YieldPoints for StyledObj2 {
     fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
-        self.inner.inner_impl_yield_points().yield_pts()
+        self.inner.yield_points().yield_pts()
     }
 }
 
 impl YieldPointsMut for StyledObj2 {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
-        self.inner.inner_impl_yield_points_mut().yield_pts_mut()
+        self.inner.yield_points_mut().yield_pts_mut()
     }
 }
 

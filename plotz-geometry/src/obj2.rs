@@ -46,7 +46,7 @@ impl Obj2 {
     }
 
     /// Casts each inner value to something which implements Bounded.
-    pub fn inner_impl_bounded(&self) -> &dyn Bounded {
+    pub fn bounded(&self) -> &dyn Bounded {
         match self {
             Obj2::Txt(ch) => ch,
             Obj2::CurveArc(arc) => arc,
@@ -58,7 +58,7 @@ impl Obj2 {
     }
 
     /// Casts each inner value to something which implements YieldPoints.
-    pub fn inner_impl_yield_points(&self) -> &dyn YieldPoints {
+    pub fn yield_points(&self) -> &dyn YieldPoints {
         match self {
             Obj2::Pt(p) => p,
             Obj2::Txt(ch) => ch,
@@ -70,7 +70,7 @@ impl Obj2 {
     }
 
     /// Casts each inner value to something which implements YieldPointsMut.
-    pub fn inner_impl_yield_points_mut(&mut self) -> &mut dyn YieldPointsMut {
+    pub fn yield_points_mut(&mut self) -> &mut dyn YieldPointsMut {
         match self {
             Obj2::Pt(p) => p,
             Obj2::Txt(ch) => ch,
@@ -84,13 +84,13 @@ impl Obj2 {
 
 impl YieldPoints for Obj2 {
     fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
-        self.inner_impl_yield_points().yield_pts()
+        self.yield_points().yield_pts()
     }
 }
 
 impl YieldPointsMut for Obj2 {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
-        self.inner_impl_yield_points_mut().yield_pts_mut()
+        self.yield_points_mut().yield_pts_mut()
     }
 }
 
@@ -98,7 +98,7 @@ impl Mutable for Obj2 {}
 
 impl Bounded for Obj2 {
     fn bounds(&self) -> crate::bounded::Bounds {
-        self.inner_impl_bounded().bounds()
+        self.bounded().bounds()
     }
 }
 
