@@ -36,7 +36,7 @@ impl Scene {
             (Projection::Oblique(obl), Occlusion::False) => self
                 .objects
                 .iter()
-                .map(|obj| obj.project_oblique(&obl))
+                .map(|sobj3| obl.project_styled_obj3(sobj3))
                 .collect(),
 
             (Projection::Oblique(obl), Occlusion::True) => {
@@ -47,13 +47,13 @@ impl Scene {
                 // remain unmodified) and work backwards.
                 let mut occ = Occluder::new();
 
-                for obj3 in self.objects.iter().sorted_by(|o1, o2| {
+                for sobj3 in self.objects.iter().sorted_by(|o1, o2| {
                     Ord::cmp(
                         &FloatOrd(o1.inner.min_dist_along(&obl.view_vector())),
                         &FloatOrd(o2.inner.min_dist_along(&obl.view_vector())),
                     )
                 }) {
-                    let obj2 = obj3.project_oblique(&obl);
+                    let sobj2 = obl.project_styled_obj3(&sobj3);
 
                     if let Some(SceneDebug {
                         draw_wireframes,
@@ -65,14 +65,14 @@ impl Scene {
                         }) = draw_wireframes
                         {
                             resultant
-                                .push(obj2.clone().with_color(color).with_thickness(*thickness));
+                                .push(sobj2.clone().with_color(color).with_thickness(*thickness));
                         }
                         if let Some(settings) = should_annotate {
-                            resultant.extend(obj2.annotate(&settings));
+                            resultant.extend(sobj2.annotate(&settings));
                         }
                     }
 
-                    occ.add(obj3.inner.clone(), obj2.inner, obj3.style.clone());
+                    occ.add(sobj3.inner.clone(), sobj2.inner, sobj3.style.clone());
                 }
                 resultant.extend(occ.export());
                 resultant

@@ -82,7 +82,7 @@ impl Occluder {
     }
 }
 
-fn export_obj(obj3: Obj3, obj2: Obj2, style: Option<Style>) -> Vec<StyledObj2> {
+fn export_obj(_obj3: Obj3, obj2: Obj2, style: Option<Style>) -> Vec<StyledObj2> {
     match style {
         None => vec![StyledObj2::new(obj2)],
         Some(style @ Style { shading: None, .. }) => {

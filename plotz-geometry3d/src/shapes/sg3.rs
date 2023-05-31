@@ -1,9 +1,8 @@
 //! A segment in 3d.
 
 use {
-    crate::{camera::Oblique, shapes::pt3::Pt3},
+    crate::shapes::pt3::Pt3,
     float_ord::FloatOrd,
-    plotz_geometry::shapes::sg2::Sg2,
     std::{fmt::Debug, ops::*},
 };
 
@@ -34,13 +33,6 @@ impl Sg3 {
             + (self.f.y.0 - self.i.y.0).powf(two)
             + (self.f.z.0 - self.i.z.0).powf(two))
         .sqrt()
-    }
-
-    pub fn project_oblique(&self, oblique_projection: &Oblique) -> Sg2 {
-        Sg2(
-            oblique_projection.project(&self.i),
-            oblique_projection.project(&self.f),
-        )
     }
 
     // The average point of the polygon.

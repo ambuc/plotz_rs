@@ -1,12 +1,8 @@
 //! An inner object.
 
 use {
-    crate::{
-        camera::Oblique,
-        shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
-    },
+    crate::shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
     derive_more::From,
-    plotz_geometry::obj2::Obj2,
 };
 
 #[derive(Debug, Clone, From)]
@@ -17,13 +13,6 @@ pub enum Obj3 {
 }
 
 impl Obj3 {
-    pub fn project_oblique(&self, oblique_projection: &Oblique) -> Obj2 {
-        match self {
-            Obj3::Pg3(pg3d) => Obj2::Pg2(pg3d.project_oblique(oblique_projection)),
-            Obj3::Sg3(sg3d) => Obj2::Sg2(sg3d.project_oblique(oblique_projection)),
-        }
-    }
-
     // The center of the object, projected along the view vector.
     pub fn dist_along(&self, view_vector: &Pt3) -> f64 {
         match self {

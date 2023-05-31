@@ -1,8 +1,19 @@
 //! A camera.
 
 use {
-    crate::{p3, shapes::pt3::Pt3},
-    plotz_geometry::{p2, shapes::pt2::Pt2},
+    crate::{
+        obj3::Obj3,
+        p3,
+        shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
+        styled_obj3::StyledObj3,
+    },
+    plotz_geometry::{
+        obj2::Obj2,
+        p2,
+        shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
+        style::Style,
+        styled_obj2::StyledObj2,
+    },
 };
 
 // Any oblique projection.  https://en.wikipedia.org/wiki/3D_projection#Oblique_projection
@@ -37,10 +48,33 @@ impl Oblique {
         p3!(0, 0, 0) - self.u_src - self.v_src - self.w_src
     }
 
-    pub fn project(&self, pt3d: &Pt3) -> Pt2 {
+    pub fn project_pt3(&self, pt3d: &Pt3) -> Pt2 {
         (self.u_dst * pt3d.dot(&self.u_src))
             + (self.v_dst * pt3d.dot(&self.v_src))
             + (self.w_dst * pt3d.dot(&self.w_src))
+    }
+    pub fn project_sg3(&self, sg3: &Sg3) -> Sg2 {
+        Sg2(self.project_pt3(&sg3.i), self.project_pt3(&sg3.f))
+    }
+    pub fn project_pg3(&self, pg3: &Pg3) -> Pg2 {
+        Pg2(pg3.pts.iter().map(|pt3d| self.project_pt3(&pt3d)))
+    }
+    pub fn project_obj3(&self, obj3: &Obj3) -> Obj2 {
+        match obj3 {
+            Obj3::Pg3(pg3d) => Obj2::Pg2(self.project_pg3(pg3d)),
+            Obj3::Sg3(sg3d) => Obj2::Sg2(self.project_sg3(sg3d)),
+        }
+    }
+    pub fn project_styled_obj3(&self, sobj3: &StyledObj3) -> StyledObj2 {
+        let mut obj2 = StyledObj2::new(self.project_obj3(&sobj3.inner));
+
+        if let Some(Style {
+            color, thickness, ..
+        }) = sobj3.style
+        {
+            obj2 = obj2.with_color(color).with_thickness(thickness);
+        }
+        obj2
     }
 }
 

@@ -1,11 +1,6 @@
 //! A 3d object.
 
-use {
-    crate::{camera::Oblique, obj3::Obj3},
-    plotz_color::ColorRGB,
-    plotz_geometry::{style::Style, styled_obj2::StyledObj2},
-    std::fmt::Debug,
-};
+use {crate::obj3::Obj3, plotz_color::ColorRGB, plotz_geometry::style::Style, std::fmt::Debug};
 
 #[derive(Clone)]
 pub struct StyledObj3 {
@@ -34,19 +29,6 @@ impl StyledObj3 {
             },
             ..self
         }
-    }
-
-    // Project oblique.
-    pub fn project_oblique(&self, oblique_projection: &Oblique) -> StyledObj2 {
-        let mut d_o = StyledObj2::new(self.inner.project_oblique(oblique_projection));
-
-        if let Some(Style {
-            color, thickness, ..
-        }) = self.style
-        {
-            d_o = d_o.with_color(color).with_thickness(thickness);
-        }
-        d_o
     }
 }
 

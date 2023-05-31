@@ -5,8 +5,7 @@ use std::fmt::Debug;
 use float_ord::FloatOrd;
 
 use {
-    crate::{camera::Oblique, p3, shapes::pt3::Pt3},
-    plotz_geometry::shapes::pg2::Pg2,
+    crate::{p3, shapes::pt3::Pt3},
     std::ops::*,
 };
 
@@ -24,14 +23,6 @@ impl Debug for Pg3 {
 }
 
 impl Pg3 {
-    pub fn project_oblique(&self, oblique_projection: &Oblique) -> Pg2 {
-        Pg2(self
-            .pts
-            .iter()
-            .map(|pt3d| oblique_projection.project(&pt3d))
-            .collect::<Vec<_>>())
-    }
-
     // The average point of the polygon.
     pub fn average_pt(&self) -> Pt3 {
         let num: f64 = self.pts.len() as f64;
