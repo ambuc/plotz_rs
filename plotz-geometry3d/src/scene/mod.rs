@@ -72,7 +72,7 @@ impl Scene {
                         }
                     }
 
-                    occ.add(sobj3.inner.clone(), sobj2.inner, sobj3.style.clone());
+                    occ.add(sobj2.clone());
                 }
                 resultant.extend(occ.export());
                 resultant

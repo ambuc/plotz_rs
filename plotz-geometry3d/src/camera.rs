@@ -11,7 +11,6 @@ use {
         obj2::Obj2,
         p2,
         shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
-        style::Style,
         styled_obj2::StyledObj2,
     },
 };
@@ -67,12 +66,8 @@ impl Oblique {
     }
     pub fn project_styled_obj3(&self, sobj3: &StyledObj3) -> StyledObj2 {
         let mut obj2 = StyledObj2::new(self.project_obj3(&sobj3.inner));
-
-        if let Some(Style {
-            color, thickness, ..
-        }) = sobj3.style
-        {
-            obj2 = obj2.with_color(color).with_thickness(thickness);
+        if let Some(style) = sobj3.style {
+            obj2 = obj2.with_style(style);
         }
         obj2
     }

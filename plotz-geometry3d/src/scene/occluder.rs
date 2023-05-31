@@ -1,14 +1,11 @@
 //! Occludes things. Cmon.
 
-use {
-    crate::obj3::Obj3,
-    plotz_geometry::{
-        crop::Croppable, obj2::Obj2, shading::shade_polygon, style::Style, styled_obj2::StyledObj2,
-    },
+use plotz_geometry::{
+    crop::Croppable, obj2::Obj2, shading::shade_polygon, style::Style, styled_obj2::StyledObj2,
 };
 
 pub struct Occluder {
-    objects: Vec<(Obj3, Obj2, Option<Style>)>,
+    objects: Vec<StyledObj2>,
 }
 
 impl Occluder {
@@ -55,20 +52,17 @@ impl Occluder {
     }
 
     // Incorporates an object.
-    pub fn add(&mut self, incoming3: Obj3, incoming2: Obj2, style: Option<Style>) {
-        let mut incoming_os = vec![incoming2];
-        for (_, existing_o, _) in &self.objects {
+    pub fn add(&mut self, incoming2: StyledObj2) {
+        let mut incoming_os = vec![incoming2.clone()];
+        for existing_o in &self.objects {
             incoming_os = incoming_os
                 .iter()
-                .map(|incoming_o| Occluder::hide_a_behind_b(incoming_o, &existing_o))
+                .map(|incoming_o| Occluder::hide_a_behind_b(&incoming_o.inner, &existing_o.inner))
                 .flatten()
+                .map(|obj2| StyledObj2::new(obj2.clone()).with_style(incoming2.style))
                 .collect::<Vec<_>>();
         }
-        self.objects.extend(
-            incoming_os
-                .into_iter()
-                .map(|incoming_o| (incoming3.clone(), incoming_o, style)),
-        );
+        self.objects.extend(incoming_os.into_iter());
     }
 
     // Exports the occluded 2d objects.
@@ -77,23 +71,20 @@ impl Occluder {
         self.objects.reverse();
         self.objects
             .into_iter()
-            .flat_map(|(obj3, obj2, style)| export_obj(obj3, obj2, style))
+            .flat_map(|sobj2| export_obj(sobj2))
             .collect()
     }
 }
 
-fn export_obj(_obj3: Obj3, obj2: Obj2, style: Option<Style>) -> Vec<StyledObj2> {
-    match style {
-        None => vec![StyledObj2::new(obj2)],
-        Some(style @ Style { shading: None, .. }) => {
-            vec![StyledObj2::new(obj2).with_style(style)]
+fn export_obj(sobj2: StyledObj2) -> Vec<StyledObj2> {
+    match sobj2.style {
+        Style { shading: None, .. } => {
+            vec![sobj2]
         }
-        Some(
-            style @ Style {
-                shading: Some(shade_config),
-                ..
-            },
-        ) => match obj2 {
+        style @ Style {
+            shading: Some(shade_config),
+            ..
+        } => match sobj2.inner {
             Obj2::Pg2(pg2) => {
                 if shade_config.along_face {
                     // TODO(jbuckland): apply shade config here.
