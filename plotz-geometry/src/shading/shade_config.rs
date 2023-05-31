@@ -22,4 +22,8 @@ pub struct ShadeConfig {
     /// whether or not to zig zag.
     #[builder(default = false)]
     pub switchback: bool,
+
+    /// If in 3d, draws the shading along the face instead of along the camera plane.
+    #[builder(default = false)]
+    pub along_face: bool,
 }

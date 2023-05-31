@@ -1,11 +1,14 @@
 //! Occludes things. Cmon.
 
-use plotz_geometry::shading::shade_polygon;
-
-use plotz_geometry::{crop::Croppable, obj2::Obj2, style::Style, styled_obj2::StyledObj2};
+use {
+    crate::obj3::Obj3,
+    plotz_geometry::{
+        crop::Croppable, obj2::Obj2, shading::shade_polygon, style::Style, styled_obj2::StyledObj2,
+    },
+};
 
 pub struct Occluder {
-    objects: Vec<(Obj2, Option<Style>)>,
+    objects: Vec<(Obj3, Obj2, Option<Style>)>,
 }
 
 impl Occluder {
@@ -52,9 +55,9 @@ impl Occluder {
     }
 
     // Incorporates an object.
-    pub fn add(&mut self, incoming: Obj2, style: Option<Style>) {
-        let mut incoming_os = vec![incoming];
-        for (existing_o, _) in &self.objects {
+    pub fn add(&mut self, incoming3: Obj3, incoming2: Obj2, style: Option<Style>) {
+        let mut incoming_os = vec![incoming2];
+        for (_, existing_o, _) in &self.objects {
             incoming_os = incoming_os
                 .iter()
                 .map(|incoming_o| Occluder::hide_a_behind_b(incoming_o, &existing_o))
@@ -64,7 +67,7 @@ impl Occluder {
         self.objects.extend(
             incoming_os
                 .into_iter()
-                .map(|incoming_o| (incoming_o, style)),
+                .map(|incoming_o| (incoming3.clone(), incoming_o, style)),
         );
     }
 
@@ -72,41 +75,45 @@ impl Occluder {
     pub fn export(mut self) -> Vec<StyledObj2> {
         // we store them front-to-back, but we want to render them to svg back-to-front.
         self.objects.reverse();
-
-        // Now is the time to apply shading.
-
         self.objects
             .into_iter()
-            .flat_map(|(obj2, style)| match style {
-                None => vec![StyledObj2::new(obj2)],
-                Some(Style {
-                    color,
-                    thickness,
-                    shading: None,
-                }) => {
-                    vec![StyledObj2::new(obj2)
-                        .with_color(color)
-                        .with_thickness(thickness)]
-                }
-                Some(Style {
-                    color,
-                    thickness,
-                    shading: Some(shade_config),
-                }) => match obj2 {
-                    Obj2::Pg2(pg2) => shade_polygon(&shade_config, &pg2)
+            .flat_map(|(obj3, obj2, style)| export_obj(obj3, obj2, style))
+            .collect()
+    }
+}
+
+fn export_obj(obj3: Obj3, obj2: Obj2, style: Option<Style>) -> Vec<StyledObj2> {
+    match style {
+        None => vec![StyledObj2::new(obj2)],
+        Some(style @ Style { shading: None, .. }) => {
+            vec![StyledObj2::new(obj2).with_style(style)]
+        }
+        Some(
+            style @ Style {
+                shading: Some(shade_config),
+                ..
+            },
+        ) => match obj2 {
+            Obj2::Pg2(pg2) => {
+                if shade_config.along_face {
+                    // TODO(jbuckland): apply shade config here.
+                    // TODO(jbuckland): apply shade config here.
+                    // TODO(jbuckland): apply shade config here.
+                    // TODO(jbuckland): apply shade config here.
+                    // TODO(jbuckland): apply shade config here.
+                    // TODO(jbuckland): apply shade config here.
+                    vec![]
+                } else {
+                    shade_polygon(&shade_config, &pg2)
                         .unwrap()
                         .into_iter()
-                        .map(|sg2| {
-                            StyledObj2::new(sg2)
-                                .with_color(color)
-                                .with_thickness(thickness)
-                        })
-                        .collect::<Vec<_>>(),
-                    _ => {
-                        panic!("can't shade not a polygon.")
-                    }
-                },
-            })
-            .collect()
+                        .map(|sg2| StyledObj2::new(sg2).with_style(style))
+                        .collect::<Vec<_>>()
+                }
+            }
+            _ => {
+                panic!("can't shade not a polygon.")
+            }
+        },
     }
 }

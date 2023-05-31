@@ -62,6 +62,13 @@ impl StyledObj2 {
             ..self
         }
     }
+    /// with a style
+    pub fn with_style(self, style: Style) -> StyledObj2 {
+        StyledObj2 {
+            style: style,
+            ..self
+        }
+    }
 }
 
 impl YieldPoints for StyledObj2 {

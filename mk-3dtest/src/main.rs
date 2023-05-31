@@ -1,11 +1,11 @@
-use plotz_geometry::traits::AnnotationSettings;
+use plotz_geometry::{shading::shade_config::ShadeConfig, traits::AnnotationSettings};
 
 use {
     argh::FromArgs,
     itertools::{iproduct, zip},
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::*},
-    plotz_geometry::{style::Style, styled_obj2::StyledObj2},
+    plotz_geometry::style::Style,
     plotz_geometry3d::{
         camera::{Occlusion, Projection},
         p3,
@@ -24,11 +24,6 @@ struct Args {
 }
 
 fn cubes() -> Vec<StyledObj3> {
-    let shading = plotz_geometry::shading::shade_config::ShadeConfig::builder()
-        .gap(0.1)
-        .slope(0.07)
-        .build();
-
     let mut objects = vec![];
     let e = 0.70;
     let n = 7;
@@ -39,10 +34,15 @@ fn cubes() -> Vec<StyledObj3> {
             .iter()
             .cycle(),
     ) {
+        let shading = ShadeConfig::builder()
+            .gap(0.1)
+            .slope(0.05)
+            .along_face((i + j + k) % 2 == 0)
+            .build();
         let style = Style::builder()
             .color(color)
             .thickness(1.0)
-            // .shading(shading)
+            .shading(shading)
             .build();
         objects.extend(
             Cube(p3!(i, j, k), (e, e, e))
@@ -62,13 +62,13 @@ fn main() {
         .finish();
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
-    let annotation = AnnotationSettings::builder()
+    let _annotation = AnnotationSettings::builder()
         .font_size(12.0)
         .precision(3)
         .build();
-    let scenedebug = SceneDebug::builder()
+    let _scenedebug = SceneDebug::builder()
         .draw_wireframes(Style::new(&GRAY, 0.5))
-        .annotate(annotation)
+        .annotate(_annotation)
         .build();
 
     let args: Args = argh::from_env();
