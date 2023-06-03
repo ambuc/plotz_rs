@@ -21,10 +21,11 @@ use {
         traits::*,
     },
     float_cmp::approx_eq,
-    itertools::{iproduct, zip},
+    itertools::iproduct,
     std::{
         cmp::{Eq, PartialEq},
         fmt::Debug,
+        iter::zip,
         ops::*,
     },
     thiserror::Error,

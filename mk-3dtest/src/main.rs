@@ -2,7 +2,7 @@ use plotz_geometry::{shading::shade_config::ShadeConfig, traits::AnnotationSetti
 
 use {
     argh::FromArgs,
-    itertools::{iproduct, zip},
+    itertools::iproduct,
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::*},
     plotz_geometry::style::Style,
@@ -13,6 +13,7 @@ use {
         shapes::{cube3d::Cube, pt3::Pt3},
         styled_obj3::StyledObj3,
     },
+    std::iter::zip,
     tracing::*,
 };
 
