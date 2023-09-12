@@ -67,8 +67,15 @@ impl Sg2 {
     }
 
     /// The slope of a line segment.
+    /// NB: this is the "elementary school math slope"; i.e. rise over run.
+    /// Not the same as the angle of the ray.
     pub fn slope(&self) -> f64 {
         (self.f.y.0 - self.i.y.0) / (self.f.x.0 - self.i.x.0)
+    }
+
+    /// The angle from sg.i to sg.f, in radians.
+    pub fn ray_angle(&self) -> f64 {
+        self.i.angle_to(&self.f)
     }
 
     /// A rotation operation, for rotating a line segment about a point. Accepts

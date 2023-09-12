@@ -1,23 +1,20 @@
-use float_ord::FloatOrd;
-use plotz_color::subway::PURPLE_7;
-use plotz_geometry::{
-    isxn::{Intersection, IsxnResult},
-    shapes::{pg2::Pg2, pt2::PolarPt, sg2::Sg2},
-    traits::{Annotatable, AnnotationSettings},
-};
-
 use {
     argh::FromArgs,
+    plotz_color::subway::*,
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         crop::PointLoc,
-        grid::grid_layout::{GridLayout, GridLayoutSettings},
+        isxn::{Intersection, IsxnResult},
         p2,
-        shapes::{curve::CurveArc, pt2::Pt2},
+        shapes::{
+            pg2::Pg2,
+            pt2::{PolarPt, Pt2},
+            ry2::Ry2,
+            sg2::Sg2,
+        },
         styled_obj2::StyledObj2,
     },
-    rand::{seq::SliceRandom, thread_rng, Rng},
     std::f64::consts::*,
     tracing::*,
     tracing_subscriber::FmtSubscriber,
@@ -30,20 +27,8 @@ struct Args {
     output_path_prefix: String,
 }
 
-// girih tiles
-
-// https://en.m.wikipedia.org/wiki/Girih_tiles
-//
-// The five shapes of the tiles, and their Persian names, are:
-//
-//
-// * All sides of these figures have the same length, and all their angles are
-//   multiples of 36° (π/5 radians). All of them except the pentagon have
-//   bilateral (reflection) symmetry through two perpendicular lines. Some have
-//   additional symmetries. Specifically, the decagon has tenfold rotational
-//   symmetry (rotation by 36°); and the pentagon has fivefold rotational
-//   symmetry (rotation by 72°).
-
+// girih tiles https://en.m.wikipedia.org/wiki/Girih_tiles. The five shapes of
+// the tiles, and their Persian names, are:
 enum Girih {
     Tabl,
     SheshBand,
@@ -60,59 +45,51 @@ fn make_girih_tile_and_strapwork(g: Girih) -> (Pg2, Vec<Sg2>) {
         Girih::Torange => &[72.0, 108.0, 72.0, 108.0],
         Girih::Pange => &[108.0; 5],
     });
+
     // NB must offset or vertical line tangents don't work, lmfao
     tile.rotate(&Pt2(0, 0), 0.00001);
 
     let mut strapwork = vec![];
 
-    let girih_segments = tile.to_segments();
-    for (sg_a, sg_b) in girih_segments
+    for (edge1, edgeb) in tile
+        .to_segments()
         .iter()
-        .zip(girih_segments.iter().cycle().skip(1))
+        .zip(tile.to_segments().iter().cycle().skip(1))
     {
         let a_ray_angle = {
-            let a_angle = sg_a.i.angle_to(&sg_a.f);
+            let a_angle = edge1.ray_angle();
 
-            let angle_1 = (a_angle + (3.0 * PI / 10.0)) % TAU;
-            let angle_2 = (a_angle + (-7.0 * PI / 10.0)) % TAU;
+            let angle_1 = a_angle + (3.0 * PI / 10.0);
+            let angle_2 = a_angle + (-7.0 * PI / 10.0);
 
-            let sg_1_f = sg_a.midpoint() + PolarPt(0.1, angle_1);
-            if matches!(tile.contains_pt(&sg_1_f), PointLoc::Inside) {
-                angle_1
-            } else {
-                angle_2
+            let sg_1_f = edge1.midpoint() + PolarPt(0.1, angle_1);
+            let sg_2_f = edge1.midpoint() + PolarPt(0.1, angle_2);
+            match (tile.contains_pt(&sg_1_f), tile.contains_pt(&sg_2_f)) {
+                (PointLoc::Inside, _) => angle_1,
+                (_, PointLoc::Inside) => angle_2,
+                _ => panic!("oh"),
             }
         };
 
-        let a_ray = Sg2(
-            sg_a.midpoint(),
-            sg_a.midpoint() + PolarPt(10.0, a_ray_angle),
-        );
+        let a_ray: Ry2 = Ry2(edge1.midpoint(), a_ray_angle);
 
-        if let Some(IsxnResult::OneIntersection(_)) = a_ray.intersects(sg_b) {
-            strapwork.push(Sg2(sg_a.midpoint(), sg_b.midpoint()));
+        if let Some(IsxnResult::OneIntersection(_)) = a_ray.intersects_sg(edgeb) {
+            strapwork.push(Sg2(edge1.midpoint(), edgeb.midpoint()));
         } else {
             // imagine a bridge from a_mdpt to b_mdpt.
-            // out of the center of the bridge rises a perpendicular tower.
-            let tower = {
-                let bridge = Sg2(sg_a.midpoint(), sg_b.midpoint());
-                let tower_slope = ((bridge.i.angle_to(&bridge.f)) + FRAC_PI_2) % TAU;
-                let d = PolarPt(10.0, tower_slope);
-                Sg2(bridge.midpoint() - d, bridge.midpoint() + d)
-            };
-            let bridge_extended = {
-                let d = PolarPt(10.0, a_ray_angle);
-                Sg2(sg_a.midpoint() - d, sg_a.midpoint() + d)
-            };
+            // out of the center of the bridge rise2 a perpendicular tower.
+            let bridge = Sg2(edge1.midpoint(), edgeb.midpoint());
+            let tower_a = Ry2(bridge.midpoint(), bridge.ray_angle() - FRAC_PI_2);
+            let tower_b = Ry2(bridge.midpoint(), bridge.ray_angle() + FRAC_PI_2);
 
             // ztex lies at the intersection of a_ray and the tower.
-            let ztex = match tower.intersects(&bridge_extended).unwrap() {
-                IsxnResult::MultipleIntersections(_) => panic!("multiple intersections?"),
-                IsxnResult::OneIntersection(Intersection { pt, .. }) => pt,
+            let ztex = match (tower_a.intersects(&a_ray), tower_b.intersects(&a_ray)) {
+                (Some(IsxnResult::OneIntersection(Intersection { pt, .. })), _) => pt,
+                (_, Some(IsxnResult::OneIntersection(Intersection { pt, .. }))) => pt,
+                _ => panic!("oh"),
             };
 
-            strapwork.push(Sg2(sg_a.midpoint(), ztex));
-            strapwork.push(Sg2(ztex, sg_b.midpoint()));
+            strapwork.extend(&[Sg2(edge1.midpoint(), ztex), Sg2(ztex, edgeb.midpoint())]);
         }
     }
 
@@ -206,7 +183,7 @@ fn main() {
             draw_objects.push(
                 StyledObj2::new(transformation_sg2(sg2))
                     .with_thickness(1.0)
-                    .with_color(&BLACK),
+                    .with_color(color),
             );
         }
     }
