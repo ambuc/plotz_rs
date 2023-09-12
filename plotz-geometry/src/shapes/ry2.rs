@@ -11,6 +11,7 @@ use crate::{
 };
 
 /// A ray which emits from a pt and goes in a direction.
+#[derive(Copy, Clone)]
 pub struct Ry2 {
     pt: Pt2,
     angle_out_rad: f64,
@@ -39,5 +40,13 @@ impl Ry2 {
     pub fn intersects_sg(&self, other: &Sg2) -> Option<IsxnResult> {
         let self_sg = Sg2(self.pt, self.pt + PolarPt(10.0, self.angle_out_rad));
         self_sg.intersects(&other)
+    }
+
+    /// Returns a version of this ray rotated by |angle| rad.
+    pub fn rotate(&self, angle: f64) -> Ry2 {
+        Ry2 {
+            pt: self.pt,
+            angle_out_rad: (self.angle_out_rad + angle) % TAU,
+        }
     }
 }

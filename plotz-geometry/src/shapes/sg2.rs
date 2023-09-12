@@ -6,11 +6,16 @@ use crate::{
     interpolate::interpolate_2d_checked,
     isxn::{Intersection, IsxnResult, MultipleIntersections},
     p2,
-    shapes::{pg2::Pg2, pt2::Pt2},
+    shapes::{pg2::Pg2, pt2::Pt2, ry2::Ry2},
     traits::*,
 };
 use float_cmp::approx_eq;
-use std::{cmp::PartialOrd, fmt::Debug, ops::*};
+use std::{
+    cmp::PartialOrd,
+    f64::consts::{FRAC_PI_2, PI},
+    fmt::Debug,
+    ops::*,
+};
 
 #[derive(Debug, PartialEq, Eq)]
 enum _Orientation {
@@ -192,6 +197,19 @@ impl Sg2 {
     /// Midpoint of a segment.
     pub fn midpoint(&self) -> Pt2 {
         (self.i + self.f) / 2.0
+    }
+
+    /// Generates a ray perpendicular to this segment and emitting from its
+    /// midpoint. One of the two angles, dunno which.
+    pub fn ray_perpendicular(&self) -> Ry2 {
+        Ry2(self.midpoint(), self.ray_angle() + FRAC_PI_2)
+    }
+
+    /// Generates both perpendicular rays which emit from the midpoint of this
+    /// segment.
+    pub fn rays_perpendicular_both(&self) -> (Ry2, Ry2) {
+        let ray = self.ray_perpendicular();
+        (ray.clone().rotate(PI), ray)
     }
 }
 

@@ -29,6 +29,7 @@ struct Args {
 
 // girih tiles https://en.m.wikipedia.org/wiki/Girih_tiles. The five shapes of
 // the tiles, and their Persian names, are:
+#[derive(Copy, Clone, PartialEq, Eq)]
 enum Girih {
     Tabl,
     SheshBand,
@@ -105,17 +106,37 @@ fn make_girih_tile_and_strapwork(g: Girih) -> (Pg2, Vec<Sg2>) {
         };
 
         for s in strapwork {
-            if tile_contains(&s) {
-                s_ver.push(s);
-            } else {
-                let n = 3.0 / 10.0 - 1.0 / (5.0 * PI);
-                let a = Sg2(s.i, s.i + (s.f - s.i) * n);
-                if tile_contains(&a) {
-                    s_ver.push(a);
+            match (tile_contains(&s), g) {
+                (true, _) => {
+                    s_ver.push(s);
                 }
-                let b = Sg2(s.f, s.f + (s.i - s.f) * n);
-                if tile_contains(&b) {
-                    s_ver.push(b);
+                (false, Girih::SormehDan) => {
+                    // I just so happen to know that the first segment here runs
+                    // perpendicular to a line of symmetry. Don't ask me how I
+                    // know it. And don't ask me to generalize it.
+                    let (perp_ray_1, perp_ray_2) = tile.to_segments()[0].rays_perpendicular_both();
+
+                    let pt_inside = match (
+                        tile.point_is_inside_or_on_border(&s.i),
+                        tile.point_is_inside_or_on_border(&s.f),
+                    ) {
+                        (true, false) => s.i,
+                        (false, true) => s.f,
+                        _ => panic!("oh"),
+                    };
+
+                    match (perp_ray_1.intersects_sg(&s), perp_ray_2.intersects_sg(&s)) {
+                        (Some(IsxnResult::OneIntersection(Intersection { pt, .. })), _) => {
+                            s_ver.push(Sg2(pt_inside, pt));
+                        }
+                        (_, Some(IsxnResult::OneIntersection(Intersection { pt, .. }))) => {
+                            s_ver.push(Sg2(pt_inside, pt));
+                        }
+                        _ => panic!("OH"),
+                    }
+                }
+                (false, _) => {
+                    panic!("uh oh")
                 }
             }
         }
