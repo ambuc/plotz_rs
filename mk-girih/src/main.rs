@@ -7,12 +7,14 @@ use {
         crop::PointLoc,
         isxn::{Intersection, IsxnResult},
         p2,
+        shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             pg2::Pg2,
             pt2::{PolarPt, Pt2},
             ry2::Ry2,
             sg2::Sg2,
         },
+        style::Style,
         styled_obj2::StyledObj2,
     },
     std::f64::consts::*,
@@ -38,18 +40,7 @@ enum Girih {
     Pange,
 }
 
-fn make_girih_tile_and_strapwork(g: Girih) -> (Pg2, Vec<Sg2>) {
-    let mut tile = make_girih_polygon_from_vertex_turn_angles(match g {
-        Girih::Tabl => &[144.0; 10],
-        Girih::SheshBand => &[72.0, 144.0, 144.0, 72.0, 144.0, 144.0],
-        Girih::SormehDan => &[72.0, 72.0, 216.0, 72.0, 72.0, 216.0],
-        Girih::Torange => &[72.0, 108.0, 72.0, 108.0],
-        Girih::Pange => &[108.0; 5],
-    });
-
-    // NB must offset or vertical line tangents don't work, lmfao
-    tile.rotate(&Pt2(0, 0), 0.00001);
-
+fn make_strapwork(g: Girih, tile: &Pg2) -> Vec<Sg2> {
     let mut strapwork = vec![];
 
     for (edge1, edgeb) in tile
@@ -143,7 +134,27 @@ fn make_girih_tile_and_strapwork(g: Girih) -> (Pg2, Vec<Sg2>) {
         s_ver
     };
 
-    (tile, strapwork_verified)
+    strapwork_verified
+}
+
+fn make_tile(g: Girih) -> Pg2 {
+    make_girih_polygon_from_vertex_turn_angles(match g {
+        Girih::Tabl => &[144.0; 10],
+        Girih::SheshBand => &[72.0, 144.0, 144.0, 72.0, 144.0, 144.0],
+        Girih::SormehDan => &[72.0, 72.0, 216.0, 72.0, 72.0, 216.0],
+        Girih::Torange => &[72.0, 108.0, 72.0, 108.0],
+        Girih::Pange => &[108.0; 5],
+    })
+}
+
+fn make_girih_tile_and_strapwork(g: Girih) -> (Pg2, Vec<Sg2>) {
+    let mut tile = make_tile(g);
+
+    // NB must offset or vertical line tangents don't work, lmfao
+    tile.rotate(&Pt2(0, 0), 0.00001);
+
+    let strapwork = make_strapwork(g, &tile);
+    (tile, strapwork)
 }
 
 // accepts a list of interior angles, in degrees.
@@ -176,7 +187,7 @@ fn main() {
     let args: Args = argh::from_env();
     trace!("Running.");
 
-    let mut draw_objects = vec![];
+    let mut objs = vec![];
     let margin = 25.0;
 
     let frame: StyledObj2 = make_frame(
@@ -194,22 +205,35 @@ fn main() {
         (Girih::SormehDan, &BLUE),
         (Girih::Torange, &PURPLE_7),
     ] {
-        let (girih_tile, strapwork) = make_girih_tile_and_strapwork(girih_enum);
-        draw_objects.push(
-            StyledObj2::new(transformation_pg2(girih_tile))
-                .with_thickness(0.5)
-                .with_color(color),
-        );
-        for sg2 in strapwork {
-            draw_objects.push(
-                StyledObj2::new(transformation_sg2(sg2))
-                    .with_thickness(1.0)
-                    .with_color(color),
-            );
-        }
+        let (mut girih_tile, mut strapwork) = make_girih_tile_and_strapwork(girih_enum);
+
+        // transform tile and strapwork.
+        girih_tile = transformation_pg2(girih_tile);
+        strapwork
+            .iter_mut()
+            .for_each(|sg| *sg = transformation_sg2(*sg));
+
+        // shade the tile and write its stripes to |objs|.
+        shade_polygon(
+            &ShadeConfig::builder().gap(2.0).slope(0.05).build(),
+            &girih_tile,
+        )
+        .unwrap()
+        .into_iter()
+        .for_each(|sg| {
+            objs.push(StyledObj2::new(sg).with_thickness(0.1).with_color(color));
+        });
+
+        // write |tile| itself to |objs|.
+        objs.push(StyledObj2::new(girih_tile).with_style(Style::new(&color, 2.0)));
+
+        // finally, write the strapwork to |objs|.
+        strapwork.into_iter().for_each(|sg| {
+            objs.push(StyledObj2::new(sg).with_thickness(1.0).with_color(color));
+        });
     }
 
-    let objs = Canvas::from_objs(draw_objects.into_iter(), /*autobucket=*/ true).with_frame(frame);
+    let objs = Canvas::from_objs(objs.into_iter(), /*autobucket=*/ true).with_frame(frame);
 
     objs.write_to_svg_or_die(
         Size {
