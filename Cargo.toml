@@ -12,6 +12,7 @@ members = [
     "mk-3dtest",
     "mk-arcs",
     "mk-croptest",
+    "mk-girih",
     "mk-lewitt",
     "mk-tilings",
     "mk-voronoi",

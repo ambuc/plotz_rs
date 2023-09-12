@@ -181,6 +181,11 @@ impl Sg2 {
         let y2 = d2.y.0;
         (x1 * y2) - (x2 * y1)
     }
+
+    /// Midpoint of a segment.
+    pub fn midpoint(&self) -> Pt2 {
+        (self.i + self.f) / 2.0
+    }
 }
 
 impl Add<Pt2> for Sg2 {
