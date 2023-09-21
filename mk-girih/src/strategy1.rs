@@ -48,7 +48,6 @@ fn strategy1_inner(tiles: &mut Vec<PlacedTile>, num_to_place: usize) -> bool {
         }
 
         let last_placed_tile = tiles.last().unwrap();
-        dbg!(last_placed_tile);
         let pt_to_attack: Pt2 = last_placed_tile
             .pg2
             .pts
@@ -65,15 +64,12 @@ fn strategy1_inner(tiles: &mut Vec<PlacedTile>, num_to_place: usize) -> bool {
     }
 
     let pt_to_attack: Pt2 = find_next_pt_to_attack(&tiles);
-    println!("pt to attack: {:?}", pt_to_attack);
 
     for new_girih_type in geom::all_girih_tiles_in_random_order() {
-        println!("trying type: {:?}", new_girih_type);
         let (pg2, ks) = geom::make_tile(new_girih_type);
 
         let mut hs_tried_ks: HashSet<geom::K> = HashSet::<geom::K>::new();
         for (pg_pt, k) in pg2.pts.iter().zip(ks.iter()) {
-            // println!("trying pg_pt: {:?} @ {:?}", pg_pt, k);
             // first, check for k type
             if hs_tried_ks.contains(k) {
                 continue;
@@ -85,7 +81,6 @@ fn strategy1_inner(tiles: &mut Vec<PlacedTile>, num_to_place: usize) -> bool {
             let pg_copy: Pg2 = pg2.clone() + delta;
             // for each rotation
             for rot_n in 0..10 {
-                // println!("trying rot {:?}", rot_n);
                 // rotate
                 let rot = (rot_n as f64) * PI / 10.0;
                 let mut cand = pg_copy.clone();
