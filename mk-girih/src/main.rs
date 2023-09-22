@@ -1,3 +1,5 @@
+use crate::strategy1::strategy1;
+
 pub mod geom;
 mod strategy1;
 
@@ -33,18 +35,12 @@ fn main() {
     let args: Args = argh::from_env();
     trace!("Running.");
 
-    let mut objs = vec![];
     let margin = 25.0;
 
-    let frame: StyledObj2 = make_frame(
-        (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
-        /*offset=*/ p2!(margin, margin),
-    );
-
-    objs.extend(strategy1::strategy1());
+    let mut so2s: Vec<StyledObj2> = strategy1();
 
     // objs -> mutate
-    objs.iter_mut().for_each(|o| {
+    so2s.iter_mut().for_each(|o| {
         *o *= 100.0;
         *o += Pt2(550.0, 250.0)
     });
@@ -52,13 +48,15 @@ fn main() {
     let transformation_pg2 = |x| x * 100.0 + Pt2(500, 300);
     let transformation_sg2 = |x| x * 100.0 + Pt2(500, 300);
 
-    for (girih_enum, color) in [
+    [
         (geom::Girih::Tabl, &RED),
         (geom::Girih::Pange, &ORANGE),
         (geom::Girih::SheshBand, &GREEN),
         (geom::Girih::SormehDan, &BLUE),
         (geom::Girih::Torange, &PURPLE_7),
-    ] {
+    ]
+    .into_iter()
+    .for_each(|(girih_enum, color)| {
         let (mut girih_tile, mut strapwork) = geom::make_girih_tile_and_strapwork(girih_enum);
 
         // transform tile and strapwork.
@@ -75,25 +73,28 @@ fn main() {
         .unwrap()
         .into_iter()
         .for_each(|sg| {
-            objs.push(StyledObj2::new(sg).with_thickness(0.1).with_color(color));
+            so2s.push(StyledObj2::new(sg).with_thickness(0.1).with_color(color));
         });
 
         // write |tile| itself to |objs|.
-        objs.push(StyledObj2::new(girih_tile).with_style(Style::new(&color, 2.0)));
+        so2s.push(StyledObj2::new(girih_tile).with_style(Style::new(&color, 2.0)));
 
         // finally, write the strapwork to |objs|.
         strapwork.into_iter().for_each(|sg| {
-            objs.push(StyledObj2::new(sg).with_thickness(1.0).with_color(color));
+            so2s.push(StyledObj2::new(sg).with_thickness(1.0).with_color(color));
         });
-    }
+    });
 
-    let objs = Canvas::from_objs(objs.into_iter(), /*autobucket=*/ true).with_frame(frame);
-
-    objs.write_to_svg_or_die(
-        Size {
-            width: 1000,
-            height: 800,
-        },
-        &args.output_path_prefix,
-    );
+    Canvas::from_objs(so2s.into_iter(), /*autobucket=*/ true)
+        .with_frame(make_frame(
+            /*wh=*/ (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
+            /*offset=*/ p2!(margin, margin),
+        ))
+        .write_to_svg_or_die(
+            Size {
+                width: 1000,
+                height: 800,
+            },
+            &args.output_path_prefix,
+        );
 }
