@@ -39,36 +39,32 @@ fn main() {
 
     let margin = 25.0;
 
-    let mut so2s: Vec<StyledObj2> = [
-        (geom::Girih::Tabl, &RED),
-        (geom::Girih::Pange, &ORANGE),
-        (geom::Girih::SheshBand, &GREEN),
-        (geom::Girih::SormehDan, &BLUE),
-        (geom::Girih::Torange, &PURPLE_7),
-    ]
-    .into_iter()
-    .flat_map(|(girih_enum, color)| {
-        let (mut tile, mut strapwork) = geom::make_girih_tile_and_strapwork(girih_enum);
+    let mut so2s: Vec<StyledObj2> = geom::all_girih_tiles_in_random_order()
+        .iter()
+        .map(|g| (*g, geom::color(*g)))
+        .into_iter()
+        .flat_map(|(girih_enum, color)| {
+            let (mut tile, mut strapwork) = geom::make_girih_tile_and_strapwork(girih_enum);
 
-        let shade = ShadeConfig::builder().gap(0.05).slope(0.05).build();
-        shade_polygon(&shade, &tile)
-            .unwrap()
-            .into_iter()
-            .map(|stripe| {
-                StyledObj2::new(stripe)
-                    .with_thickness(0.1)
-                    .with_color(color)
-            })
-            .chain(std::iter::once(
-                StyledObj2::new(tile).with_style(Style::new(&color, 2.0)),
-            ))
-            .chain(
-                strapwork
-                    .into_iter()
-                    .map(|strap| StyledObj2::new(strap).with_thickness(1.0).with_color(color)),
-            )
-    })
-    .collect::<Vec<_>>();
+            let shade = ShadeConfig::builder().gap(0.05).slope(0.05).build();
+            shade_polygon(&shade, &tile)
+                .unwrap()
+                .into_iter()
+                .map(|stripe| {
+                    StyledObj2::new(stripe)
+                        .with_thickness(0.1)
+                        .with_color(color)
+                })
+                .chain(std::iter::once(
+                    StyledObj2::new(tile).with_style(Style::new(&color, 2.0)),
+                ))
+                .chain(strapwork.into_iter().map(|strap| {
+                    StyledObj2::new(strap)
+                        .with_thickness(1.0)
+                        .with_color(color)
+                }))
+        })
+        .collect::<Vec<_>>();
 
     so2s.iter_mut().for_each(|so2| {
         *so2 *= 100.0;

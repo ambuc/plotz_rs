@@ -1,3 +1,5 @@
+use plotz_color::{subway::PURPLE_7, ColorRGB, LIGHTBLUE, LIMEGREEN, ORANGERED, YELLOW};
+
 use {
     plotz_geometry::{
         crop::PointLoc,
@@ -22,6 +24,16 @@ pub enum Girih {
     SormehDan,
     Torange,
     Pange,
+}
+
+pub fn color(g: Girih) -> &'static ColorRGB {
+    match g {
+        Girih::Tabl => &LIGHTBLUE,
+        Girih::SheshBand => &LIMEGREEN,
+        Girih::SormehDan => &ORANGERED,
+        Girih::Torange => &PURPLE_7,
+        Girih::Pange => &YELLOW,
+    }
 }
 
 fn all_girih_tiles() -> Vec<Girih> {
