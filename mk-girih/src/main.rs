@@ -39,25 +39,24 @@ fn main() {
         .map(|g| (*g, g.color()))
         .into_iter()
         .flat_map(|(girih_enum, color)| {
-            let (tile, strapwork) = geom::make_girih_tile_and_strapwork(girih_enum);
+            let t = geom::Tile::new(girih_enum);
+            let tile = t.to_pg2();
+            let strapwork = t.to_strapwork();
 
-            let shade = ShadeConfig::builder().gap(0.05).slope(0.05).build();
-            shade_polygon(&shade, &tile)
-                .unwrap()
+            let stripes =
+                shade_polygon(&ShadeConfig::builder().gap(0.05).slope(0.05).build(), &tile)
+                    .unwrap()
+                    .into_iter()
+                    .map(|stripe| {
+                        StyledObj2::new(stripe)
+                            .with_thickness(0.1)
+                            .with_color(color)
+                    });
+            let outline = StyledObj2::new(tile).with_style(Style::new(&color, 2.0));
+            let straps = strapwork
                 .into_iter()
-                .map(|stripe| {
-                    StyledObj2::new(stripe)
-                        .with_thickness(0.1)
-                        .with_color(color)
-                })
-                .chain(std::iter::once(
-                    StyledObj2::new(tile).with_style(Style::new(&color, 2.0)),
-                ))
-                .chain(
-                    strapwork
-                        .into_iter()
-                        .map(|strap| StyledObj2::new(strap).with_thickness(1.0).with_color(color)),
-                )
+                .map(|strap| StyledObj2::new(strap).with_thickness(2.0).with_color(color));
+            stripes.chain(std::iter::once(outline)).chain(straps)
         })
         .collect::<Vec<_>>();
 
