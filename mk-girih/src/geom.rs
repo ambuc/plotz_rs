@@ -26,13 +26,15 @@ pub enum Girih {
     Pange,
 }
 
-pub fn color(g: Girih) -> &'static ColorRGB {
-    match g {
-        Girih::Tabl => &LIGHTBLUE,
-        Girih::SheshBand => &LIMEGREEN,
-        Girih::SormehDan => &ORANGERED,
-        Girih::Torange => &PURPLE_7,
-        Girih::Pange => &YELLOW,
+impl Girih {
+    pub fn color(&self) -> &'static ColorRGB {
+        match self {
+            Girih::Tabl => &LIGHTBLUE,
+            Girih::SheshBand => &LIMEGREEN,
+            Girih::SormehDan => &ORANGERED,
+            Girih::Torange => &PURPLE_7,
+            Girih::Pange => &YELLOW,
+        }
     }
 }
 
@@ -51,6 +53,16 @@ pub fn all_girih_tiles_in_random_order() -> Vec<Girih> {
     let mut rng = rand::thread_rng();
     tiles.shuffle(&mut rng);
     tiles
+}
+
+// vector system
+pub enum V {
+    A, // black
+    B, // red
+    C, // orange
+    D, // green
+
+       // E, // blue // implicit
 }
 
 fn make_strapwork(g: Girih, tile: &Pg2) -> Vec<Sg2> {

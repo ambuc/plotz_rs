@@ -1,18 +1,13 @@
-use plotz_geometry::{grid, group::Group, shapes::pg2::Rect};
-
-use crate::strategy1::strategy1;
-
 pub mod geom;
 mod strategy1;
 
 use {
     argh::FromArgs,
-    plotz_color::{subway::*, *},
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{pg2::Pg2, pt2::Pt2},
+        shapes::pt2::Pt2,
         style::Style,
         styled_obj2::StyledObj2,
     },
@@ -41,10 +36,10 @@ fn main() {
 
     let mut so2s: Vec<StyledObj2> = geom::all_girih_tiles_in_random_order()
         .iter()
-        .map(|g| (*g, geom::color(*g)))
+        .map(|g| (*g, g.color()))
         .into_iter()
         .flat_map(|(girih_enum, color)| {
-            let (mut tile, mut strapwork) = geom::make_girih_tile_and_strapwork(girih_enum);
+            let (tile, strapwork) = geom::make_girih_tile_and_strapwork(girih_enum);
 
             let shade = ShadeConfig::builder().gap(0.05).slope(0.05).build();
             shade_polygon(&shade, &tile)
@@ -58,11 +53,11 @@ fn main() {
                 .chain(std::iter::once(
                     StyledObj2::new(tile).with_style(Style::new(&color, 2.0)),
                 ))
-                .chain(strapwork.into_iter().map(|strap| {
-                    StyledObj2::new(strap)
-                        .with_thickness(1.0)
-                        .with_color(color)
-                }))
+                .chain(
+                    strapwork
+                        .into_iter()
+                        .map(|strap| StyledObj2::new(strap).with_thickness(1.0).with_color(color)),
+                )
         })
         .collect::<Vec<_>>();
 
