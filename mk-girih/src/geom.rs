@@ -64,7 +64,7 @@ pub enum K {
     C,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Tile {
     enum_type: Girih,
     angs_rad: Vec<f64>,
@@ -155,14 +155,16 @@ impl Tile {
 // place tile sg #{usize} along real segment {Sg2}.
 // because girih tiles all have the same length, this will involve rotation and
 // translation but never scaling.
+#[derive(Debug)]
 pub struct Constraint {
     pub src_index: usize,
     pub target: Sg2,
 }
 
+#[derive(Debug)]
 pub struct PlacedTile {
-    pg2: Pg2,
-    tile: Tile,
+    pub pg2: Pg2,
+    pub tile: Tile,
 }
 
 impl PlacedTile {

@@ -49,4 +49,13 @@ impl Ry2 {
             angle_out_rad: (self.angle_out_rad + angle) % TAU,
         }
     }
+
+    /// returns a sg2 - keeps the initial point, and goes a distance |len| along
+    /// the ray.
+    pub fn to_sg2(&self, len: f64) -> Sg2 {
+        Sg2 {
+            i: self.pt,
+            f: self.pt + PolarPt(len, self.angle_out_rad),
+        }
+    }
 }

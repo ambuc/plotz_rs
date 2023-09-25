@@ -62,7 +62,7 @@ fn main() {
     //     .collect::<Vec<_>>();
 
     Canvas::from_objs(
-        strategy2::run(&strategy2::Settings {}).map(|mut so2| {
+        strategy2::run(&strategy2::Settings { num_iterations: 1 }).map(|mut so2| {
             so2 *= 100.0;
             so2 += Pt2(200, 200);
             so2
