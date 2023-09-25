@@ -1,6 +1,4 @@
 use crate::geom::*;
-use indicatif::ProgressBar;
-use indicatif::ProgressIterator;
 use itertools::Itertools;
 use plotz_geometry::{
     bounded::Bounded,
@@ -54,6 +52,8 @@ impl Layout {
     }
 
     // we know the tile and the target edge, but not the source edge.
+    // returns the placed tile if this was successfully placed _without_ a collision.
+    // otherwise, returns none.
     fn place_tile_on_edge(&self, g: Girih, target: &Sg2) -> Option<PlacedTile> {
         let naive_tile: Tile = Tile::new(g);
         let naive_pg2: Pg2 = naive_tile.to_naive_pg2();
@@ -87,8 +87,13 @@ impl Layout {
             .all(|(extant_tile, test_pt)| !extant_tile.pg2.point_is_inside(&test_pt))
     }
 
-    // returns true if success.
-    fn place_next_tile(&self, settings: &Settings) -> Option<PlacedTile> {
+    // returns true if successfully placed tile (or if no tile needed to be placed.)
+    fn place_next_tile(&mut self, settings: &Settings, num_remaining: usize) -> bool {
+        info!("place_next_tile: {:?}", num_remaining);
+        if num_remaining == 0 {
+            return true;
+        }
+
         let next_bare_edge: Sg2 = self.next_bare_edge();
 
         for g in match settings.is_deterministic {
@@ -97,11 +102,21 @@ impl Layout {
         } {
             for cand_edge in [next_bare_edge, next_bare_edge.flip()] {
                 if let Some(placed_tile) = self.place_tile_on_edge(g, &cand_edge) {
-                    return Some(placed_tile);
+                    self.placed_tiles.push(placed_tile);
+                    match self.place_next_tile(settings, num_remaining - 1) {
+                        true => {
+                            return true;
+                        }
+                        false => {
+                            self.placed_tiles.pop();
+                            continue;
+                        }
+                    }
                 }
             }
         }
-        None
+        // if we made it this far without a placement, something is wrong.
+        return false;
     }
 
     fn add(&mut self, pt: PlacedTile) {
@@ -117,10 +132,7 @@ pub fn run(settings: &Settings) -> impl Iterator<Item = StyledObj2> {
         target: Sg2(Pt2(0, 0), Pt2(1, 0)),
     }));
 
-    for i in 0..settings.num_iterations {
-        let next_tile = layout.place_next_tile(settings).expect("foo");
-        layout.add(next_tile);
-    }
+    assert!(layout.place_next_tile(settings, settings.num_iterations));
 
     layout.to_styledobjs()
 }
