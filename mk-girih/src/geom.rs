@@ -1,5 +1,6 @@
 use plotz_color::{subway::PURPLE_7, ColorRGB, LIGHTBLUE, LIMEGREEN, ORANGERED, YELLOW};
 use plotz_geometry::styled_obj2::StyledObj2;
+use tracing::info;
 
 use {
     plotz_geometry::{
@@ -136,14 +137,17 @@ impl Tile {
 
     pub fn place(self, c: Constraint) -> PlacedTile {
         let mut naive_pg = self.to_naive_pg2();
-        let naive_sg: Sg2 = naive_pg.to_segments()[c.src_index];
-        let target_sg: Sg2 = c.target;
+        let naive_sg = naive_pg.to_segments()[c.src_index];
 
-        let translation = target_sg.i - naive_sg.i;
-        let rotation: f64 = target_sg.ray_angle() - naive_sg.ray_angle();
+        let mut modified_pg = naive_pg.clone();
 
-        let mut modified_pg = naive_pg + translation;
-        modified_pg.rotate(&modified_pg.to_segments()[c.src_index].i, rotation);
+        let t = c.target.midpoint() - naive_sg.midpoint();
+        modified_pg += t;
+
+        let modified_sg = modified_pg.to_segments()[c.src_index];
+
+        let rotation: f64 = (c.target.ray_angle()) - naive_sg.ray_angle();
+        modified_pg.rotate(&modified_sg.midpoint(), rotation);
 
         PlacedTile {
             pg2: modified_pg,

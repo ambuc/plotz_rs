@@ -1,14 +1,17 @@
+use crate::geom::{Constraint, Girih, Tile};
+
 pub mod geom;
 mod strategy1;
 mod strategy2;
 
 use {
     argh::FromArgs,
+    plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::pt2::Pt2,
+        shapes::{pt2::Pt2, sg2::Sg2},
         style::Style,
         styled_obj2::StyledObj2,
     },
@@ -61,23 +64,25 @@ fn main() {
     //     })
     //     .collect::<Vec<_>>();
 
-    Canvas::from_objs(
-        strategy2::run(&strategy2::Settings { num_iterations: 1 }).map(|mut so2| {
-            so2 *= 100.0;
+    let s2settings = strategy2::Settings { num_iterations: 200 };
+    let mut so2s = strategy2::run(&s2settings)
+        .map(|mut so2| {
+            so2 *= 20.0;
             so2 += Pt2(200, 200);
             so2
-        }),
-        /*autobucket=*/ true,
-    )
-    .with_frame(make_frame(
-        /*wh=*/ (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
-        /*offset=*/ p2!(margin, margin),
-    ))
-    .write_to_svg_or_die(
-        Size {
-            width: 1000,
-            height: 800,
-        },
-        &args.output_path_prefix,
-    );
+        })
+        .collect::<Vec<_>>();
+
+    Canvas::from_objs(so2s, /*autobucket=*/ true)
+        .with_frame(make_frame(
+            /*wh=*/ (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
+            /*offset=*/ p2!(margin, margin),
+        ))
+        .write_to_svg_or_die(
+            Size {
+                width: 1000,
+                height: 800,
+            },
+            &args.output_path_prefix,
+        );
 }
