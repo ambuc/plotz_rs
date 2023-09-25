@@ -5,6 +5,7 @@ use plotz_geometry::{
     shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
     styled_obj2::StyledObj2,
 };
+use tracing::info;
 
 #[derive(Debug)]
 pub struct Settings {
@@ -51,7 +52,9 @@ impl Layout {
     }
 
     // returns true if success.
-    fn place_next_tile(&self, settings: &Settings) -> Option<PlacedTile> {
+    fn place_next_tile(&self, settings: &Settings) -> Vec<PlacedTile> {
+        let mut v = vec![];
+
         let next_bare_edge: Sg2 = self.next_bare_edge();
 
         for g in match settings.is_deterministic {
@@ -60,12 +63,12 @@ impl Layout {
         } {
             for cand_edge in [next_bare_edge, next_bare_edge.flip()] {
                 if let Some(placed_tile) = self.place_tile_on_edge(g, &cand_edge) {
-                    return Some(placed_tile);
+                    v.push(placed_tile);
                 }
             }
         }
 
-        None
+        v
     }
 
     // we know the tile and the target edge, but not the source edge.
@@ -105,6 +108,22 @@ impl Layout {
     fn add(&mut self, pt: PlacedTile) {
         self.placed_tiles.push(pt)
     }
+
+    fn place_n_tiles(&mut self, settings: &Settings, num_iterations: usize) -> bool {
+        if num_iterations == 0 {
+            return true;
+        }
+        for cand_next_tile in self.place_next_tile(settings) {
+            self.placed_tiles.push(cand_next_tile);
+            if !self.place_n_tiles(settings, num_iterations - 1) {
+                self.placed_tiles.pop();
+                continue;
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 pub fn run(settings: &Settings) -> impl Iterator<Item = StyledObj2> {
@@ -115,11 +134,13 @@ pub fn run(settings: &Settings) -> impl Iterator<Item = StyledObj2> {
         target: Sg2(Pt2(0, 0), Pt2(1, 0)),
     }));
 
-    for i in 0..=settings.num_iterations {
-        let next_tile = layout.place_next_tile(settings).expect("top-level failure");
-        layout.add(next_tile);
-        tracing::info!("Placed {:?}th tile.", i);
-    }
+    layout.place_n_tiles(settings, settings.num_iterations);
+
+    // for i in 0..=settings.num_iterations {
+    //     let next_tile = layout.place_next_tile(settings).expect("top-level failure");
+    //     layout.add(next_tile);
+    //     tracing::info!("Placed {:?}th tile.", i);
+    // }
 
     layout.to_styledobjs()
 }
