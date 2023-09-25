@@ -61,23 +61,23 @@ fn main() {
     //     })
     //     .collect::<Vec<_>>();
 
-    let mut so2s: Vec<StyledObj2> = strategy2::run(&strategy2::Settings {});
-
-    so2s.iter_mut().for_each(|so2| {
-        *so2 *= 100.0;
-        *so2 += Pt2(200, 200);
-    });
-
-    Canvas::from_objs(so2s.into_iter(), /*autobucket=*/ true)
-        .with_frame(make_frame(
-            /*wh=*/ (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
-            /*offset=*/ p2!(margin, margin),
-        ))
-        .write_to_svg_or_die(
-            Size {
-                width: 1000,
-                height: 800,
-            },
-            &args.output_path_prefix,
-        );
+    Canvas::from_objs(
+        strategy2::run(&strategy2::Settings {}).map(|mut so2| {
+            so2 *= 100.0;
+            so2 += Pt2(200, 200);
+            so2
+        }),
+        /*autobucket=*/ true,
+    )
+    .with_frame(make_frame(
+        /*wh=*/ (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
+        /*offset=*/ p2!(margin, margin),
+    ))
+    .write_to_svg_or_die(
+        Size {
+            width: 1000,
+            height: 800,
+        },
+        &args.output_path_prefix,
+    );
 }

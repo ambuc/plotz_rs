@@ -41,17 +41,15 @@ impl Canvas {
     }
 
     /// ctor from objs
-    pub fn from_objs<O: IntoIterator<Item = StyledObj2> + ExactSizeIterator>(
-        objs: O,
-        autobucket: bool,
-    ) -> Canvas {
+    pub fn from_objs<O: IntoIterator<Item = StyledObj2>>(objs: O, autobucket: bool) -> Canvas {
+        let objs_vec: Vec<_> = objs.into_iter().collect();
         if autobucket {
             trace!(
                 "Creating Canvas(autobucket=true) from {:?} objects",
-                objs.len()
+                objs_vec.len()
             );
             let mut c = Canvas::new();
-            for (b, objs) in &objs.into_iter().group_by(|d_o| d_o.style.color) {
+            for (b, objs) in &objs_vec.into_iter().group_by(|d_o| d_o.style.color) {
                 c.dos_by_bucket
                     .entry(Some(Bucket::Color(b)))
                     .or_default()
@@ -61,10 +59,10 @@ impl Canvas {
         } else {
             trace!(
                 "Creating Canvas(autobucket=false) from {:?} objects",
-                objs.len()
+                objs_vec.len()
             );
             Canvas {
-                dos_by_bucket: CanvasMap::from([(None, objs.into_iter().collect())]),
+                dos_by_bucket: CanvasMap::from([(None, objs_vec)]),
                 frame: None,
             }
         }

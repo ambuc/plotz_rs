@@ -135,7 +135,7 @@ impl Tile {
     }
 
     pub fn place(self, c: Constraint) -> PlacedTile {
-        let naive_pg = self.to_naive_pg2();
+        let mut naive_pg = self.to_naive_pg2();
         let naive_sg: Sg2 = naive_pg.to_segments()[c.src_index];
         let target_sg: Sg2 = c.target;
 
@@ -275,35 +275,25 @@ impl PlacedTile {
             .with_color(self.tile.color());
         v.push(outline);
 
-        // why the rigamarole? simple -- strap logic requires stupid
-        // intersection stuff and we aren't very good at that with
-        // straight-up-and-down lines with slope inf. so we rotate the whole
-        // thing by 0.1, do the math, then rotate it back. sorry...
-        let straps: Vec<_> = {
-            let axis = Pt2(0, 0);
-            let offset = 0.01;
-
-            (PlacedTile {
-                pg2: {
-                    let mut m = self.pg2.clone();
-                    m.rotate(&axis, offset);
-                    m
-                },
-                tile: self.tile.clone(),
-            })
-            .to_strapwork()
-            .into_iter()
-            .map(|mut s| {
-                s.rotate(&axis, -offset);
-                s
-            })
-            .map(|s| {
-                StyledObj2::new(s)
-                    .with_thickness(3.0)
-                    .with_color(self.tile.color())
-            })
-            .collect()
-        };
+        let axis = Pt2(0, 0);
+        let offset = 0.01;
+        let straps: Vec<_> = (PlacedTile {
+            pg2: {
+                let mut m = self.pg2.clone();
+                m.rotate(&axis, offset);
+                m
+            },
+            tile: self.tile.clone(),
+        })
+        .to_strapwork()
+        .into_iter()
+        .map(|mut s| {
+            s.rotate(&axis, -offset);
+            StyledObj2::new(s)
+                .with_thickness(3.0)
+                .with_color(self.tile.color())
+        })
+        .collect();
         v.extend(straps);
 
         v

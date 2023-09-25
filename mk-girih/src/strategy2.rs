@@ -18,18 +18,17 @@ impl Layout {
             placed_tiles: vec![pt],
         }
     }
-    fn to_styledobjs(self) -> Vec<StyledObj2> {
+    fn to_styledobjs(self) -> impl Iterator<Item = StyledObj2> {
         self.placed_tiles
             .into_iter()
             .flat_map(|pt| pt.to_styledobjs())
-            .collect()
     }
     fn next() -> () {
         //
     }
 }
 
-pub fn run(settings: &Settings) -> Vec<StyledObj2> {
+pub fn run(settings: &Settings) -> impl Iterator<Item = StyledObj2> {
     let mut layout = Layout::new(Tile::new(all_girih_tiles()[0]).place(Constraint {
         src_index: 0,
         target: Sg2(Pt2(0, 0), Pt2(1, 0)),
