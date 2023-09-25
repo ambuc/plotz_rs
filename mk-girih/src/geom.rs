@@ -64,6 +64,7 @@ pub enum K {
     C,
 }
 
+#[derive(Clone)]
 pub struct Tile {
     enum_type: Girih,
     angs_rad: Vec<f64>,
@@ -95,7 +96,9 @@ impl Tile {
         self.angs_rad.iter().map(|i| i * 180.0 / PI).collect()
     }
 
-    pub fn to_pg2(&self) -> Pg2 {
+    // what's naive about this? SO glad you asked bestie. it's the right shape
+    // but that's it. you have to place this somewhere sensible upon usage.
+    pub fn to_naive_pg2(&self) -> Pg2 {
         let vertex_turn_angles: &[f64] = &self.angles_deg();
         let mut cursor_position = Pt2(0, 0);
         let mut cursor_angle_rad = 0.0;
@@ -131,12 +134,30 @@ impl Tile {
         self.enum_type.color()
     }
 
-    pub fn place(self) -> PlacedTile {
+    pub fn place(self, c: Constraint) -> PlacedTile {
+        let mut naive_pg = self.to_naive_pg2();
+        let naive_sg: Sg2 = naive_pg.to_segments()[c.src_index];
+        let target_sg: Sg2 = c.target;
+
+        let translation = target_sg.i - naive_sg.i;
+        let rotation: f64 = target_sg.ray_angle() - naive_sg.ray_angle();
+
+        let mut modified_pg = naive_pg + translation;
+        modified_pg.rotate(&modified_pg.to_segments()[c.src_index].i, rotation);
+
         PlacedTile {
-            pg2: self.to_pg2(),
+            pg2: modified_pg,
             tile: self,
         }
     }
+}
+
+// place tile sg #{usize} along real segment {Sg2}.
+// because girih tiles all have the same length, this will involve rotation and
+// translation but never scaling.
+pub struct Constraint {
+    pub src_index: usize,
+    pub target: Sg2,
 }
 
 pub struct PlacedTile {
@@ -247,19 +268,45 @@ impl PlacedTile {
     }
 
     pub fn to_styledobjs(&self) -> Vec<StyledObj2> {
+        let mut v: Vec<StyledObj2> = vec![];
+
         let outline: StyledObj2 = StyledObj2::new(self.pg2.clone())
             .with_thickness(2.0)
             .with_color(self.tile.color());
-
-        let straps = self.to_strapwork().into_iter().map(|s: Sg2| {
-            StyledObj2::new(s)
-                .with_thickness(1.0)
-                .with_color(self.tile.color())
-        });
-
-        let mut v: Vec<StyledObj2> = vec![];
         v.push(outline);
+
+        // why the rigamarole? simple -- strap logic requires stupid
+        // intersection stuff and we aren't very good at that with
+        // straight-up-and-down lines with slope inf. so we rotate the whole
+        // thing by 0.1, do the math, then rotate it back. sorry...
+        let straps: Vec<_> = {
+            let axis = Pt2(0, 0);
+            let offset = 0.01;
+
+            let straps: Vec<_> = (PlacedTile {
+                pg2: {
+                    let mut m = self.pg2.clone();
+                    m.rotate(&axis, offset);
+                    m
+                },
+                tile: self.tile.clone(),
+            })
+            .to_strapwork()
+            .into_iter()
+            .map(|mut s| {
+                s.rotate(&axis, -offset);
+                s
+            })
+            .map(|s| {
+                StyledObj2::new(s)
+                    .with_thickness(1.0)
+                    .with_color(self.tile.color())
+            })
+            .collect();
+            straps
+        };
         v.extend(straps);
+
         v
     }
 }

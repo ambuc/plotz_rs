@@ -61,14 +61,14 @@ fn main() {
     //     })
     //     .collect::<Vec<_>>();
 
-    let mut styledobjs: Vec<StyledObj2> = strategy2::run(&strategy2::Settings {});
+    let mut so2s: Vec<StyledObj2> = strategy2::run(&strategy2::Settings {});
 
-    styledobjs.iter_mut().for_each(|so2| {
+    so2s.iter_mut().for_each(|so2| {
         *so2 *= 100.0;
-        *so2 += Pt2(550.0, 250.0);
+        *so2 += Pt2(200, 200);
     });
 
-    Canvas::from_objs(styledobjs.into_iter(), /*autobucket=*/ true)
+    Canvas::from_objs(so2s.into_iter(), /*autobucket=*/ true)
         .with_frame(make_frame(
             /*wh=*/ (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
             /*offset=*/ p2!(margin, margin),
