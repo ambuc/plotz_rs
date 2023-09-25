@@ -1,7 +1,5 @@
 use plotz_color::{subway::PURPLE_7, ColorRGB, LIGHTBLUE, LIMEGREEN, ORANGERED, YELLOW};
 use plotz_geometry::styled_obj2::StyledObj2;
-use tracing::info;
-
 use {
     plotz_geometry::{
         crop::PointLoc,
@@ -57,19 +55,10 @@ pub fn all_girih_tiles_in_random_order() -> Vec<Girih> {
     tiles
 }
 
-// Kind
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub enum K {
-    A,
-    B,
-    C,
-}
-
 #[derive(Clone, Debug)]
 pub struct Tile {
     enum_type: Girih,
     angs_rad: Vec<f64>,
-    placed_pg2: Option<Pg2>,
 }
 
 impl Tile {
@@ -89,7 +78,6 @@ impl Tile {
                 Girih::SormehDan => [ANG_2, ANG_2, ANG_6, ANG_2, ANG_2, ANG_6].to_vec(),
                 Girih::Torange => [ANG_3, ANG_2, ANG_3, ANG_2].to_vec(),
             },
-            placed_pg2: None,
         }
     }
 
@@ -121,22 +109,12 @@ impl Tile {
         pg2
     }
 
-    fn to_pointtypes(&self) -> Vec<K> {
-        match self.enum_type {
-            Girih::Tabl => vec![K::A; 10],
-            Girih::SheshBand => vec![K::A, K::B, K::C, K::A, K::B, K::C],
-            Girih::SormehDan => vec![K::A, K::B, K::C, K::A, K::B, K::C],
-            Girih::Torange => vec![K::A, K::B, K::A, K::B],
-            Girih::Pange => vec![K::A; 5],
-        }
-    }
-
     pub fn color(&self) -> &'static ColorRGB {
         self.enum_type.color()
     }
 
     pub fn place(self, c: Constraint) -> PlacedTile {
-        let mut naive_pg = self.to_naive_pg2();
+        let naive_pg = self.to_naive_pg2();
         let naive_sg = naive_pg.to_segments()[c.src_index];
 
         let mut modified_pg = naive_pg.clone();

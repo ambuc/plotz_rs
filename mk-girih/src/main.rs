@@ -1,20 +1,11 @@
-use crate::geom::{Constraint, Girih, Tile};
-
 pub mod geom;
 mod strategy1;
 mod strategy2;
 
 use {
     argh::FromArgs,
-    plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{
-        p2,
-        shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{pt2::Pt2, sg2::Sg2},
-        style::Style,
-        styled_obj2::StyledObj2,
-    },
+    plotz_geometry::{p2, shapes::pt2::Pt2},
     tracing::*,
     tracing_subscriber::FmtSubscriber,
 };
@@ -64,14 +55,16 @@ fn main() {
     //     })
     //     .collect::<Vec<_>>();
 
-    let s2settings = strategy2::Settings { num_iterations: 200 };
-    let mut so2s = strategy2::run(&s2settings)
-        .map(|mut so2| {
-            so2 *= 20.0;
-            so2 += Pt2(200, 200);
-            so2
-        })
-        .collect::<Vec<_>>();
+    let so2s = strategy2::run(&strategy2::Settings {
+        num_iterations: 15,
+        is_deterministic: true,
+    })
+    .map(|mut so2| {
+        so2 *= 20.0;
+        so2 += Pt2(200, 200);
+        so2
+    })
+    .collect::<Vec<_>>();
 
     Canvas::from_objs(so2s, /*autobucket=*/ true)
         .with_frame(make_frame(
