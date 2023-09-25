@@ -1,4 +1,5 @@
 use plotz_color::{subway::PURPLE_7, ColorRGB, LIGHTBLUE, LIMEGREEN, ORANGERED, YELLOW};
+use plotz_geometry::styled_obj2::StyledObj2;
 
 use {
     plotz_geometry::{
@@ -17,7 +18,7 @@ use {
 
 // girih tiles https://en.m.wikipedia.org/wiki/Girih_tiles. The five shapes of
 // the tiles, and their Persian names, are:
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
 pub enum Girih {
     Tabl,
     SheshBand,
@@ -38,7 +39,7 @@ impl Girih {
     }
 }
 
-fn all_girih_tiles() -> Vec<Girih> {
+pub fn all_girih_tiles() -> Vec<Girih> {
     vec![
         Girih::Tabl,
         Girih::SheshBand,
@@ -56,7 +57,7 @@ pub fn all_girih_tiles_in_random_order() -> Vec<Girih> {
 }
 
 // Kind
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum K {
     A,
     B,
@@ -66,6 +67,7 @@ pub enum K {
 pub struct Tile {
     enum_type: Girih,
     angs_rad: Vec<f64>,
+    placed_pg2: Option<Pg2>,
 }
 
 impl Tile {
@@ -85,6 +87,7 @@ impl Tile {
                 Girih::SormehDan => [ANG_2, ANG_2, ANG_6, ANG_2, ANG_2, ANG_6].to_vec(),
                 Girih::Torange => [ANG_3, ANG_2, ANG_3, ANG_2].to_vec(),
             },
+            placed_pg2: None,
         }
     }
 
@@ -124,15 +127,33 @@ impl Tile {
         }
     }
 
+    pub fn color(&self) -> &'static ColorRGB {
+        self.enum_type.color()
+    }
+
+    pub fn place(self) -> PlacedTile {
+        PlacedTile {
+            pg2: self.to_pg2(),
+            tile: self,
+        }
+    }
+}
+
+pub struct PlacedTile {
+    pg2: Pg2,
+    tile: Tile,
+}
+
+impl PlacedTile {
     pub fn to_strapwork(&self) -> Vec<Sg2> {
-        let tile = self.to_pg2();
-        let g = self.enum_type;
+        let g = self.tile.enum_type;
         let mut strapwork = vec![];
 
-        for (edge1, edgeb) in tile
+        for (edge1, edgeb) in self
+            .pg2
             .to_segments()
             .iter()
-            .zip(tile.to_segments().iter().cycle().skip(1))
+            .zip(self.pg2.to_segments().iter().cycle().skip(1))
         {
             let a_ray_angle = {
                 let a_angle = edge1.ray_angle();
@@ -142,7 +163,7 @@ impl Tile {
 
                 let sg_1_f = edge1.midpoint() + PolarPt(0.1, angle_1);
                 let sg_2_f = edge1.midpoint() + PolarPt(0.1, angle_2);
-                match (tile.contains_pt(&sg_1_f), tile.contains_pt(&sg_2_f)) {
+                match (self.pg2.contains_pt(&sg_1_f), self.pg2.contains_pt(&sg_2_f)) {
                     (PointLoc::Inside, _) => angle_1,
                     (_, PointLoc::Inside) => angle_2,
                     _ => panic!("oh"),
@@ -179,7 +200,8 @@ impl Tile {
             let mut s_ver = vec![];
 
             let tile_contains = |sg: &Sg2| {
-                tile.point_is_inside_or_on_border(&sg.i) && tile.point_is_inside_or_on_border(&sg.f)
+                self.pg2.point_is_inside_or_on_border(&sg.i)
+                    && self.pg2.point_is_inside_or_on_border(&sg.f)
             };
 
             for s in strapwork {
@@ -192,11 +214,11 @@ impl Tile {
                         // perpendicular to a line of symmetry. Don't ask me how I
                         // know it. And don't ask me to generalize it.
                         let (perp_ray_1, perp_ray_2) =
-                            tile.to_segments()[0].rays_perpendicular_both();
+                            self.pg2.to_segments()[0].rays_perpendicular_both();
 
                         let pt_inside = match (
-                            tile.point_is_inside_or_on_border(&s.i),
-                            tile.point_is_inside_or_on_border(&s.f),
+                            self.pg2.point_is_inside_or_on_border(&s.i),
+                            self.pg2.point_is_inside_or_on_border(&s.f),
                         ) {
                             (true, false) => s.i,
                             (false, true) => s.f,
@@ -223,7 +245,60 @@ impl Tile {
 
         strapwork_verified
     }
+
+    pub fn to_styledobjs(&self) -> Vec<StyledObj2> {
+        let outline: StyledObj2 = StyledObj2::new(self.pg2.clone())
+            .with_thickness(2.0)
+            .with_color(self.tile.color());
+
+        let straps = self.to_strapwork().into_iter().map(|s: Sg2| {
+            StyledObj2::new(s)
+                .with_thickness(1.0)
+                .with_color(self.tile.color())
+        });
+
+        let mut v: Vec<StyledObj2> = vec![];
+        v.push(outline);
+        v.extend(straps);
+        v
+    }
 }
+
+// #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+// struct PieSlice(Girih, usize, K);
+//
+// const ALL_SLICES: &[PieSlice] = &[
+//     // TABL => (4/5, K::A)
+//     PieSlice(Girih::Tabl, 4, K::A),
+//     // PANGE => (3/5, K::A)
+//     PieSlice(Girih::Pange, 3, K::A),
+//     // SHESHBAND => (2/5, K::A), (4/5, K::B), (4/5, K::C)
+//     PieSlice(Girih::SheshBand, 2, K::A),
+//     PieSlice(Girih::SheshBand, 4, K::B),
+//     PieSlice(Girih::SheshBand, 4, K::C),
+//     // TORANGE => (2/5, K::A), (3/5, K::B)
+//     PieSlice(Girih::Torange, 2, K::A),
+//     PieSlice(Girih::Torange, 3, K::B),
+//     // SORMEHDAN => (6/5, K::A), (2/5, K::B), (2/5, K::C)
+//     PieSlice(Girih::SormehDan, 6, K::A),
+//     PieSlice(Girih::SormehDan, 2, K::B),
+//     PieSlice(Girih::SormehDan, 2, K::C),
+// ];
+//
+// #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+// struct PieChart {
+//     pie_slices: Vec<PieSlice>,
+// }
+//
+// impl PieChart {
+//     fn is_complete(&self) -> bool {
+//         self.pie_slices
+//             .iter()
+//             .map(|PieSlice(_, n, _)| n)
+//             .sum::<usize>()
+//             == 10
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
