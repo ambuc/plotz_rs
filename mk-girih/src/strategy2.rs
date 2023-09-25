@@ -1,4 +1,5 @@
 use crate::geom::*;
+use average::Mean;
 use itertools::Itertools;
 use plotz_geometry::{
     bounded::Bounded,
@@ -30,6 +31,19 @@ impl Layout {
     }
 
     fn next_bare_edge(&self) -> Sg2 {
+        // what if we WEIGHTED these by proximity to average center?
+        // step (1) find average center of whole board.
+        let ctrs: Vec<Pt2> = self
+            .placed_tiles
+            .iter()
+            .map(|placed_tile| placed_tile.pg2.bbox_center())
+            .collect::<Vec<_>>();
+
+        let mean_x: Mean = ctrs.iter().map(|pt2| pt2.x.0).collect();
+        let mean_y: Mean = ctrs.iter().map(|pt2| pt2.y.0).collect();
+        let ctr: Pt2 = Pt2(mean_x.mean(), mean_y.mean());
+
+        let mut bare_edges = vec![];
         for placed_tile in &self.placed_tiles {
             for segment in placed_tile.pg2.to_segments() {
                 // both rays which emit from the midpoint.
@@ -43,12 +57,16 @@ impl Layout {
                         .iter()
                         .all(|t| t.pg2.point_is_outside(&pt))
                     {
-                        return segment;
+                        bare_edges.push(segment);
                     }
                 }
             }
         }
-        panic!("this should never happen -- how could we have a set of tiles with no border?")
+
+        bare_edges
+            .into_iter()
+            .min_by_key(|sg| float_ord::FloatOrd(sg.midpoint().dist(&ctr)))
+            .expect("bare_edges should never be empty")
     }
 
     // we know the tile and the target edge, but not the source edge.
