@@ -135,7 +135,7 @@ impl Tile {
     }
 
     pub fn place(self, c: Constraint) -> PlacedTile {
-        let mut naive_pg = self.to_naive_pg2();
+        let naive_pg = self.to_naive_pg2();
         let naive_sg: Sg2 = naive_pg.to_segments()[c.src_index];
         let target_sg: Sg2 = c.target;
 
@@ -271,7 +271,7 @@ impl PlacedTile {
         let mut v: Vec<StyledObj2> = vec![];
 
         let outline: StyledObj2 = StyledObj2::new(self.pg2.clone())
-            .with_thickness(2.0)
+            .with_thickness(1.0)
             .with_color(self.tile.color());
         v.push(outline);
 
@@ -283,7 +283,7 @@ impl PlacedTile {
             let axis = Pt2(0, 0);
             let offset = 0.01;
 
-            let straps: Vec<_> = (PlacedTile {
+            (PlacedTile {
                 pg2: {
                     let mut m = self.pg2.clone();
                     m.rotate(&axis, offset);
@@ -299,11 +299,10 @@ impl PlacedTile {
             })
             .map(|s| {
                 StyledObj2::new(s)
-                    .with_thickness(1.0)
+                    .with_thickness(3.0)
                     .with_color(self.tile.color())
             })
-            .collect();
-            straps
+            .collect()
         };
         v.extend(straps);
 
