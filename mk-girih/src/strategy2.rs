@@ -69,19 +69,17 @@ impl Layout {
             .expect("bare_edges should never be empty")
     }
 
-    // we know the tile and the target edge, but not the source edge.
     // returns the placed tile if this was successfully placed _without_ a collision.
     // otherwise, returns none.
     fn place_tile_on_edge(&self, g: Girih, target: &Sg2) -> Option<PlacedTile> {
-        let naive_tile: Tile = Tile::new(g);
-        let naive_pg2: Pg2 = naive_tile.to_naive_pg2();
+        let naive_pg2: Pg2 = Tile::new(g).to_naive_pg2();
 
         for src_index in 0..naive_pg2.to_segments().len() {
             let constraint = Constraint {
                 src_index,
                 target: *target,
             };
-            let cand: PlacedTile = naive_tile.clone().place(constraint);
+            let cand: PlacedTile = Tile::new(g).clone().place(constraint);
             if self.evaluate_cand(&cand) {
                 return Some(cand);
             }
