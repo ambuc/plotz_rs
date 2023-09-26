@@ -3,7 +3,7 @@ use average::Mean;
 use itertools::Itertools;
 use plotz_geometry::{
     bounded::Bounded,
-    shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
+    shapes::{pt2::Pt2, sg2::Sg2},
     styled_obj2::StyledObj2,
 };
 use tracing::info;
@@ -32,7 +32,6 @@ impl Layout {
 
     fn next_bare_edge(&self) -> Sg2 {
         // what if we WEIGHTED these by proximity to average center?
-        // step (1) find average center of whole board.
         let ctrs: Vec<Pt2> = self
             .placed_tiles
             .iter()
@@ -69,22 +68,19 @@ impl Layout {
             .expect("bare_edges should never be empty")
     }
 
-    // returns the placed tile if this was successfully placed _without_ a collision.
-    // otherwise, returns none.
-    fn place_tile_on_edge(&self, g: Girih, target: &Sg2) -> Option<PlacedTile> {
-        let naive_pg2: Pg2 = Tile::new(g).to_naive_pg2();
-
-        for src_index in 0..naive_pg2.to_segments().len() {
-            let constraint = Constraint {
-                src_index,
-                target: *target,
-            };
-            let cand: PlacedTile = Tile::new(g).clone().place(constraint);
-            if self.evaluate_cand(&cand) {
-                return Some(cand);
-            }
+    fn place_tile_on_edge_src(
+        &self,
+        g: Girih,
+        target: &Sg2,
+        src_index: usize,
+    ) -> Option<PlacedTile> {
+        let cand: PlacedTile = Tile::new(g).clone().place(Constraint {
+            src_index,
+            target: *target,
+        });
+        if self.evaluate_cand(&cand) {
+            return Some(cand);
         }
-
         None
     }
 
@@ -122,16 +118,18 @@ impl Layout {
             true => all_girih_tiles(),
             false => all_girih_tiles_in_random_order(),
         } {
-            for cand_edge in [next_bare_edge, next_bare_edge.flip()] {
-                if let Some(placed_tile) = self.place_tile_on_edge(g, &cand_edge) {
-                    self.placed_tiles.push(placed_tile);
-                    match self.place_next_tile(settings, num_remaining - 1) {
-                        true => {
-                            return true;
-                        }
-                        false => {
-                            self.placed_tiles.pop();
-                            continue;
+            for target in [next_bare_edge, next_bare_edge.flip()] {
+                for src_index in 0..Tile::new(g).to_naive_pg2().pts.len() {
+                    if let Some(placed_tile) = self.place_tile_on_edge_src(g, &target, src_index) {
+                        self.placed_tiles.push(placed_tile);
+                        match self.place_next_tile(settings, num_remaining - 1) {
+                            true => {
+                                return true;
+                            }
+                            false => {
+                                self.placed_tiles.pop();
+                                // implicit continue
+                            }
                         }
                     }
                 }
@@ -139,10 +137,6 @@ impl Layout {
         }
         // if we made it this far without a placement, something is wrong.
         return false;
-    }
-
-    fn add(&mut self, pt: PlacedTile) {
-        self.placed_tiles.push(pt)
     }
 }
 
