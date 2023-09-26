@@ -56,7 +56,7 @@ impl Oblique {
         Sg2(self.project_pt3(&sg3.i), self.project_pt3(&sg3.f))
     }
     pub fn project_pg3(&self, pg3: &Pg3) -> Pg2 {
-        Pg2(pg3.pts.iter().map(|pt3d| self.project_pt3(&pt3d)))
+        Pg2(pg3.pts.iter().map(|pt3d| self.project_pt3(pt3d)))
     }
     pub fn project_obj3(&self, obj3: &Obj3) -> Obj2 {
         match obj3 {

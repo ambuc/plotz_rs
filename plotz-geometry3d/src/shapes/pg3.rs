@@ -40,7 +40,7 @@ impl Pg3 {
     pub fn min_dist_along(&self, view_vector: &Pt3) -> f64 {
         self.pts
             .iter()
-            .map(|pt| FloatOrd(view_vector.dot(&pt)))
+            .map(|pt| FloatOrd(view_vector.dot(pt)))
             .min()
             .unwrap()
             .0
@@ -49,7 +49,7 @@ impl Pg3 {
     pub fn max_dist_along(&self, view_vector: &Pt3) -> f64 {
         self.pts
             .iter()
-            .map(|pt| FloatOrd(view_vector.dot(&pt)))
+            .map(|pt| FloatOrd(view_vector.dot(pt)))
             .max()
             .unwrap()
             .0
@@ -78,7 +78,6 @@ impl Add<Pt3> for &Pg3 {
     fn add(self, rhs: Pt3) -> Self::Output {
         Pg3 {
             pts: self.pts.iter().map(|p| *p + rhs).collect(),
-            ..self.clone()
         }
     }
 }
@@ -98,7 +97,6 @@ impl Div<Pt3> for Pg3 {
     fn div(self, rhs: Pt3) -> Self::Output {
         Pg3 {
             pts: self.pts.iter().map(|p| *p / rhs).collect(),
-            ..self
         }
     }
 }
@@ -107,7 +105,6 @@ impl Div<f64> for Pg3 {
     fn div(self, rhs: f64) -> Self::Output {
         Pg3 {
             pts: self.pts.iter().map(|p| *p / rhs).collect(),
-            ..self
         }
     }
 }
@@ -126,7 +123,6 @@ impl Mul<Pt3> for Pg3 {
     fn mul(self, rhs: Pt3) -> Pg3 {
         Pg3 {
             pts: self.pts.iter().map(|p| *p * rhs).collect(),
-            ..self
         }
     }
 }
@@ -152,7 +148,6 @@ impl Sub<Pt3> for &Pg3 {
     fn sub(self, rhs: Pt3) -> Self::Output {
         Pg3 {
             pts: self.pts.iter().map(|p| *p - rhs).collect(),
-            ..self.clone()
         }
     }
 }
@@ -161,7 +156,6 @@ impl Sub<Pt3> for Pg3 {
     fn sub(self, rhs: Pt3) -> Self::Output {
         Pg3 {
             pts: self.pts.iter().map(|p| *p - rhs).collect(),
-            ..self
         }
     }
 }

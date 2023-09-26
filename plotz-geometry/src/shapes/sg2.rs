@@ -35,18 +35,12 @@ pub enum Contains {
     AtEnd,
 }
 /// A segment in 2D space, with initial and final points.
-#[derive(Debug, Clone, Copy, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Sg2 {
     /// The initial point of the segment.
     pub i: Pt2,
     /// The final point of the segment.
     pub f: Pt2,
-}
-
-impl PartialEq for Sg2 {
-    fn eq(&self, other: &Self) -> bool {
-        self.i == other.i && self.f == other.f
-    }
 }
 
 /// An alternate constructor for segments.

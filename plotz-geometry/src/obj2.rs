@@ -301,7 +301,6 @@ impl Croppable for Obj2 {
                     .to_segments()
                     .into_iter()
                     .flat_map(|sg| sg.crop(frame, crop_type))
-                    .into_iter()
                     .map(Obj2::from)
                     .collect::<Vec<_>>(),
                 PolygonKind::Closed => pg
@@ -353,7 +352,6 @@ impl Croppable for Obj2 {
                     .to_segments()
                     .into_iter()
                     .flat_map(|sg| sg.crop_excluding(other))
-                    .into_iter()
                     .map(Obj2::from)
                     .collect::<Vec<_>>(),
                 PolygonKind::Closed => pg

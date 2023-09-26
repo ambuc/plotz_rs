@@ -49,7 +49,6 @@ fn main_inner(args: Args) {
         .input_files(
             glob(&args.input_glob)
                 .expect("failed to read glob pattern")
-                .into_iter()
                 .collect::<Result<Vec<_>, _>>()
                 .unwrap(),
         )

@@ -327,7 +327,7 @@ mod tests {
     #[test]
     fn test_foo() {
         // assert_eq!(1, 2);
-        let t = Tile::new(Girih::Tabl);
-        let p = Tile::new(Girih::Pange);
+        let _t = Tile::new(Girih::Tabl);
+        let _p = Tile::new(Girih::Pange);
     }
 }

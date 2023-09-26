@@ -31,6 +31,12 @@ pub struct Canvas {
     pub frame: Option<StyledObj2>,
 }
 
+impl Default for Canvas {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Canvas {
     /// Create a new Canvas.
     pub fn new() -> Canvas {
@@ -117,12 +123,8 @@ impl Canvas {
     fn scale_to_fit_frame(mut self) -> Result<Self, Error> {
         {
             let frame_bounds = self.frame.clone().ok_or(anyhow!("no frame"))?.bounds();
-            let inner_bounds = streaming_bbox(
-                self.dos_by_bucket
-                    .iter()
-                    .map(|(_bucket, dos)| dos)
-                    .flatten(),
-            )?;
+            let inner_bounds =
+                streaming_bbox(self.dos_by_bucket.iter().flat_map(|(_bucket, dos)| dos))?;
 
             let buffer = 0.9;
             let w_scale = frame_bounds.width() / inner_bounds.width();

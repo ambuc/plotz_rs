@@ -143,7 +143,6 @@ fn split_range(
 /// times. This is nice on a pen plotter.
 pub fn CurveArcs(ctr: Pt2, sweep: RangeInclusive<f64>, radius: f64) -> Vec<CurveArc> {
     split_range(sweep, 0.0..=TAU)
-        .into_iter()
         .map(|r| CurveArc(ctr, r, radius))
         .collect::<Vec<_>>()
 }

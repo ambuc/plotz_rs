@@ -94,7 +94,7 @@ fn map_bucket_to_color(bucket: &Bucket) -> Option<&'static ColorRGB> {
     match bucket {
         Bucket::Frame => Some(&BLACK),
 
-        Bucket::Color(c) => Some(&c),
+        Bucket::Color(c) => Some(c),
 
         Bucket::Area(area) => match area {
             Area::Beach => Some(&TAN),
@@ -214,17 +214,13 @@ impl Map {
                 .iter()
                 .flat_map(|(obj_inner, tags)| {
                     bucketer.bucket(tags).into_iter().flat_map(|bucket| {
-                        if let Some(color) = map_bucket_to_color(&bucket) {
-                            Some(AnnotatedObject2d {
-                                object_2d: StyledObj2::new(obj_inner.clone())
-                                    .with_color(color)
-                                    .with_thickness(*DEFAULT_THICKNESS),
-                                bucket,
-                                _tags: tags.clone(),
-                            })
-                        } else {
-                            None
-                        }
+                        map_bucket_to_color(&bucket).map(|color| AnnotatedObject2d {
+                            object_2d: StyledObj2::new(obj_inner.clone())
+                                .with_color(color)
+                                .with_thickness(*DEFAULT_THICKNESS),
+                            bucket,
+                            _tags: tags.clone(),
+                        })
                     })
                 })
                 .collect::<Vec<AnnotatedObject2d>>()
@@ -325,7 +321,7 @@ impl Map {
                     let crosshatchings: Vec<StyledObj2> = layers
                         .iter()
                         .filter_map(|co| match &co.inner {
-                            Obj2::Pg2(p) => match shade_polygon(shade_config, &p) {
+                            Obj2::Pg2(p) => match shade_polygon(shade_config, p) {
                                 Err(_) => None,
                                 Ok(segments) => Some(
                                     segments
@@ -393,11 +389,7 @@ impl Map {
     pub fn crop_to_frame(&mut self, frame: &Pg2) {
         trace!("Cropping all to frame.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
-            *dos = dos
-                .into_iter()
-                .map(|d_o| d_o.crop_to(&frame))
-                .flatten()
-                .collect();
+            *dos = dos.iter_mut().flat_map(|d_o| d_o.crop_to(frame)).collect();
         }
     }
 
@@ -408,7 +400,7 @@ impl Map {
         trace!("Turning polygons into segments.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             *dos = dos
-                .into_iter()
+                .iter_mut()
                 .flat_map(|d_o| {
                     match d_o.inner.clone() {
                         Obj2::Pg2(pg) => pg.to_segments().into_iter().map(Obj2::from).collect(),
@@ -502,9 +494,10 @@ impl Map {
             let () = self.crop_to_frame(&frame);
         }
 
-        Ok(self
-            .canvas
-            .write_to_svg_or_die(config.size, config.output_directory.to_str().unwrap()))
+        self.canvas
+            .write_to_svg_or_die(config.size, config.output_directory.to_str().unwrap());
+
+        Ok(())
     }
 }
 

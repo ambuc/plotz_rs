@@ -1,13 +1,12 @@
 use crate::geom::*;
 use average::Mean;
-use itertools::Itertools;
 use plotz_geometry::{
     bounded::Bounded,
     shapes::{pt2::Pt2, sg2::Sg2},
     styled_obj2::StyledObj2,
 };
-use rand::{prelude::SliceRandom, Rng};
-use std::f64::consts::{PI, TAU};
+use rand::Rng;
+use std::f64::consts::TAU;
 use tracing::info;
 
 #[derive(Debug)]
@@ -87,8 +86,6 @@ impl Layout {
     }
 
     fn evaluate_cand(&self, cand: &PlacedTile) -> bool {
-        use rayon::prelude::*;
-
         let cand_ctr = cand.pg2.bbox_center();
         let test_pts: Vec<Pt2> = std::iter::once(cand.pg2.bbox_center())
             .chain(
@@ -172,7 +169,7 @@ impl Layout {
                 let mut rng = rand::thread_rng();
                 // TODO(jbuckland): this is wrong, actually.
                 // how do we implement weighted shuffle !?
-                choices.sort_by_key(|(item, weight)| {
+                choices.sort_by_key(|(_item, weight)| {
                     float_ord::FloatOrd(rng.gen::<f64>() * (*weight as f64))
                 });
                 choices

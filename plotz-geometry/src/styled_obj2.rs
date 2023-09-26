@@ -64,10 +64,7 @@ impl StyledObj2 {
     }
     /// with a style
     pub fn with_style(self, style: Style) -> StyledObj2 {
-        StyledObj2 {
-            style: style,
-            ..self
-        }
+        StyledObj2 { style, ..self }
     }
 }
 

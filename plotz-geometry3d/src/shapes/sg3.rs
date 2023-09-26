@@ -7,16 +7,10 @@ use {
 };
 
 // A segment in 3d space, with initial and final points.
-#[derive(Debug, Clone, Copy, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Sg3 {
     pub i: Pt3,
     pub f: Pt3,
-}
-
-impl PartialEq for Sg3 {
-    fn eq(&self, other: &Self) -> bool {
-        self.i == other.i && self.f == other.f
-    }
 }
 
 #[allow(non_snake_case)]

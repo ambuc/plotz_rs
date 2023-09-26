@@ -26,6 +26,12 @@ pub struct Scene {
     debug: Option<SceneDebug>,
 }
 
+impl Default for Scene {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Scene {
     pub fn new() -> Scene {
         Scene::builder().build()
@@ -53,7 +59,7 @@ impl Scene {
                         &FloatOrd(o2.inner.min_dist_along(&obl.view_vector())),
                     )
                 }) {
-                    let sobj2 = obl.project_styled_obj3(&sobj3);
+                    let sobj2 = obl.project_styled_obj3(sobj3);
 
                     if let Some(SceneDebug {
                         draw_wireframes,
@@ -68,7 +74,7 @@ impl Scene {
                                 .push(sobj2.clone().with_color(color).with_thickness(*thickness));
                         }
                         if let Some(settings) = should_annotate {
-                            resultant.extend(sobj2.annotate(&settings));
+                            resultant.extend(sobj2.annotate(settings));
                         }
                     }
 

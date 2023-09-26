@@ -35,6 +35,7 @@ Some useful cargo commands for working with a repo with many crates:
 * `cargo build --workspace --color=always`
 * `cargo test --release --workspace -- --nocapture --color=always`
 * `RUST_LOG=info cargo run --release -- --input-glob testdata/wuppertal.geojson --output-directory "/tmp/" --width 1024 --height 1024`
+* `cargo nextest run --workspace --color=always --release`
 
 ## License
 

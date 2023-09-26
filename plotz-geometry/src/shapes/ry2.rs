@@ -39,7 +39,7 @@ impl Ry2 {
     /// Returns if one ray intersects a segment.
     pub fn intersects_sg(&self, other: &Sg2) -> Option<IsxnResult> {
         let self_sg = Sg2(self.pt, self.pt + PolarPt(10.0, self.angle_out_rad));
-        self_sg.intersects(&other)
+        self_sg.intersects(other)
     }
 
     /// Returns a version of this ray rotated by |angle| rad.

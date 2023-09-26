@@ -57,9 +57,10 @@ impl Occluder {
         for existing_o in &self.objects {
             incoming_os = incoming_os
                 .iter()
-                .map(|incoming_o| Occluder::hide_a_behind_b(&incoming_o.inner, &existing_o.inner))
-                .flatten()
-                .map(|obj2| StyledObj2::new(obj2.clone()).with_style(incoming2.style))
+                .flat_map(|incoming_o| {
+                    Occluder::hide_a_behind_b(&incoming_o.inner, &existing_o.inner)
+                })
+                .map(|obj2| StyledObj2::new(obj2).with_style(incoming2.style))
                 .collect::<Vec<_>>();
         }
         self.objects.extend(incoming_os.into_iter());
@@ -69,10 +70,7 @@ impl Occluder {
     pub fn export(mut self) -> Vec<StyledObj2> {
         // we store them front-to-back, but we want to render them to svg back-to-front.
         self.objects.reverse();
-        self.objects
-            .into_iter()
-            .flat_map(|sobj2| export_obj(sobj2))
-            .collect()
+        self.objects.into_iter().flat_map(export_obj).collect()
     }
 }
 

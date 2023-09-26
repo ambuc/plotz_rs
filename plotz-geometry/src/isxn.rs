@@ -27,7 +27,7 @@ impl Pct {
         }
     }
     /// as an f64.
-    pub fn to_f64(&self) -> f64 {
+    pub fn as_f64(&self) -> f64 {
         match self {
             Pct::Zero => 0.0,
             Pct::Val(f) => *f,
@@ -107,11 +107,11 @@ impl Intersection {
 
     /// The percent of the way along line A at which the intersection occurs.
     pub fn percent_along_a(&self) -> FloatOrd<f64> {
-        FloatOrd(self.a_pct.to_f64())
+        FloatOrd(self.a_pct.as_f64())
     }
     /// The percent of the way along line B at which the intersection occurs.
     pub fn percent_along_b(&self) -> FloatOrd<f64> {
-        FloatOrd(self.b_pct.to_f64())
+        FloatOrd(self.b_pct.as_f64())
     }
 
     /// The percent of the way along line |N| at which the intersection occurs.
@@ -145,8 +145,8 @@ impl Debug for Intersection {
             f,
             "pt({:?}) {:.0}% along a, {:.0}% along b",
             pt,
-            100.0 * a_pct.to_f64(),
-            100.0 * b_pct.to_f64()
+            100.0 * a_pct.as_f64(),
+            100.0 * b_pct.as_f64()
         )
     }
 }
