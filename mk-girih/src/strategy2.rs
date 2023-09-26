@@ -5,14 +5,47 @@ use plotz_geometry::{
     shapes::{pt2::Pt2, sg2::Sg2},
     styled_obj2::StyledObj2,
 };
-use rand::Rng;
-use std::f64::consts::TAU;
+use rand::{seq::SliceRandom, Rng};
+use std::f64::consts::{PI, TAU};
 use tracing::info;
 
 #[derive(Debug)]
 pub struct Settings {
     pub num_iterations: usize,
     pub is_deterministic: bool,
+}
+
+impl Settings {
+    pub fn choices(&self) -> Vec<Girih> {
+        match self.is_deterministic {
+            true => all_girih_tiles(),
+            false => {
+                let mut weighted_choices = vec![
+                    (Girih::SormehDan, 1),
+                    (Girih::Tabl, 1),
+                    (Girih::Pange, 1),
+                    (Girih::Torange, 1),
+                    (Girih::SheshBand, 1),
+                ];
+                let mut dest = vec![];
+                let mut rng = rand::thread_rng();
+                while !weighted_choices.is_empty() {
+                    let marble = weighted_choices
+                        .choose_weighted(&mut rng, |(item, weight)| *weight)
+                        .unwrap()
+                        .0;
+                    weighted_choices.remove(
+                        weighted_choices
+                            .iter()
+                            .position(|(item, weight)| *item == marble)
+                            .unwrap(),
+                    );
+                    dest.push(marble);
+                }
+                dest
+            }
+        }
+    }
 }
 
 struct Layout {
@@ -119,7 +152,7 @@ impl Layout {
             for _ in 0..=10 {
                 // ten times, rotate the rotor by TAU/10 (or, (2PI)/10)
                 let axis = rotor.i;
-                rotor.rotate(&axis, 1.0 / 10.0 * TAU);
+                rotor.rotate(&axis, 1.0 / 11.0 * TAU);
 
                 let trial_pt = rotor.f;
                 results.push(
@@ -156,29 +189,8 @@ impl Layout {
 
         let next_bare_edge: Sg2 = self.next_bare_edge();
 
-        for g in match settings.is_deterministic {
-            true => all_girih_tiles(),
-            false => {
-                let mut choices = vec![
-                    (Girih::SormehDan, 2),
-                    (Girih::Tabl, 1),
-                    (Girih::Pange, 1),
-                    (Girih::Torange, 1),
-                    (Girih::SheshBand, 1),
-                ];
-                let mut rng = rand::thread_rng();
-                // TODO(jbuckland): this is wrong, actually.
-                // how do we implement weighted shuffle !?
-                choices.sort_by_key(|(_item, weight)| {
-                    float_ord::FloatOrd(rng.gen::<f64>() * (*weight as f64))
-                });
-                choices
-                    .into_iter()
-                    .map(|(item, _)| item)
-                    .collect::<Vec<_>>()
-            }
-        } {
-            for target in [next_bare_edge, next_bare_edge.flip()] {
+        for g in settings.choices() {
+            for target in [next_bare_edge.flip(), next_bare_edge] {
                 for src_index in 0..Tile::new(g).to_naive_pg2().pts.len() {
                     if let Some(placed_tile) = self.place_tile_on_edge_src(g, &target, src_index) {
                         self.placed_tiles.push(placed_tile);
@@ -203,10 +215,11 @@ impl Layout {
 pub fn run(settings: &Settings) -> impl Iterator<Item = StyledObj2> {
     let all_tiles = all_girih_tiles();
 
-    let mut layout = Layout::new(Tile::new(all_tiles[0]).place(Constraint {
-        src_index: 0,
-        target: Sg2(Pt2(0, 0), Pt2(1, 0)),
-    }));
+    let mut layout = Layout::new({
+        let tile = Tile::new(Girih::SormehDan);
+        let mut pg2 = tile.to_naive_pg2();
+        PlacedTile { pg2, tile }
+    });
 
     assert!(layout.place_next_tile(settings, settings.num_iterations));
 
