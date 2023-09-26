@@ -274,7 +274,7 @@ impl PlacedTile {
         .map(|mut s| {
             s.rotate(&axis, -offset);
             StyledObj2::new(s)
-                .with_thickness(3.0)
+                .with_thickness(1.0)
                 .with_color(self.tile.color())
         })
         .collect();

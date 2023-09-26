@@ -31,12 +31,12 @@ fn main() {
 
     Canvas::from_objs(
         strategy2::run(&strategy2::Settings {
-            num_iterations: 25,
+            num_iterations: 250,
             is_deterministic: false,
         })
         .map(|mut so2| {
-            so2 *= 40.0;
-            so2 += Pt2(300, 300);
+            so2 *= 20.0;
+            so2 += Pt2(300, 400);
             so2
         }),
         /*autobucket=*/

@@ -6,6 +6,8 @@ use plotz_geometry::{
     shapes::{pt2::Pt2, sg2::Sg2},
     styled_obj2::StyledObj2,
 };
+use rand::{prelude::SliceRandom, Rng};
+use std::f64::consts::{PI, TAU};
 use tracing::info;
 
 #[derive(Debug)]
@@ -98,11 +100,54 @@ impl Layout {
             .chain(cand.pg2.pts.iter().map(|pt| pt.avg(&cand_ctr)))
             .collect::<Vec<_>>();
 
-        !(self.placed_tiles.iter())
-            .cartesian_product(test_pts.iter())
-            .collect::<Vec<_>>()
-            .par_iter()
-            .any(|(extant_tile, test_pt)| extant_tile.pg2.point_is_inside(&test_pt))
+        for extant_tile in &self.placed_tiles {
+            for test_pt in &test_pts {
+                if extant_tile.pg2.point_is_inside(&test_pt) {
+                    // one of our candidate test points is wholly within an extant tile; this means collision.
+                    return false;
+                }
+            }
+        }
+
+        // not having collisions is very important. but there is another
+        // important characteristic as well. we want to make sure that, around
+        // each corner of the newly placed tile, we haven't created a tight
+        // corner -- an acute angle of size pi/5 (for example) which no tile
+        // could fill.
+
+        for cand_sg in &cand.pg2.to_segments() {
+            let mut results: Vec<bool> = vec![];
+            let mut rotor = Sg2(cand_sg.i, cand_sg.midpoint());
+            rotor.rotate(&cand_sg.i, 0.001 * TAU); // offset
+            for _ in 0..=10 {
+                // ten times, rotate the rotor by TAU/10 (or, (2PI)/10)
+                let axis = rotor.i;
+                rotor.rotate(&axis, 1.0 / 10.0 * TAU);
+
+                let trial_pt = rotor.f;
+                results.push(
+                    cand.pg2.point_is_inside(&trial_pt)
+                        || self
+                            .placed_tiles
+                            .iter()
+                            .any(|extant_tile| extant_tile.pg2.point_is_inside(&trial_pt)),
+                );
+            }
+            for window in results
+                .iter()
+                .cycle()
+                .take(13)
+                .cloned()
+                .collect::<Vec<bool>>()
+                .windows(3)
+            {
+                if matches!(window, [true, false, true]) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     // returns true if successfully placed tile (or if no tile needed to be placed.)
@@ -116,7 +161,25 @@ impl Layout {
 
         for g in match settings.is_deterministic {
             true => all_girih_tiles(),
-            false => all_girih_tiles_in_random_order(),
+            false => {
+                let mut choices = vec![
+                    (Girih::SormehDan, 2),
+                    (Girih::Tabl, 1),
+                    (Girih::Pange, 1),
+                    (Girih::Torange, 1),
+                    (Girih::SheshBand, 1),
+                ];
+                let mut rng = rand::thread_rng();
+                // TODO(jbuckland): this is wrong, actually.
+                // how do we implement weighted shuffle !?
+                choices.sort_by_key(|(item, weight)| {
+                    float_ord::FloatOrd(rng.gen::<f64>() * (*weight as f64))
+                });
+                choices
+                    .into_iter()
+                    .map(|(item, _)| item)
+                    .collect::<Vec<_>>()
+            }
         } {
             for target in [next_bare_edge, next_bare_edge.flip()] {
                 for src_index in 0..Tile::new(g).to_naive_pg2().pts.len() {
