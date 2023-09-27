@@ -146,7 +146,9 @@ impl Layout {
         // corner -- an acute angle of size pi/5 (for example) which no tile
         // could fill.
 
-        for cand_sg in &cand.pg2.to_segments() {
+        // if there's _any_ collision, return false;
+        if cand.pg2.to_segments().par_iter().any(|cand_sg| -> bool {
+            // returns true if there's a collision
             let mut results: Vec<bool> = vec![];
             let mut rotor = Sg2(cand_sg.i, cand_sg.midpoint());
             rotor.rotate(&cand_sg.i, 0.001 * TAU); // offset
@@ -164,18 +166,20 @@ impl Layout {
                             .any(|extant_tile| extant_tile.pg2.point_is_inside(&trial_pt)),
                 );
             }
-            for window in results
+            if results
                 .iter()
                 .cycle()
-                .take(13)
-                .cloned()
-                .collect::<Vec<bool>>()
+                .take(11)
+                .collect::<Vec<_>>()
                 .windows(3)
+                .any(|window| matches!(window, [true, false, true]))
             {
-                if matches!(window, [true, false, true]) {
-                    return false;
-                }
+                return true;
             }
+            return false;
+        }) {
+            // if there's any collision, return false.
+            return false;
         }
 
         return true;
