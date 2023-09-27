@@ -138,9 +138,9 @@ impl Tile {
 // because girih tiles all have the same length, this will involve rotation and
 // translation but never scaling.
 #[derive(Debug)]
-pub struct Constraint {
+pub struct Constraint<'a> {
     pub src_index: usize,
-    pub target: Sg2,
+    pub target: &'a Sg2,
 }
 
 #[derive(Debug)]

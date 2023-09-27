@@ -1,12 +1,13 @@
 use crate::geom::*;
-use average::Mean;
+use itertools::Itertools;
 use plotz_geometry::{
     bounded::Bounded,
     shapes::{pt2::Pt2, sg2::Sg2},
     styled_obj2::StyledObj2,
 };
-use rand::{seq::SliceRandom, Rng};
-use std::f64::consts::{PI, TAU};
+use rand::seq::SliceRandom;
+use rayon::iter::*;
+use std::f64::consts::TAU;
 use tracing::info;
 
 #[derive(Debug)]
@@ -21,28 +22,15 @@ impl Settings {
             true => all_girih_tiles(),
             false => {
                 let mut weighted_choices = vec![
-                    (Girih::SormehDan, 1),
-                    (Girih::Tabl, 1),
-                    (Girih::Pange, 1),
-                    (Girih::Torange, 1),
-                    (Girih::SheshBand, 1),
+                    Girih::SormehDan,
+                    Girih::Tabl,
+                    Girih::Pange,
+                    Girih::Torange,
+                    Girih::SheshBand,
                 ];
-                let mut dest = vec![];
                 let mut rng = rand::thread_rng();
-                while !weighted_choices.is_empty() {
-                    let marble = weighted_choices
-                        .choose_weighted(&mut rng, |(item, weight)| *weight)
-                        .unwrap()
-                        .0;
-                    weighted_choices.remove(
-                        weighted_choices
-                            .iter()
-                            .position(|(item, weight)| *item == marble)
-                            .unwrap(),
-                    );
-                    dest.push(marble);
-                }
-                dest
+                weighted_choices.shuffle(&mut rng);
+                weighted_choices
             }
         }
     }
@@ -103,20 +91,12 @@ impl Layout {
             .expect("bare_edges should never be empty")
     }
 
-    fn place_tile_on_edge_src(
-        &self,
-        g: Girih,
-        target: &Sg2,
-        src_index: usize,
-    ) -> Option<PlacedTile> {
-        let cand: PlacedTile = Tile::new(g).clone().place(Constraint {
-            src_index,
-            target: *target,
-        });
-        if self.evaluate_cand(&cand) {
-            return Some(cand);
+    fn place_tile_on_edge_src(&self, g: Girih, c: Constraint) -> Option<PlacedTile> {
+        let cand: PlacedTile = Tile::new(g).clone().place(c);
+        match self.evaluate_cand(&cand) {
+            true => Some(cand),
+            false => None,
         }
-        None
     }
 
     fn evaluate_cand(&self, cand: &PlacedTile) -> bool {
@@ -131,10 +111,10 @@ impl Layout {
             .chain(cand.pg2.pts.iter().map(|pt| pt.avg(&cand_ctr)))
             .collect::<Vec<_>>();
 
-        use itertools::Itertools;
-        use rayon::prelude::*;
         if (self.placed_tiles.iter())
             .cartesian_product(test_pts.iter())
+            .collect::<Vec<_>>()
+            .par_iter()
             .any(|(extant_tile, test_pt)| extant_tile.pg2.point_is_inside(&test_pt))
         {
             return false;
@@ -195,19 +175,33 @@ impl Layout {
         let next_bare_edge: Sg2 = self.next_bare_edge();
 
         for g in settings.choices() {
-            for target in [next_bare_edge.flip(), next_bare_edge] {
-                for src_index in 0..Tile::new(g).to_naive_pg2().pts.len() {
-                    if let Some(placed_tile) = self.place_tile_on_edge_src(g, &target, src_index) {
-                        self.placed_tiles.push(placed_tile);
-                        match self.place_next_tile(settings, num_remaining - 1) {
-                            true => {
-                                return true;
-                            }
-                            false => {
-                                self.placed_tiles.pop();
-                                // implicit continue
-                            }
-                        }
+            let num_pts = Tile::new(g).to_naive_pg2().pts.len();
+
+            let next_tiles: Vec<_> = [next_bare_edge, next_bare_edge.flip()]
+                .into_iter()
+                .cartesian_product(0..num_pts)
+                .collect::<Vec<_>>()
+                .into_par_iter()
+                .flat_map(|(target, src_index)| {
+                    self.place_tile_on_edge_src(
+                        g,
+                        Constraint {
+                            src_index,
+                            target: &target,
+                        },
+                    )
+                })
+                .collect();
+
+            for placed_tile in next_tiles {
+                self.placed_tiles.push(placed_tile);
+                match self.place_next_tile(settings, num_remaining - 1) {
+                    true => {
+                        return true;
+                    }
+                    false => {
+                        self.placed_tiles.pop();
+                        // implicit continue
                     }
                 }
             }
@@ -218,11 +212,9 @@ impl Layout {
 }
 
 pub fn run(settings: &Settings) -> impl Iterator<Item = StyledObj2> {
-    let all_tiles = all_girih_tiles();
-
     let mut layout = Layout::new({
         let tile = Tile::new(Girih::SormehDan);
-        let mut pg2 = tile.to_naive_pg2();
+        let pg2 = tile.to_naive_pg2();
         PlacedTile { pg2, tile }
     });
 
