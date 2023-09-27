@@ -1,13 +1,20 @@
 use crate::geom::*;
 use indicatif::ProgressBar;
 use itertools::Itertools;
+use plotz_color::ColorRGB;
 use plotz_geometry::{
-    shapes::{pt2::Pt2, sg2::Sg2},
+    obj2::Obj2,
+    shapes::{
+        pg2::{multiline::Multiline, Pg2},
+        pt2::Pt2,
+        sg2::Sg2,
+    },
+    style::Style,
     styled_obj2::StyledObj2,
 };
 use rand::seq::SliceRandom;
 use rayon::iter::*;
-use std::f64::consts::TAU;
+use std::{error::Error, f64::consts::TAU};
 use tracing::{info, warn};
 
 #[derive(Debug)]
@@ -223,10 +230,96 @@ impl Layout {
     }
     fn postprocess(&self, so2s: Vec<StyledObj2>) -> Vec<StyledObj2> {
         match self.settings.display {
-            Display::JustStraps(StrapsColoring::Chasing) => todo!(),
+            Display::JustStraps(StrapsColoring::Chasing) => chase(so2s),
             _ => so2s,
         }
     }
+}
+
+fn pts_eq_within(a: &Pt2, b: &Pt2, epsilon: f64) -> bool {
+    a.dist(b) < epsilon
+}
+fn vals_eq_within(a: f64, b: f64, epsilon: f64) -> bool {
+    (a - b).abs() < epsilon
+}
+
+fn remove_from_list(list: &mut Vec<StyledObj2>, item: &Sg2, epsilon: f64) {
+    let item_position: usize = list
+        .iter()
+        .position(|x: &StyledObj2| {
+            let x_sg: &Sg2 = x.inner.to_sg2().expect("x.inner was not sg2");
+            pts_eq_within(&x_sg.i, &item.i, epsilon) && pts_eq_within(&x_sg.f, &item.f, epsilon)
+        })
+        .expect("could not find sg.");
+
+    list.remove(item_position);
+    println!("successful removal");
+}
+
+fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
+    // first of all, we're guaranteed that every element in so2s is
+    // a strap. nothing else.
+    let mut inputs: Vec<StyledObj2> = inputs.clone();
+    let mut outputs: Vec<StyledObj2> = vec![];
+
+    let epsilon: f64 = 0.001;
+
+    while let Some(seed) = inputs.pop() {
+        let pg: Pg2 = (|| {
+            let mut pts: Vec<Pt2> = vec![];
+
+            let sg2: &Sg2 = seed.inner.to_sg2().unwrap();
+            pts.push(sg2.i);
+            let mut cursor: Pt2 = sg2.f;
+
+            // while we haven't finished looping, continue
+            while !pts_eq_within(&cursor, &pts[0], epsilon) {
+                let neighbors: Vec<Sg2> = inputs
+                    .iter()
+                    .flat_map(|cand| cand.inner.to_sg2().clone())
+                    .filter(|cand_sg2: &&Sg2| {
+                        pts_eq_within(&cand_sg2.i, &cursor, epsilon)
+                            || pts_eq_within(&cand_sg2.f, &cursor, epsilon)
+                    })
+                    .cloned()
+                    .collect::<Vec<Sg2>>();
+
+                if neighbors.is_empty() {
+                    // special case -- if we truly have no more neighbors,
+                    // we've hit an edge and it's time to return.
+                    return Multiline(pts).unwrap();
+                }
+
+                let curr = Sg2(*pts.last().unwrap(), cursor);
+                for n in neighbors.iter() {
+                    if vals_eq_within(curr.ray_angle(), n.ray_angle(), epsilon) {
+                        if pts_eq_within(&cursor, &n.i, epsilon) {
+                            pts.push(n.i);
+                            cursor = n.f;
+                        } else if pts_eq_within(&cursor, &n.f, epsilon) {
+                            pts.push(n.f);
+                            cursor = n.i;
+                        } else {
+                            panic!("lies");
+                        }
+                    }
+                    remove_from_list(&mut inputs, &sg2, epsilon);
+                    break;
+                }
+            }
+
+            // finally, continue a continuous polygon.
+            Pg2(pts)
+        })();
+
+        outputs.push(
+            StyledObj2::new(pg)
+                .with_color(plotz_color::take_random_colors(1)[0])
+                .with_thickness(2.0),
+        );
+    }
+
+    outputs
 }
 
 pub fn run() -> Vec<StyledObj2> {
@@ -234,7 +327,8 @@ pub fn run() -> Vec<StyledObj2> {
         Settings {
             num_iterations: 50,
             is_deterministic: false,
-            display: Display::JustStraps(StrapsColoring::Original),
+            display: Display::JustStraps(StrapsColoring::Chasing),
+            // display: Display::All,
         },
         {
             let tile = Tile::new(Girih::SormehDan);

@@ -80,6 +80,13 @@ impl Obj2 {
             Obj2::Sg2(sg) => sg,
         }
     }
+    /// Cast to sg2, if possible
+    pub fn to_sg2(&self) -> Option<&Sg2> {
+        match self {
+            Obj2::Sg2(x) => Some(x),
+            _ => None,
+        }
+    }
 }
 
 impl YieldPoints for Obj2 {
