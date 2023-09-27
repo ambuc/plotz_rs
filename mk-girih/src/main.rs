@@ -30,13 +30,7 @@ fn main() {
     let margin = 25.0;
 
     Canvas::from_objs(
-        strategy2::run(&strategy2::Settings {
-            num_iterations: 50,
-            is_deterministic: false,
-            display: strategy2::Display::JustStraps,
-        })
-        .into_iter()
-        .map(|mut so2| {
+        strategy2::run().into_iter().map(|mut so2| {
             so2 *= 20.0;
             so2 += Pt2(500, 400);
             so2

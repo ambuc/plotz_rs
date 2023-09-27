@@ -11,21 +11,27 @@ use std::f64::consts::TAU;
 use tracing::{info, warn};
 
 #[derive(Debug)]
-pub enum Display {
+enum StrapsColoring {
+    Original,
+    Chasing,
+}
+
+#[derive(Debug)]
+enum Display {
     JustTiles,
-    JustStraps,
+    JustStraps(StrapsColoring),
     All,
 }
 
 #[derive(Debug)]
-pub struct Settings {
-    pub num_iterations: usize,
-    pub is_deterministic: bool,
-    pub display: Display,
+struct Settings {
+    num_iterations: usize,
+    is_deterministic: bool,
+    display: Display,
 }
 
 impl Settings {
-    pub fn choices(&self) -> Vec<Girih> {
+    fn choices(&self) -> Vec<Girih> {
         match self.is_deterministic {
             true => all_girih_tiles(),
             false => {
@@ -45,24 +51,26 @@ impl Settings {
 }
 
 struct Layout {
+    settings: Settings,
     placed_tiles: Vec<PlacedTile>,
 }
 impl Layout {
-    fn new(pt: PlacedTile) -> Layout {
+    fn new(settings: Settings, pt: PlacedTile) -> Layout {
         Layout {
+            settings,
             placed_tiles: vec![pt],
         }
     }
 
-    fn to_styledobjs(self, s: &Settings) -> Vec<StyledObj2> {
+    fn to_styledobjs(&self) -> Vec<StyledObj2> {
         let mut res = vec![];
-        for placed_tile in self.placed_tiles {
+        for placed_tile in &self.placed_tiles {
             let spt = placed_tile.to_styledobjs();
-            match s.display {
+            match self.settings.display {
                 Display::JustTiles => {
                     res.push(spt.outline);
                 }
-                Display::JustStraps => {
+                Display::JustStraps(_) => {
                     res.extend(spt.straps);
                 }
                 Display::All => {
@@ -168,12 +176,7 @@ impl Layout {
     }
 
     // returns true if successfully placed tile (or if no tile needed to be placed.)
-    fn place_next_tile(
-        &mut self,
-        settings: &Settings,
-        num_remaining: usize,
-        bar: &mut ProgressBar,
-    ) -> bool {
+    fn place_next_tile(&mut self, num_remaining: usize, bar: &mut ProgressBar) -> bool {
         // info!("place_next_tile: {:?}", num_remaining);
         if num_remaining == 0 {
             return true;
@@ -181,7 +184,7 @@ impl Layout {
 
         let next_bare_edge: Sg2 = self.next_bare_edge();
 
-        for g in settings.choices() {
+        for g in self.settings.choices() {
             let num_pts = Tile::new(g).to_naive_pg2().pts.len();
 
             let next_tiles: Vec<_> = [next_bare_edge, next_bare_edge.flip()]
@@ -203,7 +206,7 @@ impl Layout {
             for placed_tile in next_tiles {
                 self.placed_tiles.push(placed_tile);
                 bar.inc(1);
-                match self.place_next_tile(settings, num_remaining - 1, bar) {
+                match self.place_next_tile(num_remaining - 1, bar) {
                     true => {
                         return true;
                     }
@@ -218,18 +221,31 @@ impl Layout {
         // if we made it this far without a placement, something is wrong.
         return false;
     }
+    fn postprocess(&self, so2s: Vec<StyledObj2>) -> Vec<StyledObj2> {
+        match self.settings.display {
+            Display::JustStraps(StrapsColoring::Chasing) => todo!(),
+            _ => so2s,
+        }
+    }
 }
 
-pub fn run(settings: &Settings) -> Vec<StyledObj2> {
-    let mut layout = Layout::new({
-        let tile = Tile::new(Girih::SormehDan);
-        let pg2 = tile.to_naive_pg2();
-        PlacedTile { pg2, tile }
-    });
+pub fn run() -> Vec<StyledObj2> {
+    let mut layout = Layout::new(
+        Settings {
+            num_iterations: 50,
+            is_deterministic: false,
+            display: Display::JustStraps(StrapsColoring::Original),
+        },
+        {
+            let tile = Tile::new(Girih::SormehDan);
+            let pg2 = tile.to_naive_pg2();
+            PlacedTile { pg2, tile }
+        },
+    );
 
-    let mut bar = ProgressBar::new(settings.num_iterations.try_into().unwrap());
-    assert!(layout.place_next_tile(settings, settings.num_iterations, &mut bar));
+    let mut bar = ProgressBar::new(layout.settings.num_iterations.try_into().unwrap());
+    assert!(layout.place_next_tile(layout.settings.num_iterations, &mut bar));
     bar.finish();
 
-    layout.to_styledobjs(settings)
+    layout.postprocess(layout.to_styledobjs())
 }
