@@ -7,7 +7,7 @@ use plotz_geometry::{
 use rand::seq::SliceRandom;
 use rayon::iter::*;
 use std::f64::consts::TAU;
-use tracing::info;
+use tracing::{info, warn};
 
 #[derive(Debug)]
 pub struct Settings {
@@ -52,18 +52,6 @@ impl Layout {
     }
 
     fn next_bare_edge(&self) -> Sg2 {
-        // what if we WEIGHTED these by proximity to average center?
-        // let ctrs: Vec<Pt2> = self
-        //     .placed_tiles
-        //     .iter()
-        //     .map(|placed_tile| placed_tile.pg2.bbox_center())
-        //     .collect::<Vec<_>>();
-
-        // let mean_x: Mean = ctrs.iter().map(|pt2| pt2.x.0).collect();
-        // let mean_y: Mean = ctrs.iter().map(|pt2| pt2.y.0).collect();
-        // let ctr: Pt2 = Pt2(mean_x.mean(), mean_y.mean());
-        let ctr: Pt2 = Pt2(0, 0);
-
         let mut bare_edges = vec![];
         for placed_tile in &self.placed_tiles {
             for segment in placed_tile.pg2.to_segments() {
@@ -84,6 +72,7 @@ impl Layout {
             }
         }
 
+        let ctr: Pt2 = Pt2(0, 0);
         bare_edges
             .into_iter()
             .min_by_key(|sg| float_ord::FloatOrd(sg.midpoint().dist(&ctr)))
@@ -117,7 +106,7 @@ impl Layout {
         // could fill.
 
         // if there's _any_ collision, return false;
-        if cand.pg2.to_segments().par_iter().any(|cand_sg| -> bool {
+        if cand.pg2.to_segments().iter().any(|cand_sg| -> bool {
             // returns true if there's a collision
             let mut results: Vec<bool> = vec![];
             let mut rotor = Sg2(cand_sg.i, cand_sg.midpoint());
