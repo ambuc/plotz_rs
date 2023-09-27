@@ -75,8 +75,7 @@ impl Layout {
         // let mean_x: Mean = ctrs.iter().map(|pt2| pt2.x.0).collect();
         // let mean_y: Mean = ctrs.iter().map(|pt2| pt2.y.0).collect();
         // let ctr: Pt2 = Pt2(mean_x.mean(), mean_y.mean());
-        let ctr: Pt2 = Pt2(0,0);
-
+        let ctr: Pt2 = Pt2(0, 0);
 
         let mut bare_edges = vec![];
         for placed_tile in &self.placed_tiles {
@@ -132,13 +131,13 @@ impl Layout {
             .chain(cand.pg2.pts.iter().map(|pt| pt.avg(&cand_ctr)))
             .collect::<Vec<_>>();
 
-        for extant_tile in &self.placed_tiles {
-            for test_pt in &test_pts {
-                if extant_tile.pg2.point_is_inside(&test_pt) {
-                    // one of our candidate test points is wholly within an extant tile; this means collision.
-                    return false;
-                }
-            }
+        use itertools::Itertools;
+        use rayon::prelude::*;
+        if (self.placed_tiles.iter())
+            .cartesian_product(test_pts.iter())
+            .any(|(extant_tile, test_pt)| extant_tile.pg2.point_is_inside(&test_pt))
+        {
+            return false;
         }
 
         // not having collisions is very important. but there is another
