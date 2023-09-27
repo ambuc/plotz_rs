@@ -1,4 +1,5 @@
 use crate::geom::*;
+use indicatif::ProgressBar;
 use itertools::Itertools;
 use plotz_geometry::{
     shapes::{pt2::Pt2, sg2::Sg2},
@@ -145,8 +146,13 @@ impl Layout {
     }
 
     // returns true if successfully placed tile (or if no tile needed to be placed.)
-    fn place_next_tile(&mut self, settings: &Settings, num_remaining: usize) -> bool {
-        info!("place_next_tile: {:?}", num_remaining);
+    fn place_next_tile(
+        &mut self,
+        settings: &Settings,
+        num_remaining: usize,
+        bar: &mut ProgressBar,
+    ) -> bool {
+        // info!("place_next_tile: {:?}", num_remaining);
         if num_remaining == 0 {
             return true;
         }
@@ -174,12 +180,14 @@ impl Layout {
 
             for placed_tile in next_tiles {
                 self.placed_tiles.push(placed_tile);
-                match self.place_next_tile(settings, num_remaining - 1) {
+                bar.inc(1);
+                match self.place_next_tile(settings, num_remaining - 1, bar) {
                     true => {
                         return true;
                     }
                     false => {
                         self.placed_tiles.pop();
+                        bar.set_position(bar.position() - 1);
                         // implicit continue
                     }
                 }
@@ -197,7 +205,9 @@ pub fn run(settings: &Settings) -> impl Iterator<Item = StyledObj2> {
         PlacedTile { pg2, tile }
     });
 
-    assert!(layout.place_next_tile(settings, settings.num_iterations));
+    let mut bar = ProgressBar::new(settings.num_iterations.try_into().unwrap());
+    assert!(layout.place_next_tile(settings, settings.num_iterations, &mut bar));
+    bar.finish();
 
     layout.to_styledobjs()
 }
