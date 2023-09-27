@@ -31,9 +31,11 @@ fn main() {
 
     Canvas::from_objs(
         strategy2::run(&strategy2::Settings {
-            num_iterations: 200,
+            num_iterations: 50,
             is_deterministic: false,
+            display: strategy2::Display::JustStraps,
         })
+        .into_iter()
         .map(|mut so2| {
             so2 *= 20.0;
             so2 += Pt2(500, 400);

@@ -11,9 +11,17 @@ use std::f64::consts::TAU;
 use tracing::{info, warn};
 
 #[derive(Debug)]
+pub enum Display {
+    JustTiles,
+    JustStraps,
+    All,
+}
+
+#[derive(Debug)]
 pub struct Settings {
     pub num_iterations: usize,
     pub is_deterministic: bool,
+    pub display: Display,
 }
 
 impl Settings {
@@ -46,10 +54,24 @@ impl Layout {
         }
     }
 
-    fn to_styledobjs(self) -> impl Iterator<Item = StyledObj2> {
-        self.placed_tiles
-            .into_iter()
-            .flat_map(|pt| pt.to_styledobjs())
+    fn to_styledobjs(self, s: &Settings) -> Vec<StyledObj2> {
+        let mut res = vec![];
+        for placed_tile in self.placed_tiles {
+            let spt = placed_tile.to_styledobjs();
+            match s.display {
+                Display::JustTiles => {
+                    res.push(spt.outline);
+                }
+                Display::JustStraps => {
+                    res.extend(spt.straps);
+                }
+                Display::All => {
+                    res.push(spt.outline);
+                    res.extend(spt.straps);
+                }
+            }
+        }
+        res
     }
 
     fn next_bare_edge(&self) -> Sg2 {
@@ -198,7 +220,7 @@ impl Layout {
     }
 }
 
-pub fn run(settings: &Settings) -> impl Iterator<Item = StyledObj2> {
+pub fn run(settings: &Settings) -> Vec<StyledObj2> {
     let mut layout = Layout::new({
         let tile = Tile::new(Girih::SormehDan);
         let pg2 = tile.to_naive_pg2();
@@ -209,5 +231,5 @@ pub fn run(settings: &Settings) -> impl Iterator<Item = StyledObj2> {
     assert!(layout.place_next_tile(settings, settings.num_iterations, &mut bar));
     bar.finish();
 
-    layout.to_styledobjs()
+    layout.to_styledobjs(settings)
 }

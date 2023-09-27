@@ -252,36 +252,33 @@ impl PlacedTile {
         strapwork_verified
     }
 
-    pub fn to_styledobjs(&self) -> Vec<StyledObj2> {
-        let mut v: Vec<StyledObj2> = vec![];
-
-        let outline: StyledObj2 = StyledObj2::new(self.pg2.clone())
-            .with_thickness(1.0)
-            .with_color(self.tile.color());
-        v.push(outline);
-
+    pub fn to_styledobjs(&self) -> StyledPlacedTile {
         let axis = Pt2(0, 0);
         let offset = 0.01;
-        let straps: Vec<_> = (PlacedTile {
-            pg2: {
-                let mut m = self.pg2.clone();
-                m.rotate(&axis, offset);
-                m
-            },
-            tile: self.tile.clone(),
-        })
-        .to_strapwork()
-        .into_iter()
-        .map(|mut s| {
-            s.rotate(&axis, -offset);
-            StyledObj2::new(s)
-                .with_thickness(1.0)
-                .with_color(self.tile.color())
-        })
-        .collect();
-        v.extend(straps);
 
-        v
+        StyledPlacedTile {
+            outline: StyledObj2::new(self.pg2.clone())
+                .with_thickness(1.0)
+                .with_color(self.tile.color()),
+            //
+            straps: (PlacedTile {
+                pg2: {
+                    let mut m = self.pg2.clone();
+                    m.rotate(&axis, offset);
+                    m
+                },
+                tile: self.tile.clone(),
+            })
+            .to_strapwork()
+            .into_iter()
+            .map(|mut s| {
+                s.rotate(&axis, -offset);
+                StyledObj2::new(s)
+                    .with_thickness(1.0)
+                    .with_color(self.tile.color())
+            })
+            .collect(),
+        }
     }
 
     pub fn test_pts(&self) -> Vec<Pt2> {
@@ -296,6 +293,11 @@ impl PlacedTile {
             .chain(self.pg2.pts.iter().map(|pt| pt.avg(&cand_ctr)))
             .collect::<Vec<_>>()
     }
+}
+
+pub struct StyledPlacedTile {
+    pub outline: StyledObj2,
+    pub straps: Vec<StyledObj2>,
 }
 
 #[cfg(test)]
