@@ -66,15 +66,17 @@ impl Layout {
 
     fn next_bare_edge(&self) -> Sg2 {
         // what if we WEIGHTED these by proximity to average center?
-        let ctrs: Vec<Pt2> = self
-            .placed_tiles
-            .iter()
-            .map(|placed_tile| placed_tile.pg2.bbox_center())
-            .collect::<Vec<_>>();
+        // let ctrs: Vec<Pt2> = self
+        //     .placed_tiles
+        //     .iter()
+        //     .map(|placed_tile| placed_tile.pg2.bbox_center())
+        //     .collect::<Vec<_>>();
 
-        let mean_x: Mean = ctrs.iter().map(|pt2| pt2.x.0).collect();
-        let mean_y: Mean = ctrs.iter().map(|pt2| pt2.y.0).collect();
-        let ctr: Pt2 = Pt2(mean_x.mean(), mean_y.mean());
+        // let mean_x: Mean = ctrs.iter().map(|pt2| pt2.x.0).collect();
+        // let mean_y: Mean = ctrs.iter().map(|pt2| pt2.y.0).collect();
+        // let ctr: Pt2 = Pt2(mean_x.mean(), mean_y.mean());
+        let ctr: Pt2 = Pt2(0,0);
+
 
         let mut bare_edges = vec![];
         for placed_tile in &self.placed_tiles {
