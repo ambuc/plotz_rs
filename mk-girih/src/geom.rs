@@ -2,6 +2,7 @@ use plotz_color::{subway::PURPLE_7, ColorRGB, LIGHTBLUE, LIMEGREEN, ORANGERED, Y
 use plotz_geometry::styled_obj2::StyledObj2;
 use {
     plotz_geometry::{
+        bounded::Bounded,
         crop::PointLoc,
         isxn::{Intersection, IsxnResult},
         shapes::{
@@ -282,43 +283,20 @@ impl PlacedTile {
 
         v
     }
-}
 
-// #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-// struct PieSlice(Girih, usize, K);
-//
-// const ALL_SLICES: &[PieSlice] = &[
-//     // TABL => (4/5, K::A)
-//     PieSlice(Girih::Tabl, 4, K::A),
-//     // PANGE => (3/5, K::A)
-//     PieSlice(Girih::Pange, 3, K::A),
-//     // SHESHBAND => (2/5, K::A), (4/5, K::B), (4/5, K::C)
-//     PieSlice(Girih::SheshBand, 2, K::A),
-//     PieSlice(Girih::SheshBand, 4, K::B),
-//     PieSlice(Girih::SheshBand, 4, K::C),
-//     // TORANGE => (2/5, K::A), (3/5, K::B)
-//     PieSlice(Girih::Torange, 2, K::A),
-//     PieSlice(Girih::Torange, 3, K::B),
-//     // SORMEHDAN => (6/5, K::A), (2/5, K::B), (2/5, K::C)
-//     PieSlice(Girih::SormehDan, 6, K::A),
-//     PieSlice(Girih::SormehDan, 2, K::B),
-//     PieSlice(Girih::SormehDan, 2, K::C),
-// ];
-//
-// #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-// struct PieChart {
-//     pie_slices: Vec<PieSlice>,
-// }
-//
-// impl PieChart {
-//     fn is_complete(&self) -> bool {
-//         self.pie_slices
-//             .iter()
-//             .map(|PieSlice(_, n, _)| n)
-//             .sum::<usize>()
-//             == 10
-//     }
-// }
+    pub fn test_pts(&self) -> Vec<Pt2> {
+        let cand_ctr = self.pg2.bbox_center();
+        std::iter::once(cand_ctr)
+            .chain(
+                self.pg2
+                    .to_segments()
+                    .iter()
+                    .map(|sg2| -> Pt2 { sg2.midpoint() }),
+            )
+            .chain(self.pg2.pts.iter().map(|pt| pt.avg(&cand_ctr)))
+            .collect::<Vec<_>>()
+    }
+}
 
 #[cfg(test)]
 mod tests {

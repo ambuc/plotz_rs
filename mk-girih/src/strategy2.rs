@@ -1,7 +1,6 @@
 use crate::geom::*;
 use itertools::Itertools;
 use plotz_geometry::{
-    bounded::Bounded,
     shapes::{pt2::Pt2, sg2::Sg2},
     styled_obj2::StyledObj2,
 };
@@ -100,16 +99,7 @@ impl Layout {
     }
 
     fn evaluate_cand(&self, cand: &PlacedTile) -> bool {
-        let cand_ctr = cand.pg2.bbox_center();
-        let test_pts: Vec<Pt2> = std::iter::once(cand.pg2.bbox_center())
-            .chain(
-                cand.pg2
-                    .to_segments()
-                    .iter()
-                    .map(|sg2| -> Pt2 { sg2.midpoint() }),
-            )
-            .chain(cand.pg2.pts.iter().map(|pt| pt.avg(&cand_ctr)))
-            .collect::<Vec<_>>();
+        let test_pts = cand.test_pts();
 
         if (self.placed_tiles.iter())
             .cartesian_product(test_pts.iter())
