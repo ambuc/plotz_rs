@@ -1,7 +1,7 @@
 use crate::geom::*;
 use indicatif::ProgressBar;
 use itertools::Itertools;
-use plotz_color::ColorRGB;
+use plotz_color::{ColorRGB, RED};
 use plotz_geometry::{
     obj2::Obj2,
     shapes::{
@@ -14,8 +14,8 @@ use plotz_geometry::{
 };
 use rand::seq::SliceRandom;
 use rayon::iter::*;
-use std::{error::Error, f64::consts::TAU};
-use tracing::{info, warn};
+use std::{error::Error, f32::EPSILON, f64::consts::TAU};
+use tracing::{error, info, warn};
 
 #[derive(Debug)]
 enum StrapsColoring {
@@ -230,19 +230,25 @@ impl Layout {
     }
     fn postprocess(&self, so2s: Vec<StyledObj2>) -> Vec<StyledObj2> {
         match self.settings.display {
-            Display::JustStraps(StrapsColoring::Chasing) => chase(so2s),
+            Display::JustStraps(StrapsColoring::Chasing) => {
+                let mut v = vec![];
+                // v.extend(so2s.clone());
+                v.extend(chase(so2s));
+                v
+            }
             _ => so2s,
         }
     }
 }
 
-fn pts_eq_within(a: &Pt2, b: &Pt2, epsilon: f64) -> bool {
-    a.dist(b) < epsilon
+fn pts_eq_within(a: Pt2, b: Pt2, epsilon: f64) -> bool {
+    a.dist(&b) < epsilon
 }
 fn vals_eq_within(a: f64, b: f64, epsilon: f64) -> bool {
     (a - b).abs() < epsilon
 }
 
+/*
 fn remove_from_list(list: &mut Vec<StyledObj2>, item: &Sg2, epsilon: f64) {
     let item_position: usize = list
         .iter()
@@ -253,69 +259,36 @@ fn remove_from_list(list: &mut Vec<StyledObj2>, item: &Sg2, epsilon: f64) {
         .expect("could not find sg.");
 
     list.remove(item_position);
-    println!("successful removal");
 }
+ */
 
 fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
     // first of all, we're guaranteed that every element in so2s is
     // a strap. nothing else.
-    let mut inputs: Vec<StyledObj2> = inputs.clone();
+    let mut inputs: Vec<Sg2> = inputs
+        .into_iter()
+        .map(|so2| so2.inner.to_sg2().unwrap().clone())
+        .collect();
+
     let mut outputs: Vec<StyledObj2> = vec![];
+    let epsilon = 1.1;
 
-    let epsilon: f64 = 0.001;
+    while let Some(sg2) = inputs.pop() {
+        info!("popping input");
+        let mut sgs: Vec<Sg2> = vec![];
+        sgs.push(sg2);
+        // collect links in the chain. implicitly going sg.i -> sg.f.
 
-    while let Some(seed) = inputs.pop() {
-        let pg: Pg2 = (|| {
-            let mut pts: Vec<Pt2> = vec![];
+        // turn that chain into a list of deduplicated points
+        let mut pts: Vec<Pt2> = sgs.into_iter().flat_map(|sg2| [sg2.i, sg2.f]).collect();
+        pts.dedup();
 
-            let sg2: &Sg2 = seed.inner.to_sg2().unwrap();
-            pts.push(sg2.i);
-            let mut cursor: Pt2 = sg2.f;
-
-            // while we haven't finished looping, continue
-            while !pts_eq_within(&cursor, &pts[0], epsilon) {
-                let neighbors: Vec<Sg2> = inputs
-                    .iter()
-                    .flat_map(|cand| cand.inner.to_sg2().clone())
-                    .filter(|cand_sg2: &&Sg2| {
-                        pts_eq_within(&cand_sg2.i, &cursor, epsilon)
-                            || pts_eq_within(&cand_sg2.f, &cursor, epsilon)
-                    })
-                    .cloned()
-                    .collect::<Vec<Sg2>>();
-
-                if neighbors.is_empty() {
-                    // special case -- if we truly have no more neighbors,
-                    // we've hit an edge and it's time to return.
-                    return Multiline(pts).unwrap();
-                }
-
-                let curr = Sg2(*pts.last().unwrap(), cursor);
-                for n in neighbors.iter() {
-                    if vals_eq_within(curr.ray_angle(), n.ray_angle(), epsilon) {
-                        if pts_eq_within(&cursor, &n.i, epsilon) {
-                            pts.push(n.i);
-                            cursor = n.f;
-                        } else if pts_eq_within(&cursor, &n.f, epsilon) {
-                            pts.push(n.f);
-                            cursor = n.i;
-                        } else {
-                            panic!("lies");
-                        }
-                    }
-                    remove_from_list(&mut inputs, &sg2, epsilon);
-                    break;
-                }
-            }
-
-            // finally, continue a continuous polygon.
-            Pg2(pts)
-        })();
-
+        // and then make a multiline, and add it to our final outputs list.
         outputs.push(
-            StyledObj2::new(pg)
+            StyledObj2::new(Multiline(pts).unwrap())
+                // .with_color(&RED)
                 .with_color(plotz_color::take_random_colors(1)[0])
-                .with_thickness(2.0),
+                .with_thickness(3.0),
         );
     }
 
@@ -325,9 +298,10 @@ fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
 pub fn run() -> Vec<StyledObj2> {
     let mut layout = Layout::new(
         Settings {
-            num_iterations: 50,
-            is_deterministic: false,
+            num_iterations: 2,
+            is_deterministic: true,
             display: Display::JustStraps(StrapsColoring::Chasing),
+            // display: Display::JustStraps(StrapsColoring::Original),
             // display: Display::All,
         },
         {
