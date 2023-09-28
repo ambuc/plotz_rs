@@ -256,6 +256,8 @@ fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
         .map(|so2| so2.inner.to_sg2().unwrap().clone())
         .collect();
 
+    info!("inputs: {:?}", inputs);
+
     let mut outputs: Vec<StyledObj2> = vec![];
     let epsilon = 1.1;
 
@@ -265,7 +267,7 @@ fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
         sgs.push(sg2);
         // collect links in the chain. implicitly going sg.i -> sg.f.
 
-        todo!();
+        // todo!();
 
         // turn that chain into a list of deduplicated points
         let mut pts: Vec<Pt2> = sgs.into_iter().flat_map(|sg2| [sg2.i, sg2.f]).collect();
@@ -286,7 +288,7 @@ fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
 pub fn run() -> Vec<StyledObj2> {
     let mut layout = Layout::new(
         Settings {
-            num_iterations: 2,
+            num_iterations: 1,
             is_deterministic: true,
             display: Display::JustStraps(StrapsColoring::Chasing),
             // display: Display::JustStraps(StrapsColoring::Original),
