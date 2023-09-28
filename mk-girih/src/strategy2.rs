@@ -249,28 +249,47 @@ fn vals_eq_within(a: f64, b: f64, epsilon: f64) -> bool {
 }
 
 fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
-    // first of all, we're guaranteed that every element in so2s is
-    // a strap. nothing else.
+    // first of all, we're guaranteed that every element in so2s is a strap. nothing else.
     let mut inputs: Vec<Sg2> = inputs
         .into_iter()
         .map(|so2| so2.inner.to_sg2().unwrap().clone())
         .collect();
 
-    info!("inputs: {:?}", inputs);
-
     let mut outputs: Vec<StyledObj2> = vec![];
-    let epsilon = 1.1;
+    let epsilon = 0.001;
 
-    while let Some(sg2) = inputs.pop() {
-        info!("popping input");
-        let mut sgs: Vec<Sg2> = vec![];
-        sgs.push(sg2);
+    while let Some(first) = inputs.pop() {
+        let mut segments: Vec<Sg2> = vec![];
+
         // collect links in the chain. implicitly going sg.i -> sg.f.
+        segments.push(first);
 
-        // todo!();
+        while let Some(next_idx) = inputs.iter().position(|cand_sg| {
+            pts_eq_within(cand_sg.i, segments.last().unwrap().f, epsilon)
+                || pts_eq_within(cand_sg.f, segments.last().unwrap().f, epsilon)
+        }) {
+            // get next sg
+            let cand_sg = inputs[next_idx];
+            let next_sg = if pts_eq_within(cand_sg.i, segments.last().unwrap().f, epsilon) {
+                //
+                cand_sg
+            } else if pts_eq_within(cand_sg.f, segments.last().unwrap().f, epsilon) {
+                //
+                cand_sg.flip()
+            } else {
+                panic!("why did you think there was?");
+            };
+            // remove sg at next_idx
+            inputs.remove(next_idx);
+            // use next_sg
+            segments.push(next_sg);
+        }
 
         // turn that chain into a list of deduplicated points
-        let mut pts: Vec<Pt2> = sgs.into_iter().flat_map(|sg2| [sg2.i, sg2.f]).collect();
+        let mut pts: Vec<Pt2> = segments
+            .into_iter()
+            .flat_map(|sg2| [sg2.i, sg2.f])
+            .collect();
         pts.dedup();
 
         // and then make a multiline, and add it to our final outputs list.
@@ -288,8 +307,8 @@ fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
 pub fn run() -> Vec<StyledObj2> {
     let mut layout = Layout::new(
         Settings {
-            num_iterations: 1,
-            is_deterministic: true,
+            num_iterations: 10,
+            is_deterministic: false,
             display: Display::JustStraps(StrapsColoring::Chasing),
             // display: Display::JustStraps(StrapsColoring::Original),
             // display: Display::All,
