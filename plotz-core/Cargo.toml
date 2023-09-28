@@ -9,6 +9,7 @@ cairo-rs = { version = "0.14.9", features = ["png", "svg"] }
 derive_more = "*"
 float-ord = "*"
 itertools = "*"
+indicatif = "*"
 lazy_static = "*"
 multimap = "*"
 tracing = "*"

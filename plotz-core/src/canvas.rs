@@ -188,8 +188,8 @@ impl Canvas {
 
         // dos
         {
-            for (i, (_bucket, dos)) in self.dos_by_bucket.iter().enumerate() {
-                trace!("Writing layer: {:?}", i);
+            use indicatif::ProgressIterator;
+            for (i, (_bucket, dos)) in self.dos_by_bucket.iter().enumerate().progress() {
                 let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), dos)
                     .expect("failed to write");
             }
