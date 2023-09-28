@@ -248,20 +248,6 @@ fn vals_eq_within(a: f64, b: f64, epsilon: f64) -> bool {
     (a - b).abs() < epsilon
 }
 
-/*
-fn remove_from_list(list: &mut Vec<StyledObj2>, item: &Sg2, epsilon: f64) {
-    let item_position: usize = list
-        .iter()
-        .position(|x: &StyledObj2| {
-            let x_sg: &Sg2 = x.inner.to_sg2().expect("x.inner was not sg2");
-            pts_eq_within(&x_sg.i, &item.i, epsilon) && pts_eq_within(&x_sg.f, &item.f, epsilon)
-        })
-        .expect("could not find sg.");
-
-    list.remove(item_position);
-}
- */
-
 fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
     // first of all, we're guaranteed that every element in so2s is
     // a strap. nothing else.
@@ -278,6 +264,8 @@ fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
         let mut sgs: Vec<Sg2> = vec![];
         sgs.push(sg2);
         // collect links in the chain. implicitly going sg.i -> sg.f.
+
+        todo!();
 
         // turn that chain into a list of deduplicated points
         let mut pts: Vec<Pt2> = sgs.into_iter().flat_map(|sg2| [sg2.i, sg2.f]).collect();
