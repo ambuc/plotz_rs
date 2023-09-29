@@ -1,6 +1,8 @@
+// #![allow(unused)]
+
 use crate::geom::*;
 use indicatif::ProgressBar;
-use itertools::Itertools;
+use itertools::{all, Itertools};
 use plotz_color::{ColorRGB, RED};
 use plotz_geometry::{
     obj2::Obj2,
@@ -39,21 +41,12 @@ struct Settings {
 
 impl Settings {
     fn choices(&self) -> Vec<Girih> {
-        match self.is_deterministic {
-            true => all_girih_tiles(),
-            false => {
-                let mut weighted_choices = vec![
-                    Girih::SormehDan,
-                    Girih::Tabl,
-                    Girih::Pange,
-                    Girih::Torange,
-                    Girih::SheshBand,
-                ];
-                let mut rng = rand::thread_rng();
-                weighted_choices.shuffle(&mut rng);
-                weighted_choices
-            }
+        let mut c = all_girih_tiles();
+        if !self.is_deterministic {
+            let mut rng = rand::thread_rng();
+            c.shuffle(&mut rng);
         }
+        c
     }
 }
 
@@ -73,17 +66,11 @@ impl Layout {
         let mut res = vec![];
         for placed_tile in &self.placed_tiles {
             let spt = placed_tile.to_styledobjs();
-            match self.settings.display {
-                Display::JustTiles => {
-                    res.push(spt.outline);
-                }
-                Display::JustStraps(_) => {
-                    res.extend(spt.straps);
-                }
-                Display::All => {
-                    res.push(spt.outline);
-                    res.extend(spt.straps);
-                }
+            if matches!(self.settings.display, Display::All | Display::JustTiles) {
+                res.push(spt.outline);
+            }
+            if matches!(self.settings.display, Display::All | Display::JustStraps(_)) {
+                res.extend(spt.straps);
             }
         }
         res
@@ -229,12 +216,7 @@ impl Layout {
     }
     fn postprocess(&self, so2s: Vec<StyledObj2>) -> Vec<StyledObj2> {
         match self.settings.display {
-            Display::JustStraps(StrapsColoring::Chasing) => {
-                let mut v = vec![];
-                // v.extend(so2s.clone());
-                v.extend(chase(so2s));
-                v
-            }
+            Display::JustStraps(StrapsColoring::Chasing) => chase(so2s),
             _ => so2s,
         }
     }
@@ -294,19 +276,14 @@ fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
             segments.push(next_sg); // use next_sg
         }
 
-        // turn that chain into a list of deduplicated points
-        let mut pts: Vec<Pt2> = segments
-            .into_iter()
-            .flat_map(|sg2| [sg2.i, sg2.f])
-            .collect();
-        pts.dedup();
-
         // and then make a multiline, and add it to our final outputs list.
         outputs.push(
-            StyledObj2::new(Multiline(pts).unwrap())
-                // .with_color(&RED)
-                .with_color(plotz_color::take_random_colors(1)[0])
-                .with_thickness(3.0),
+            StyledObj2::new(
+                Multiline(segments.into_iter().map(|sg2| sg2.i).collect::<Vec<_>>()).unwrap(),
+            )
+            // .with_color(&RED)
+            .with_color(plotz_color::take_random_colors(1)[0])
+            .with_thickness(3.0),
         );
     }
 
@@ -316,7 +293,7 @@ fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
 pub fn run() -> Vec<StyledObj2> {
     let mut layout = Layout::new(
         Settings {
-            num_iterations: 20,
+            num_iterations: 50,
             is_deterministic: false,
             display: Display::JustStraps(StrapsColoring::Chasing),
             // display: Display::JustStraps(StrapsColoring::Original),
