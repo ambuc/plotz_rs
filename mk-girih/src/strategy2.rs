@@ -50,6 +50,11 @@ impl Settings {
     }
 }
 
+struct StyledPlacedTiles {
+    outlines: Vec<StyledObj2>,
+    straps: Vec<StyledObj2>,
+}
+
 struct Layout {
     settings: Settings,
     placed_tiles: Vec<PlacedTile>,
@@ -62,18 +67,17 @@ impl Layout {
         }
     }
 
-    fn to_styledobjs(&self) -> Vec<StyledObj2> {
-        let mut res = vec![];
+    fn to_styledobjs(&self) -> StyledPlacedTiles {
+        let mut spts = StyledPlacedTiles {
+            outlines: vec![],
+            straps: vec![],
+        };
         for placed_tile in &self.placed_tiles {
             let spt = placed_tile.to_styledobjs();
-            if matches!(self.settings.display, Display::All | Display::JustTiles) {
-                res.push(spt.outline);
-            }
-            if matches!(self.settings.display, Display::All | Display::JustStraps(_)) {
-                res.extend(spt.straps);
-            }
+            spts.outlines.push(spt.outline);
+            spts.straps.extend(spt.straps);
         }
-        res
+        spts
     }
 
     fn next_bare_edge(&self) -> Sg2 {
@@ -207,10 +211,17 @@ impl Layout {
         // if we made it this far without a placement, something is wrong.
         return false;
     }
-    fn postprocess(&self, so2s: Vec<StyledObj2>) -> Vec<StyledObj2> {
+    fn postprocess(&self, spts: StyledPlacedTiles) -> Vec<StyledObj2> {
         match self.settings.display {
-            Display::JustStraps(StrapsColoring::Chasing) => chase(so2s),
-            _ => so2s,
+            Display::JustStraps(StrapsColoring::Original) => spts.straps,
+            Display::JustStraps(StrapsColoring::Chasing) => chase(spts),
+            Display::JustTiles => spts.outlines,
+            Display::All => {
+                let mut v = vec![];
+                v.extend(spts.outlines);
+                v.extend(spts.straps);
+                v
+            }
         }
     }
 }
@@ -222,9 +233,10 @@ fn vals_eq_within(a: f64, b: f64, epsilon: f64) -> bool {
     (a - b).abs() < epsilon
 }
 
-fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
+fn chase(styled_placed_tiles: StyledPlacedTiles) -> Vec<StyledObj2> {
     // first of all, we're guaranteed that every element in so2s is a strap. nothing else.
-    let mut inputs: Vec<Sg2> = inputs
+    let mut inputs: Vec<Sg2> = styled_placed_tiles
+        .straps
         .into_iter()
         .map(|so2| so2.inner.to_sg2().unwrap().clone())
         .collect();
@@ -287,7 +299,7 @@ fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
 pub fn run() -> Vec<StyledObj2> {
     let mut layout = Layout::new(
         Settings {
-            num_iterations: 50,
+            num_iterations: 20,
             is_deterministic: false,
             display: Display::JustStraps(StrapsColoring::Chasing),
             // display: Display::JustStraps(StrapsColoring::Original),

@@ -87,6 +87,13 @@ impl Obj2 {
             _ => None,
         }
     }
+    /// Cast to pg2, if possible
+    pub fn to_pg2(&self) -> Option<&Pg2> {
+        match self {
+            Obj2::Pg2(x) => Some(x),
+            _ => None,
+        }
+    }
 }
 
 impl YieldPoints for Obj2 {
