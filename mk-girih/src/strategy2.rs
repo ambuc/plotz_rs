@@ -2,22 +2,13 @@
 
 use crate::geom::*;
 use indicatif::ProgressBar;
-use itertools::{all, Itertools};
-use plotz_color::{ColorRGB, RED};
+use itertools::Itertools;
 use plotz_geometry::{
-    obj2::Obj2,
-    shapes::{
-        pg2::{multiline::Multiline, Pg2},
-        pt2::Pt2,
-        sg2::Sg2,
-    },
-    style::Style,
+    shapes::{pg2::multiline::Multiline, pt2::Pt2, sg2::Sg2},
     styled_obj2::StyledObj2,
 };
 use rand::seq::SliceRandom;
-use rayon::iter::*;
-use std::{error::Error, f32::EPSILON, f64::consts::TAU};
-use tracing::{error, info, warn};
+use std::f64::consts::TAU;
 
 #[derive(Debug)]
 enum StrapsColoring {
@@ -122,7 +113,7 @@ impl Layout {
         if (self.placed_tiles.iter())
             .cartesian_product(test_pts.iter())
             .collect::<Vec<_>>()
-            .par_iter()
+            .iter()
             .any(|(extant_tile, test_pt)| extant_tile.pg2.point_is_inside(&test_pt))
         {
             return false;
@@ -186,7 +177,7 @@ impl Layout {
                 .into_iter()
                 .cartesian_product(0..g.num_pts())
                 .collect::<Vec<_>>()
-                .into_par_iter()
+                .into_iter()
                 .flat_map(|(target, src_index)| {
                     self.place_tile_on_edge_src(
                         g,
@@ -299,7 +290,7 @@ fn chase(styled_placed_tiles: StyledPlacedTiles) -> Vec<StyledObj2> {
 pub fn run() -> Vec<StyledObj2> {
     let mut layout = Layout::new(
         Settings {
-            num_iterations: 20,
+            num_iterations: 50,
             is_deterministic: false,
             display: Display::JustStraps(StrapsColoring::Chasing),
             // display: Display::JustStraps(StrapsColoring::Original),
