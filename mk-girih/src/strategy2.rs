@@ -257,11 +257,9 @@ fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
     let mut outputs: Vec<StyledObj2> = vec![];
     let epsilon = 0.001;
 
+    // collect links in the chain. implicitly going sg.i -> sg.f.
     while let Some(first) = inputs.pop() {
-        let mut segments: Vec<Sg2> = vec![];
-
-        // collect links in the chain. implicitly going sg.i -> sg.f.
-        segments.push(first);
+        let mut segments: Vec<Sg2> = vec![first];
 
         'l: loop {
             let last = segments.last().unwrap();
@@ -274,43 +272,26 @@ fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
                 })
                 .collect::<Vec<usize>>();
 
-            if positions.is_empty() {
-                break 'l;
-            } else if positions.len() == 1 {
-                let next_idx = positions[0];
-                let cand_sg = inputs[next_idx]; // get next sg
+            let next_idx: usize = match positions[..] {
+                [] => break 'l,
+                [next_idx] => next_idx,
+                _ => *positions
+                    .iter()
+                    .find(|cand_idx| {
+                        vals_eq_within(inputs[**cand_idx].ray_angle(), last.ray_angle(), epsilon)
+                    })
+                    .unwrap(),
+            };
 
-                let next_sg = if pts_eq_within(cand_sg.i, last.f, epsilon) {
-                    cand_sg
-                } else if pts_eq_within(cand_sg.f, last.f, epsilon) {
-                    cand_sg.flip()
-                } else {
-                    panic!("why did you think there was?");
-                };
+            let cand_sg: Sg2 = inputs.remove(next_idx); // get next sg
 
-                inputs.remove(next_idx); // remove sg at next_idx
-                segments.push(next_sg); // use next_sg
+            let next_sg = if pts_eq_within(cand_sg.i, last.f, epsilon) {
+                cand_sg
             } else {
-                if let Some(next_idx) = positions.iter().find(|cand_idx| {
-                    let cand_sg: Sg2 = inputs[**cand_idx];
-                    vals_eq_within(cand_sg.ray_angle(), last.ray_angle(), epsilon)
-                }) {
-                    let cand_sg = inputs[*next_idx]; // get next sg
+                cand_sg.flip()
+            };
 
-                    let next_sg = if pts_eq_within(cand_sg.i, segments.last().unwrap().f, epsilon) {
-                        cand_sg
-                    } else if pts_eq_within(cand_sg.f, segments.last().unwrap().f, epsilon) {
-                        cand_sg.flip()
-                    } else {
-                        panic!("why did you think there was?");
-                    };
-
-                    inputs.remove(*next_idx); // remove sg at next_idx
-                    segments.push(next_sg); // use next_sg
-                } else {
-                    panic!("oh");
-                }
-            }
+            segments.push(next_sg); // use next_sg
         }
 
         // turn that chain into a list of deduplicated points
@@ -336,7 +317,7 @@ pub fn run() -> Vec<StyledObj2> {
     let mut layout = Layout::new(
         Settings {
             num_iterations: 20,
-            is_deterministic: true,
+            is_deterministic: false,
             display: Display::JustStraps(StrapsColoring::Chasing),
             // display: Display::JustStraps(StrapsColoring::Original),
             // display: Display::All,
