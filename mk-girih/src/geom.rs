@@ -37,6 +37,16 @@ impl Girih {
             Girih::Pange => &YELLOW,
         }
     }
+
+    pub fn num_pts(&self) -> usize {
+        match self {
+            Girih::Tabl => 10,
+            Girih::SheshBand => 6,
+            Girih::SormehDan => 6,
+            Girih::Torange => 4,
+            Girih::Pange => 5,
+        }
+    }
 }
 
 pub fn all_girih_tiles() -> Vec<Girih> {

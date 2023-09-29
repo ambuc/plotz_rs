@@ -178,11 +178,9 @@ impl Layout {
         let next_bare_edge: Sg2 = self.next_bare_edge();
 
         for g in self.settings.choices() {
-            let num_pts = Tile::new(g).to_naive_pg2().pts.len();
-
             let next_tiles: Vec<_> = [next_bare_edge, next_bare_edge.flip()]
                 .into_iter()
-                .cartesian_product(0..num_pts)
+                .cartesian_product(0..g.num_pts())
                 .collect::<Vec<_>>()
                 .into_par_iter()
                 .flat_map(|(target, src_index)| {
