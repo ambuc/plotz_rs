@@ -199,16 +199,11 @@ impl Layout {
             for placed_tile in next_tiles {
                 self.placed_tiles.push(placed_tile);
                 bar.inc(1);
-                match self.place_next_tile(num_remaining - 1, bar) {
-                    true => {
-                        return true;
-                    }
-                    false => {
-                        self.placed_tiles.pop();
-                        bar.set_position(bar.position() - 1);
-                        // implicit continue
-                    }
+                if self.place_next_tile(num_remaining - 1, bar) {
+                    return true;
                 }
+                self.placed_tiles.pop();
+                bar.set_position(bar.position() - 1);
             }
         }
         // if we made it this far without a placement, something is wrong.
@@ -276,14 +271,15 @@ fn chase(inputs: Vec<StyledObj2>) -> Vec<StyledObj2> {
             segments.push(next_sg); // use next_sg
         }
 
+        let mut pts = segments.iter().map(|sg2| sg2.i).collect::<Vec<_>>();
+        pts.push(segments.first().unwrap().i);
+
         // and then make a multiline, and add it to our final outputs list.
         outputs.push(
-            StyledObj2::new(
-                Multiline(segments.into_iter().map(|sg2| sg2.i).collect::<Vec<_>>()).unwrap(),
-            )
-            // .with_color(&RED)
-            .with_color(plotz_color::take_random_colors(1)[0])
-            .with_thickness(3.0),
+            StyledObj2::new(Multiline(pts).unwrap())
+                // .with_color(&RED)
+                .with_color(plotz_color::take_random_colors(1)[0])
+                .with_thickness(3.0),
         );
     }
 
