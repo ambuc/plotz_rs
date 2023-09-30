@@ -63,13 +63,13 @@ impl Layout {
         }
     }
 
-    fn to_styledobjs(&self) -> AnnotatedPlacedTiles {
+    fn to_annotated_placed_tiles(&self) -> AnnotatedPlacedTiles {
         let mut spts = AnnotatedPlacedTiles {
             outlines: vec![],
             straps: vec![],
         };
         for placed_tile in &self.placed_tiles {
-            let spt = placed_tile.to_annotated();
+            let spt = placed_tile.to_annotated_placed_tiles();
             spts.outlines.push((spt.girih, spt.outline));
             spts.straps
                 .extend(spt.straps.into_iter().map(|strap| (spt.girih, strap)));
@@ -367,5 +367,5 @@ pub fn run() -> Vec<StyledObj2> {
     assert!(layout.place_next_tile(layout.settings.num_iterations, &mut bar));
     bar.finish();
 
-    layout.postprocess(layout.to_styledobjs())
+    layout.postprocess(layout.to_annotated_placed_tiles())
 }

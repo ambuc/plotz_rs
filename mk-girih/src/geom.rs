@@ -261,7 +261,7 @@ impl PlacedTile {
         strapwork_verified
     }
 
-    pub fn to_annotated(&self) -> AnnotatedPlacedTile {
+    pub fn to_annotated_placed_tiles(&self) -> AnnotatedPlacedTile {
         let axis = Pt2(0, 0);
         let offset = 0.01;
 
