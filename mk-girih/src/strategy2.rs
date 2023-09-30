@@ -6,7 +6,11 @@ use itertools::Itertools;
 use plotz_color::BLACK;
 use plotz_geometry::{
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{pg2::multiline::Multiline, pt2::Pt2, sg2::Sg2},
+    shapes::{
+        pg2::{multiline::Multiline, Pg2},
+        pt2::Pt2,
+        sg2::Sg2,
+    },
     styled_obj2::StyledObj2,
 };
 use rand::seq::SliceRandom;
@@ -42,9 +46,9 @@ impl Settings {
 }
 
 #[derive(Debug, Clone)]
-struct StyledPlacedTiles {
-    outlines: Vec<StyledObj2>,
-    straps: Vec<StyledObj2>,
+struct AnnotatedPlacedTiles {
+    outlines: Vec<(Girih, Pg2)>,
+    straps: Vec<(Girih, Sg2)>,
 }
 
 struct Layout {
@@ -59,15 +63,16 @@ impl Layout {
         }
     }
 
-    fn to_styledobjs(&self) -> StyledPlacedTiles {
-        let mut spts = StyledPlacedTiles {
+    fn to_styledobjs(&self) -> AnnotatedPlacedTiles {
+        let mut spts = AnnotatedPlacedTiles {
             outlines: vec![],
             straps: vec![],
         };
         for placed_tile in &self.placed_tiles {
-            let spt = placed_tile.to_styledobjs();
-            spts.outlines.push(spt.outline);
-            spts.straps.extend(spt.straps);
+            let spt = placed_tile.to_annotated();
+            spts.outlines.push((spt.girih, spt.outline));
+            spts.straps
+                .extend(spt.straps.into_iter().map(|strap| (spt.girih, strap)));
         }
         spts
     }
@@ -204,32 +209,33 @@ impl Layout {
         return false;
     }
 
-    fn postprocess(&self, spts: StyledPlacedTiles) -> Vec<StyledObj2> {
+    fn postprocess(&self, apts: AnnotatedPlacedTiles) -> Vec<StyledObj2> {
         let mut v = vec![];
 
         self.settings.display.0.iter().for_each(|inst| match inst {
             Instr::StrapsOriginal(thickness) => {
-                v.extend(spts.clone().straps.into_iter().map(|mut so2| {
-                    so2.style.thickness = *thickness;
-                    so2
+                v.extend(apts.clone().straps.into_iter().map(|(girih, sg2)| {
+                    StyledObj2::new(sg2)
+                        .with_color(girih.color())
+                        .with_thickness(*thickness)
                 }))
             }
-            Instr::StrapsChasing => v.extend(chase(&spts)),
+            Instr::StrapsChasing => v.extend(chase(&apts)),
             Instr::TilesOutline(thickness) => {
-                v.extend(spts.clone().outlines.into_iter().map(|so2| {
-                    StyledObj2::new(so2.inner)
+                v.extend(apts.clone().outlines.into_iter().map(|(_, pg2)| {
+                    StyledObj2::new(pg2)
                         .with_color(&BLACK)
                         .with_thickness(*thickness)
                 }))
             }
             Instr::TileShaded(shade_config) => {
-                v.extend(spts.clone().outlines.iter().flat_map(|outline| {
-                    shade_polygon(&shade_config, outline.inner.to_pg2().unwrap())
+                v.extend(apts.clone().outlines.iter().flat_map(|(girih, pg2)| {
+                    shade_polygon(&shade_config, pg2)
                         .unwrap()
                         .into_iter()
                         .map(|shade| {
                             StyledObj2::new(shade)
-                                .with_color(outline.style.color)
+                                .with_color(girih.color())
                                 .with_thickness(1.0)
                         })
                 }))
@@ -247,13 +253,9 @@ fn vals_eq_within(a: f64, b: f64, epsilon: f64) -> bool {
     (a - b).abs() < epsilon
 }
 
-fn chase(styled_placed_tiles: &StyledPlacedTiles) -> Vec<StyledObj2> {
+fn chase(apts: &AnnotatedPlacedTiles) -> Vec<StyledObj2> {
     // first of all, we're guaranteed that every element in so2s is a strap. nothing else.
-    let mut inputs: Vec<Sg2> = styled_placed_tiles
-        .straps
-        .iter()
-        .map(|so2| so2.inner.to_sg2().unwrap().clone())
-        .collect();
+    let mut inputs: Vec<Sg2> = apts.straps.iter().map(|(_, sg2)| *sg2).collect();
 
     let mut outputs: Vec<StyledObj2> = vec![];
     let epsilon = 0.001;
@@ -342,16 +344,17 @@ pub fn run() -> Vec<StyledObj2> {
         .slope(0.5)
         .switchback(false)
         .build();
+    let d = Display(vec![
+        // Instr::StrapsOriginal(2.0),
+        Instr::TilesOutline(1.0),
+        Instr::StrapsChasing,
+        Instr::TileShaded(shade_config),
+    ]);
     let mut layout = Layout::new(
         Settings {
-            num_iterations: 50,
+            num_iterations: 20,
             is_deterministic: false,
-            display: Display(vec![
-                // Instr::StrapsOriginal(2.0),
-                Instr::TilesOutline(1.0),
-                Instr::StrapsChasing,
-                Instr::TileShaded(shade_config),
-            ]),
+            display: d,
         },
         {
             let tile = Tile::new(Girih::SormehDan);

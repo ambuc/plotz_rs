@@ -1,5 +1,4 @@
 use plotz_color::{subway::PURPLE_7, ColorRGB, LIGHTBLUE, LIMEGREEN, ORANGERED, YELLOW};
-use plotz_geometry::styled_obj2::StyledObj2;
 use {
     plotz_geometry::{
         bounded::Bounded,
@@ -262,15 +261,13 @@ impl PlacedTile {
         strapwork_verified
     }
 
-    pub fn to_styledobjs(&self) -> StyledPlacedTile {
+    pub fn to_annotated(&self) -> AnnotatedPlacedTile {
         let axis = Pt2(0, 0);
         let offset = 0.01;
 
-        StyledPlacedTile {
-            outline: StyledObj2::new(self.pg2.clone())
-                .with_thickness(1.0)
-                .with_color(self.tile.color()),
-            //
+        AnnotatedPlacedTile {
+            girih: self.tile.enum_type,
+            outline: self.pg2.clone(),
             straps: (PlacedTile {
                 pg2: {
                     let mut m = self.pg2.clone();
@@ -283,9 +280,7 @@ impl PlacedTile {
             .into_iter()
             .map(|mut s| {
                 s.rotate(&axis, -offset);
-                StyledObj2::new(s)
-                    .with_thickness(1.0)
-                    .with_color(self.tile.color())
+                s
             })
             .collect(),
         }
@@ -305,9 +300,10 @@ impl PlacedTile {
     }
 }
 
-pub struct StyledPlacedTile {
-    pub outline: StyledObj2,
-    pub straps: Vec<StyledObj2>,
+pub struct AnnotatedPlacedTile {
+    pub girih: Girih,
+    pub outline: Pg2,
+    pub straps: Vec<Sg2>,
 }
 
 #[cfg(test)]
