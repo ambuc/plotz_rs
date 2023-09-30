@@ -102,6 +102,10 @@ fn disable_motors() {
     manual_cmd("disable_xy");
 }
 
+fn raise_pen() {
+    manual_cmd("raise_pen");
+}
+
 fn toggle() {
     Command::new("axicli")
         .args(vec!["--mode", "toggle"])
@@ -180,6 +184,9 @@ fn do_layer(s: &str, special_name: Option<&str>) {
         n_toggles += 1;
         toggle();
     }
+
+    print_ok(&format!("Raising pen.",));
+    raise_pen();
 
     let mut n_runs = 0;
     while hits_yes(&format!(
