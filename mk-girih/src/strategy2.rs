@@ -5,20 +5,12 @@ use indicatif::ProgressBar;
 use itertools::Itertools;
 use plotz_color::BLACK;
 use plotz_geometry::{
-    shading::{
-        shade_config::{self, ShadeConfig},
-        shade_polygon,
-    },
-    shapes::{
-        curve::CurveArc,
-        pg2::{abp, multiline::Multiline, Pg2},
-        pt2::{PolarPt, Pt2},
-        sg2::Sg2,
-    },
+    shading::{shade_config::ShadeConfig, shade_polygon},
+    shapes::{pg2::multiline::Multiline, pt2::Pt2, sg2::Sg2},
     styled_obj2::StyledObj2,
 };
 use rand::seq::SliceRandom;
-use std::f64::consts::{FRAC_PI_2, TAU};
+use std::f64::consts::TAU;
 
 #[derive(Debug)]
 enum Instr {
@@ -357,8 +349,8 @@ pub fn run() -> Vec<StyledObj2> {
             display: Display(vec![
                 // Instr::StrapsOriginal(2.0),
                 Instr::TilesOutline(1.0),
-                Instr::TileShaded(shade_config),
                 Instr::StrapsChasing,
+                Instr::TileShaded(shade_config),
             ]),
         },
         {
