@@ -3,25 +3,39 @@
 use crate::geom::*;
 use indicatif::ProgressBar;
 use itertools::Itertools;
+use plotz_color::BLACK;
 use plotz_geometry::{
-    shapes::{pg2::multiline::Multiline, pt2::Pt2, sg2::Sg2},
+    shading::{
+        shade_config::{self, ShadeConfig},
+        shade_polygon,
+    },
+    shapes::{
+        curve::CurveArc,
+        pg2::{abp, multiline::Multiline, Pg2},
+        pt2::{PolarPt, Pt2},
+        sg2::Sg2,
+    },
     styled_obj2::StyledObj2,
 };
 use rand::seq::SliceRandom;
-use std::f64::consts::TAU;
+use std::f64::consts::{FRAC_PI_2, TAU};
 
 #[derive(Debug)]
 enum StrapsColoring {
+    None,
     Original,
     Chasing,
 }
 
 #[derive(Debug)]
-enum Display {
-    JustTiles,
-    JustStraps(StrapsColoring),
-    All,
+enum TilesColoring {
+    None,
+    Shaded,
+    Original,
 }
+
+#[derive(Debug)]
+struct Display(TilesColoring, StrapsColoring);
 
 #[derive(Debug)]
 struct Settings {
@@ -41,6 +55,7 @@ impl Settings {
     }
 }
 
+#[derive(Debug, Clone)]
 struct StyledPlacedTiles {
     outlines: Vec<StyledObj2>,
     straps: Vec<StyledObj2>,
@@ -202,18 +217,40 @@ impl Layout {
         // if we made it this far without a placement, something is wrong.
         return false;
     }
+
     fn postprocess(&self, spts: StyledPlacedTiles) -> Vec<StyledObj2> {
-        match self.settings.display {
-            Display::JustStraps(StrapsColoring::Original) => spts.straps,
-            Display::JustStraps(StrapsColoring::Chasing) => chase(spts),
-            Display::JustTiles => spts.outlines,
-            Display::All => {
-                let mut v = vec![];
-                v.extend(spts.outlines);
-                v.extend(spts.straps);
-                v
+        let shade_config = ShadeConfig::builder()
+            .gap(0.05)
+            .slope(0.5)
+            .switchback(false)
+            .build();
+
+        let Display(tiles, straps) = &self.settings.display;
+
+        let mut v = vec![];
+        match tiles {
+            TilesColoring::None => {}
+            TilesColoring::Shaded => {
+                v.extend(spts.outlines.iter().flat_map(|outline| {
+                    shade_polygon(&shade_config, outline.inner.to_pg2().unwrap())
+                        .unwrap()
+                        .into_iter()
+                        .map(|shade| {
+                            StyledObj2::new(shade)
+                                .with_color(outline.style.color)
+                                .with_thickness(1.0)
+                        })
+                }));
             }
+            TilesColoring::Original => v.extend(spts.clone().outlines),
         }
+        match straps {
+            StrapsColoring::None => {}
+            StrapsColoring::Original => v.extend(spts.straps),
+            StrapsColoring::Chasing => v.extend(chase(&spts)),
+        }
+
+        v
     }
 }
 
@@ -224,11 +261,11 @@ fn vals_eq_within(a: f64, b: f64, epsilon: f64) -> bool {
     (a - b).abs() < epsilon
 }
 
-fn chase(styled_placed_tiles: StyledPlacedTiles) -> Vec<StyledObj2> {
+fn chase(styled_placed_tiles: &StyledPlacedTiles) -> Vec<StyledObj2> {
     // first of all, we're guaranteed that every element in so2s is a strap. nothing else.
     let mut inputs: Vec<Sg2> = styled_placed_tiles
         .straps
-        .into_iter()
+        .iter()
         .map(|so2| so2.inner.to_sg2().unwrap().clone())
         .collect();
 
@@ -287,14 +324,39 @@ fn chase(styled_placed_tiles: StyledPlacedTiles) -> Vec<StyledObj2> {
     outputs
 }
 
+/*
+fn scallop(styled_placed_tiles: &StyledPlacedTiles) -> Vec<StyledObj2> {
+    let mut v = vec![];
+    //
+
+    let d = 0.1;
+
+    for o in styled_placed_tiles.outlines.iter() {
+        let pg2 = o.inner.to_pg2().unwrap();
+        for sg2 in pg2.to_segments() {
+            let m: Pt2 = sg2.midpoint();
+            let o: Pt2 = m + PolarPt(d, sg2.ray_angle() + FRAC_PI_2);
+            let r: f64 = o.dist(&a);
+            let ang_a: f64 = abp(&o, &(o + Pt2(1.0, 0.0)), a);
+            let ang_b: f64 = abp(&o, &(o + Pt2(1.0, 0.0)), b);
+
+            let s = o.style;
+
+            v.push(StyledObj2::new(CurveArc(o, ang_a..ang_b, r)));
+        }
+    }
+
+    v
+}
+*/
+
 pub fn run() -> Vec<StyledObj2> {
     let mut layout = Layout::new(
         Settings {
             num_iterations: 50,
             is_deterministic: false,
-            display: Display::JustStraps(StrapsColoring::Chasing),
-            // display: Display::JustStraps(StrapsColoring::Original),
-            // display: Display::All,
+            // display: Display::JustStraps(StrapsColoring::Chasing),
+            display: Display(TilesColoring::Shaded, StrapsColoring::Original),
         },
         {
             let tile = Tile::new(Girih::SormehDan);
