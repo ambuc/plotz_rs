@@ -21,21 +21,15 @@ use rand::seq::SliceRandom;
 use std::f64::consts::{FRAC_PI_2, TAU};
 
 #[derive(Debug)]
-enum StrapsColoring {
-    None,
-    Original,
-    Chasing,
+enum Instr {
+    StrapsOriginal(/*thickness */ f64),
+    StrapsChasing,
+    TilesOutline(/*thickness*/ f64),
+    TileShaded(ShadeConfig),
 }
 
 #[derive(Debug)]
-enum TilesColoring {
-    None,
-    Shaded,
-    Original,
-}
-
-#[derive(Debug)]
-struct Display(TilesColoring, StrapsColoring);
+struct Display(Vec<Instr>);
 
 #[derive(Debug)]
 struct Settings {
@@ -219,19 +213,25 @@ impl Layout {
     }
 
     fn postprocess(&self, spts: StyledPlacedTiles) -> Vec<StyledObj2> {
-        let shade_config = ShadeConfig::builder()
-            .gap(0.05)
-            .slope(0.5)
-            .switchback(false)
-            .build();
-
-        let Display(tiles, straps) = &self.settings.display;
-
         let mut v = vec![];
-        match tiles {
-            TilesColoring::None => {}
-            TilesColoring::Shaded => {
-                v.extend(spts.outlines.iter().flat_map(|outline| {
+
+        self.settings.display.0.iter().for_each(|inst| match inst {
+            Instr::StrapsOriginal(thickness) => {
+                v.extend(spts.clone().straps.into_iter().map(|mut so2| {
+                    so2.style.thickness = *thickness;
+                    so2
+                }))
+            }
+            Instr::StrapsChasing => v.extend(chase(&spts)),
+            Instr::TilesOutline(thickness) => {
+                v.extend(spts.clone().outlines.into_iter().map(|so2| {
+                    StyledObj2::new(so2.inner)
+                        .with_color(&BLACK)
+                        .with_thickness(*thickness)
+                }))
+            }
+            Instr::TileShaded(shade_config) => {
+                v.extend(spts.clone().outlines.iter().flat_map(|outline| {
                     shade_polygon(&shade_config, outline.inner.to_pg2().unwrap())
                         .unwrap()
                         .into_iter()
@@ -240,15 +240,9 @@ impl Layout {
                                 .with_color(outline.style.color)
                                 .with_thickness(1.0)
                         })
-                }));
+                }))
             }
-            TilesColoring::Original => v.extend(spts.clone().outlines),
-        }
-        match straps {
-            StrapsColoring::None => {}
-            StrapsColoring::Original => v.extend(spts.straps),
-            StrapsColoring::Chasing => v.extend(chase(&spts)),
-        }
+        });
 
         v
     }
@@ -351,12 +345,21 @@ fn scallop(styled_placed_tiles: &StyledPlacedTiles) -> Vec<StyledObj2> {
 */
 
 pub fn run() -> Vec<StyledObj2> {
+    let shade_config = ShadeConfig::builder()
+        .gap(0.05)
+        .slope(0.5)
+        .switchback(false)
+        .build();
     let mut layout = Layout::new(
         Settings {
             num_iterations: 50,
             is_deterministic: false,
-            // display: Display::JustStraps(StrapsColoring::Chasing),
-            display: Display(TilesColoring::Shaded, StrapsColoring::Original),
+            display: Display(vec![
+                // Instr::StrapsOriginal(2.0),
+                Instr::TilesOutline(1.0),
+                Instr::TileShaded(shade_config),
+                Instr::StrapsChasing,
+            ]),
         },
         {
             let tile = Tile::new(Girih::SormehDan);
