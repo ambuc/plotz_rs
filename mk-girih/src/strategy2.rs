@@ -5,6 +5,7 @@ use indicatif::ProgressBar;
 use itertools::Itertools;
 use plotz_color::BLACK;
 use plotz_geometry::{
+    bounded::Bounded,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
         pg2::{multiline::Multiline, Pg2},
@@ -14,13 +15,17 @@ use plotz_geometry::{
     styled_obj2::StyledObj2,
 };
 use rand::seq::SliceRandom;
+use rand::Rng;
 use std::f64::consts::TAU;
 
 #[derive(Debug)]
 enum Instr {
     StrapsOriginal(/*thickness */ f64),
     StrapsChasing,
-    TilesOutline(/*thickness*/ f64),
+    TilesOutline {
+        thickness: f64,
+        // default value 1.0. expecting values between 0.0 -> 1.0.
+    },
     TileShaded(ShadeConfig),
 }
 
@@ -221,8 +226,9 @@ impl Layout {
                 }))
             }
             Instr::StrapsChasing => v.extend(chase(&apts)),
-            Instr::TilesOutline(thickness) => {
+            Instr::TilesOutline { thickness } => {
                 v.extend(apts.clone().outlines.into_iter().map(|(_, pg2)| {
+                    // scale
                     StyledObj2::new(pg2)
                         .with_color(&BLACK)
                         .with_thickness(*thickness)
@@ -339,25 +345,27 @@ fn scallop(styled_placed_tiles: &StyledPlacedTiles) -> Vec<StyledObj2> {
 */
 
 pub fn run() -> Vec<StyledObj2> {
+    // let mut rng = rand::thread_rng();
     let shade_config = ShadeConfig::builder()
         .gap(0.05)
-        .slope(0.5)
+        .slope(1.0)
         .switchback(false)
         .build();
     let d = Display(vec![
         // Instr::StrapsOriginal(2.0),
-        Instr::TilesOutline(1.0),
+        // Instr::TilesOutline { thickness: 0.1 },
         Instr::StrapsChasing,
-        Instr::TileShaded(shade_config),
+        // Instr::TileShaded(shade_config),
     ]);
     let mut layout = Layout::new(
         Settings {
-            num_iterations: 20,
+            num_iterations: 50,
             is_deterministic: false,
             display: d,
         },
         {
-            let tile = Tile::new(Girih::SormehDan);
+            let girih = all_girih_tiles_in_random_order()[0];
+            let tile = Tile::new(girih);
             let pg2 = tile.to_naive_pg2();
             PlacedTile { pg2, tile }
         },

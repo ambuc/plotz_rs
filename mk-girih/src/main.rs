@@ -31,7 +31,7 @@ fn main() {
 
     Canvas::from_objs(
         strategy2::run().into_iter().map(|mut so2| {
-            so2 *= 50.0;
+            so2 *= 40.0;
             so2 += Pt2(500, 400);
             so2
         }),
