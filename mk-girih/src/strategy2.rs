@@ -5,7 +5,6 @@ use indicatif::ProgressBar;
 use itertools::Itertools;
 use plotz_color::BLACK;
 use plotz_geometry::{
-    bounded::Bounded,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
         pg2::{multiline::Multiline, Pg2},
@@ -15,17 +14,13 @@ use plotz_geometry::{
     styled_obj2::StyledObj2,
 };
 use rand::seq::SliceRandom;
-use rand::Rng;
 use std::f64::consts::TAU;
 
 #[derive(Debug)]
 enum Instr {
     StrapsOriginal(/*thickness */ f64),
     StrapsChasing,
-    TilesOutline {
-        thickness: f64,
-        // default value 1.0. expecting values between 0.0 -> 1.0.
-    },
+    TilesOutline { thickness: f64 },
     TileShaded(ShadeConfig),
 }
 
@@ -318,48 +313,22 @@ fn chase(apts: &AnnotatedPlacedTiles) -> Vec<StyledObj2> {
     outputs
 }
 
-/*
-fn scallop(styled_placed_tiles: &StyledPlacedTiles) -> Vec<StyledObj2> {
-    let mut v = vec![];
-    //
-
-    let d = 0.1;
-
-    for o in styled_placed_tiles.outlines.iter() {
-        let pg2 = o.inner.to_pg2().unwrap();
-        for sg2 in pg2.to_segments() {
-            let m: Pt2 = sg2.midpoint();
-            let o: Pt2 = m + PolarPt(d, sg2.ray_angle() + FRAC_PI_2);
-            let r: f64 = o.dist(&a);
-            let ang_a: f64 = abp(&o, &(o + Pt2(1.0, 0.0)), a);
-            let ang_b: f64 = abp(&o, &(o + Pt2(1.0, 0.0)), b);
-
-            let s = o.style;
-
-            v.push(StyledObj2::new(CurveArc(o, ang_a..ang_b, r)));
-        }
-    }
-
-    v
-}
-*/
-
 pub fn run() -> Vec<StyledObj2> {
-    // let mut rng = rand::thread_rng();
-    let shade_config = ShadeConfig::builder()
-        .gap(0.05)
-        .slope(1.0)
-        .switchback(false)
-        .build();
     let d = Display(vec![
         // Instr::StrapsOriginal(2.0),
-        // Instr::TilesOutline { thickness: 0.1 },
+        Instr::TilesOutline { thickness: 1.0 },
         Instr::StrapsChasing,
-        // Instr::TileShaded(shade_config),
+        Instr::TileShaded(
+            ShadeConfig::builder()
+                .gap(0.05)
+                .slope(1.0)
+                .switchback(false)
+                .build(),
+        ),
     ]);
     let mut layout = Layout::new(
         Settings {
-            num_iterations: 50,
+            num_iterations: 130,
             is_deterministic: false,
             display: d,
         },
