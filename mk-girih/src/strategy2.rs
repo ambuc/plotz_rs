@@ -1,6 +1,7 @@
-// #![allow(unused)]
+#![allow(unused)]
 
-use crate::geom::*;
+use crate::layout::{Layout, Settings};
+use crate::{geom::*, layout::AnnotatedPlacedTiles};
 use indicatif::ProgressBar;
 use itertools::Itertools;
 use plotz_color::BLACK;
@@ -26,226 +27,6 @@ enum Instr {
 
 #[derive(Debug)]
 struct Display(Vec<Instr>);
-
-#[derive(Debug)]
-struct Settings {
-    num_iterations: usize,
-    is_deterministic: bool,
-    display: Display,
-}
-
-impl Settings {
-    fn choices(&self) -> Vec<Girih> {
-        let mut c = all_girih_tiles();
-        if !self.is_deterministic {
-            let mut rng = rand::thread_rng();
-            c.shuffle(&mut rng);
-        }
-        c
-    }
-}
-
-#[derive(Debug, Clone)]
-struct AnnotatedPlacedTiles {
-    outlines: Vec<(Girih, Pg2)>,
-    straps: Vec<(Girih, Sg2)>,
-}
-
-struct Layout {
-    settings: Settings,
-    placed_tiles: Vec<PlacedTile>,
-}
-impl Layout {
-    fn new(settings: Settings, pt: PlacedTile) -> Layout {
-        Layout {
-            settings,
-            placed_tiles: vec![pt],
-        }
-    }
-
-    fn to_annotated_placed_tiles(&self) -> AnnotatedPlacedTiles {
-        let mut spts = AnnotatedPlacedTiles {
-            outlines: vec![],
-            straps: vec![],
-        };
-        for placed_tile in &self.placed_tiles {
-            let spt = placed_tile.to_annotated_placed_tiles();
-            spts.outlines.push((spt.girih, spt.outline));
-            spts.straps
-                .extend(spt.straps.into_iter().map(|strap| (spt.girih, strap)));
-        }
-        spts
-    }
-
-    fn next_bare_edge(&self) -> Sg2 {
-        let mut bare_edges = vec![];
-        for placed_tile in &self.placed_tiles {
-            for segment in placed_tile.pg2.to_segments() {
-                // both rays which emit from the midpoint.
-                let (ray_a, ray_b) = segment.rays_perpendicular_both();
-                let offset = segment.abs() * 0.1;
-                // if there is any point adjacent to the segment (a tiny offset away)
-                for pt in [ray_a.to_sg2(offset).f, ray_b.to_sg2(offset).f] {
-                    // for which it is outside of _ALL_ known placed tiles
-                    if self
-                        .placed_tiles
-                        .iter()
-                        .all(|t| t.pg2.point_is_outside(&pt))
-                    {
-                        bare_edges.push(segment);
-                    }
-                }
-            }
-        }
-
-        let ctr: Pt2 = Pt2(0, 0);
-        bare_edges
-            .into_iter()
-            .min_by_key(|sg| float_ord::FloatOrd(sg.midpoint().dist(&ctr)))
-            .expect("bare_edges should never be empty")
-    }
-
-    fn place_tile_on_edge_src(&self, g: Girih, c: Constraint) -> Option<PlacedTile> {
-        let cand: PlacedTile = Tile::new(g).clone().place(c);
-        match self.evaluate_cand(&cand) {
-            true => Some(cand),
-            false => None,
-        }
-    }
-
-    fn evaluate_cand(&self, cand: &PlacedTile) -> bool {
-        let test_pts = cand.test_pts();
-
-        if (self.placed_tiles.iter())
-            .cartesian_product(test_pts.iter())
-            .collect::<Vec<_>>()
-            .iter()
-            .any(|(extant_tile, test_pt)| extant_tile.pg2.point_is_inside(&test_pt))
-        {
-            return false;
-        }
-
-        // not having collisions is very important. but there is another
-        // important characteristic as well. we want to make sure that, around
-        // each corner of the newly placed tile, we haven't created a tight
-        // corner -- an acute angle of size pi/5 (for example) which no tile
-        // could fill.
-
-        // if there's _any_ collision, return false;
-        if cand.pg2.to_segments().iter().any(|cand_sg| -> bool {
-            // returns true if there's a collision
-            let mut results: Vec<bool> = vec![];
-            let mut rotor = Sg2(cand_sg.i, cand_sg.midpoint());
-            rotor.rotate(&cand_sg.i, 0.001 * TAU); // offset
-            for _ in 0..=10 {
-                // ten times, rotate the rotor by TAU/10 (or, (2PI)/10)
-                let axis = rotor.i;
-                rotor.rotate(&axis, 1.0 / 11.0 * TAU);
-
-                let trial_pt = rotor.f;
-                results.push(
-                    cand.pg2.point_is_inside(&trial_pt)
-                        || self
-                            .placed_tiles
-                            .iter()
-                            .any(|extant_tile| extant_tile.pg2.point_is_inside(&trial_pt)),
-                );
-            }
-            if results
-                .iter()
-                .cycle()
-                .take(11)
-                .collect::<Vec<_>>()
-                .windows(3)
-                .any(|window| matches!(window, [true, false, true]))
-            {
-                return true;
-            }
-            return false;
-        }) {
-            // if there's any collision, return false.
-            return false;
-        }
-
-        return true;
-    }
-
-    // returns true if successfully placed tile (or if no tile needed to be placed.)
-    fn place_next_tile(&mut self, num_remaining: usize, bar: &mut ProgressBar) -> bool {
-        if num_remaining == 0 {
-            return true;
-        }
-
-        let next_bare_edge: Sg2 = self.next_bare_edge();
-
-        for g in self.settings.choices() {
-            let next_tiles: Vec<_> = [next_bare_edge, next_bare_edge.flip()]
-                .into_iter()
-                .cartesian_product(0..g.num_pts())
-                .collect::<Vec<_>>()
-                .into_iter()
-                .flat_map(|(target, src_index)| {
-                    self.place_tile_on_edge_src(
-                        g,
-                        Constraint {
-                            src_index,
-                            target: &target,
-                        },
-                    )
-                })
-                .collect();
-
-            for placed_tile in next_tiles {
-                self.placed_tiles.push(placed_tile);
-                bar.inc(1);
-                if self.place_next_tile(num_remaining - 1, bar) {
-                    return true;
-                }
-                self.placed_tiles.pop();
-                bar.set_position(bar.position() - 1);
-            }
-        }
-        // if we made it this far without a placement, something is wrong.
-        return false;
-    }
-
-    fn postprocess(&self, apts: AnnotatedPlacedTiles) -> Vec<StyledObj2> {
-        let mut v = vec![];
-
-        self.settings.display.0.iter().for_each(|inst| match inst {
-            Instr::StrapsOriginal(thickness) => {
-                v.extend(apts.clone().straps.into_iter().map(|(girih, sg2)| {
-                    StyledObj2::new(sg2)
-                        .with_color(girih.color())
-                        .with_thickness(*thickness)
-                }))
-            }
-            Instr::StrapsChasing => v.extend(chase(&apts)),
-            Instr::TilesOutline { thickness } => {
-                v.extend(apts.clone().outlines.into_iter().map(|(_, pg2)| {
-                    // scale
-                    StyledObj2::new(pg2)
-                        .with_color(&BLACK)
-                        .with_thickness(*thickness)
-                }))
-            }
-            Instr::TileShaded(shade_config) => {
-                v.extend(apts.clone().outlines.iter().flat_map(|(girih, pg2)| {
-                    shade_polygon(&shade_config, pg2)
-                        .unwrap()
-                        .into_iter()
-                        .map(|shade| {
-                            StyledObj2::new(shade)
-                                .with_color(girih.color())
-                                .with_thickness(1.0)
-                        })
-                }))
-            }
-        });
-
-        v
-    }
-}
 
 fn pts_eq_within(a: Pt2, b: Pt2, epsilon: f64) -> bool {
     a.dist(&b) < epsilon
@@ -313,6 +94,43 @@ fn chase(apts: &AnnotatedPlacedTiles) -> Vec<StyledObj2> {
     outputs
 }
 
+fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<StyledObj2> {
+    let mut v = vec![];
+
+    display.0.iter().for_each(|inst| match inst {
+        Instr::StrapsOriginal(thickness) => {
+            v.extend(apts.clone().straps.into_iter().map(|(girih, sg2)| {
+                StyledObj2::new(sg2)
+                    .with_color(girih.color())
+                    .with_thickness(*thickness)
+            }))
+        }
+        Instr::StrapsChasing => v.extend(chase(&apts)),
+        Instr::TilesOutline { thickness } => {
+            v.extend(apts.clone().outlines.into_iter().map(|(_, pg2)| {
+                // scale
+                StyledObj2::new(pg2)
+                    .with_color(&BLACK)
+                    .with_thickness(*thickness)
+            }))
+        }
+        Instr::TileShaded(shade_config) => {
+            v.extend(apts.clone().outlines.iter().flat_map(|(girih, pg2)| {
+                shade_polygon(&shade_config, pg2)
+                    .unwrap()
+                    .into_iter()
+                    .map(|shade| {
+                        StyledObj2::new(shade)
+                            .with_color(girih.color())
+                            .with_thickness(1.0)
+                    })
+            }))
+        }
+    });
+
+    v
+}
+
 pub fn run() -> Vec<StyledObj2> {
     let d = Display(vec![
         // Instr::StrapsOriginal(2.0),
@@ -328,9 +146,8 @@ pub fn run() -> Vec<StyledObj2> {
     ]);
     let mut layout = Layout::new(
         Settings {
-            num_iterations: 130,
+            num_iterations: 30,
             is_deterministic: false,
-            display: d,
         },
         {
             let girih = all_girih_tiles_in_random_order()[0];
@@ -340,9 +157,7 @@ pub fn run() -> Vec<StyledObj2> {
         },
     );
 
-    let mut bar = ProgressBar::new(layout.settings.num_iterations.try_into().unwrap());
-    assert!(layout.place_next_tile(layout.settings.num_iterations, &mut bar));
-    bar.finish();
+    layout.run();
 
-    layout.postprocess(layout.to_annotated_placed_tiles())
+    postprocess(&d, layout.to_annotated_placed_tiles())
 }
