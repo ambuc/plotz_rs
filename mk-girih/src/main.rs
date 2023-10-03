@@ -32,12 +32,14 @@ fn main() {
     let margin = 25.0;
 
     Canvas::from_objs(
-        // strategy3::run()
-        strategy2::run().into_iter().map(|mut so2| {
-            so2 *= 40.0;
-            so2 += Pt2(500, 400);
-            so2
-        }),
+        strategy3::run()
+            // strategy2::run()
+            .into_iter()
+            .map(|mut so2| {
+                so2 *= 40.0;
+                so2 += Pt2(500, 400);
+                so2
+            }),
         /*autobucket=*/
         true,
     )
