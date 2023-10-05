@@ -875,3 +875,8 @@ pub fn take_random_colors(limit: usize) -> Vec<&'static ColorRGB> {
 
     colors.into_iter().take(limit).collect()
 }
+
+/// Returns a random color.
+pub fn random_color() -> &'static ColorRGB {
+    take_random_colors(1)[0]
+}
