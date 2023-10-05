@@ -1,4 +1,5 @@
 use argh::FromArgs;
+use indicatif::ParallelProgressIterator;
 use plotz_color::*;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
@@ -9,6 +10,7 @@ use plotz_geometry::{
 };
 use rand::thread_rng;
 use rand::Rng;
+use rayon::prelude::*;
 use std::{f64::consts::*, ops::Range};
 
 const ARROW_RANGE: Range<f64> = (-1.0 * MAX_ARROW_SIZE)..MAX_ARROW_SIZE;
@@ -37,8 +39,6 @@ fn main() {
     let mut dos = vec![];
     let mgn = 25.0;
 
-    let mut rng = thread_rng();
-
     let frame: StyledObj2 = make_frame(
         (800.0 - 2.0 * mgn, 1000.0 - 2.0 * mgn),
         /*offset=*/ p2!(mgn, mgn),
@@ -48,8 +48,8 @@ fn main() {
 
     for i in (0..=(900 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
         for j in (0..=(700 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
-            let dx = rng.gen_range(ARROW_RANGE.clone());
-            let dy = rng.gen_range(ARROW_RANGE.clone());
+            let dx = thread_rng().gen_range(ARROW_RANGE.clone());
+            let dy = thread_rng().gen_range(ARROW_RANGE.clone());
             let arrow_i = Pt2(i as f64, j as f64);
             let arrow_f = arrow_i + Pt2(dx, dy) + uniform_shift;
             let arrow = Sg2(arrow_i, arrow_f);
@@ -70,38 +70,41 @@ fn main() {
 
     for _ in 0..=NUM_CLUSTERS {
         let cluster_color = random_color();
-        let rx = rng.gen_range(0..=900);
-        let ry = rng.gen_range(0..=700);
+        let rx = thread_rng().gen_range(0..=900);
+        let ry = thread_rng().gen_range(0..=700);
         let cluster_center = Pt2(rx, ry);
 
-        for _ in 0..=NUM_PTS_PER_CLUSTER {
-            let rx = rng.gen_range(CLUSTER_RANGE.clone());
-            let ry = rng.gen_range(CLUSTER_RANGE.clone());
-            let pt = cluster_center + Pt2(rx, ry);
+        dos.extend(
+            (0..NUM_PTS_PER_CLUSTER)
+                .into_par_iter()
+                .progress()
+                .map(|_| {
+                    let rx = thread_rng().gen_range(CLUSTER_RANGE.clone());
+                    let ry = thread_rng().gen_range(CLUSTER_RANGE.clone());
+                    let pt = cluster_center + Pt2(rx, ry);
 
-            let mut history = vec![pt];
-            let num_steps = rng.gen_range(NUM_STEPS_RANGE.clone());
-            for _ in 0..=num_steps {
-                let last = history.last().unwrap();
-                let del: Pt2 = arrows_store
-                    .iter()
-                    .map(|arrow| {
-                        let scaling_factor: f64 = last.dist(&arrow.i).sqrt();
-                        (arrow.f - arrow.i) * scaling_factor / MOMENTUM
-                    })
-                    .fold(Pt2(0.0, 0.0), |acc, x| acc + x);
-                let next: Pt2 = *last + del;
-                history.push(next);
-            }
+                    let mut history = vec![pt];
+                    let num_steps = thread_rng().gen_range(NUM_STEPS_RANGE.clone());
+                    for _ in 0..=num_steps {
+                        let last = history.last().unwrap();
+                        let del: Pt2 = arrows_store
+                            .iter()
+                            .map(|arrow| {
+                                let scaling_factor: f64 = last.dist(&arrow.i).sqrt();
+                                (arrow.f - arrow.i) * scaling_factor / MOMENTUM
+                            })
+                            .fold(Pt2(0.0, 0.0), |acc, x| acc + x);
+                        let next: Pt2 = *last + del;
+                        history.push(next);
+                    }
 
-            let sg = Multiline(history).expect("multiline");
-            dos.extend([
-                StyledObj2::new(sg)
-                    .with_thickness(1.0)
-                    .with_color(cluster_color),
-                //
-            ])
-        }
+                    let sg = Multiline(history).expect("multiline");
+                    StyledObj2::new(sg)
+                        .with_thickness(1.0)
+                        .with_color(cluster_color)
+                })
+                .collect::<Vec<_>>(),
+        );
     }
 
     let frame_pg2 = frame.inner.to_pg2().unwrap();

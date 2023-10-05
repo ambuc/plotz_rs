@@ -14,5 +14,6 @@ plotz-geometry = { path = "../plotz-geometry" }
 rand = { version = "0.8.5", features = ["alloc"] }
 tracing = "*"
 tracing-subscriber = "*"
-indicatif = "0.17.7"
+rayon = "*"
+indicatif = { version = "*", features = ["rayon"] }
 float-ord = "*"
