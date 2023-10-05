@@ -2,7 +2,7 @@ use plotz_geometry::styled_obj2::StyledObj2;
 
 use crate::{
     geom::{all_girih_tiles_in_random_order, PlacedTile, Tile},
-    layout::{AnnotatedPlacedTiles, Layout, Settings},
+    layout::{Layout, Settings},
 };
 
 pub fn run() -> Vec<StyledObj2> {
@@ -22,7 +22,7 @@ pub fn run() -> Vec<StyledObj2> {
     let mut result = vec![];
 
     let apts = layout.to_annotated_placed_tiles();
-    for (girih, pg2) in apts.outlines {
+    for (_girih, pg2) in apts.outlines {
         //
         result.push(StyledObj2::new(pg2));
     }
