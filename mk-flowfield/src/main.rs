@@ -20,7 +20,7 @@ const GRID_GRANULARITY: usize = 50;
 const MAX_ARROW_SIZE: f64 = 50.0;
 const MOMENTUM: f64 = 1000.0;
 const NUM_CLUSTERS: usize = 8;
-const NUM_PTS_PER_CLUSTER: usize = 100;
+const NUM_PTS_PER_CLUSTER: usize = 50;
 const NUM_STEPS_RANGE: Range<usize> = 100..500;
 const PRINT_ARROWS: bool = false;
 
@@ -68,44 +68,48 @@ fn main() {
         }
     }
 
-    for _ in 0..=NUM_CLUSTERS {
-        let cluster_color = random_color();
-        let rx = thread_rng().gen_range(0..=900);
-        let ry = thread_rng().gen_range(0..=700);
-        let cluster_center = Pt2(rx, ry);
+    dos.extend(
+        (0..NUM_CLUSTERS)
+            .into_par_iter()
+            .progress()
+            .flat_map(|_| {
+                let cluster_color = random_color();
+                let rx = thread_rng().gen_range(0..=900);
+                let ry = thread_rng().gen_range(0..=700);
+                let cluster_center = Pt2(rx, ry);
 
-        dos.extend(
-            (0..NUM_PTS_PER_CLUSTER)
-                .into_par_iter()
-                .progress()
-                .map(|_| {
-                    let rx = thread_rng().gen_range(CLUSTER_RANGE.clone());
-                    let ry = thread_rng().gen_range(CLUSTER_RANGE.clone());
-                    let pt = cluster_center + Pt2(rx, ry);
+                (0..NUM_PTS_PER_CLUSTER)
+                    .into_par_iter()
+                    .progress()
+                    .map(|_| {
+                        let rx = thread_rng().gen_range(CLUSTER_RANGE.clone());
+                        let ry = thread_rng().gen_range(CLUSTER_RANGE.clone());
+                        let pt = cluster_center + Pt2(rx, ry);
 
-                    let mut history = vec![pt];
-                    let num_steps = thread_rng().gen_range(NUM_STEPS_RANGE.clone());
-                    for _ in 0..=num_steps {
-                        let last = history.last().unwrap();
-                        let del: Pt2 = arrows_store
-                            .iter()
-                            .map(|arrow| {
-                                let scaling_factor: f64 = last.dist(&arrow.i).sqrt();
-                                (arrow.f - arrow.i) * scaling_factor / MOMENTUM
-                            })
-                            .fold(Pt2(0.0, 0.0), |acc, x| acc + x);
-                        let next: Pt2 = *last + del;
-                        history.push(next);
-                    }
+                        let mut history = vec![pt];
+                        let num_steps = thread_rng().gen_range(NUM_STEPS_RANGE.clone());
+                        for _ in 0..=num_steps {
+                            let last = history.last().unwrap();
+                            let del: Pt2 = arrows_store
+                                .iter()
+                                .map(|arrow| {
+                                    let scaling_factor: f64 = last.dist(&arrow.i).sqrt();
+                                    (arrow.f - arrow.i) * scaling_factor / MOMENTUM
+                                })
+                                .fold(Pt2(0.0, 0.0), |acc, x| acc + x);
+                            let next: Pt2 = *last + del;
+                            history.push(next);
+                        }
 
-                    let sg = Multiline(history).expect("multiline");
-                    StyledObj2::new(sg)
-                        .with_thickness(1.0)
-                        .with_color(cluster_color)
-                })
-                .collect::<Vec<_>>(),
-        );
-    }
+                        let sg = Multiline(history).expect("multiline");
+                        StyledObj2::new(sg)
+                            .with_thickness(1.0)
+                            .with_color(cluster_color)
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
+    );
 
     let frame_pg2 = frame.inner.to_pg2().unwrap();
     let objs = Canvas::from_objs(
@@ -115,7 +119,7 @@ fn main() {
                 d_o
             })
             .flat_map(|d_o| d_o.crop_to(frame_pg2)),
-        /*autobucket=*/ false,
+        /*autobucket=*/ true,
     )
     .with_frame(frame);
 
