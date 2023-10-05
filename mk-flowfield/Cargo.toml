@@ -16,4 +16,5 @@ tracing = "*"
 tracing-subscriber = "*"
 rayon = "*"
 indicatif = { version = "*", features = ["rayon"] }
+anyhow = "*"
 float-ord = "*"
