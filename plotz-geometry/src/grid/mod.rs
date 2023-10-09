@@ -1,12 +1,11 @@
 //! Grid (for debugging, mostly)
 
+use crate::{obj2::Obj2, style::Style};
+
 pub mod grid_layout;
 
 use {
-    crate::{
-        shapes::{pt2::Pt2, sg2::Sg2},
-        styled_obj2::StyledObj2,
-    },
+    crate::shapes::{pt2::Pt2, sg2::Sg2},
     num::range_step,
     plotz_color::*,
     typed_builder::TypedBuilder,
@@ -44,7 +43,7 @@ pub struct Grid {
 
 impl Grid {
     /// Renders the grid to a set of object2ds for plotting.
-    pub fn to_segments(&self) -> Vec<StyledObj2> {
+    pub fn to_segments(&self) -> Vec<(Obj2, Style)> {
         let h = self.height as f64;
         let w = self.width as f64;
 
@@ -52,38 +51,46 @@ impl Grid {
         for x in range_step(self.x_init, self.x_init + self.width, self.minor_every) {
             let i = Pt2((self.x_init + x) as f64, (self.y_init) as f64);
             let f = i + Pt2(0.0, h);
-            v.push(
-                StyledObj2::new(Sg2(i, f))
-                    .with_color(self.minor_color)
-                    .with_thickness(self.minor_thickness),
-            );
+            v.push((
+                Sg2(i, f).into(),
+                Style::builder()
+                    .color(self.minor_color)
+                    .thickness(self.minor_thickness)
+                    .build(),
+            ));
         }
         for x in range_step(self.x_init, self.x_init + self.width, self.major_every) {
             let i = Pt2((self.x_init + x) as f64, (self.y_init) as f64);
             let f = i + Pt2(0.0, h);
-            v.push(
-                StyledObj2::new(Sg2(i, f))
-                    .with_color(self.major_color)
-                    .with_thickness(self.major_thickness),
-            );
+            v.push((
+                Sg2(i, f).into(),
+                Style::builder()
+                    .color(self.major_color)
+                    .thickness(self.major_thickness)
+                    .build(),
+            ));
         }
         for y in range_step(self.y_init, self.y_init + self.height, self.minor_every) {
             let i = Pt2((self.x_init) as f64, (self.y_init + y) as f64);
             let f = i + Pt2(w, 0.0);
-            v.push(
-                StyledObj2::new(Sg2(i, f))
-                    .with_color(self.minor_color)
-                    .with_thickness(self.minor_thickness),
-            )
+            v.push((
+                Sg2(i, f).into(),
+                Style::builder()
+                    .color(self.minor_color)
+                    .thickness(self.minor_thickness)
+                    .build(),
+            ));
         }
         for y in range_step(self.y_init, self.y_init + self.height, self.major_every) {
             let i = Pt2((self.x_init) as f64, (self.y_init + y) as f64);
             let f = i + Pt2(w, 0.0);
-            v.push(
-                StyledObj2::new(Sg2(i, f))
-                    .with_color(self.major_color)
-                    .with_thickness(self.major_thickness),
-            )
+            v.push((
+                Sg2(i, f).into(),
+                Style::builder()
+                    .color(self.major_color)
+                    .thickness(self.major_thickness)
+                    .build(),
+            ));
         }
         v
     }

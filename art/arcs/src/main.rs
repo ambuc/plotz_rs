@@ -62,7 +62,9 @@ fn main() {
                 .width(800)
                 .height(1000)
                 .build()
-                .to_segments(),
+                .to_segments()
+                .into_iter()
+                .map(|(inner, style)| StyledObj2 { inner, style }),
         );
     }
 
