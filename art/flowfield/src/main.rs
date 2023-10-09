@@ -38,7 +38,7 @@ fn main() {
     let mut dos = vec![];
     let mgn = 25.0;
 
-    let frame: StyledObj2 = make_frame(
+    let frame = make_frame(
         (800.0 - 2.0 * mgn, 1000.0 - 2.0 * mgn),
         /*offset=*/ Pt2(mgn, mgn),
     );
@@ -110,7 +110,7 @@ fn main() {
             .collect::<Vec<_>>(),
     );
 
-    let frame_pg2 = frame.inner.to_pg2().unwrap();
+    let frame_pg2 = frame.0.to_pg2().unwrap();
     let objs = Canvas::from_objs(
         dos.into_iter()
             .map(|mut d_o| {

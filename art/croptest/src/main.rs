@@ -37,7 +37,7 @@ fn main() {
     let mut dos = vec![];
     let mgn = 25.0;
 
-    let frame: StyledObj2 = make_frame_with_margin((1000.0, 800.0), mgn);
+    let frame = make_frame_with_margin((1000.0, 800.0), mgn);
 
     let mut gl = GridLayout::new(
         GridLayoutSettings::builder()

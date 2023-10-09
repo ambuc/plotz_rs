@@ -13,7 +13,6 @@ use {
     plotz_geometry::{
         bounded::{streaming_bbox, Bounded, Bounds},
         shapes::pt2::Pt2,
-        styled_obj2::StyledObj2,
         traits::*,
     },
     std::collections::HashMap,
@@ -76,9 +75,9 @@ impl Canvas {
     }
 
     /// with a frame
-    pub fn with_frame(self, frame: StyledObj2) -> Canvas {
+    pub fn with_frame(self, frame: (Obj2, Style)) -> Canvas {
         Canvas {
-            frame: Some((frame.inner, frame.style)),
+            frame: Some(frame),
             ..self
         }
     }

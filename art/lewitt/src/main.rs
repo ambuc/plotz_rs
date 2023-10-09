@@ -34,7 +34,7 @@ fn main() {
     let mut dos = vec![];
     let mgn = 25.0;
 
-    let frame: StyledObj2 = make_frame(
+    let frame = make_frame(
         (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
         /*offset=*/ Pt2(mgn, mgn),
     );

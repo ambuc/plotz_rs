@@ -28,14 +28,14 @@ fn main() {
 
     let mut rng = rand::thread_rng();
 
-    let frame: StyledObj2 = make_frame(
+    let frame = make_frame(
         (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
         /*offset=*/ Pt2(mgn, mgn),
     );
     {
-        let frame_polygon = frame.inner.to_pg2().unwrap();
+        let frame_polygon = frame.0.to_pg2().unwrap();
 
-        let frame_ctr = frame.inner.bbox_center();
+        let frame_ctr = frame.0.bbox_center();
 
         for i in 1..200 {
             let i: f64 = i as f64;

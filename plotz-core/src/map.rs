@@ -499,8 +499,9 @@ impl Map {
                 ),
                 Pt2(margin, margin),
             );
-            self.canvas.frame = Some((frame.inner.clone(), frame.style));
-            let () = self.crop_to_frame(frame.inner.to_pg2().unwrap());
+            let frame_pg2 = frame.0.to_pg2().unwrap().clone();
+            self.canvas.frame = Some(frame);
+            let () = self.crop_to_frame(&frame_pg2);
         }
 
         self.canvas

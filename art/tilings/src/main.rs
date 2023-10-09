@@ -1,9 +1,7 @@
 use {
     argh::FromArgs,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{
-        crop::PointLoc, shapes::pt2::Pt2, styled_obj2::StyledObj2, traits::YieldPoints,
-    },
+    plotz_geometry::{crop::PointLoc, shapes::pt2::Pt2, traits::YieldPoints},
 };
 
 mod ab_rhomb;
@@ -30,8 +28,8 @@ fn main() {
         _ => vec![],
     };
 
-    let frame: StyledObj2 = make_frame((720.0, 720.0 * 1.3), /*offset=*/ Pt2(20.0, 20.0));
-    let frame_polygon = frame.inner.to_pg2().unwrap();
+    let frame = make_frame((720.0, 720.0 * 1.3), /*offset=*/ Pt2(20.0, 20.0));
+    let frame_polygon = frame.0.to_pg2().unwrap().clone();
 
     // drain things not in frame
     dos.retain(|d_o| {
