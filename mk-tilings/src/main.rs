@@ -40,7 +40,6 @@ fn main() {
     // drain things not in frame
     dos.retain(|d_o| {
         d_o.yield_pts()
-            .into_iter()
             .all(|pt| matches!(frame_polygon.contains_pt(pt), PointLoc::Inside))
     });
 

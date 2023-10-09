@@ -83,7 +83,7 @@ impl Layout {
     }
 
     fn place_tile_on_edge_src(&self, g: Girih, c: Constraint) -> Option<PlacedTile> {
-        let cand: PlacedTile = Tile::new(g).clone().place(c);
+        let cand: PlacedTile = Tile::new(g).place(c);
         match self.evaluate_cand(&cand) {
             true => Some(cand),
             false => None,
@@ -97,7 +97,7 @@ impl Layout {
             .cartesian_product(test_pts.iter())
             .collect::<Vec<_>>()
             .iter()
-            .any(|(extant_tile, test_pt)| extant_tile.pg2.point_is_inside(&test_pt))
+            .any(|(extant_tile, test_pt)| extant_tile.pg2.point_is_inside(test_pt))
         {
             return false;
         }
@@ -138,13 +138,13 @@ impl Layout {
             {
                 return true;
             }
-            return false;
+            false
         }) {
             // if there's any collision, return false.
             return false;
         }
 
-        return true;
+        true
     }
 
     // returns true if successfully placed tile (or if no tile needed to be placed.)
@@ -183,7 +183,7 @@ impl Layout {
             }
         }
         // if we made it this far without a placement, something is wrong.
-        return false;
+        false
     }
 
     pub fn run(&mut self) {

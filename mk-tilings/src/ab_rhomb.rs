@@ -45,7 +45,7 @@ impl Tile for T2 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let sq2: f64 = 2.0_f64.sqrt();
 
-        let T2([a, b, c]) = self.clone();
+        let T2([a, b, c]) = self;
         let ab = *a + (*b - *a) / (1.0 + sq2) * sq2;
         let bc = *b + (*c - *b) / (1.0 + sq2) * sq2;
         let ac1 = *a + (*c - *a) / (2.0 + sq2) * 1.0;
@@ -73,7 +73,7 @@ impl Tile for T2 {
 struct T3([Pt2; 4]);
 impl Tile for T3 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
-        let T3([a, b, c, d]) = self.clone();
+        let T3([a, b, c, d]) = self;
         let sq2 = 2.0_f64.sqrt();
         let ab = *a + (*b - *a) / (1.0 + sq2) * 1.0;
         let bc = *b + (*c - *b) / (1.0 + sq2) * sq2;
@@ -135,7 +135,7 @@ pub fn make() -> Vec<StyledObj2> {
     for _ in 0..4 {
         let next_layer = all_tiles
             .iter()
-            .flat_map(|tile: &Box<dyn Tile>| tile.expand())
+            .flat_map(|tile| tile.expand())
             .collect::<Vec<_>>();
         all_tiles = next_layer;
     }

@@ -58,9 +58,7 @@ fn main() {
             dos.extend(
                 cas.iter()
                     .flat_map(|ca| ca.crop_to(&frame_polygon))
-                    .into_iter()
-                    .map(|ca| StyledObj2::new(ca).with_color(&GREEN).with_thickness(0.30))
-                    .into_iter(),
+                    .map(|ca| StyledObj2::new(ca).with_color(&GREEN).with_thickness(0.30)),
             );
         }
 

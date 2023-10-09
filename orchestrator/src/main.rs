@@ -87,7 +87,7 @@ fn make_default_axicli_args() -> Vec<&'static str> {
         "2",
         "--model", // https://axidraw.com/doc/cli_api/#model
         "2",
-        "--progress", // https://axidraw.com/doc/cli_api/#progress
+        "--progress",    // https://axidraw.com/doc/cli_api/#progress
         "--report_time", // https://axidraw.com/doc/cli_api/#report_time
     ]
 }
@@ -186,7 +186,7 @@ fn do_layer(s: &str, special_name: Option<&str>) {
         toggle();
     }
 
-    print_ok(&format!("Raising pen.",));
+    print_ok("Raising pen.");
     raise_pen();
 
     let mut n_runs = 0;

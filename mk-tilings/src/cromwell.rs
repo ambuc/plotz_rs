@@ -280,7 +280,7 @@ pub fn make() -> Vec<StyledObj2> {
     for _ in 0..5 {
         let next_layer = all_tiles
             .iter()
-            .flat_map(|tile: &Box<dyn Tile>| tile.expand())
+            .flat_map(|tile| tile.expand())
             .collect::<Vec<_>>();
         all_tiles = next_layer;
     }

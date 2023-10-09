@@ -127,7 +127,7 @@ impl Tile {
         let naive_pg = self.to_naive_pg2();
         let naive_sg = naive_pg.to_segments()[c.src_index];
 
-        let mut modified_pg = naive_pg.clone();
+        let mut modified_pg = naive_pg;
 
         let t = c.target.midpoint() - naive_sg.midpoint();
         modified_pg += t;
@@ -211,54 +211,50 @@ impl PlacedTile {
         // if they do, crop them by each other (i.e., if ab intersects cd at x, create ax, xb, cx, xd)
         // and remove the ones with one end outside of the tile.
 
-        let strapwork_verified = {
-            let mut s_ver = vec![];
+        let mut s_ver = vec![];
 
-            let tile_contains = |sg: &Sg2| {
-                self.pg2.point_is_inside_or_on_border(&sg.i)
-                    && self.pg2.point_is_inside_or_on_border(&sg.f)
-            };
-
-            for s in strapwork {
-                match (tile_contains(&s), g) {
-                    (true, _) => {
-                        s_ver.push(s);
-                    }
-                    (false, Girih::SormehDan) => {
-                        // I just so happen to know that the first segment here runs
-                        // perpendicular to a line of symmetry. Don't ask me how I
-                        // know it. And don't ask me to generalize it.
-                        let (perp_ray_1, perp_ray_2) =
-                            self.pg2.to_segments()[0].rays_perpendicular_both();
-
-                        let pt_inside = match (
-                            self.pg2.point_is_inside_or_on_border(&s.i),
-                            self.pg2.point_is_inside_or_on_border(&s.f),
-                        ) {
-                            (true, false) => s.i,
-                            (false, true) => s.f,
-                            _ => panic!("oh"),
-                        };
-
-                        match (perp_ray_1.intersects_sg(&s), perp_ray_2.intersects_sg(&s)) {
-                            (Some(IsxnResult::OneIntersection(Intersection { pt, .. })), _) => {
-                                s_ver.push(Sg2(pt_inside, pt));
-                            }
-                            (_, Some(IsxnResult::OneIntersection(Intersection { pt, .. }))) => {
-                                s_ver.push(Sg2(pt_inside, pt));
-                            }
-                            _ => panic!("OH"),
-                        }
-                    }
-                    (false, _) => {
-                        panic!("uh oh")
-                    }
-                }
-            }
-            s_ver
+        let tile_contains = |sg: &Sg2| {
+            self.pg2.point_is_inside_or_on_border(&sg.i)
+                && self.pg2.point_is_inside_or_on_border(&sg.f)
         };
 
-        strapwork_verified
+        for s in strapwork {
+            match (tile_contains(&s), g) {
+                (true, _) => {
+                    s_ver.push(s);
+                }
+                (false, Girih::SormehDan) => {
+                    // I just so happen to know that the first segment here runs
+                    // perpendicular to a line of symmetry. Don't ask me how I
+                    // know it. And don't ask me to generalize it.
+                    let (perp_ray_1, perp_ray_2) =
+                        self.pg2.to_segments()[0].rays_perpendicular_both();
+
+                    let pt_inside = match (
+                        self.pg2.point_is_inside_or_on_border(&s.i),
+                        self.pg2.point_is_inside_or_on_border(&s.f),
+                    ) {
+                        (true, false) => s.i,
+                        (false, true) => s.f,
+                        _ => panic!("oh"),
+                    };
+
+                    match (perp_ray_1.intersects_sg(&s), perp_ray_2.intersects_sg(&s)) {
+                        (Some(IsxnResult::OneIntersection(Intersection { pt, .. })), _) => {
+                            s_ver.push(Sg2(pt_inside, pt));
+                        }
+                        (_, Some(IsxnResult::OneIntersection(Intersection { pt, .. }))) => {
+                            s_ver.push(Sg2(pt_inside, pt));
+                        }
+                        _ => panic!("OH"),
+                    }
+                }
+                (false, _) => {
+                    panic!("uh oh")
+                }
+            }
+        }
+        s_ver
     }
 
     pub fn to_annotated_placed_tiles(&self) -> AnnotatedPlacedTile {

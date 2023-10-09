@@ -116,7 +116,7 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<StyledObj2>
         }
         Instr::TileShaded(shade_config) => {
             v.extend(apts.clone().outlines.iter().flat_map(|(girih, pg2)| {
-                shade_polygon(&shade_config, pg2)
+                shade_polygon(shade_config, pg2)
                     .unwrap()
                     .into_iter()
                     .map(|shade| {

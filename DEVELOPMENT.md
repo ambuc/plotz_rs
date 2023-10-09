@@ -6,6 +6,8 @@ Some useful cargo commands for working with a repo with many crates:
 
 ```bash
 cargo build --workspace --color=always
+
+cargo clippy --workspace --color=always
 ```
 
 ## Test

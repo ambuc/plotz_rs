@@ -53,7 +53,7 @@ fn main() {
             let arrow_i = Pt2(i as f64, j as f64);
             let arrow_f = arrow_i + Pt2(dx, dy) + uniform_shift;
             let arrow = Sg2(arrow_i, arrow_f);
-            arrows_store.push(arrow.clone());
+            arrows_store.push(arrow);
             if PRINT_ARROWS {
                 dos.extend([
                     StyledObj2::new(arrow).with_thickness(2.0),
