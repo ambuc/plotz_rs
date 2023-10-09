@@ -1,3 +1,5 @@
+use plotz_geometry::{obj2::Obj2, style::Style};
+
 use {
     argh::FromArgs,
     plotz_color::{ColorRGB, *},
@@ -5,7 +7,6 @@ use {
     plotz_geometry::{
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{pg2::Pg2, pt2::Pt2},
-        styled_obj2::StyledObj2,
     },
     rand::{prelude::SliceRandom, Rng},
     std::f64::consts::*,
@@ -98,11 +99,7 @@ fn main() {
             shade_polygon(&shade.config, p)
                 .expect("failed to shade")
                 .iter()
-                .map(|sg| {
-                    StyledObj2::new(*sg)
-                        .with_color(shade.color)
-                        .with_thickness(1.0)
-                })
+                .map(|sg| (Obj2::Sg2(*sg), Style::builder().color(shade.color).build()))
                 .collect::<Vec<_>>()
         })
     }));
@@ -114,11 +111,8 @@ fn main() {
     // TODO(ambuc): split by group color before printing
     // TODO(ambuc): split by group color before printing
 
-    let canvas = Canvas::from_objs(
-        dos.into_iter().map(|so2| (so2.inner, so2.style)),
-        /*autobucket=*/ true,
-    )
-    .with_frame(make_frame((DIM, DIM), Pt2(20.0, 20.0)));
+    let canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true)
+        .with_frame(make_frame((DIM, DIM), Pt2(20.0, 20.0)));
 
     canvas.write_to_svg_or_die(
         Size {
