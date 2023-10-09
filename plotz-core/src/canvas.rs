@@ -83,7 +83,7 @@ impl Canvas {
     }
 
     /// Returns an iterator of Object2dInner.
-    pub fn objs_iter(&self) -> impl Iterator<Item = &Obj2> {
+    pub fn objs_iter(&self) -> impl Iterator<Item = &impl Bounded> {
         self.dos_by_bucket
             .iter()
             .flat_map(|(_bucket, dos)| dos)

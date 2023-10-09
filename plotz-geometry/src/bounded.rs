@@ -184,8 +184,8 @@ impl Bounded for BoundsCollector {
 
 /// Given an iterator of bounded items, computes the bounding box for that
 /// collection.
-pub fn streaming_bbox<'a, T: 'a + Bounded>(
-    it: impl IntoIterator<Item = &'a T>,
+pub fn streaming_bbox<'a>(
+    it: impl IntoIterator<Item = &'a (impl Bounded + 'a)>,
 ) -> Result<Bounds, BoundingBoxError> {
     let mut bc = BoundsCollector::default();
     for i in it {
