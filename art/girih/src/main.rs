@@ -35,12 +35,12 @@ fn main() {
         strategy3::run()
             // strategy2::run()
             .into_iter()
-            .map(|mut so2| {
-                so2 *= 40.0;
-                so2 += Pt2(500, 400);
-                so2
+            .map(|(mut obj2, style)| {
+                obj2 *= 40.0;
+                obj2 += Pt2(500, 400);
+                (obj2, style)
             })
-            .map(|so2| (so2.inner, so2.style)),
+            .map(|so2| (so2.0, so2.1)),
         /*autobucket=*/
         true,
     )

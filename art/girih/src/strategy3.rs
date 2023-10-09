@@ -1,11 +1,11 @@
-use plotz_geometry::styled_obj2::StyledObj2;
+use plotz_geometry::{obj2::Obj2, style::Style};
 
 use crate::{
     geom::{all_girih_tiles_in_random_order, PlacedTile, Tile},
     layout::{Layout, Settings},
 };
 
-pub fn run() -> Vec<StyledObj2> {
+pub fn run() -> Vec<(Obj2, Style)> {
     let girih = all_girih_tiles_in_random_order()[0];
     let tile = Tile::new(girih);
     let pg2 = tile.to_naive_pg2();
@@ -24,7 +24,7 @@ pub fn run() -> Vec<StyledObj2> {
     let apts = layout.to_annotated_placed_tiles();
     for (_girih, pg2) in apts.outlines {
         //
-        result.push(StyledObj2::new(pg2));
+        result.push((Obj2::Pg2(pg2), Style::default()));
     }
 
     //
