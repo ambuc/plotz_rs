@@ -1,5 +1,7 @@
 //! A 2D polygon (or multi&line).
 
+use crate::{obj2::Obj2, style::Style};
+
 mod annotated_isxn_result;
 mod crop_graph;
 pub mod multiline;
@@ -16,7 +18,6 @@ use {
             sg2::{Contains, Sg2},
             txt::Txt,
         },
-        styled_obj2::StyledObj2,
         traits::*,
     },
     float_cmp::approx_eq,
@@ -546,7 +547,7 @@ impl Nullable for Pg2 {
 }
 
 impl Annotatable for Pg2 {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<StyledObj2> {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj2, Style)> {
         let mut a = vec![];
 
         let AnnotationSettings {
@@ -556,11 +557,15 @@ impl Annotatable for Pg2 {
         for (_idx, pt) in self.pts.iter().enumerate() {
             let x = format!("{:.1$}", pt.x.0, precision);
             let y = format!("{:.1$}", pt.y.0, precision);
-            a.push(StyledObj2::new(Txt {
-                pt: *pt,
-                inner: format!("({}, {})", x, y),
-                font_size: *font_size,
-            }));
+            a.push((
+                Txt {
+                    pt: *pt,
+                    inner: format!("({}, {})", x, y),
+                    font_size: *font_size,
+                }
+                .into(),
+                Style::default(),
+            ));
         }
 
         // for (idx, sg) in self.to_segments().iter().enumerate() {

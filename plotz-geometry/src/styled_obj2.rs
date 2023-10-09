@@ -197,11 +197,19 @@ impl Croppable for StyledObj2 {
 }
 
 impl Annotatable for StyledObj2 {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<StyledObj2> {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj2, Style)> {
         self.inner
             .annotate(settings)
             .into_iter()
-            .map(|o| o.with_color(self.style.color))
+            .map(|(obj2, style)| {
+                (
+                    obj2,
+                    Style {
+                        color: self.style.color,
+                        ..style
+                    },
+                )
+            })
             .collect()
     }
 }

@@ -1,10 +1,8 @@
 //! Traits.
 
-use {
-    crate::{shapes::pt2::Pt2, styled_obj2::StyledObj2},
-    std::ops::*,
-    typed_builder::TypedBuilder,
-};
+use crate::{obj2::Obj2, style::Style};
+
+use {crate::shapes::pt2::Pt2, std::ops::*, typed_builder::TypedBuilder};
 
 /// A geometric figure made of points which might emit a boxed iterator of immutable points.
 pub trait YieldPoints {
@@ -65,7 +63,7 @@ pub struct AnnotationSettings {
 /// Something which can have its points and segments labelled.
 pub trait Annotatable {
     /// Return the labelled points and segments.
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<StyledObj2>;
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj2, Style)>;
 }
 
 impl Default for AnnotationSettings {

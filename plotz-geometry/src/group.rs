@@ -1,11 +1,12 @@
 //! A group of objects.
 
+use crate::{obj2::Obj2, style::Style};
+
 use {
     crate::{
         bounded::{Bounded, Bounds, BoundsCollector},
         crop::{CropType, Croppable},
         shapes::{pg2::Pg2, pt2::Pt2},
-        styled_obj2::StyledObj2,
         traits::*,
     },
     std::ops::*,
@@ -201,7 +202,7 @@ impl<T> Annotatable for Group<T>
 where
     T: Annotatable,
 {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<StyledObj2> {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj2, Style)> {
         self.0.iter().flat_map(|o| o.annotate(settings)).collect()
     }
 }

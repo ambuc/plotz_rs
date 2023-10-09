@@ -74,7 +74,12 @@ impl Scene {
                                 .push(sobj2.clone().with_color(color).with_thickness(*thickness));
                         }
                         if let Some(settings) = should_annotate {
-                            resultant.extend(sobj2.annotate(settings));
+                            resultant.extend(
+                                sobj2
+                                    .annotate(settings)
+                                    .into_iter()
+                                    .map(|(inner, style)| StyledObj2 { inner, style }),
+                            );
                         }
                     }
 

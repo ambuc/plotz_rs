@@ -1,6 +1,6 @@
 //! The inner value of a Object2d, i.e. the enum which holds some geometric thingy.
 
-use crate::{bounded::Bounds, styled_obj2::StyledObj2};
+use crate::{bounded::Bounds, style::Style, styled_obj2::StyledObj2};
 
 use {
     crate::{
@@ -388,7 +388,7 @@ impl Croppable for Obj2 {
 }
 
 impl Annotatable for Obj2 {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<crate::styled_obj2::StyledObj2> {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj2, Style)> {
         match self {
             Obj2::Pg2(pg) => pg.annotate(settings),
             Obj2::Group(g) => g.annotate(settings),
