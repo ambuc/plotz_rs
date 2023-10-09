@@ -19,7 +19,7 @@ use {
 #[derive(Debug, PartialEq, Clone, From)]
 pub enum Obj2 {
     /// A point.
-    Pt(Pt2),
+    Pt2(Pt2),
     /// A polygon.
     Pg2(Pg2),
     /// A segment.
@@ -54,7 +54,7 @@ impl Nullable for Obj2 {
         match self {
             Obj2::Pg2(p) => p.is_empty(),
             Obj2::Group(dois) => dois.is_empty(),
-            Obj2::Pt(pt) => pt.is_empty(),
+            Obj2::Pt2(pt) => pt.is_empty(),
             Obj2::Sg2(sg) => sg.is_empty(),
             Obj2::Txt(ch) => ch.is_empty(),
             Obj2::CurveArc(ca) => ca.is_empty(),
@@ -65,7 +65,7 @@ impl Nullable for Obj2 {
 impl YieldPoints for Obj2 {
     fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
         match self {
-            Obj2::Pt(p) => p.yield_pts(),
+            Obj2::Pt2(p) => p.yield_pts(),
             Obj2::Txt(ch) => ch.yield_pts(),
             Obj2::CurveArc(ca) => ca.yield_pts(),
             Obj2::Group(g) => g.yield_pts(),
@@ -78,7 +78,7 @@ impl YieldPoints for Obj2 {
 impl YieldPointsMut for Obj2 {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
         match self {
-            Obj2::Pt(p) => p.yield_pts_mut(),
+            Obj2::Pt2(p) => p.yield_pts_mut(),
             Obj2::Txt(ch) => ch.yield_pts_mut(),
             Obj2::CurveArc(ca) => ca.yield_pts_mut(),
             Obj2::Group(g) => g.yield_pts_mut(),
@@ -96,7 +96,7 @@ impl Bounded for Obj2 {
             Obj2::Txt(ch) => ch.bounds(),
             Obj2::CurveArc(arc) => arc.bounds(),
             Obj2::Group(dos) => dos.bounds(),
-            Obj2::Pt(p) => p.bounds(),
+            Obj2::Pt2(p) => p.bounds(),
             Obj2::Pg2(pg) => pg.bounds(),
             Obj2::Sg2(s) => s.bounds(),
         }
@@ -106,7 +106,7 @@ impl Bounded for Obj2 {
 impl RemAssign<Pt2> for Obj2 {
     fn rem_assign(&mut self, rhs: Pt2) {
         match self {
-            Obj2::Pt(p) => {
+            Obj2::Pt2(p) => {
                 *p %= rhs;
             }
             Obj2::Txt(ch) => {
@@ -132,7 +132,7 @@ impl Add<Pt2> for Obj2 {
     type Output = Obj2;
     fn add(self, rhs: Pt2) -> Self::Output {
         match self {
-            Obj2::Pt(p) => Obj2::from(p + rhs),
+            Obj2::Pt2(p) => Obj2::from(p + rhs),
             Obj2::Txt(ch) => Obj2::from(ch + rhs),
             Obj2::CurveArc(ca) => Obj2::from(ca + rhs),
             Obj2::Group(g) => Obj2::from(g + rhs),
@@ -146,7 +146,7 @@ impl Sub<Pt2> for Obj2 {
     type Output = Obj2;
     fn sub(self, rhs: Pt2) -> Self::Output {
         match self {
-            Obj2::Pt(p) => Obj2::from(p - rhs),
+            Obj2::Pt2(p) => Obj2::from(p - rhs),
             Obj2::Txt(ch) => Obj2::from(ch - rhs),
             Obj2::CurveArc(ca) => Obj2::from(ca - rhs),
             Obj2::Group(g) => Obj2::from(g - rhs),
@@ -159,7 +159,7 @@ impl Mul<f64> for Obj2 {
     type Output = Obj2;
     fn mul(self, rhs: f64) -> Self::Output {
         match self {
-            Obj2::Pt(p) => Obj2::from(p * rhs),
+            Obj2::Pt2(p) => Obj2::from(p * rhs),
             Obj2::Txt(ch) => Obj2::from(ch * rhs),
             Obj2::CurveArc(ca) => Obj2::from(ca * rhs),
             Obj2::Group(g) => Obj2::from(g * rhs),
@@ -172,7 +172,7 @@ impl Div<f64> for Obj2 {
     type Output = Obj2;
     fn div(self, rhs: f64) -> Self::Output {
         match self {
-            Obj2::Pt(p) => Obj2::from(p / rhs),
+            Obj2::Pt2(p) => Obj2::from(p / rhs),
             Obj2::Txt(ch) => Obj2::from(ch / rhs),
             Obj2::CurveArc(ca) => Obj2::from(ca / rhs),
             Obj2::Group(g) => Obj2::from(g / rhs),
@@ -184,7 +184,7 @@ impl Div<f64> for Obj2 {
 impl AddAssign<Pt2> for Obj2 {
     fn add_assign(&mut self, rhs: Pt2) {
         match self {
-            Obj2::Pt(p) => {
+            Obj2::Pt2(p) => {
                 *p += rhs;
             }
             Obj2::Txt(ch) => {
@@ -208,7 +208,7 @@ impl AddAssign<Pt2> for Obj2 {
 impl SubAssign<Pt2> for Obj2 {
     fn sub_assign(&mut self, rhs: Pt2) {
         match self {
-            Obj2::Pt(p) => {
+            Obj2::Pt2(p) => {
                 *p -= rhs;
             }
             Obj2::Txt(ch) => {
@@ -233,7 +233,7 @@ impl SubAssign<Pt2> for Obj2 {
 impl MulAssign<f64> for Obj2 {
     fn mul_assign(&mut self, rhs: f64) {
         match self {
-            Obj2::Pt(p) => {
+            Obj2::Pt2(p) => {
                 *p *= rhs;
             }
             Obj2::Txt(ch) => {
@@ -258,7 +258,7 @@ impl MulAssign<f64> for Obj2 {
 impl DivAssign<f64> for Obj2 {
     fn div_assign(&mut self, rhs: f64) {
         match self {
-            Obj2::Pt(p) => {
+            Obj2::Pt2(p) => {
                 *p /= rhs;
             }
             Obj2::Txt(ch) => {
@@ -289,7 +289,7 @@ impl Croppable for Obj2 {
     type Output = Obj2;
     fn crop(&self, frame: &Pg2, crop_type: CropType) -> Vec<Self::Output> {
         match &self {
-            Obj2::Pt(pt) => {
+            Obj2::Pt2(pt) => {
                 assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(pt), PointLoc::Outside) {
                     vec![self.clone()]
@@ -341,7 +341,7 @@ impl Croppable for Obj2 {
         Self: Sized,
     {
         match &self {
-            Obj2::Pt(pt) => {
+            Obj2::Pt2(pt) => {
                 if matches!(other.contains_pt(pt), PointLoc::Outside) {
                     vec![]
                 } else {
@@ -392,7 +392,7 @@ impl Annotatable for Obj2 {
         match self {
             Obj2::Pg2(pg) => pg.annotate(settings),
             Obj2::Group(g) => g.annotate(settings),
-            Obj2::Pt(_) | Obj2::Sg2(_) | Obj2::CurveArc(_) | Obj2::Txt(_) => vec![],
+            Obj2::Pt2(_) | Obj2::Sg2(_) | Obj2::CurveArc(_) | Obj2::Txt(_) => vec![],
         }
     }
 }

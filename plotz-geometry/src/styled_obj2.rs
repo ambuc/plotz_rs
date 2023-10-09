@@ -27,7 +27,7 @@ impl Debug for StyledObj2 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let StyledObj2 { inner, style } = self;
         let inner_fmt = match inner {
-            Obj2::Pt(p) => format!("{:?}", p),
+            Obj2::Pt2(p) => format!("{:?}", p),
             Obj2::Pg2(pg) => format!("{:?}", pg),
             Obj2::Sg2(sg) => format!("{:?}", sg),
             Obj2::CurveArc(ca) => format!("{:?}", ca),

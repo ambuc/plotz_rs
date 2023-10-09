@@ -50,7 +50,7 @@ pub enum SvgWriteError {
 
 fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), SvgWriteError> {
     match &doi {
-        Obj2::Pt(p) => {
+        Obj2::Pt2(p) => {
             context.line_to(p.x.0, p.y.0);
             context.line_to(p.x.0 + 1.0, p.y.0 + 1.0);
         }

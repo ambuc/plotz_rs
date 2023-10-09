@@ -18,7 +18,7 @@ impl Occluder {
 
         match (&incoming, &existing) {
             // points can/should be occluded, not handled yet.
-            (Obj2::Pt(_), _) => {
+            (Obj2::Pt2(_), _) => {
                 unimplemented!("no support for points yet")
             }
             // chars are points, see above.
@@ -45,7 +45,7 @@ impl Occluder {
 
             //
             // you can't hide something behind a segment or a point or a char. don't be daft.
-            (incoming, Obj2::Sg2(_) | Obj2::Pt(_) | Obj2::Txt(_)) => {
+            (incoming, Obj2::Sg2(_) | Obj2::Pt2(_) | Obj2::Txt(_)) => {
                 vec![(**incoming).clone()]
             }
         }
