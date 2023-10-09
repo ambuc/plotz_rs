@@ -4,8 +4,9 @@ use plotz_color::*;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
     crop::Croppable,
+    obj2::Obj2,
     shapes::{curve::CurveArc, pg2::multiline::Multiline, pt2::Pt2, sg2::Sg2},
-    styled_obj2::StyledObj2,
+    style::Style,
 };
 use rand::thread_rng;
 use rand::Rng;
@@ -35,7 +36,7 @@ fn main() {
 
     let args: Args = argh::from_env();
 
-    let mut dos = vec![];
+    let mut dos: Vec<(Obj2, Style)> = vec![];
     let mgn = 25.0;
 
     let frame = make_frame(
@@ -55,13 +56,15 @@ fn main() {
             arrows_store.push(arrow);
             if PRINT_ARROWS {
                 dos.extend([
-                    StyledObj2::new(arrow).with_thickness(2.0),
-                    StyledObj2::new(CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0))
-                        .with_thickness(1.0)
-                        .with_color(&RED),
-                    StyledObj2::new(CurveArc(arrow_i, 0.0..=TAU, /*radius=*/ 2.0))
-                        .with_thickness(1.0)
-                        .with_color(&GREEN),
+                    (Obj2::Sg2(arrow), Style::builder().thickness(2.0).build()),
+                    (
+                        Obj2::CurveArc(CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0)),
+                        Style::builder().thickness(1.0).color(&RED).build(),
+                    ),
+                    (
+                        Obj2::CurveArc(CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0)),
+                        Style::builder().thickness(1.0).color(&GREEN).build(),
+                    ),
                 ]);
             }
         }
@@ -101,9 +104,10 @@ fn main() {
                         }
 
                         let sg = Multiline(history).expect("multiline");
-                        StyledObj2::new(sg)
-                            .with_thickness(1.0)
-                            .with_color(cluster_color)
+                        (
+                            Obj2::Pg2(sg),
+                            Style::builder().thickness(1.0).color(cluster_color).build(),
+                        )
                     })
                     .collect::<Vec<_>>()
             })
@@ -112,13 +116,12 @@ fn main() {
 
     let frame_pg2 = frame.0.to_pg2().unwrap();
     let objs = Canvas::from_objs(
-        dos.into_iter()
-            .map(|mut d_o| {
-                d_o += Pt2(2.0 * mgn, 2.0 * mgn);
-                d_o
-            })
-            .flat_map(|d_o| d_o.crop_to(frame_pg2))
-            .map(|so2| (so2.inner, so2.style)),
+        dos.into_iter().flat_map(|(obj2, style)| {
+            obj2.crop_to(frame_pg2)
+                .into_iter()
+                .map(|o| (o, style))
+                .collect::<Vec<_>>()
+        }),
         /*autobucket=*/ true,
     )
     .with_frame(frame);
