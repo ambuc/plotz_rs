@@ -24,7 +24,10 @@ impl StyledObj3 {
     pub fn with_color(self, c: &'static ColorRGB) -> StyledObj3 {
         StyledObj3 {
             style: match self.style {
-                None => Some(Style::builder().color(c).build()),
+                None => Some(Style {
+                    color: c,
+                    ..Default::default()
+                }),
                 Some(s) => Some(Style { color: c, ..s }),
             },
             ..self

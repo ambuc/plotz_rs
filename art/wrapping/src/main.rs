@@ -46,7 +46,15 @@ impl Tile {
     fn to_dos(&self) -> Vec<(Obj2, Style)> {
         self.to_dois()
             .into_iter()
-            .map(|obj2| (obj2, Style::builder().thickness(2.0).build()))
+            .map(|obj2| {
+                (
+                    obj2,
+                    Style {
+                        thickness: 2.0,
+                        ..Default::default()
+                    },
+                )
+            })
             .collect::<Vec<_>>()
     }
 

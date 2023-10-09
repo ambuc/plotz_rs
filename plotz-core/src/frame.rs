@@ -15,7 +15,10 @@ pub fn make_frame_pg((w, h): (f64, f64), offset: Pt2) -> Pg2 {
 pub fn make_frame(wh: (f64, f64), offset: Pt2) -> (Obj2, Style) {
     (
         Obj2::Pg2(make_frame_pg(wh, offset)),
-        Style::builder().thickness(5.0).build(),
+        Style {
+            thickness: 5.0,
+            ..Default::default()
+        },
     )
 }
 

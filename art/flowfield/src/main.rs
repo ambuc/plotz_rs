@@ -56,14 +56,28 @@ fn main() {
             arrows_store.push(arrow);
             if PRINT_ARROWS {
                 dos.extend([
-                    (Obj2::Sg2(arrow), Style::builder().thickness(2.0).build()),
                     (
-                        Obj2::CurveArc(CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0)),
-                        Style::builder().thickness(1.0).color(&RED).build(),
+                        Obj2::Sg2(arrow),
+                        Style {
+                            thickness: 2.0,
+                            ..Default::default()
+                        },
                     ),
                     (
                         Obj2::CurveArc(CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0)),
-                        Style::builder().thickness(1.0).color(&GREEN).build(),
+                        Style {
+                            thickness: 1.0,
+                            color: &RED,
+                            ..Default::default()
+                        },
+                    ),
+                    (
+                        Obj2::CurveArc(CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0)),
+                        Style {
+                            thickness: 1.0,
+                            color: &GREEN,
+                            ..Default::default()
+                        },
                     ),
                 ]);
             }
@@ -106,7 +120,10 @@ fn main() {
                         let sg = Multiline(history).expect("multiline");
                         (
                             Obj2::Pg2(sg),
-                            Style::builder().thickness(1.0).color(cluster_color).build(),
+                            Style {
+                                color: cluster_color,
+                                ..Default::default()
+                            },
                         )
                     })
                     .collect::<Vec<_>>()

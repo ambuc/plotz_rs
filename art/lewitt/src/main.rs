@@ -70,7 +70,11 @@ fn main() {
                             cubby,
                             (
                                 Obj2::CurveArc(CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64)),
-                                Style::builder().color(color).thickness(1.0).build(),
+                                Style {
+                                    thickness: 1.0,
+                                    color,
+                                    ..Default::default()
+                                },
                             ),
                         );
                     }

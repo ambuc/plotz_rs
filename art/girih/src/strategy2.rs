@@ -86,10 +86,11 @@ fn chase(apts: &AnnotatedPlacedTiles) -> Vec<(Obj2, Style)> {
         // and then make a multiline, and add it to our final outputs list.
         outputs.push((
             Obj2::Pg2(Multiline(pts).unwrap()),
-            Style::builder()
-                .color(plotz_color::take_random_colors(1).next().unwrap())
-                .thickness(3.0)
-                .build(),
+            Style {
+                color: plotz_color::take_random_colors(1).next().unwrap(),
+                thickness: 3.0,
+                ..Default::default()
+            },
         ));
     }
 
@@ -104,10 +105,11 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj2, Styl
             v.extend(apts.clone().straps.into_iter().map(|(girih, sg2)| {
                 (
                     Obj2::Sg2(sg2),
-                    Style::builder()
-                        .color(girih.color())
-                        .thickness(*thickness)
-                        .build(),
+                    Style {
+                        color: girih.color(),
+                        thickness: *thickness,
+                        ..Default::default()
+                    },
                 )
             }))
         }
@@ -117,7 +119,11 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj2, Styl
                 // scale
                 (
                     Obj2::Pg2(pg2),
-                    Style::builder().color(&BLACK).thickness(*thickness).build(),
+                    Style {
+                        color: &BLACK,
+                        thickness: *thickness,
+                        ..Default::default()
+                    },
                 )
             }))
         }
@@ -129,7 +135,10 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj2, Styl
                     .map(|shade| {
                         (
                             Obj2::Sg2(shade),
-                            Style::builder().color(girih.color()).thickness(1.0).build(),
+                            Style {
+                                color: girih.color(),
+                                ..Default::default()
+                            },
                         )
                     })
             }))

@@ -99,7 +99,15 @@ fn main() {
             shade_polygon(&shade.config, p)
                 .expect("failed to shade")
                 .iter()
-                .map(|sg| (Obj2::Sg2(*sg), Style::builder().color(shade.color).build()))
+                .map(|sg| {
+                    (
+                        Obj2::Sg2(*sg),
+                        Style {
+                            color: shade.color,
+                            ..Default::default()
+                        },
+                    )
+                })
                 .collect::<Vec<_>>()
         })
     }));

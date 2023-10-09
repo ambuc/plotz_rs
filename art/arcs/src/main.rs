@@ -55,7 +55,11 @@ fn main() {
                 |ca| -> (Obj2, Style) {
                     (
                         Obj2::CurveArc(ca),
-                        Style::builder().color(&GREEN).thickness(0.30).build(),
+                        Style {
+                            color: &GREEN,
+                            thickness: 0.30,
+                            ..Default::default()
+                        },
                     )
                 },
             ));

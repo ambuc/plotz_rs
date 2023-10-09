@@ -184,7 +184,7 @@ mod test_super {
             path.to_str().unwrap(),
             vec![&(
                 Obj2::Pg2(Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)])),
-                Style::builder().color(&BLACK).thickness(1.0).build(),
+                Style::default(),
             )],
         )
         .unwrap();
@@ -210,11 +210,11 @@ mod test_super {
             vec![
                 &(
                     Obj2::Pg2(Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)])),
-                    Style::builder().color(&BLACK).thickness(1.0).build(),
+                    Style::default(),
                 ),
                 &(
                     Obj2::Pg2(Pg2([Pt2(5, 5), Pt2(5, 6), Pt2(6, 5)])),
-                    Style::builder().color(&BLACK).thickness(1.0).build(),
+                    Style::default(),
                 ),
             ],
         )

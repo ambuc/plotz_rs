@@ -74,7 +74,11 @@ impl Scene {
                         {
                             resultant.push((
                                 obj2.clone(),
-                                Style::builder().color(color).thickness(*thickness).build(),
+                                Style {
+                                    color,
+                                    thickness: *thickness,
+                                    ..Default::default()
+                                },
                             ));
                         }
                         if let Some(settings) = should_annotate {

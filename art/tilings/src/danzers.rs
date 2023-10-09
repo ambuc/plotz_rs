@@ -264,11 +264,15 @@ pub fn make() -> Vec<(Obj2, Style)> {
 
             let mut ret: Vec<(Obj2, Style)> = vec![];
             ret.push((Obj2::Pg2(p), Style::default()));
-            ret.extend(
-                segments
-                    .into_iter()
-                    .map(|s| (Obj2::Sg2(s), Style::builder().color(color).build())),
-            );
+            ret.extend(segments.into_iter().map(|s| {
+                (
+                    Obj2::Sg2(s),
+                    Style {
+                        color,
+                        ..Default::default()
+                    },
+                )
+            }));
 
             ret
         })

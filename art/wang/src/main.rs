@@ -198,9 +198,10 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj2, Style
 
             (
                 Obj2::Pg2(pg),
-                Style::builder()
-                    .color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
-                    .build(),
+                Style {
+                    color: [&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()],
+                    ..Default::default()
+                },
             )
         });
         ret.extend({
@@ -216,23 +217,22 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj2, Style
                 .map(|sg| {
                     (
                         Obj2::Sg2(*sg),
-                        Style::builder()
-                            .color(
-                                [
-                                    &ALICEBLUE,      // 1
-                                    &BLUEVIOLET,     // 2
-                                    &CORNFLOWERBLUE, // 3
-                                    &DODGERBLUE,     // 4
-                                    &FIREBRICK,      // 5
-                                    &GOLD,           // 6
-                                    &HOTPINK,        // 7
-                                    &KHAKI,          // 8
-                                    &LAVENDER,       // 9
-                                    &MAGENTA,        // 10
-                                    &NAVY,           // 11
-                                ][cell_id],
-                            )
-                            .build(),
+                        Style {
+                            color: [
+                                &ALICEBLUE,      // 1
+                                &BLUEVIOLET,     // 2
+                                &CORNFLOWERBLUE, // 3
+                                &DODGERBLUE,     // 4
+                                &FIREBRICK,      // 5
+                                &GOLD,           // 6
+                                &HOTPINK,        // 7
+                                &KHAKI,          // 8
+                                &LAVENDER,       // 9
+                                &MAGENTA,        // 10
+                                &NAVY,           // 11
+                            ][cell_id],
+                            ..Default::default()
+                        },
                     )
                 })
                 .collect::<Vec<_>>()

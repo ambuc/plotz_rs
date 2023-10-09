@@ -216,10 +216,11 @@ impl Map {
                     bucketer.bucket(tags).into_iter().flat_map(|bucket| {
                         map_bucket_to_color(&bucket).map(|color| AnnotatedObject2d {
                             obj: obj_inner.clone(),
-                            style: Style::builder()
-                                .color(color)
-                                .thickness(*DEFAULT_THICKNESS)
-                                .build(),
+                            style: Style {
+                                color,
+                                thickness: *DEFAULT_THICKNESS,
+                                ..Default::default()
+                            },
                             bucket,
                             _tags: tags.clone(),
                         })
@@ -331,10 +332,10 @@ impl Map {
                                         .map(|s| {
                                             (
                                                 Obj2::Sg2(s),
-                                                Style::builder()
-                                                    .color(style.color)
-                                                    .thickness(shade_config.thickness)
-                                                    .build(),
+                                                Style {
+                                                    thickness: shade_config.thickness,
+                                                    ..*style
+                                                },
                                             )
                                         })
                                         .collect::<Vec<_>>(),
@@ -467,7 +468,15 @@ impl Map {
             }
             *dos = hs
                 .into_iter()
-                .map(|sg| (Obj2::Sg2(sg), Style::builder().color(color).build()))
+                .map(|sg| {
+                    (
+                        Obj2::Sg2(sg),
+                        Style {
+                            color,
+                            ..Default::default()
+                        },
+                    )
+                })
                 .collect::<Vec<_>>();
         }
     }
@@ -619,7 +628,10 @@ mod tests {
                         Some(Bucket::Area(Area::Beach)),
                         vec![(
                             obj,
-                            Style::builder().color(&ALICEBLUE).thickness(1.0).build(),
+                            Style {
+                                color: &ALICEBLUE,
+                                ..Default::default()
+                            },
                         )],
                     );
                     canvas
@@ -669,7 +681,10 @@ mod tests {
                         Some(Bucket::Area(Area::Beach)),
                         vec![(
                             obj,
-                            Style::builder().color(&ALICEBLUE).thickness(1.0).build(),
+                            Style {
+                                color: &ALICEBLUE,
+                                ..Default::default()
+                            },
                         )],
                     );
                     canvas

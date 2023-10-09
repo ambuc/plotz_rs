@@ -302,13 +302,27 @@ pub fn make() -> Vec<(Obj2, Style)> {
             let segments = shade_polygon(&config, &p).unwrap();
 
             // std::iter::empty() //
-            std::iter::once((Obj2::Pg2(p), Style::builder().color(color).build())).chain([(
-                Obj2::Group(Group::new(
-                    segments
-                        .into_iter()
-                        .map(|s| (Obj2::Sg2(s), Style::builder().color(color).build())),
-                )),
-                Style::builder().color(color).build(),
+            std::iter::once((
+                Obj2::Pg2(p),
+                Style {
+                    color,
+                    ..Default::default()
+                },
+            ))
+            .chain([(
+                Obj2::Group(Group::new(segments.into_iter().map(|s| {
+                    (
+                        Obj2::Sg2(s),
+                        Style {
+                            color,
+                            ..Default::default()
+                        },
+                    )
+                }))),
+                Style {
+                    color,
+                    ..Default::default()
+                },
             )])
         })
         .collect()

@@ -53,10 +53,11 @@ impl Grid {
             let f = i + Pt2(0.0, h);
             v.push((
                 Sg2(i, f).into(),
-                Style::builder()
-                    .color(self.minor_color)
-                    .thickness(self.minor_thickness)
-                    .build(),
+                Style {
+                    color: self.minor_color,
+                    thickness: self.minor_thickness,
+                    ..Default::default()
+                },
             ));
         }
         for x in range_step(self.x_init, self.x_init + self.width, self.major_every) {
@@ -64,10 +65,11 @@ impl Grid {
             let f = i + Pt2(0.0, h);
             v.push((
                 Sg2(i, f).into(),
-                Style::builder()
-                    .color(self.major_color)
-                    .thickness(self.major_thickness)
-                    .build(),
+                Style {
+                    color: self.major_color,
+                    thickness: self.minor_thickness,
+                    ..Default::default()
+                },
             ));
         }
         for y in range_step(self.y_init, self.y_init + self.height, self.minor_every) {
@@ -75,10 +77,11 @@ impl Grid {
             let f = i + Pt2(w, 0.0);
             v.push((
                 Sg2(i, f).into(),
-                Style::builder()
-                    .color(self.minor_color)
-                    .thickness(self.minor_thickness)
-                    .build(),
+                Style {
+                    color: self.minor_color,
+                    thickness: self.minor_thickness,
+                    ..Default::default()
+                },
             ));
         }
         for y in range_step(self.y_init, self.y_init + self.height, self.major_every) {
@@ -86,10 +89,11 @@ impl Grid {
             let f = i + Pt2(w, 0.0);
             v.push((
                 Sg2(i, f).into(),
-                Style::builder()
-                    .color(self.major_color)
-                    .thickness(self.major_thickness)
-                    .build(),
+                Style {
+                    color: self.major_color,
+                    thickness: self.major_thickness,
+                    ..Default::default()
+                },
             ));
         }
         v

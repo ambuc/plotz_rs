@@ -60,7 +60,10 @@ fn main() {
 
         let base_sq = (
             Obj2::Pg2(r.clone()),
-            Style::builder().thickness(2.0).build(),
+            Style {
+                thickness: 2.0,
+                ..Default::default()
+            },
         );
         v.push(base_sq.clone());
         // v.extend(base_sq.annotate(&AnnotationSettings::default()));
@@ -93,26 +96,40 @@ fn main() {
 
         let subject_sq = (
             Obj2::Pg2(Pg2(pts)) + offset,
-            Style::builder().color(&RED).build(),
+            Style {
+                color: &RED,
+                ..Default::default()
+            },
         );
         // v.push(subject_sq.clone());
         // v.extend(subject_sq.annotate(&AnnotationSettings::default()));
 
         let r = r.clone();
-        v.extend(
-            subject_sq
-                .0
-                .crop_to(&r)
-                .into_iter()
-                .map(|x| (x, Style::builder().color(&GREEN).thickness(2.0).build())),
-        );
+        v.extend(subject_sq.0.crop_to(&r).into_iter().map(|x| {
+            (
+                x,
+                Style {
+                    color: &GREEN,
+                    thickness: 2.0,
+                    ..Default::default()
+                },
+            )
+        }));
 
         v.extend(
             subject_sq
                 .0
                 .crop_excluding(&r.clone())
                 .into_iter()
-                .map(|x| (x, Style::builder().color(&BLUE).thickness(2.0).build())),
+                .map(|x| {
+                    (
+                        x,
+                        Style {
+                            color: &BLUE,
+                            ..Default::default()
+                        },
+                    )
+                }),
         );
 
         gl.insert_and_rescale_to_cubby(
