@@ -14,13 +14,13 @@ use rayon::prelude::*;
 use std::{f64::consts::*, ops::Range};
 
 const ARROW_RANGE: Range<f64> = (-1.0 * MAX_ARROW_SIZE)..MAX_ARROW_SIZE;
-const CLUSTER_DISTANCE: f64 = 200.0;
+const CLUSTER_DISTANCE: f64 = 400.0;
 const CLUSTER_RANGE: Range<f64> = (-1.0 * CLUSTER_DISTANCE)..CLUSTER_DISTANCE;
-const GRID_GRANULARITY: usize = 50;
-const MAX_ARROW_SIZE: f64 = 50.0;
-const MOMENTUM: f64 = 1_000.0;
+const GRID_GRANULARITY: usize = 20;
+const MAX_ARROW_SIZE: f64 = 70.0;
+const MOMENTUM: f64 = 1000.0;
 const NUM_CLUSTERS: usize = 8;
-const NUM_PTS_PER_CLUSTER: usize = 50;
+const NUM_PTS_PER_CLUSTER: usize = 300;
 const NUM_STEPS_RANGE: Range<usize> = 100..500;
 const PRINT_ARROWS: bool = false;
 

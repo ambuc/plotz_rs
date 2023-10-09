@@ -80,7 +80,7 @@ fn make_default_axicli_args() -> Vec<&'static str> {
         "--pen_pos_up", // https://axidraw.com/doc/cli_api/#pen_pos_up
         "45",
         "--speed_pendown", // https://axidraw.com/doc/cli_api/#speed_pendown
-        "100",
+        "70",
         "--speed_penup", // https://axidraw.com/doc/cli_api/#speed_penup
         "100",
         "--reordering", // https://axidraw.com/doc/cli_api/#reordering
@@ -88,6 +88,7 @@ fn make_default_axicli_args() -> Vec<&'static str> {
         "--model", // https://axidraw.com/doc/cli_api/#model
         "2",
         "--progress", // https://axidraw.com/doc/cli_api/#progress
+        "--report_time", // https://axidraw.com/doc/cli_api/#report_time
     ]
 }
 
