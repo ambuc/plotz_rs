@@ -22,6 +22,7 @@ pub struct ColorRGB {
 
 impl Debug for ColorRGB {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // TODO(ambuc): Make this not always print 'red'.
         write!(f, "&RED")
     }
 }
@@ -867,16 +868,16 @@ pub static COLORS: [&ColorRGB; 141] = [
 ];
 
 /// Returns a vector of |limit| random colors.
-pub fn take_random_colors(limit: usize) -> Vec<&'static ColorRGB> {
+pub fn take_random_colors(limit: usize) -> impl Iterator<Item = &'static ColorRGB> {
     let mut colors = COLORS;
 
     let mut rng = rand::thread_rng();
     colors.shuffle(&mut rng);
 
-    colors.into_iter().take(limit).collect()
+    colors.into_iter().take(limit)
 }
 
 /// Returns a random color.
 pub fn random_color() -> &'static ColorRGB {
-    take_random_colors(1)[0]
+    take_random_colors(1).next().unwrap()
 }

@@ -85,8 +85,7 @@ fn chase(apts: &AnnotatedPlacedTiles) -> Vec<StyledObj2> {
         // and then make a multiline, and add it to our final outputs list.
         outputs.push(
             StyledObj2::new(Multiline(pts).unwrap())
-                // .with_color(&RED)
-                .with_color(plotz_color::take_random_colors(1)[0])
+                .with_color(plotz_color::take_random_colors(1).next().unwrap())
                 .with_thickness(3.0),
         );
     }
