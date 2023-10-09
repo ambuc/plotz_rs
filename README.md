@@ -2,23 +2,21 @@
 
 A collection of pen plotter libraries, binaries, and utilities.
 
-## Binaries
+```mermaid
+graph TD;
+    src/main.rs-->plotz_core;
+    plotz_core-->plotz_color;
+    plotz_core-->plotz_geometry;
+    plotz_core-->plotz_geojson;
+    plotz_geojson-->plotz_geometry;
+    plotz_geometry3d-->plotz_color;
+    plotz_geometry3d-->plotz_geometry;
 
-* [`mk-tilings`](mk-tilings/README.md), a tool for making tiling patterns.
-* [`mk-voronoi`](mk-voronoi/README.md), a tool for making voronoi patterns.
-* [`mk-wang`](mk-wang/README.md), a tool for making voronoi patterns.
-* [`orchestrator`](orchestrator/README.md), a tool for managing long-running prints.
-* [`svg-splitter`](svg-splitter/README.md), a tool for splitting very large SVG files which already have inherent groupings.
-
-## Libraries
-
-* [`plotz-color`](plotz-color/README.md), a library with lots of useful predefined RGB colors.
-* [`plotz-geojson`](plotz-geojson/README.md), a library for parsing GeoJSON into `plotz-geometry` types.
-* [`plotz-geometry`](plotz-geometry/README.md), a library for 2D geometry.
-
-## Questions?
-
-Please file an issue on GitHub.
+    mk_foo-->plotz_core;
+    mk_foo-->plotz_geometry;
+    mk_foo-->plotz_color;
+    mk_foo-->plotz_geometry3d;
+```
 
 ## Authors
 
@@ -26,16 +24,11 @@ See [`Cargo.toml`](Cargo.toml).
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`NOTES.md`](NOTES.md)
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) .
 
-## Commands
+## Development
 
-Some useful cargo commands for working with a repo with many crates:
-
-* `cargo build --workspace --color=always`
-* `cargo test --release --workspace -- --nocapture --color=always`
-* `RUST_LOG=info cargo run --release -- --input-glob testdata/wuppertal.geojson --output-directory "/tmp/" --width 1024 --height 1024`
-* `cargo nextest run --workspace --color=always --release`
+See [`DEVELOPMENT.md`](DEVELOPMENT.md).
 
 ## License
 
