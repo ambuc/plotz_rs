@@ -23,7 +23,6 @@ use {
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
         style::Style,
-        styled_obj2::StyledObj2,
         traits::*,
     },
     rand::{thread_rng, Rng},
@@ -65,14 +64,15 @@ pub enum MapError {
 #[derive(Debug)]
 /// A polygon with some annotations (bucket, color, tags, etc.).
 pub struct AnnotatedObject2d {
-    object_2d: StyledObj2,
+    obj: Obj2,
+    style: Style,
     bucket: Bucket,
     _tags: Vec<(String, String)>,
 }
 impl AnnotatedObject2d {
     /// Consumes an AnnotatedPolygon and casts down to a ColoredPolygon.
     pub fn to_object2d(self) -> (Obj2, Style) {
-        (self.object_2d.inner, self.object_2d.style)
+        (self.obj, self.style)
     }
 }
 
@@ -215,9 +215,11 @@ impl Map {
                 .flat_map(|(obj_inner, tags)| {
                     bucketer.bucket(tags).into_iter().flat_map(|bucket| {
                         map_bucket_to_color(&bucket).map(|color| AnnotatedObject2d {
-                            object_2d: StyledObj2::new(obj_inner.clone())
-                                .with_color(color)
-                                .with_thickness(*DEFAULT_THICKNESS),
+                            obj: obj_inner.clone(),
+                            style: Style::builder()
+                                .color(color)
+                                .thickness(*DEFAULT_THICKNESS)
+                                .build(),
                             bucket,
                             _tags: tags.clone(),
                         })
@@ -318,7 +320,7 @@ impl Map {
                 {
                     let mut v: Vec<(Obj2, Style)> = vec![];
                     // keep the frame, add the crosshatchings.
-                    let crosshatchings: Vec<StyledObj2> = layers
+                    let crosshatchings: Vec<(Obj2, Style)> = layers
                         .iter()
                         .filter_map(|(obj, style)| match &obj {
                             Obj2::Pg2(p) => match shade_polygon(shade_config, p) {
@@ -326,12 +328,14 @@ impl Map {
                                 Ok(segments) => Some(
                                     segments
                                         .into_iter()
-                                        .map(|s| StyledObj2 {
-                                            inner: Obj2::Sg2(s),
-                                            style: Style::builder()
-                                                .color(style.color)
-                                                .thickness(shade_config.thickness)
-                                                .build(),
+                                        .map(|s| {
+                                            (
+                                                Obj2::Sg2(s),
+                                                Style::builder()
+                                                    .color(style.color)
+                                                    .thickness(shade_config.thickness)
+                                                    .build(),
+                                            )
                                         })
                                         .collect::<Vec<_>>(),
                                 ),
@@ -342,18 +346,10 @@ impl Map {
                         .collect();
                     match shade_and_outline {
                         ShadeAndOutline::JustShade => {
-                            v.extend(
-                                crosshatchings
-                                    .iter()
-                                    .map(|so2| (so2.inner.clone(), so2.style)),
-                            );
+                            v.extend(crosshatchings.iter().map(|so2| (so2.0.clone(), so2.1)));
                         }
                         ShadeAndOutline::Both => {
-                            v.extend(
-                                crosshatchings
-                                    .iter()
-                                    .map(|so2| (so2.inner.clone(), so2.style)),
-                            );
+                            v.extend(crosshatchings.iter().map(|so2| (so2.0.clone(), so2.1)));
                             v.extend(layers.clone());
                         }
                     }
