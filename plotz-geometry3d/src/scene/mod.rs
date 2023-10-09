@@ -1,6 +1,8 @@
 //! A scene, i.e. a holder for 3d objects ready to be projected down onto a 2d
 //! plane.
 
+use plotz_geometry::obj2::Obj2;
+
 pub mod debug;
 mod occluder;
 
@@ -12,7 +14,7 @@ use {
     },
     float_ord::FloatOrd,
     itertools::Itertools,
-    plotz_geometry::{style::Style, styled_obj2::StyledObj2, traits::Annotatable},
+    plotz_geometry::{style::Style, traits::Annotatable},
     std::fmt::Debug,
     typed_builder::TypedBuilder,
 };
@@ -37,17 +39,16 @@ impl Scene {
         Scene::builder().build()
     }
 
-    pub fn project_with(&self, projection: Projection, occlusion: Occlusion) -> Vec<StyledObj2> {
+    pub fn project_with(&self, projection: Projection, occlusion: Occlusion) -> Vec<(Obj2, Style)> {
         match (projection, occlusion) {
             (Projection::Oblique(obl), Occlusion::False) => self
                 .objects
                 .iter()
                 .map(|sobj3| obl.project_styled_obj3(sobj3))
-                .map(|(inner, style)| StyledObj2 { inner, style })
                 .collect(),
 
             (Projection::Oblique(obl), Occlusion::True) => {
-                let mut resultant = vec![];
+                let mut resultant: Vec<(Obj2, Style)> = vec![];
 
                 // add objects to the occluder in distance order.
                 // start at the front (so that the objects in the front can
@@ -71,17 +72,13 @@ impl Scene {
                             color, thickness, ..
                         }) = draw_wireframes
                         {
-                            resultant.push(StyledObj2 {
-                                inner: obj2.clone(),
-                                style: Style::builder().color(color).thickness(*thickness).build(),
-                            });
+                            resultant.push((
+                                obj2.clone(),
+                                Style::builder().color(color).thickness(*thickness).build(),
+                            ));
                         }
                         if let Some(settings) = should_annotate {
-                            resultant.extend(
-                                obj2.annotate(settings)
-                                    .into_iter()
-                                    .map(|(inner, style)| StyledObj2 { inner, style }),
-                            );
+                            resultant.extend(obj2.annotate(settings).into_iter());
                         }
                     }
 

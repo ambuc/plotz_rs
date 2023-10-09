@@ -1,8 +1,6 @@
 //! Occludes things. Cmon.
 
-use plotz_geometry::{
-    crop::Croppable, obj2::Obj2, shading::shade_polygon, style::Style, styled_obj2::StyledObj2,
-};
+use plotz_geometry::{crop::Croppable, obj2::Obj2, shading::shade_polygon, style::Style};
 
 pub struct Occluder {
     objects: Vec<(Obj2, Style)>,
@@ -65,26 +63,22 @@ impl Occluder {
     }
 
     // Exports the occluded 2d objects.
-    pub fn export(mut self) -> Vec<StyledObj2> {
+    pub fn export(mut self) -> Vec<(Obj2, Style)> {
         // we store them front-to-back, but we want to render them to svg back-to-front.
         self.objects.reverse();
-        self.objects
-            .into_iter()
-            .map(|(inner, style)| StyledObj2 { inner, style })
-            .flat_map(export_obj)
-            .collect()
+        self.objects.into_iter().flat_map(export_obj).collect()
     }
 }
 
-fn export_obj(sobj2: StyledObj2) -> Vec<StyledObj2> {
-    match sobj2.style {
+fn export_obj((sobj2, style): (Obj2, Style)) -> Vec<(Obj2, Style)> {
+    match style {
         Style { shading: None, .. } => {
-            vec![sobj2]
+            vec![(sobj2, style)]
         }
         style @ Style {
             shading: Some(shade_config),
             ..
-        } => match sobj2.inner {
+        } => match sobj2 {
             Obj2::Pg2(pg2) => {
                 if shade_config.along_face {
                     // TODO(jbuckland): apply shade config here.
@@ -98,7 +92,7 @@ fn export_obj(sobj2: StyledObj2) -> Vec<StyledObj2> {
                     shade_polygon(&shade_config, &pg2)
                         .unwrap()
                         .into_iter()
-                        .map(|sg2| StyledObj2::new(sg2).with_style(style))
+                        .map(|sg2| (sg2.into(), style))
                         .collect::<Vec<_>>()
                 }
             }

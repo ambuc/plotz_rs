@@ -1,4 +1,6 @@
-use plotz_geometry::{shading::shade_config::ShadeConfig, traits::AnnotationSettings};
+use plotz_geometry::{
+    shading::shade_config::ShadeConfig, styled_obj2::StyledObj2, traits::AnnotationSettings,
+};
 
 use {
     argh::FromArgs,
@@ -80,7 +82,8 @@ fn main() {
             .objects(cubes())
             .build()
             .project_with(Projection::default(), Occlusion::True)
-            .into_iter(),
+            .into_iter()
+            .map(|(inner, style)| StyledObj2 { inner, style }),
         /*autobucket=*/ false,
     )
     .with_frame(make_frame_with_margin(
