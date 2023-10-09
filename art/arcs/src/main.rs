@@ -52,7 +52,7 @@ fn main() {
 
             dos.extend(
                 cas.iter()
-                    .flat_map(|ca| ca.crop_to(&frame_polygon))
+                    .flat_map(|ca| ca.crop_to(frame_polygon))
                     .map(|ca| StyledObj2::new(ca).with_color(&GREEN).with_thickness(0.30)),
             );
         }

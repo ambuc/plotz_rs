@@ -2,12 +2,13 @@
 
 #![allow(clippy::let_unit_value)]
 
+use crate::frame::make_frame;
+
 use {
     crate::{
         bucket::{Area, Bucket, Highway, Path as BucketPath, Subway},
         bucketer::{Bucketer2, DefaultBucketer2},
         canvas::Canvas,
-        frame::make_frame_pg,
         svg::{Size, SvgWriteError},
     },
     float_ord::FloatOrd,
@@ -70,8 +71,8 @@ pub struct AnnotatedObject2d {
 }
 impl AnnotatedObject2d {
     /// Consumes an AnnotatedPolygon and casts down to a ColoredPolygon.
-    pub fn to_object2d(self) -> StyledObj2 {
-        self.object_2d
+    pub fn to_object2d(self) -> (Obj2, Style) {
+        (self.object_2d.inner, self.object_2d.style)
     }
 }
 
@@ -315,11 +316,11 @@ impl Map {
                 if let Some((shade_and_outline, ref shade_config)) =
                     map_bucket_to_shadeconfig(bucket)
                 {
-                    let mut v = vec![];
+                    let mut v: Vec<(Obj2, Style)> = vec![];
                     // keep the frame, add the crosshatchings.
                     let crosshatchings: Vec<StyledObj2> = layers
                         .iter()
-                        .filter_map(|co| match &co.inner {
+                        .filter_map(|(obj, style)| match &obj {
                             Obj2::Pg2(p) => match shade_polygon(shade_config, p) {
                                 Err(_) => None,
                                 Ok(segments) => Some(
@@ -328,7 +329,7 @@ impl Map {
                                         .map(|s| StyledObj2 {
                                             inner: Obj2::Sg2(s),
                                             style: Style::builder()
-                                                .color(co.style.color)
+                                                .color(style.color)
                                                 .thickness(shade_config.thickness)
                                                 .build(),
                                         })
@@ -341,10 +342,18 @@ impl Map {
                         .collect();
                     match shade_and_outline {
                         ShadeAndOutline::JustShade => {
-                            v.extend(crosshatchings);
+                            v.extend(
+                                crosshatchings
+                                    .iter()
+                                    .map(|so2| (so2.inner.clone(), so2.style)),
+                            );
                         }
                         ShadeAndOutline::Both => {
-                            v.extend(crosshatchings);
+                            v.extend(
+                                crosshatchings
+                                    .iter()
+                                    .map(|so2| (so2.inner.clone(), so2.style)),
+                            );
                             v.extend(layers.clone());
                         }
                     }
@@ -372,8 +381,8 @@ impl Map {
     /// should stay.
     pub fn randomize_circles(&mut self) {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
-            for d_o in dos.iter_mut() {
-                if let Obj2::CurveArc(ca) = &mut d_o.inner {
+            for (ref mut obj2, _style) in dos.iter_mut() {
+                if let Obj2::CurveArc(mut ca) = &obj2 {
                     ca.ctr += Pt2(
                         thread_rng().gen_range(-2.0..=2.0),
                         thread_rng().gen_range(-2.0..=2.0),
@@ -388,7 +397,12 @@ impl Map {
     pub fn crop_to_frame(&mut self, frame: &Pg2) {
         trace!("Cropping all to frame.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
-            *dos = dos.iter_mut().flat_map(|d_o| d_o.crop_to(frame)).collect();
+            *dos = dos
+                .iter_mut()
+                .flat_map(|(obj2, style)| {
+                    obj2.crop_to(frame).into_iter().map(|obj2| (obj2, *style))
+                })
+                .collect();
         }
     }
 
@@ -400,13 +414,13 @@ impl Map {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             *dos = dos
                 .iter_mut()
-                .flat_map(|d_o| {
-                    match d_o.inner.clone() {
+                .flat_map(|(obj2, style)| {
+                    match obj2.clone() {
                         Obj2::Pg2(pg) => pg.to_segments().into_iter().map(Obj2::from).collect(),
                         x => vec![x],
                     }
                     .into_iter()
-                    .map(|doi| StyledObj2 { inner: doi, ..*d_o })
+                    .map(|inner| (inner, *style))
                 })
                 .collect();
         }
@@ -418,12 +432,12 @@ impl Map {
         trace!("Quantizing layers.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             let q = 0.5;
-            for d_o in dos.iter_mut() {
-                match &mut d_o.inner {
-                    Obj2::Sg2(sg) => {
+            for (ref mut obj2, _style) in dos.iter_mut() {
+                match obj2 {
+                    Obj2::Sg2(ref mut sg) => {
                         sg.round_to_nearest(q);
                     }
-                    Obj2::Pg2(pg) => {
+                    Obj2::Pg2(ref mut pg) => {
                         pg.round_to_nearest(q);
                     }
                     _ => {}
@@ -449,15 +463,15 @@ impl Map {
                 .unwrap_or(Some(&BLACK))
                 .unwrap();
             let mut hs = HashSet::<Sg2>::new();
-            for d_o in dos.iter() {
-                if let Obj2::Sg2(sg) = d_o.inner {
-                    hs.insert(sg);
+            for (obj2, _style) in dos.iter() {
+                if let Obj2::Sg2(sg) = obj2 {
+                    hs.insert(*sg);
                     // TODO(ambuc): really, deduplicate this way but then store and restore the original.
                 }
             }
             *dos = hs
                 .into_iter()
-                .map(|sg| StyledObj2::new(sg).with_color(color))
+                .map(|sg| (Obj2::Sg2(sg), Style::builder().color(color).build()))
                 .collect::<Vec<_>>();
         }
     }
@@ -477,7 +491,7 @@ impl Map {
         if config.draw_frame {
             info!("Adding frame.");
             let margin = 20.0;
-            let frame = make_frame_pg(
+            let frame = make_frame(
                 // yes these are backwards. oops
                 (
                     config.size.height as f64 - 2.0 * margin,
@@ -485,12 +499,8 @@ impl Map {
                 ),
                 Pt2(margin, margin),
             );
-            self.canvas.frame = Some(
-                StyledObj2::new(frame.clone())
-                    .with_color(&BLACK)
-                    .with_thickness(5.0),
-            );
-            let () = self.crop_to_frame(&frame);
+            self.canvas.frame = Some((frame.inner.clone(), frame.style));
+            let () = self.crop_to_frame(frame.inner.to_pg2().unwrap());
         }
 
         self.canvas
@@ -549,8 +559,8 @@ mod tests {
         {
             let mut rolling_bbox = BoundsCollector::default();
             map.canvas.dos_by_bucket.iter().for_each(|(_bucket, dos)| {
-                dos.iter().for_each(|d_o| {
-                    rolling_bbox.incorporate(d_o);
+                dos.iter().for_each(|(obj2, _)| {
+                    rolling_bbox.incorporate(obj2);
                 });
             });
             assert_eq!(rolling_bbox.items_seen(), 4);
@@ -570,8 +580,8 @@ mod tests {
         {
             let mut rolling_bbox = BoundsCollector::default();
             map.canvas.dos_by_bucket.iter().for_each(|(_bucket, dos)| {
-                dos.iter().for_each(|d_o| {
-                    rolling_bbox.incorporate(d_o);
+                dos.iter().for_each(|(obj2, _)| {
+                    rolling_bbox.incorporate(obj2);
                 })
             });
             assert_float_eq!(rolling_bbox.left_bound(), 51.200, abs <= 0.000_01);
@@ -610,10 +620,10 @@ mod tests {
                     let mut canvas = Canvas::new();
                     canvas.dos_by_bucket.insert(
                         Some(Bucket::Area(Area::Beach)),
-                        vec![StyledObj2 {
-                            inner: obj,
-                            style: Style::builder().color(&ALICEBLUE).thickness(1.0).build(),
-                        }],
+                        vec![(
+                            obj,
+                            Style::builder().color(&ALICEBLUE).thickness(1.0).build(),
+                        )],
                     );
                     canvas
                 },
@@ -623,7 +633,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].inner, Obj2::Pg2(Pg2(expected)));
+            assert_eq!(x.next().unwrap()[0].0, Obj2::Pg2(Pg2(expected)));
         }
     }
 
@@ -660,10 +670,10 @@ mod tests {
                     let mut canvas = Canvas::new();
                     canvas.dos_by_bucket.insert(
                         Some(Bucket::Area(Area::Beach)),
-                        vec![StyledObj2 {
-                            inner: obj,
-                            style: Style::builder().color(&ALICEBLUE).thickness(1.0).build(),
-                        }],
+                        vec![(
+                            obj,
+                            Style::builder().color(&ALICEBLUE).thickness(1.0).build(),
+                        )],
                     );
                     canvas
                 },
@@ -672,7 +682,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].inner, Obj2::Pg2(Pg2(expected)));
+            assert_eq!(x.next().unwrap()[0].0, Obj2::Pg2(Pg2(expected)));
         }
     }
 }

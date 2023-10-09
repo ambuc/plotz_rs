@@ -254,9 +254,9 @@ fn main() {
     let scale = image_width / 2.0 / (grid_cardinality as f64);
 
     objs.dos_by_bucket.iter_mut().for_each(|(_bucket, layers)| {
-        layers.iter_mut().for_each(|d_o| {
-            *d_o *= scale;
-            *d_o += Pt2(margin, margin);
+        layers.iter_mut().for_each(|(ref mut obj2, _style)| {
+            *obj2 *= scale;
+            *obj2 += Pt2(margin, margin);
         });
     });
 

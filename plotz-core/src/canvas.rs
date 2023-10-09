@@ -1,11 +1,13 @@
 //! Many objects.
 
+use plotz_geometry::{obj2::Obj2, style::Style};
+
 use {
     crate::{
         bucket::Bucket,
         svg::{write_layer_to_svg, Size},
     },
-    anyhow::{anyhow, Error},
+    anyhow::Error,
     float_ord::FloatOrd,
     itertools::Itertools,
     plotz_geometry::{
@@ -18,7 +20,7 @@ use {
     tracing::trace,
 };
 
-type CanvasMap = HashMap<Option<Bucket>, Vec<StyledObj2>>;
+type CanvasMap = HashMap<Option<Bucket>, Vec<(Obj2, Style)>>;
 
 /// Many objects.
 #[derive(Debug, Clone)]
@@ -27,7 +29,7 @@ pub struct Canvas {
     pub dos_by_bucket: CanvasMap,
 
     /// the frame, maybe.
-    pub frame: Option<StyledObj2>,
+    pub frame: Option<(Obj2, Style)>,
 }
 
 impl Default for Canvas {
@@ -47,14 +49,15 @@ impl Canvas {
 
     /// ctor from objs
     pub fn from_objs<O: IntoIterator<Item = StyledObj2>>(objs: O, autobucket: bool) -> Canvas {
-        let objs_vec: Vec<_> = objs.into_iter().collect();
+        let objs_vec: Vec<(Obj2, Style)> =
+            objs.into_iter().map(|so2| (so2.inner, so2.style)).collect();
         if autobucket {
             trace!(
                 "Creating Canvas(autobucket=true) from {:?} objects",
                 objs_vec.len()
             );
             let mut c = Canvas::new();
-            for (b, objs) in &objs_vec.into_iter().group_by(|d_o| d_o.style.color) {
+            for (b, objs) in &objs_vec.into_iter().group_by(|(_obj2, style)| style.color) {
                 c.dos_by_bucket
                     .entry(Some(Bucket::Color(b)))
                     .or_default()
@@ -76,7 +79,7 @@ impl Canvas {
     /// with a frame
     pub fn with_frame(self, frame: StyledObj2) -> Canvas {
         Canvas {
-            frame: Some(frame),
+            frame: Some((frame.inner, frame.style)),
             ..self
         }
     }
@@ -86,7 +89,7 @@ impl Canvas {
         self.dos_by_bucket
             .iter()
             .flat_map(|(_bucket, dos)| dos)
-            .map(|d_o| &d_o.inner)
+            .map(|(obj2, _style)| obj2)
     }
 
     /// Returns an iterator of mutable Object2dInner.
@@ -96,7 +99,7 @@ impl Canvas {
         self.dos_by_bucket
             .iter_mut()
             .flat_map(|(_bucket, dos)| dos)
-            .map(|d_o| &mut d_o.inner)
+            .map(|(obj2, _style)| obj2)
     }
 
     /// Mutates every object in the canvas according to some |f|.
@@ -123,9 +126,13 @@ impl Canvas {
     // returns true on success
     fn scale_to_fit_frame(mut self) -> Result<Self, Error> {
         {
-            let frame_bounds = self.frame.clone().ok_or(anyhow!("no frame"))?.bounds();
-            let inner_bounds =
-                streaming_bbox(self.dos_by_bucket.iter().flat_map(|(_bucket, dos)| dos))?;
+            let frame_bounds = self.frame.as_ref().unwrap().0.bounds();
+            let inner_bounds = streaming_bbox(
+                self.dos_by_bucket
+                    .iter()
+                    .flat_map(|(_bucket, dos)| dos)
+                    .map(|(obj2, _style)| obj2),
+            )?;
 
             let buffer = 0.9;
             let w_scale = frame_bounds.width() / inner_bounds.width();
@@ -133,21 +140,26 @@ impl Canvas {
             let scale = std::cmp::min(FloatOrd(w_scale), FloatOrd(s_scale)).0 * buffer;
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
-                for d_o in dos.iter_mut() {
-                    *d_o *= scale;
+                for (obj2, _style) in dos.iter_mut() {
+                    *obj2 *= scale;
                 }
             });
         }
 
         {
-            let frame_bounds = self.frame.clone().ok_or(anyhow!("no frame"))?.bounds();
-            let inner_bounds = streaming_bbox(self.dos_by_bucket.values().flatten())?;
+            let frame_bounds = self.frame.as_ref().unwrap().0.bounds();
+            let inner_bounds = streaming_bbox(
+                self.dos_by_bucket
+                    .values()
+                    .flatten()
+                    .map(|(obj2, _style)| obj2),
+            )?;
 
             let translate_diff = frame_bounds.bbox_center() - inner_bounds.bbox_center();
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
-                dos.iter_mut().for_each(|obj| {
-                    obj.mutate(|pt: &mut Pt2| {
+                dos.iter_mut().for_each(|(obj2, _style)| {
+                    obj2.mutate(|pt: &mut Pt2| {
                         *pt += translate_diff;
                     });
                 });
@@ -169,21 +181,29 @@ impl Canvas {
         {
             trace!("Writing to all.");
             let name = format!("{}_all.svg", prefix);
-            let mut all: Vec<StyledObj2> = vec![];
+            let mut all: Vec<(Obj2, Style)> = vec![];
             if let Some(frame) = self.frame.clone() {
                 all.push(frame);
             }
             for dos in self.dos_by_bucket.values() {
                 all.extend(dos.clone());
             }
-            write_layer_to_svg(size, name, &all)?;
+            let pgs: Vec<StyledObj2> = all
+                .into_iter()
+                .map(|(inner, style)| StyledObj2 { inner, style })
+                .collect::<Vec<_>>();
+            write_layer_to_svg(size, name, &pgs)?;
         }
 
         // frame
         {
             trace!("Writing frame.");
-            if let Some(frame) = self.frame.clone() {
-                let _ = write_layer_to_svg(size, format!("{}_{}.svg", prefix, "frame"), &[frame]);
+            if let Some((inner, style)) = self.frame.clone() {
+                let _ = write_layer_to_svg(
+                    size,
+                    format!("{}_{}.svg", prefix, "frame"),
+                    &[StyledObj2 { inner, style }],
+                );
             }
         }
 
@@ -191,7 +211,14 @@ impl Canvas {
         {
             use indicatif::ProgressIterator;
             for (i, (_bucket, dos)) in self.dos_by_bucket.iter().enumerate().progress() {
-                let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), dos)
+                let pgs2: Vec<StyledObj2> = dos
+                    .iter()
+                    .map(|(inner, style)| StyledObj2 {
+                        inner: inner.clone(),
+                        style: *style,
+                    })
+                    .collect::<Vec<_>>();
+                let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), &pgs2)
                     .expect("failed to write");
             }
         }
