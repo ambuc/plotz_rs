@@ -10,7 +10,6 @@ use {
             pg2::{multiline::Multiline, Pg2},
             pt2::Pt2,
         },
-        styled_obj2::StyledObj2,
     },
     rand::prelude::SliceRandom,
     std::f64::consts::*,
@@ -155,7 +154,7 @@ fn fill_grid(x: usize, y: usize) -> Vec<Vec<Tile>> {
         .collect()
 }
 
-fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<StyledObj2> {
+fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj2, Style)> {
     [
         (cell.id(), cell.n(), 0.0 * FRAC_PI_2),
         (cell.id(), cell.w(), -1.0 * FRAC_PI_2),
@@ -197,7 +196,12 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<StyledObj2> 
             pg.rotate(&Pt2(1.0, 1.0), rot);
             pg += Pt2(2.0 * row_idx as f64, 2.0 * col_idx as f64);
 
-            StyledObj2::new(pg).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
+            (
+                Obj2::Pg2(pg),
+                Style::builder()
+                    .color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
+                    .build(),
+            )
         });
         ret.extend({
             let mut pg: Pg2 = Pg2([Pt2(0.1, 0.1), Pt2(0.5, 0.5), Pt2(0.9, 0.1)]);
@@ -210,20 +214,25 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<StyledObj2> 
                 .unwrap()
                 .iter()
                 .map(|sg| {
-                    StyledObj2::new(*sg).with_color(
-                        [
-                            &ALICEBLUE,      // 1
-                            &BLUEVIOLET,     // 2
-                            &CORNFLOWERBLUE, // 3
-                            &DODGERBLUE,     // 4
-                            &FIREBRICK,      // 5
-                            &GOLD,           // 6
-                            &HOTPINK,        // 7
-                            &KHAKI,          // 8
-                            &LAVENDER,       // 9
-                            &MAGENTA,        // 10
-                            &NAVY,           // 11
-                        ][cell_id],
+                    (
+                        Obj2::Sg2(*sg),
+                        Style::builder()
+                            .color(
+                                [
+                                    &ALICEBLUE,      // 1
+                                    &BLUEVIOLET,     // 2
+                                    &CORNFLOWERBLUE, // 3
+                                    &DODGERBLUE,     // 4
+                                    &FIREBRICK,      // 5
+                                    &GOLD,           // 6
+                                    &HOTPINK,        // 7
+                                    &KHAKI,          // 8
+                                    &LAVENDER,       // 9
+                                    &MAGENTA,        // 10
+                                    &NAVY,           // 11
+                                ][cell_id],
+                            )
+                            .build(),
                     )
                 })
                 .collect::<Vec<_>>()
@@ -246,11 +255,7 @@ fn main() {
 
     for (row_idx, row) in grid.iter().enumerate() {
         for (col_idx, cell) in row.iter().enumerate() {
-            obj_vec.extend(
-                draw_tile(*cell, (row_idx, col_idx))
-                    .into_iter()
-                    .map(|so2| (so2.inner, so2.style)),
-            );
+            obj_vec.extend(draw_tile(*cell, (row_idx, col_idx)).into_iter());
         }
     }
 
