@@ -5,7 +5,7 @@ use {
     plotz_geometry::{
         obj2::Obj2,
         shapes::{pg2::PolygonKind, txt::Txt},
-        styled_obj2::StyledObj2,
+        style::Style,
         traits::Nullable,
     },
     std::fmt::Debug,
@@ -79,8 +79,8 @@ fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), 
             context.show_text(txt).expect("show text");
         }
         Obj2::Group(group) => {
-            for obj in group.iter_objects() {
-                write_obj_to_context(obj, context).expect("write");
+            for so in group.iter_objects() {
+                write_obj_to_context(&(so.inner.clone(), so.style), context).expect("write");
             }
         }
         Obj2::CurveArc(arc) => {
@@ -97,17 +97,17 @@ fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), 
 }
 
 fn write_obj_to_context(
-    co: &StyledObj2,
+    (obj2, style): &(Obj2, Style),
     context: &mut cairo::Context,
 ) -> Result<(), SvgWriteError> {
-    if co.inner.is_empty() {
+    if obj2.is_empty() {
         return Ok(());
     }
 
-    write_doi_to_context(&co.inner, context)?;
+    write_doi_to_context(obj2, context)?;
 
-    context.set_source_rgb(co.style.color.r, co.style.color.g, co.style.color.b);
-    context.set_line_width(co.style.thickness);
+    context.set_source_rgb(style.color.r, style.color.g, style.color.b);
+    context.set_line_width(style.thickness);
     context.stroke()?;
     context.set_source_rgb(BLACK.r, BLACK.g, BLACK.b);
     Ok(())
@@ -117,13 +117,13 @@ fn write_obj_to_context(
 pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     path: P,
-    polygons: impl IntoIterator<Item = &'a StyledObj2>,
+    polygons: impl IntoIterator<Item = &'a (Obj2, Style)>,
 ) -> Result<usize, SvgWriteError> {
     let svg_surface = cairo::SvgSurface::new(size.width as f64, size.height as f64, Some(path))?;
     let mut ctx = cairo::Context::new(&svg_surface)?;
     let mut c = 0_usize;
-    for p in polygons {
-        write_obj_to_context(p, &mut ctx)?;
+    for so in polygons {
+        write_obj_to_context(so, &mut ctx)?;
         c += 1;
     }
     Ok(c)
@@ -132,7 +132,7 @@ pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
 fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     paths: impl IntoIterator<Item = P>,
-    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a StyledObj2>>,
+    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a (Obj2, Style)>>,
 ) -> Result<(), SvgWriteError> {
     for (path, polygons) in paths.into_iter().zip(polygon_layers.into_iter()) {
         write_layer_to_svg(size, path, polygons)?;
@@ -146,7 +146,6 @@ mod test_super {
     use plotz_geometry::{
         shapes::{pg2::Pg2, pt2::Pt2},
         style::Style,
-        styled_obj2::StyledObj2,
     };
     use tempdir::TempDir;
 
@@ -183,10 +182,10 @@ mod test_super {
                 height: 1024,
             },
             path.to_str().unwrap(),
-            vec![&StyledObj2 {
-                inner: Obj2::Pg2(Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)])),
-                style: Style::builder().color(&BLACK).thickness(1.0).build(),
-            }],
+            vec![&(
+                Obj2::Pg2(Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)])),
+                Style::builder().color(&BLACK).thickness(1.0).build(),
+            )],
         )
         .unwrap();
 
@@ -209,14 +208,14 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![
-                &StyledObj2 {
-                    inner: Obj2::Pg2(Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)])),
-                    style: Style::builder().color(&BLACK).thickness(1.0).build(),
-                },
-                &StyledObj2 {
-                    inner: Obj2::Pg2(Pg2([Pt2(5, 5), Pt2(5, 6), Pt2(6, 5)])),
-                    style: Style::builder().color(&BLACK).thickness(1.0).build(),
-                },
+                &(
+                    Obj2::Pg2(Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)])),
+                    Style::builder().color(&BLACK).thickness(1.0).build(),
+                ),
+                &(
+                    Obj2::Pg2(Pg2([Pt2(5, 5), Pt2(5, 6), Pt2(6, 5)])),
+                    Style::builder().color(&BLACK).thickness(1.0).build(),
+                ),
             ],
         )
         .unwrap();

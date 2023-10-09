@@ -188,10 +188,7 @@ impl Canvas {
             for dos in self.dos_by_bucket.values() {
                 all.extend(dos.clone());
             }
-            let pgs: Vec<StyledObj2> = all
-                .into_iter()
-                .map(|(inner, style)| StyledObj2 { inner, style })
-                .collect::<Vec<_>>();
+            let pgs: Vec<(Obj2, Style)> = all.into_iter().collect::<Vec<_>>();
             write_layer_to_svg(size, name, &pgs)?;
         }
 
@@ -202,7 +199,7 @@ impl Canvas {
                 let _ = write_layer_to_svg(
                     size,
                     format!("{}_{}.svg", prefix, "frame"),
-                    &[StyledObj2 { inner, style }],
+                    &[(inner, style)],
                 );
             }
         }
@@ -211,12 +208,9 @@ impl Canvas {
         {
             use indicatif::ProgressIterator;
             for (i, (_bucket, dos)) in self.dos_by_bucket.iter().enumerate().progress() {
-                let pgs2: Vec<StyledObj2> = dos
+                let pgs2: Vec<_> = dos
                     .iter()
-                    .map(|(inner, style)| StyledObj2 {
-                        inner: inner.clone(),
-                        style: *style,
-                    })
+                    .map(|(inner, style)| (inner.clone(), *style))
                     .collect::<Vec<_>>();
                 let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), &pgs2)
                     .expect("failed to write");
