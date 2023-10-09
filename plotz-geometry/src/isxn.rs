@@ -166,18 +166,18 @@ pub enum MultipleIntersections {
 
 /// An enum representing whether an intersection occurred and where.
 #[derive(PartialEq, Copy, Clone)]
-pub enum IsxnResult {
+pub enum IntersectionResult {
     /// Two line segments intersect at many points.
     MultipleIntersections(MultipleIntersections),
     /// Two line segments intersect at one point, defined by |Intersection|.
     OneIntersection(Intersection),
 }
 
-impl Debug for IsxnResult {
+impl Debug for IntersectionResult {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            IsxnResult::MultipleIntersections(_) => write!(f, "multiple intersections."),
-            IsxnResult::OneIntersection(isxn) => write!(f, "one: {:?}", isxn),
+            IntersectionResult::MultipleIntersections(_) => write!(f, "multiple intersections."),
+            IntersectionResult::OneIntersection(isxn) => write!(f, "one: {:?}", isxn),
         }
     }
 }

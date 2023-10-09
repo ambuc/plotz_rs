@@ -4,7 +4,7 @@ use {
     super::TryPolygon,
     crate::{
         crop::{CropType, PointLoc},
-        isxn::{Intersection, IsxnResult, Pair, Which},
+        isxn::{Intersection, IntersectionResult, Pair, Which},
         shapes::{
             pg2::Pg2,
             pt2::{is_colinear_n, Pt2},
@@ -106,8 +106,8 @@ impl<'a> CropGraph<'a> {
                     .intersects_segment_detailed(&sg)
                     .into_iter()
                     .filter_map(|isxn| match isxn {
-                        IsxnResult::MultipleIntersections(_) => None,
-                        IsxnResult::OneIntersection(isxn) => Some(isxn),
+                        IntersectionResult::MultipleIntersections(_) => None,
+                        IntersectionResult::OneIntersection(isxn) => Some(isxn),
                     })
                     .map(|isxn| match which {
                         // ugh... this one is stupid. when we call

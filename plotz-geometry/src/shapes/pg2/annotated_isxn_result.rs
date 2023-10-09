@@ -1,11 +1,11 @@
 //! Crop logic for polygons.
 
-use {crate::isxn::IsxnResult, std::fmt::Debug};
+use {crate::isxn::IntersectionResult, std::fmt::Debug};
 
 /// An IsxnResult which knows the polygon segments of its two lines.
 #[derive(PartialEq, Copy, Clone)]
 pub struct AnnotatedIsxnResult {
-    pub isxn_result: IsxnResult,
+    pub isxn_result: IntersectionResult,
     pub a_segment_idx: usize,
     pub b_segment_idx: usize,
 }

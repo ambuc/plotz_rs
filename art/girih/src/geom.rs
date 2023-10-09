@@ -3,7 +3,7 @@ use {
     plotz_geometry::{
         bounded::Bounded,
         crop::PointLoc,
-        isxn::{Intersection, IsxnResult},
+        isxn::{Intersection, IntersectionResult},
         shapes::{
             pg2::Pg2,
             pt2::{PolarPt, Pt2},
@@ -187,7 +187,7 @@ impl PlacedTile {
 
             let a_ray: Ry2 = Ry2(edge1.midpoint(), a_ray_angle);
 
-            if let Some(IsxnResult::OneIntersection(_)) = a_ray.intersects_sg(edgeb) {
+            if let Some(IntersectionResult::OneIntersection(_)) = a_ray.intersects_sg(edgeb) {
                 strapwork.push(Sg2(edge1.midpoint(), edgeb.midpoint()));
             } else {
                 // imagine a bridge from a_mdpt to b_mdpt.
@@ -198,8 +198,8 @@ impl PlacedTile {
 
                 // ztex lies at the intersection of a_ray and the tower.
                 let ztex = match (tower_a.intersects(&a_ray), tower_b.intersects(&a_ray)) {
-                    (Some(IsxnResult::OneIntersection(Intersection { pt, .. })), _) => pt,
-                    (_, Some(IsxnResult::OneIntersection(Intersection { pt, .. }))) => pt,
+                    (Some(IntersectionResult::OneIntersection(Intersection { pt, .. })), _) => pt,
+                    (_, Some(IntersectionResult::OneIntersection(Intersection { pt, .. }))) => pt,
                     _ => panic!("oh"),
                 };
 
@@ -240,10 +240,10 @@ impl PlacedTile {
                     };
 
                     match (perp_ray_1.intersects_sg(&s), perp_ray_2.intersects_sg(&s)) {
-                        (Some(IsxnResult::OneIntersection(Intersection { pt, .. })), _) => {
+                        (Some(IntersectionResult::OneIntersection(Intersection { pt, .. })), _) => {
                             s_ver.push(Sg2(pt_inside, pt));
                         }
-                        (_, Some(IsxnResult::OneIntersection(Intersection { pt, .. }))) => {
+                        (_, Some(IntersectionResult::OneIntersection(Intersection { pt, .. }))) => {
                             s_ver.push(Sg2(pt_inside, pt));
                         }
                         _ => panic!("OH"),

@@ -12,7 +12,7 @@ use {
         bounded::{Bounded, Bounds},
         crop::CropType,
         crop::{CropToPolygonError, Croppable, PointLoc},
-        isxn::IsxnResult,
+        isxn::IntersectionResult,
         shapes::{
             pt2::Pt2,
             sg2::{Contains, Sg2},
@@ -189,7 +189,7 @@ impl Pg2 {
 
     /// Returns the detailed set of intersection outcomes between this polygon's
     /// segments and another polygon's segments.
-    pub fn intersects_detailed(&self, other: &Pg2) -> impl Iterator<Item = IsxnResult> {
+    pub fn intersects_detailed(&self, other: &Pg2) -> impl Iterator<Item = IntersectionResult> {
         iproduct!(self.to_segments(), other.to_segments()).flat_map(|(l1, l2)| l1.intersects(&l2))
     }
 
@@ -217,7 +217,7 @@ impl Pg2 {
 
     /// Returns the detailed set of intersection outcomes between this polygon's
     /// segments and another segment.
-    pub fn intersects_segment_detailed(&self, other: &Sg2) -> Vec<IsxnResult> {
+    pub fn intersects_segment_detailed(&self, other: &Sg2) -> Vec<IntersectionResult> {
         self.to_segments()
             .iter()
             .flat_map(|l| l.intersects(other))
