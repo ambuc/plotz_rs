@@ -2,12 +2,10 @@ use plotz_geometry::style::Style;
 
 use {
     argh::FromArgs,
-    plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         obj2::Obj2,
         shapes::{curve::CurveArc, pt2::Pt2, sg2::Sg2},
-        styled_obj2::StyledObj2,
     },
     rand::{distributions::Standard, prelude::Distribution, Rng},
     std::f64::consts::*,
@@ -45,10 +43,10 @@ enum Tile {
     Clover2,
 }
 impl Tile {
-    fn to_dos(&self) -> Vec<StyledObj2> {
+    fn to_dos(&self) -> Vec<(Obj2, Style)> {
         self.to_dois()
             .into_iter()
-            .map(|doi| StyledObj2::new(doi).with_color(&BLACK).with_thickness(2.0))
+            .map(|obj2| (obj2, Style::builder().thickness(2.0).build()))
             .collect::<Vec<_>>()
     }
 
@@ -159,7 +157,7 @@ fn main() {
             obj_vec.extend(
                 tile.to_dos()
                     .into_iter()
-                    .map(|so2| (so2.inner + Pt2(dx, dy), so2.style)),
+                    .map(|(obj2, style)| (obj2 + Pt2(dx, dy), style)),
             );
         }
     }
