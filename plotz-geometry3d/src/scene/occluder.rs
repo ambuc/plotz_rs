@@ -5,7 +5,7 @@ use plotz_geometry::{
 };
 
 pub struct Occluder {
-    objects: Vec<StyledObj2>,
+    objects: Vec<(Obj2, Style)>,
 }
 
 impl Occluder {
@@ -53,24 +53,27 @@ impl Occluder {
 
     // Incorporates an object.
     pub fn add(&mut self, incoming2: StyledObj2) {
-        let mut incoming_os = vec![incoming2.clone()];
-        for existing_o in &self.objects {
+        let mut incoming_os: Vec<StyledObj2> = vec![incoming2.clone()];
+        for (existing_o, _) in &self.objects {
             incoming_os = incoming_os
                 .iter()
-                .flat_map(|incoming_o| {
-                    Occluder::hide_a_behind_b(&incoming_o.inner, &existing_o.inner)
-                })
+                .flat_map(|incoming_o| Occluder::hide_a_behind_b(&incoming_o.inner, &existing_o))
                 .map(|obj2| StyledObj2::new(obj2).with_style(incoming2.style))
                 .collect::<Vec<_>>();
         }
-        self.objects.extend(incoming_os.into_iter());
+        self.objects
+            .extend(incoming_os.into_iter().map(|so| (so.inner, so.style)));
     }
 
     // Exports the occluded 2d objects.
     pub fn export(mut self) -> Vec<StyledObj2> {
         // we store them front-to-back, but we want to render them to svg back-to-front.
         self.objects.reverse();
-        self.objects.into_iter().flat_map(export_obj).collect()
+        self.objects
+            .into_iter()
+            .map(|(inner, style)| StyledObj2 { inner, style })
+            .flat_map(export_obj)
+            .collect()
     }
 }
 
