@@ -25,7 +25,7 @@ impl StyledObj3 {
         StyledObj3 {
             style: match self.style {
                 None => Some(Style::builder().color(c).build()),
-                Some(s) => Some(s.with_color(c)),
+                Some(s) => Some(Style { color: c, ..s }),
             },
             ..self
         }

@@ -9,7 +9,7 @@ use {
         style::Style,
         traits::*,
     },
-    plotz_color::{ColorRGB, BLACK},
+    plotz_color::ColorRGB,
     std::{fmt::Debug, ops::*},
 };
 
@@ -43,14 +43,17 @@ impl StyledObj2 {
     pub fn new(obj: impl Into<Obj2>) -> StyledObj2 {
         StyledObj2 {
             inner: obj.into(),
-            style: Style::builder().color(&BLACK).thickness(0.1).build(),
+            style: Style::default(),
         }
     }
 
     /// with a color.
     pub fn with_color(self, color: &'static ColorRGB) -> StyledObj2 {
         StyledObj2 {
-            style: self.style.with_color(color),
+            style: Style {
+                color,
+                ..self.style
+            },
             ..self
         }
     }
@@ -58,7 +61,10 @@ impl StyledObj2 {
     /// with a thickness.
     pub fn with_thickness(self, thickness: f64) -> StyledObj2 {
         StyledObj2 {
-            style: self.style.with_thickness(thickness),
+            style: Style {
+                thickness,
+                ..self.style
+            },
             ..self
         }
     }

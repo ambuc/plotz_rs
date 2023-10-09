@@ -68,7 +68,7 @@ fn main() {
         .precision(3)
         .build();
     let _scenedebug = SceneDebug::builder()
-        .draw_wireframes(Style::new(&GRAY, 0.5))
+        .draw_wireframes(Style::builder().color(&GRAY).thickness(0.5).build())
         .annotate(_annotation)
         .build();
 
