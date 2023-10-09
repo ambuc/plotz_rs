@@ -12,7 +12,7 @@ use {
         bounded::{Bounded, Bounds},
         crop::CropType,
         crop::{CropToPolygonError, Croppable, PointLoc},
-        isxn::IntersectionResult,
+        intersection::IntersectionResult,
         shapes::{
             pt2::Pt2,
             sg2::{Contains, Sg2},

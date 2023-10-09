@@ -3,7 +3,7 @@
 use std::f64::consts::TAU;
 
 use crate::{
-    isxn::IntersectionResult,
+    intersection::IntersectionResult,
     shapes::{
         pt2::{PolarPt, Pt2},
         sg2::Sg2,

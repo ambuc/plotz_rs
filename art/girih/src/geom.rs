@@ -3,7 +3,7 @@ use {
     plotz_geometry::{
         bounded::Bounded,
         crop::PointLoc,
-        isxn::{Intersection, IntersectionResult},
+        intersection::{Intersection, IntersectionResult},
         shapes::{
             pg2::Pg2,
             pt2::{PolarPt, Pt2},

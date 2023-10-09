@@ -4,7 +4,7 @@ use crate::{
     crop::{CropType, Croppable, PointLoc},
     interpolate,
     interpolate::interpolate_2d_checked,
-    isxn::{Intersection, IntersectionResult, MultipleIntersections},
+    intersection::{Intersection, IntersectionResult, MultipleIntersections},
     shapes::{pg2::Pg2, pt2::Pt2, ry2::Ry2},
     traits::*,
 };

@@ -4,7 +4,7 @@ use {
     super::TryPolygon,
     crate::{
         crop::{CropType, PointLoc},
-        isxn::{Intersection, IntersectionResult, Pair, Which},
+        intersection::{Intersection, IntersectionResult, Pair, Which},
         shapes::{
             pg2::Pg2,
             pt2::{is_colinear_n, Pt2},

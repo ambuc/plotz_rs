@@ -6,7 +6,7 @@ pub mod bounded;
 pub mod crop;
 pub mod group;
 pub mod interpolate;
-pub mod isxn;
+pub mod intersection;
 pub mod obj2;
 pub mod style;
 pub mod traits;
