@@ -346,6 +346,11 @@ impl Pg2 {
             .iter()
             .all(|pt| matches!(self.contains_pt(pt), PointLoc::Outside))
     }
+
+    #[allow(unused)]
+    fn iter(&self) -> Pg2Iter<'_> {
+        Pg2Iter { idx: 0, pg2: self }
+    }
 }
 
 impl Croppable for Pg2 {
@@ -422,6 +427,34 @@ pub fn abp(o: &Pt2, i: &Pt2, j: &Pt2) -> f64 {
         0.0
     } else {
         angle
+    }
+}
+
+impl IntoIterator for Pg2 {
+    type Item = Pt2;
+    type IntoIter = std::vec::IntoIter<Pt2>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.pts.into_iter()
+    }
+}
+
+struct Pg2Iter<'a> {
+    idx: usize,
+    pg2: &'a Pg2,
+}
+
+impl<'a> Iterator for Pg2Iter<'a> {
+    type Item = &'a Pt2;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.pg2.pts.get(self.idx) {
+            Some(x) => {
+                self.idx += 1;
+                Some(x)
+            }
+            None => None,
+        }
     }
 }
 
@@ -1257,5 +1290,21 @@ mod tests {
             Sg2(Pt2(0, 1), Pt2(2, 1)).crop_to(&frame),
             vec![Sg2(Pt2(0, 1), Pt2(2, 1))]
         );
+    }
+
+    #[test]
+    fn test_into_iter() {
+        let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
+        let pts: Vec<Pt2> = frame.into_iter().collect();
+        assert_eq!(pts, vec![Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
+    }
+
+    #[test]
+    fn test_iter() {
+        let src = vec![Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)];
+        let frame = Pg2(src.clone());
+        for (idx, p) in frame.iter().enumerate() {
+            assert_eq!(src[idx], *p);
+        }
     }
 }
