@@ -1,6 +1,10 @@
 # plotz_rs
 
-A collection of pen plotter libraries, binaries, and utilities.
+![Example image](docs/assets/arcs-001.png "Arcs-001")
+
+A collection of pen plotter libraries, binaries, and utilities. Please see my [blog post](https://jbuckland.com/blog/plotting-open-street-map/) about what this library does and why I wrote it.
+
+## Structure
 
 ```mermaid
 graph TD;
