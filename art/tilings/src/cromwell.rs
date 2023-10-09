@@ -12,7 +12,6 @@ use {
             pg2::Pg2,
             pt2::{PolarPt, Pt2},
         },
-        styled_obj2::StyledObj2,
     },
     std::f64::consts::PI,
 };
@@ -304,10 +303,11 @@ pub fn make() -> Vec<(Obj2, Style)> {
 
             // std::iter::empty() //
             std::iter::once((Obj2::Pg2(p), Style::builder().color(color).build())).chain([(
-                Obj2::Group(Group::new(segments.into_iter().map(|s| StyledObj2 {
-                    inner: Obj2::Sg2(s),
-                    style: Style::builder().color(color).build(),
-                }))),
+                Obj2::Group(Group::new(
+                    segments
+                        .into_iter()
+                        .map(|s| (Obj2::Sg2(s), Style::builder().color(color).build())),
+                )),
                 Style::builder().color(color).build(),
             )])
         })

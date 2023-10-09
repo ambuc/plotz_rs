@@ -14,52 +14,40 @@ use {
 
 #[derive(Debug, PartialEq, Clone)]
 /// A group of objects.
-pub struct Group<T>(Vec<T>);
+pub struct Group<T>(Vec<(Obj2, T)>);
 
 impl<T> Group<T> {
     /// Creates a new group.
-    pub fn new(objs: impl IntoIterator<Item = T>) -> Group<T> {
+    pub fn new(objs: impl IntoIterator<Item = (Obj2, T)>) -> Group<T> {
         Group(objs.into_iter().collect::<Vec<_>>())
     }
 
     /// Returns a boxed iterator of immutable Object2dInners, the members of this
     /// group.
-    pub fn iter_objects(&self) -> Box<dyn Iterator<Item = &T> + '_> {
+    pub fn iter_objects(&self) -> Box<dyn Iterator<Item = &(Obj2, T)> + '_> {
         Box::new(self.0.iter())
     }
 
     /// Mutates each point in each object in the group. See |Mutable|.
-    pub fn mutate(&mut self, f: impl Fn(&mut Pt2))
-    where
-        T: Mutable,
-    {
-        for obj in &mut self.0 {
+    pub fn mutate(&mut self, f: impl Fn(&mut Pt2)) {
+        for (obj, _) in &mut self.0 {
             obj.mutate(&f);
         }
     }
 }
 
-impl<T> YieldPoints for Group<T>
-where
-    T: YieldPoints,
-{
+impl<T> YieldPoints for Group<T> {
     fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
-        Box::new(self.0.iter().flat_map(|obj| obj.yield_pts()))
+        Box::new(self.0.iter().flat_map(|(obj, _)| obj.yield_pts()))
     }
 }
-impl<T> YieldPointsMut for Group<T>
-where
-    T: YieldPointsMut,
-{
+impl<T> YieldPointsMut for Group<T> {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
-        Box::new(self.0.iter_mut().flat_map(|obj| obj.yield_pts_mut()))
+        Box::new(self.0.iter_mut().flat_map(|(obj, _)| obj.yield_pts_mut()))
     }
 }
 
-impl<T> Bounded for Group<T>
-where
-    T: Bounded + YieldPoints,
-{
+impl<T> Bounded for Group<T> {
     fn bounds(&self) -> Bounds {
         let mut bc = BoundsCollector::default();
         for pt in self.yield_pts() {
@@ -69,119 +57,90 @@ where
     }
 }
 
-impl<T> AddAssign<Pt2> for Group<T>
-where
-    T: AddAssign<Pt2>,
-{
+impl<T> AddAssign<Pt2> for Group<T> {
     fn add_assign(&mut self, rhs: Pt2) {
-        self.0.iter_mut().for_each(|o| {
+        self.0.iter_mut().for_each(|(o, _)| {
             *o += rhs;
         });
     }
 }
 
-impl<T> SubAssign<Pt2> for Group<T>
-where
-    T: SubAssign<Pt2>,
-{
+impl<T> SubAssign<Pt2> for Group<T> {
     fn sub_assign(&mut self, rhs: Pt2) {
-        self.0.iter_mut().for_each(|o| {
+        self.0.iter_mut().for_each(|(o, _)| {
             *o -= rhs;
         });
     }
 }
 
-impl<T> Add<Pt2> for Group<T>
-where
-    T: Add<Pt2, Output = T>,
-{
+impl<T> Add<Pt2> for Group<T> {
     type Output = Self;
     fn add(self, rhs: Pt2) -> Self::Output {
-        Self::new(self.0.into_iter().map(|o| o + rhs))
+        Self::new(self.0.into_iter().map(|(o, s)| (o + rhs, s)))
     }
 }
-impl<T> Sub<Pt2> for Group<T>
-where
-    T: Sub<Pt2, Output = T>,
-{
+impl<T> Sub<Pt2> for Group<T> {
     type Output = Self;
     fn sub(self, rhs: Pt2) -> Self::Output {
-        Self::new(self.0.into_iter().map(|o| o - rhs))
+        Self::new(self.0.into_iter().map(|(o, s)| (o - rhs, s)))
     }
 }
 
-impl<T> Mul<f64> for Group<T>
-where
-    T: Mul<f64, Output = T>,
-{
+impl<T> Mul<f64> for Group<T> {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
-        Self::new(self.0.into_iter().map(|o| o * rhs))
+        Self::new(self.0.into_iter().map(|(o, s)| (o * rhs, s)))
     }
 }
 
-impl<T> MulAssign<f64> for Group<T>
-where
-    T: MulAssign<f64>,
-{
+impl<T> MulAssign<f64> for Group<T> {
     fn mul_assign(&mut self, rhs: f64) {
-        self.0.iter_mut().for_each(|o| {
+        self.0.iter_mut().for_each(|(o, _)| {
             *o *= rhs;
         })
     }
 }
 
-impl<T> Div<f64> for Group<T>
-where
-    T: Div<f64, Output = T>,
-{
+impl<T> Div<f64> for Group<T> {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
-        Self::new(self.0.into_iter().map(|o| o / rhs))
+        Self::new(self.0.into_iter().map(|(o, s)| (o / rhs, s)))
     }
 }
 
-impl<T> DivAssign<f64> for Group<T>
-where
-    T: DivAssign<f64>,
-{
+impl<T> DivAssign<f64> for Group<T> {
     fn div_assign(&mut self, rhs: f64) {
-        self.0.iter_mut().for_each(|o| {
+        self.0.iter_mut().for_each(|(o, _)| {
             *o /= rhs;
         })
     }
 }
 
-impl<T> RemAssign<Pt2> for Group<T>
-where
-    T: RemAssign<Pt2>,
-{
+impl<T> RemAssign<Pt2> for Group<T> {
     fn rem_assign(&mut self, rhs: Pt2) {
-        self.0.iter_mut().for_each(|o| *o %= rhs);
+        self.0.iter_mut().for_each(|(o, _)| *o %= rhs);
     }
 }
 
-impl<T> Translatable for Group<T> where
-    T: Add<Pt2, Output = T> + AddAssign<Pt2> + Sub<Pt2, Output = T> + SubAssign<Pt2> + Sized
-{
-}
+impl<T> Translatable for Group<T> {}
 
-impl<T> Scalable<f64> for Group<T> where
-    T: Mul<f64, Output = T> + MulAssign<f64> + Div<f64, Output = T> + DivAssign<f64> + Sized
-{
-}
+impl<T> Scalable<f64> for Group<T> {}
 
 impl<T> Croppable for Group<T>
 where
-    T: Croppable<Output = T>,
+    T: Clone,
 {
     type Output = Group<T>;
     fn crop(&self, frame: &Pg2, crop_type: CropType) -> Vec<Self::Output> {
         vec![Group::new(
             self.0
                 .iter()
-                .flat_map(|d_o| d_o.crop(frame, crop_type))
-                .collect::<Vec<_>>(),
+                .flat_map(|(obj, s)| {
+                    obj.crop(frame, crop_type)
+                        .into_iter()
+                        .map(|o| (o, s.clone()))
+                })
+                .collect::<Vec<(Obj2, T)>>(),
         )]
     }
     fn crop_excluding(&self, _other: &Pg2) -> Vec<Self::Output>
@@ -198,11 +157,11 @@ impl<T> Nullable for Group<T> {
     }
 }
 
-impl<T> Annotatable for Group<T>
-where
-    T: Annotatable,
-{
+impl<T> Annotatable for Group<T> {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj2, Style)> {
-        self.0.iter().flat_map(|o| o.annotate(settings)).collect()
+        self.0
+            .iter()
+            .flat_map(|(o, _)| o.annotate(settings))
+            .collect()
     }
 }

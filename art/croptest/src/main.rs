@@ -1,4 +1,4 @@
-use plotz_geometry::{obj2::Obj2, style::Style, styled_obj2::StyledObj2};
+use plotz_geometry::{obj2::Obj2, style::Style};
 
 use {
     argh::FromArgs,
@@ -115,12 +115,11 @@ fn main() {
                 .map(|x| (x, Style::builder().color(&BLUE).thickness(2.0).build())),
         );
 
-        let g = Group::new(
-            v.into_iter()
-                .map(|(inner, style)| StyledObj2 { inner, style }),
+        gl.insert_and_rescale_to_cubby(
+            idx,
+            (Obj2::Group(Group::new(v.into_iter())), Style::default()),
+            1.00,
         );
-
-        gl.insert_and_rescale_to_cubby(idx, (Obj2::Group(g), Style::default()), 1.00);
     }
 
     dos.extend(gl.to_object2ds());

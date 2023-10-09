@@ -1,6 +1,6 @@
 //! The inner value of a Object2d, i.e. the enum which holds some geometric thingy.
 
-use crate::{bounded::Bounds, style::Style, styled_obj2::StyledObj2};
+use crate::{bounded::Bounds, style::Style};
 
 use {
     crate::{
@@ -29,7 +29,7 @@ pub enum Obj2 {
     /// A character to be printed in SVG, at a point.
     Txt(Txt),
     /// A group of other objects.
-    Group(Group<StyledObj2>),
+    Group(Group<Style>),
 }
 
 impl Obj2 {

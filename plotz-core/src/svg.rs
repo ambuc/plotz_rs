@@ -79,8 +79,8 @@ fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), 
             context.show_text(txt).expect("show text");
         }
         Obj2::Group(group) => {
-            for so in group.iter_objects() {
-                write_obj_to_context(&(so.inner.clone(), so.style), context).expect("write");
+            for s in group.iter_objects() {
+                write_obj_to_context(s, context).expect("write");
             }
         }
         Obj2::CurveArc(arc) => {

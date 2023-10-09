@@ -1,19 +1,14 @@
-use plotz_geometry::{shading::shade_config::ShadeConfig, traits::AnnotationSettings};
+use plotz_geometry::traits::AnnotationSettings;
 
 use {
     argh::FromArgs,
-    itertools::iproduct,
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::*},
     plotz_geometry::style::Style,
     plotz_geometry3d::{
         camera::{Occlusion, Projection},
-        p3,
         scene::{debug::SceneDebug, Scene},
-        shapes::{cube3d::Cube, pt3::Pt3},
-        styled_obj3::StyledObj3,
     },
-    std::iter::zip,
     tracing::*,
 };
 
@@ -24,6 +19,7 @@ struct Args {
     output_path_prefix: String,
 }
 
+/*
 fn cubes() -> Vec<StyledObj3> {
     let mut objects = vec![];
     let e = 0.70;
@@ -54,6 +50,7 @@ fn cubes() -> Vec<StyledObj3> {
     }
     objects
 }
+ */
 
 fn main() {
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
@@ -77,7 +74,9 @@ fn main() {
         /*objs=*/
         Scene::builder()
             // .debug(scenedebug)
-            .objects(cubes())
+            .objects(
+                vec![], //cubes()
+            )
             .build()
             .project_with(Projection::default(), Occlusion::True)
             .into_iter(),
