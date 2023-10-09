@@ -1,6 +1,6 @@
 //! The inner value of a Object2d, i.e. the enum which holds some geometric thingy.
 
-use crate::styled_obj2::StyledObj2;
+use crate::{bounded::Bounds, styled_obj2::StyledObj2};
 
 use {
     crate::{
@@ -91,7 +91,7 @@ impl YieldPointsMut for Obj2 {
 impl Mutable for Obj2 {}
 
 impl Bounded for Obj2 {
-    fn bounds(&self) -> crate::bounded::Bounds {
+    fn bounds(&self) -> Bounds {
         match self {
             Obj2::Txt(ch) => ch.bounds(),
             Obj2::CurveArc(arc) => arc.bounds(),

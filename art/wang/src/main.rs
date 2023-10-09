@@ -166,7 +166,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<StyledObj2> 
     .flat_map(|(cell_id, cell, rot)| {
         let mut ret = vec![];
         ret.push({
-            let shape = match cell {
+            let mut pg: Pg2 = match cell {
                 Fill::Blue => Multiline([p2!(0.25, 0.0), p2!(0.5, 0.25), p2!(0.75, 0.0)]).unwrap(),
                 Fill::Green => Multiline([
                     p2!(0.25, 0.0),
@@ -192,48 +192,41 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<StyledObj2> 
                 ])
                 .unwrap(),
             };
-            StyledObj2::new(shape).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
+
+            pg *= 2.0;
+            pg.rotate(&p2!(1.0, 1.0), rot);
+            pg += p2!(2.0 * row_idx as f64, 2.0 * col_idx as f64);
+
+            StyledObj2::new(pg).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
         });
         ret.extend({
-            shade_polygon(
-                &ShadeConfig::builder().gap(0.05).slope(0.0).build(),
-                &Pg2([p2!(0.1, 0.1), p2!(0.5, 0.5), p2!(0.9, 0.1)]),
-            )
-            .unwrap()
-            .iter()
-            .map(|sg| {
-                StyledObj2::new(*sg).with_color(
-                    [
-                        &ALICEBLUE,      // 1
-                        &BLUEVIOLET,     // 2
-                        &CORNFLOWERBLUE, // 3
-                        &DODGERBLUE,     // 4
-                        &FIREBRICK,      // 5
-                        &GOLD,           // 6
-                        &HOTPINK,        // 7
-                        &KHAKI,          // 8
-                        &LAVENDER,       // 9
-                        &MAGENTA,        // 10
-                        &NAVY,           // 11
-                    ][cell_id],
-                )
-            })
-            .collect::<Vec<_>>()
-        });
-        ret.iter_mut().for_each(|d_o| match &mut d_o.inner {
-            Obj2::Pg2(pg) => {
-                *pg *= 2.0;
-                pg.rotate(&p2!(1.0, 1.0), rot);
-                *pg += p2!(2.0 * row_idx as f64, 2.0 * col_idx as f64);
-            }
-            Obj2::Sg2(sg) => {
-                *sg *= 2.0;
-                sg.rotate(&p2!(1.0, 1.0), rot);
-                *sg += p2!(2.0 * row_idx as f64, 2.0 * col_idx as f64);
-            }
-            _ => {
-                unimplemented!()
-            }
+            let mut pg: Pg2 = Pg2([p2!(0.1, 0.1), p2!(0.5, 0.5), p2!(0.9, 0.1)]);
+
+            pg *= 2.0;
+            pg.rotate(&p2!(1.0, 1.0), rot);
+            pg += p2!(2.0 * row_idx as f64, 2.0 * col_idx as f64);
+
+            shade_polygon(&ShadeConfig::builder().gap(0.05).slope(0.0).build(), &pg)
+                .unwrap()
+                .iter()
+                .map(|sg| {
+                    StyledObj2::new(*sg).with_color(
+                        [
+                            &ALICEBLUE,      // 1
+                            &BLUEVIOLET,     // 2
+                            &CORNFLOWERBLUE, // 3
+                            &DODGERBLUE,     // 4
+                            &FIREBRICK,      // 5
+                            &GOLD,           // 6
+                            &HOTPINK,        // 7
+                            &KHAKI,          // 8
+                            &LAVENDER,       // 9
+                            &MAGENTA,        // 10
+                            &NAVY,           // 11
+                        ][cell_id],
+                    )
+                })
+                .collect::<Vec<_>>()
         });
         ret
     })
