@@ -5,6 +5,8 @@ use crate::{geom::*, layout::AnnotatedPlacedTiles};
 use indicatif::ProgressBar;
 use itertools::Itertools;
 use plotz_color::BLACK;
+use plotz_geometry::obj2::Obj2;
+use plotz_geometry::style::Style;
 use plotz_geometry::{
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
@@ -12,7 +14,6 @@ use plotz_geometry::{
         pt2::Pt2,
         sg2::Sg2,
     },
-    styled_obj2::StyledObj2,
 };
 use rand::seq::SliceRandom;
 use std::f64::consts::TAU;
@@ -35,11 +36,11 @@ fn vals_eq_within(a: f64, b: f64, epsilon: f64) -> bool {
     (a - b).abs() < epsilon
 }
 
-fn chase(apts: &AnnotatedPlacedTiles) -> Vec<StyledObj2> {
+fn chase(apts: &AnnotatedPlacedTiles) -> Vec<(Obj2, Style)> {
     // first of all, we're guaranteed that every element in so2s is a strap. nothing else.
     let mut inputs: Vec<Sg2> = apts.straps.iter().map(|(_, sg2)| *sg2).collect();
 
-    let mut outputs: Vec<StyledObj2> = vec![];
+    let mut outputs: Vec<(Obj2, Style)> = vec![];
     let epsilon = 0.001;
 
     // collect links in the chain. implicitly going sg.i -> sg.f.
@@ -83,34 +84,41 @@ fn chase(apts: &AnnotatedPlacedTiles) -> Vec<StyledObj2> {
         pts.push(segments.first().unwrap().i);
 
         // and then make a multiline, and add it to our final outputs list.
-        outputs.push(
-            StyledObj2::new(Multiline(pts).unwrap())
-                .with_color(plotz_color::take_random_colors(1).next().unwrap())
-                .with_thickness(3.0),
-        );
+        outputs.push((
+            Obj2::Pg2(Multiline(pts).unwrap()),
+            Style::builder()
+                .color(plotz_color::take_random_colors(1).next().unwrap())
+                .thickness(3.0)
+                .build(),
+        ));
     }
 
     outputs
 }
 
-fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<StyledObj2> {
-    let mut v = vec![];
+fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj2, Style)> {
+    let mut v: Vec<(Obj2, Style)> = vec![];
 
     display.0.iter().for_each(|inst| match inst {
         Instr::StrapsOriginal(thickness) => {
             v.extend(apts.clone().straps.into_iter().map(|(girih, sg2)| {
-                StyledObj2::new(sg2)
-                    .with_color(girih.color())
-                    .with_thickness(*thickness)
+                (
+                    Obj2::Sg2(sg2),
+                    Style::builder()
+                        .color(girih.color())
+                        .thickness(*thickness)
+                        .build(),
+                )
             }))
         }
         Instr::StrapsChasing => v.extend(chase(&apts)),
         Instr::TilesOutline { thickness } => {
             v.extend(apts.clone().outlines.into_iter().map(|(_, pg2)| {
                 // scale
-                StyledObj2::new(pg2)
-                    .with_color(&BLACK)
-                    .with_thickness(*thickness)
+                (
+                    Obj2::Pg2(pg2),
+                    Style::builder().color(&BLACK).thickness(*thickness).build(),
+                )
             }))
         }
         Instr::TileShaded(shade_config) => {
@@ -119,9 +127,10 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<StyledObj2>
                     .unwrap()
                     .into_iter()
                     .map(|shade| {
-                        StyledObj2::new(shade)
-                            .with_color(girih.color())
-                            .with_thickness(1.0)
+                        (
+                            Obj2::Sg2(shade),
+                            Style::builder().color(girih.color()).thickness(1.0).build(),
+                        )
                     })
             }))
         }
@@ -130,7 +139,7 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<StyledObj2>
     v
 }
 
-pub fn run() -> Vec<StyledObj2> {
+pub fn run() -> Vec<(Obj2, Style)> {
     let d = Display(vec![
         // Instr::StrapsOriginal(2.0),
         Instr::TilesOutline { thickness: 1.0 },
