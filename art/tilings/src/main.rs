@@ -39,7 +39,11 @@ fn main() {
             .all(|pt| matches!(frame_polygon.contains_pt(pt), PointLoc::Inside))
     });
 
-    let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
+    let objs = Canvas::from_objs(
+        dos.into_iter().map(|so2| (so2.inner, so2.style)),
+        /*autobucket=*/ false,
+    )
+    .with_frame(frame);
 
     //objs.join_adjacent_segments();
 

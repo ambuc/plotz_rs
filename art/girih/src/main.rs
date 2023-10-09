@@ -39,7 +39,8 @@ fn main() {
                 so2 *= 40.0;
                 so2 += Pt2(500, 400);
                 so2
-            }),
+            })
+            .map(|so2| (so2.inner, so2.style)),
         /*autobucket=*/
         true,
     )

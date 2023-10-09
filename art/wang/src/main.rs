@@ -1,3 +1,5 @@
+use plotz_geometry::{obj2::Obj2, style::Style};
+
 use {
     argh::FromArgs,
     plotz_color::*,
@@ -240,11 +242,15 @@ fn main() {
 
     let grid: Vec<Vec<Tile>> = fill_grid(grid_cardinality, grid_cardinality);
 
-    let mut obj_vec = vec![];
+    let mut obj_vec: Vec<(Obj2, Style)> = vec![];
 
     for (row_idx, row) in grid.iter().enumerate() {
         for (col_idx, cell) in row.iter().enumerate() {
-            obj_vec.extend(draw_tile(*cell, (row_idx, col_idx)));
+            obj_vec.extend(
+                draw_tile(*cell, (row_idx, col_idx))
+                    .into_iter()
+                    .map(|so2| (so2.inner, so2.style)),
+            );
         }
     }
 

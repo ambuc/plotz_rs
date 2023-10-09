@@ -66,7 +66,11 @@ fn main() {
         );
     }
 
-    let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
+    let objs = Canvas::from_objs(
+        dos.into_iter().map(|so2| (so2.inner, so2.style)),
+        /*autobucket=*/ false,
+    )
+    .with_frame(frame);
 
     objs.write_to_svg_or_die(
         Size {

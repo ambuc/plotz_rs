@@ -1,3 +1,5 @@
+use plotz_geometry::style::Style;
+
 use {
     argh::FromArgs,
     plotz_color::*,
@@ -147,14 +149,18 @@ fn main() {
     let image_width: f64 = 500.0;
     let margin = 10.0;
 
-    let mut obj_vec: Vec<StyledObj2> = vec![];
+    let mut obj_vec: Vec<(Obj2, Style)> = vec![];
 
     let width = 10;
     let height = 10;
     for dx in 0..=width {
         for dy in 0..=height {
             let tile: Tile = rand::random();
-            obj_vec.extend(tile.to_dos().into_iter().map(|d_o| d_o + Pt2(dx, dy)));
+            obj_vec.extend(
+                tile.to_dos()
+                    .into_iter()
+                    .map(|so2| (so2.inner + Pt2(dx, dy), so2.style)),
+            );
         }
     }
 

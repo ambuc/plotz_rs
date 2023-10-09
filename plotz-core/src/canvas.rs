@@ -48,9 +48,8 @@ impl Canvas {
     }
 
     /// ctor from objs
-    pub fn from_objs<O: IntoIterator<Item = StyledObj2>>(objs: O, autobucket: bool) -> Canvas {
-        let objs_vec: Vec<(Obj2, Style)> =
-            objs.into_iter().map(|so2| (so2.inner, so2.style)).collect();
+    pub fn from_objs<O: IntoIterator<Item = (Obj2, Style)>>(objs: O, autobucket: bool) -> Canvas {
+        let objs_vec: Vec<(Obj2, Style)> = objs.into_iter().collect();
         if autobucket {
             trace!(
                 "Creating Canvas(autobucket=true) from {:?} objects",

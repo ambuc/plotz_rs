@@ -114,8 +114,11 @@ fn main() {
     // TODO(ambuc): split by group color before printing
     // TODO(ambuc): split by group color before printing
 
-    let canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true)
-        .with_frame(make_frame((DIM, DIM), Pt2(20.0, 20.0)));
+    let canvas = Canvas::from_objs(
+        dos.into_iter().map(|so2| (so2.inner, so2.style)),
+        /*autobucket=*/ true,
+    )
+    .with_frame(make_frame((DIM, DIM), Pt2(20.0, 20.0)));
 
     canvas.write_to_svg_or_die(
         Size {

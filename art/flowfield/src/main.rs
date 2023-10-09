@@ -117,7 +117,8 @@ fn main() {
                 d_o += Pt2(2.0 * mgn, 2.0 * mgn);
                 d_o
             })
-            .flat_map(|d_o| d_o.crop_to(frame_pg2)),
+            .flat_map(|d_o| d_o.crop_to(frame_pg2))
+            .map(|so2| (so2.inner, so2.style)),
         /*autobucket=*/ true,
     )
     .with_frame(frame);
