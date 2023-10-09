@@ -6,7 +6,6 @@ use {
         bounded::Bounded,
         crop::Croppable,
         grid::Grid,
-        obj2::Obj2,
         p2,
         shapes::{curve::CurveArcs, pt2::Pt2},
         styled_obj2::StyledObj2,
