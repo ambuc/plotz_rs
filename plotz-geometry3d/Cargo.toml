@@ -8,18 +8,10 @@ edition = "2021"
 [dependencies]
 plotz-color = { path = "../plotz-color" }
 plotz-geometry = { path = "../plotz-geometry" }
-either = "*"
-float-cmp = "*"
 float-ord = "*"
-derivative = "*"
 itertools = "*"
-num = "*"
 derive_more = "*"
-num-traits = "*"
-rand = "*"
-thiserror = "*"
 typed-builder = "*"
-tracing = "*"
 
 [dev-dependencies]
 float_eq = "*"

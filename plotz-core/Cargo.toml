@@ -6,21 +6,17 @@ edition = "2021"
 [dependencies]
 anyhow = "*"
 cairo-rs = { version = "0.14.9", features = ["png", "svg"] }
-derive_more = "*"
 float-ord = "*"
-itertools = "*"
 indicatif = "*"
+itertools = "*"
 lazy_static = "*"
-multimap = "*"
-tracing = "*"
-tracing-subscriber = "*"
 plotz-color = { path = "../plotz-color" }
 plotz-geojson = { path = "../plotz-geojson" }
 plotz-geometry = { path = "../plotz-geometry" }
-serde_json = "*"
-string-interner = "*"
-thiserror = "*"
 rand = "0.8.5"
+serde_json = "*"
+thiserror = "*"
+tracing = "*"
 typed-builder = "*"
 
 [dev-dependencies]

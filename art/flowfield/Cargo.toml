@@ -7,14 +7,9 @@ edition = "2021"
 
 
 argh = "*"
-itertools = "*"
 plotz-color = { path = "../../plotz-color" }
 plotz-core = { path = "../../plotz-core" }
 plotz-geometry = { path = "../../plotz-geometry" }
 rand = { version = "0.8.5", features = ["alloc"] }
-tracing = "*"
-tracing-subscriber = "*"
 rayon = "*"
 indicatif = { version = "*", features = ["rayon"] }
-anyhow = "*"
-float-ord = "*"

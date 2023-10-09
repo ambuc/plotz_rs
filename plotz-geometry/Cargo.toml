@@ -7,20 +7,15 @@ edition = "2021"
 
 [dependencies]
 approx = "*"
-derivative = "*"
 derive_more = "*"
-either = "*"
 float-cmp = "*"
 float-ord = "*"
 itertools = "*"
 num = "*"
-num-traits = "*"
 petgraph = "0.6.3"
 plotz-color = { path = "../plotz-color" }
-rand = "*"
 thiserror = "*"
 typed-builder = "*"
-tracing = "*"
 
 [dev-dependencies]
 float_eq = "*"

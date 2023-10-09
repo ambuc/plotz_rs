@@ -5,8 +5,9 @@ edition = "2021"
 
 [dependencies]
 
-
 argh = "*"
+float-ord = "*"
+indicatif = "0.17.7"
 itertools = "*"
 plotz-color = { path = "../../plotz-color" }
 plotz-core = { path = "../../plotz-core" }
@@ -14,7 +15,3 @@ plotz-geometry = { path = "../../plotz-geometry" }
 rand = { version = "0.8.5", features = ["alloc"] }
 tracing = "*"
 tracing-subscriber = "*"
-indicatif = "0.17.7"
-average = "*"
-float-ord = "*"
-rayon = "*"

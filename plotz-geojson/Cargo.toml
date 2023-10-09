@@ -4,13 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tracing = "*"
 plotz-geometry = { path = "../plotz-geometry" }
 serde_json = "*"
-string-interner = "*"
-rand = "*"
 thiserror = "*"
-lazy_static = "*"
+tracing = "*"
 
 
 [dev-dependencies]
