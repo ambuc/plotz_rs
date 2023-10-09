@@ -43,6 +43,7 @@ impl Scene {
                 .objects
                 .iter()
                 .map(|sobj3| obl.project_styled_obj3(sobj3))
+                .map(|(inner, style)| StyledObj2 { inner, style })
                 .collect(),
 
             (Projection::Oblique(obl), Occlusion::True) => {
@@ -59,7 +60,7 @@ impl Scene {
                         &FloatOrd(o2.inner.min_dist_along(&obl.view_vector())),
                     )
                 }) {
-                    let sobj2 = obl.project_styled_obj3(sobj3);
+                    let (obj2, style) = obl.project_styled_obj3(sobj3);
 
                     if let Some(SceneDebug {
                         draw_wireframes,
@@ -70,20 +71,21 @@ impl Scene {
                             color, thickness, ..
                         }) = draw_wireframes
                         {
-                            resultant
-                                .push(sobj2.clone().with_color(color).with_thickness(*thickness));
+                            resultant.push(StyledObj2 {
+                                inner: obj2.clone(),
+                                style: Style::builder().color(color).thickness(*thickness).build(),
+                            });
                         }
                         if let Some(settings) = should_annotate {
                             resultant.extend(
-                                sobj2
-                                    .annotate(settings)
+                                obj2.annotate(settings)
                                     .into_iter()
                                     .map(|(inner, style)| StyledObj2 { inner, style }),
                             );
                         }
                     }
 
-                    occ.add(sobj2.clone());
+                    occ.add(StyledObj2 { inner: obj2, style });
                 }
                 resultant.extend(occ.export());
                 resultant

@@ -1,5 +1,7 @@
 //! A camera.
 
+use plotz_geometry::style::Style;
+
 use {
     crate::{
         obj3::Obj3,
@@ -10,7 +12,6 @@ use {
     plotz_geometry::{
         obj2::Obj2,
         shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
-        styled_obj2::StyledObj2,
     },
 };
 
@@ -63,12 +64,11 @@ impl Oblique {
             Obj3::Sg3(sg3d) => Obj2::Sg2(self.project_sg3(sg3d)),
         }
     }
-    pub fn project_styled_obj3(&self, sobj3: &StyledObj3) -> StyledObj2 {
-        let mut obj2 = StyledObj2::new(self.project_obj3(&sobj3.inner));
-        if let Some(style) = sobj3.style {
-            obj2 = obj2.with_style(style);
-        }
-        obj2
+    pub fn project_styled_obj3(&self, sobj3: &StyledObj3) -> (Obj2, Style) {
+        (
+            self.project_obj3(&sobj3.inner),
+            sobj3.style.unwrap_or_default(),
+        )
     }
 }
 
