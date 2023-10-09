@@ -1,11 +1,12 @@
 //! GridLayout for grid...layouts... what do you want from me.
 
+use crate::{obj2::Obj2, style::Style};
+
 use {
     crate::{
         bounded::{Bounded, Bounds},
         crop::Croppable,
         shapes::pt2::Pt2,
-        styled_obj2::StyledObj2,
     },
     float_ord::FloatOrd,
     typed_builder::TypedBuilder,
@@ -31,7 +32,7 @@ pub struct GridLayout {
     /// the settings. See above.
     settings: GridLayoutSettings,
     /// A vector of objects. By default these will be empty vectors.
-    objs: Vec<Vec<Vec<StyledObj2>>>,
+    objs: Vec<Vec<Vec<(Obj2, Style)>>>,
 }
 
 impl GridLayout {
@@ -90,7 +91,7 @@ impl GridLayout {
     }
 
     /// Returns a list of all inner objects.
-    pub fn to_object2ds(&self) -> Vec<StyledObj2> {
+    pub fn to_object2ds(&self) -> Vec<(Obj2, Style)> {
         self.objs
             .clone()
             .into_iter()
@@ -101,40 +102,44 @@ impl GridLayout {
 
     /// Given an Object2d, crops it to the cubby at objs[i][j] and inserts that
     /// into the grid.
-    pub fn insert_and_crop_to_cubby(&mut self, (i, j): (usize, usize), d_o: StyledObj2) {
-        let cropped = d_o.crop_to_bounds(self.get_cubby_bounds((i, j)));
+    pub fn insert_and_crop_to_cubby(
+        &mut self,
+        (i, j): (usize, usize),
+        (obj2, style): (Obj2, Style),
+    ) {
+        let cropped = obj2.crop_to_bounds(self.get_cubby_bounds((i, j)));
 
-        self.objs[i][j].extend(cropped);
+        self.objs[i][j].extend(cropped.into_iter().map(|o| (o, style)));
     }
 
     /// Given an Object2d, recales it to the cubby at objs[i][j] and inserts that into the grid.
     pub fn insert_and_rescale_to_cubby(
         &mut self,
         (i, j): (usize, usize),
-        d_o: StyledObj2,
+        (obj2, style): (Obj2, Style),
         buffer: f64,
     ) {
-        let mut modified_obj = d_o;
+        let mut obj2 = obj2;
         {
             let frame_bounds = self.get_cubby_bounds((i, j));
-            let inner_bounds = modified_obj.bounds();
+            let inner_bounds = obj2.bounds();
 
             let w_scale = frame_bounds.width() / inner_bounds.width();
             let s_scale = frame_bounds.height() / inner_bounds.height();
             let scale = std::cmp::min(FloatOrd(w_scale), FloatOrd(s_scale)).0 * buffer;
 
-            modified_obj *= scale;
+            obj2 *= scale;
         }
 
         {
             let frame_bounds = self.get_cubby_bounds((i, j));
-            let inner_bounds = modified_obj.bounds();
+            let inner_bounds = obj2.bounds();
 
             let translate_diff = frame_bounds.bbox_center() - inner_bounds.bbox_center();
 
-            modified_obj += translate_diff;
+            obj2 += translate_diff;
         }
 
-        self.objs[i][j].push(modified_obj);
+        self.objs[i][j].push((obj2, style));
     }
 }

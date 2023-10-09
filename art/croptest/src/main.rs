@@ -1,3 +1,5 @@
+use plotz_geometry::{obj2::Obj2, style::Style, styled_obj2::StyledObj2};
+
 use {
     argh::FromArgs,
     itertools::iproduct,
@@ -11,7 +13,6 @@ use {
             pg2::{Pg2, Rect},
             pt2::Pt2,
         },
-        styled_obj2::StyledObj2,
     },
 };
 
@@ -53,13 +54,14 @@ fn main() {
         .map(|(i, j)| ((i, j), Pt2((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
     // .filter(|(idx, _)| *idx == (1, 2))
     {
-        let mut v: Vec<StyledObj2> = vec![];
+        let mut v: Vec<(Obj2, Style)> = vec![];
 
         let r = Rect(Pt2(50.0, 50.0), (50.0, 50.0)).unwrap();
 
-        let base_sq = StyledObj2::new(r.clone())
-            .with_color(&BLACK)
-            .with_thickness(2.0);
+        let base_sq = (
+            Obj2::Pg2(r.clone()),
+            Style::builder().thickness(2.0).build(),
+        );
         v.push(base_sq.clone());
         // v.extend(base_sq.annotate(&AnnotationSettings::default()));
 
@@ -89,39 +91,41 @@ fn main() {
             vec![a, b, c, d, e, f, g, h, i, j, k, l, a]
         };
 
-        let subject_sq = StyledObj2::new(Pg2(pts))
-            .with_color(&RED)
-            .with_thickness(1.0)
-            + offset;
+        let subject_sq = (
+            Obj2::Pg2(Pg2(pts)) + offset,
+            Style::builder().color(&RED).build(),
+        );
         // v.push(subject_sq.clone());
         // v.extend(subject_sq.annotate(&AnnotationSettings::default()));
 
+        let r = r.clone();
         v.extend(
             subject_sq
+                .0
                 .crop_to(&r)
                 .into_iter()
-                .map(|o| o.with_color(&GREEN).with_thickness(2.0)),
+                .map(|x| (x, Style::builder().color(&GREEN).thickness(2.0).build())),
         );
 
         v.extend(
             subject_sq
+                .0
                 .crop_excluding(&r.clone())
                 .into_iter()
-                .map(|o| o.with_color(&BLUE).with_thickness(2.0)),
+                .map(|x| (x, Style::builder().color(&BLUE).thickness(2.0).build())),
         );
 
-        let g = Group::new(v);
+        let g = Group::new(
+            v.into_iter()
+                .map(|(inner, style)| StyledObj2 { inner, style }),
+        );
 
-        gl.insert_and_rescale_to_cubby(idx, StyledObj2::new(g), 1.00);
+        gl.insert_and_rescale_to_cubby(idx, (Obj2::Group(g), Style::default()), 1.00);
     }
 
     dos.extend(gl.to_object2ds());
 
-    let objs = Canvas::from_objs(
-        dos.into_iter().map(|so2| (so2.inner, so2.style)),
-        /*autobucket=*/ false,
-    )
-    .with_frame(frame);
+    let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
 
     objs.write_to_svg_or_die(
         Size {

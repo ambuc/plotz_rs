@@ -1,3 +1,5 @@
+use plotz_geometry::{obj2::Obj2, style::Style};
+
 use {
     argh::FromArgs,
     plotz_color::*,
@@ -6,7 +8,6 @@ use {
         crop::PointLoc,
         grid::grid_layout::{GridLayout, GridLayoutSettings},
         shapes::{curve::CurveArc, pt2::Pt2},
-        styled_obj2::StyledObj2,
     },
     rand::{seq::SliceRandom, thread_rng, Rng},
     std::f64::consts::*,
@@ -65,9 +66,13 @@ fn main() {
                     }();
                     let rstep = rng.gen_range(10..20);
                     for r in (0..2000).step_by(rstep) {
-                        let ca = CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64);
-                        let d_o = StyledObj2::new(ca).with_thickness(1.0).with_color(color);
-                        grid_layout.insert_and_crop_to_cubby(cubby, d_o);
+                        grid_layout.insert_and_crop_to_cubby(
+                            cubby,
+                            (
+                                Obj2::CurveArc(CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64)),
+                                Style::builder().color(color).thickness(1.0).build(),
+                            ),
+                        );
                     }
                 }
             }
@@ -76,11 +81,7 @@ fn main() {
         dos.extend(grid_layout.to_object2ds());
     }
 
-    let objs = Canvas::from_objs(
-        dos.into_iter().map(|so2| (so2.inner, so2.style)),
-        /*autobucket=*/ true,
-    )
-    .with_frame(frame);
+    let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true).with_frame(frame);
 
     objs.write_to_svg_or_die(
         Size {
