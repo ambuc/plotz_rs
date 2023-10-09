@@ -3,7 +3,6 @@ use {
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        obj2::Obj2,
         p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
@@ -256,18 +255,9 @@ fn main() {
     let scale = image_width / 2.0 / (grid_cardinality as f64);
 
     objs.dos_by_bucket.iter_mut().for_each(|(_bucket, layers)| {
-        layers.iter_mut().for_each(|d_o| match &mut d_o.inner {
-            Obj2::Pg2(p) => {
-                *p *= scale;
-                *p += p2!(margin, margin);
-            }
-            Obj2::Sg2(s) => {
-                *s *= scale;
-                *s += p2!(margin, margin);
-            }
-            _ => {
-                unimplemented!()
-            }
+        layers.iter_mut().for_each(|d_o| {
+            *d_o *= scale;
+            *d_o += p2!(margin, margin);
         });
     });
 

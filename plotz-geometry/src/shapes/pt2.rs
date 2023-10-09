@@ -22,6 +22,7 @@ pub struct Pt2 {
 }
 
 /// Pt shortcut.
+/// TODO(jbuckland): Remove this.
 #[macro_export]
 macro_rules! p2 {
     ($x:expr, $y:expr) => {
