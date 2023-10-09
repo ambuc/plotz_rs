@@ -8,7 +8,7 @@ use float_ord::FloatOrd;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 /// Guaranteed to be 0.0 <= f <= 1.0. Witness type.
-enum Pct {
+enum Percent {
     /// Zero.
     Zero,
     /// Another value.
@@ -16,22 +16,22 @@ enum Pct {
     /// One.
     One,
 }
-impl Pct {
+impl Percent {
     /// new percent.
-    pub fn new(f: f64) -> Option<Pct> {
+    pub fn new(f: f64) -> Option<Percent> {
         match f {
-            f if approx_eq!(f64, f, 0.0) => Some(Pct::Zero),
-            f if approx_eq!(f64, f, 1.0) => Some(Pct::One),
-            f if (0.0..=1.0).contains(&f) => Some(Pct::Val(f)),
+            f if approx_eq!(f64, f, 0.0) => Some(Percent::Zero),
+            f if approx_eq!(f64, f, 1.0) => Some(Percent::One),
+            f if (0.0..=1.0).contains(&f) => Some(Percent::Val(f)),
             _ => None,
         }
     }
     /// as an f64.
     pub fn as_f64(&self) -> f64 {
         match self {
-            Pct::Zero => 0.0,
-            Pct::Val(f) => *f,
-            Pct::One => 1.0,
+            Percent::Zero => 0.0,
+            Percent::Val(f) => *f,
+            Percent::One => 1.0,
         }
     }
 }
@@ -85,9 +85,9 @@ pub struct Intersection {
     /// pt
     pub pt: Pt2,
     /// a_pct
-    a_pct: Pct,
+    a_pct: Percent,
     /// b_pct
-    b_pct: Pct,
+    b_pct: Percent,
 }
 
 impl Intersection {
@@ -95,8 +95,8 @@ impl Intersection {
     pub fn new(pt: Pt2, a: f64, b: f64) -> Option<Intersection> {
         Some(Intersection {
             pt,
-            a_pct: Pct::new(a)?,
-            b_pct: Pct::new(b)?,
+            a_pct: Percent::new(a)?,
+            b_pct: Percent::new(b)?,
         })
     }
 
@@ -125,7 +125,8 @@ impl Intersection {
     /// Returns true if the intersection occurs at the head or tail of either
     /// intersecting segment.
     pub fn on_points_of_either(&self) -> bool {
-        matches!(self.a_pct, Pct::Zero | Pct::One) || matches!(self.b_pct, Pct::Zero | Pct::One)
+        matches!(self.a_pct, Percent::Zero | Percent::One)
+            || matches!(self.b_pct, Percent::Zero | Percent::One)
     }
 
     /// for whatever reason, some callers need to flip these.
