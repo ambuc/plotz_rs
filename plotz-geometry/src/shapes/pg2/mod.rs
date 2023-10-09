@@ -184,15 +184,13 @@ impl Pg2 {
     /// Returns true if any line Sg2 from this polygon intersects any line
     /// segment from the other polygon.
     pub fn intersects(&self, other: &Pg2) -> bool {
-        !self.intersects_detailed(other).is_empty()
+        self.intersects_detailed(other).count() != 0
     }
 
     /// Returns the detailed set of intersection outcomes between this polygon's
     /// segments and another polygon's segments.
-    pub fn intersects_detailed(&self, other: &Pg2) -> Vec<IsxnResult> {
-        iproduct!(self.to_segments(), other.to_segments())
-            .flat_map(|(l1, l2)| l1.intersects(&l2))
-            .collect::<Vec<_>>()
+    pub fn intersects_detailed(&self, other: &Pg2) -> impl Iterator<Item = IsxnResult> {
+        iproduct!(self.to_segments(), other.to_segments()).flat_map(|(l1, l2)| l1.intersects(&l2))
     }
 
     fn annotated_intersects_detailed(&self, other: &Pg2) -> Vec<AnnotatedIsxnResult> {
