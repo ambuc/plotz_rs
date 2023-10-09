@@ -1,3 +1,5 @@
+use plotz_geometry::{obj2::Obj2, style::Style};
+
 use {
     argh::FromArgs,
     plotz_color::*,
@@ -7,7 +9,6 @@ use {
         crop::Croppable,
         grid::Grid,
         shapes::{curve::CurveArcs, pt2::Pt2},
-        styled_obj2::StyledObj2,
     },
     rand::Rng,
     std::f64::consts::*,
@@ -50,11 +51,14 @@ fn main() {
 
             let cas = CurveArcs(ctr, angle_1..=angle_2, radius);
 
-            dos.extend(
-                cas.iter()
-                    .flat_map(|ca| ca.crop_to(frame_polygon))
-                    .map(|ca| StyledObj2::new(ca).with_color(&GREEN).with_thickness(0.30)),
-            );
+            dos.extend(cas.iter().flat_map(|ca| ca.crop_to(frame_polygon)).map(
+                |ca| -> (Obj2, Style) {
+                    (
+                        Obj2::CurveArc(ca),
+                        Style::builder().color(&GREEN).thickness(0.30).build(),
+                    )
+                },
+            ));
         }
 
         dos.extend(
@@ -63,16 +67,11 @@ fn main() {
                 .height(1000)
                 .build()
                 .to_segments()
-                .into_iter()
-                .map(|(inner, style)| StyledObj2 { inner, style }),
+                .into_iter(),
         );
     }
 
-    let objs = Canvas::from_objs(
-        dos.into_iter().map(|so2| (so2.inner, so2.style)),
-        /*autobucket=*/ false,
-    )
-    .with_frame(frame);
+    let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
 
     objs.write_to_svg_or_die(
         Size {
