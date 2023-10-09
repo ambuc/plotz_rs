@@ -33,53 +33,6 @@ pub enum Obj2 {
 }
 
 impl Obj2 {
-    /// Returns true if the object is empty (i.e. zero points)
-    pub fn is_empty(&self) -> bool {
-        match self {
-            Obj2::Pg2(p) => p.is_empty(),
-            Obj2::Group(dois) => dois.is_empty(),
-            Obj2::Pt(pt) => pt.is_empty(),
-            Obj2::Sg2(sg) => sg.is_empty(),
-            Obj2::Txt(ch) => ch.is_empty(),
-            Obj2::CurveArc(ca) => ca.is_empty(),
-        }
-    }
-
-    /// Casts each inner value to something which implements Bounded.
-    pub fn bounded(&self) -> &dyn Bounded {
-        match self {
-            Obj2::Txt(ch) => ch,
-            Obj2::CurveArc(arc) => arc,
-            Obj2::Group(dos) => dos,
-            Obj2::Pt(p) => p,
-            Obj2::Pg2(pg) => pg,
-            Obj2::Sg2(s) => s,
-        }
-    }
-
-    /// Casts each inner value to something which implements YieldPoints.
-    pub fn yield_points(&self) -> &dyn YieldPoints {
-        match self {
-            Obj2::Pt(p) => p,
-            Obj2::Txt(ch) => ch,
-            Obj2::CurveArc(ca) => ca,
-            Obj2::Group(g) => g,
-            Obj2::Pg2(pg) => pg,
-            Obj2::Sg2(sg) => sg,
-        }
-    }
-
-    /// Casts each inner value to something which implements YieldPointsMut.
-    pub fn yield_points_mut(&mut self) -> &mut dyn YieldPointsMut {
-        match self {
-            Obj2::Pt(p) => p,
-            Obj2::Txt(ch) => ch,
-            Obj2::CurveArc(ca) => ca,
-            Obj2::Group(g) => g,
-            Obj2::Pg2(pg) => pg,
-            Obj2::Sg2(sg) => sg,
-        }
-    }
     /// Cast to sg2, if possible
     pub fn to_sg2(&self) -> Option<&Sg2> {
         match self {
@@ -96,15 +49,42 @@ impl Obj2 {
     }
 }
 
+impl Nullable for Obj2 {
+    fn is_empty(&self) -> bool {
+        match self {
+            Obj2::Pg2(p) => p.is_empty(),
+            Obj2::Group(dois) => dois.is_empty(),
+            Obj2::Pt(pt) => pt.is_empty(),
+            Obj2::Sg2(sg) => sg.is_empty(),
+            Obj2::Txt(ch) => ch.is_empty(),
+            Obj2::CurveArc(ca) => ca.is_empty(),
+        }
+    }
+}
+
 impl YieldPoints for Obj2 {
     fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
-        self.yield_points().yield_pts()
+        match self {
+            Obj2::Pt(p) => p.yield_pts(),
+            Obj2::Txt(ch) => ch.yield_pts(),
+            Obj2::CurveArc(ca) => ca.yield_pts(),
+            Obj2::Group(g) => g.yield_pts(),
+            Obj2::Pg2(pg) => pg.yield_pts(),
+            Obj2::Sg2(sg) => sg.yield_pts(),
+        }
     }
 }
 
 impl YieldPointsMut for Obj2 {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
-        self.yield_points_mut().yield_pts_mut()
+        match self {
+            Obj2::Pt(p) => p.yield_pts_mut(),
+            Obj2::Txt(ch) => ch.yield_pts_mut(),
+            Obj2::CurveArc(ca) => ca.yield_pts_mut(),
+            Obj2::Group(g) => g.yield_pts_mut(),
+            Obj2::Pg2(pg) => pg.yield_pts_mut(),
+            Obj2::Sg2(sg) => sg.yield_pts_mut(),
+        }
     }
 }
 
@@ -112,7 +92,14 @@ impl Mutable for Obj2 {}
 
 impl Bounded for Obj2 {
     fn bounds(&self) -> crate::bounded::Bounds {
-        self.bounded().bounds()
+        match self {
+            Obj2::Txt(ch) => ch.bounds(),
+            Obj2::CurveArc(arc) => arc.bounds(),
+            Obj2::Group(dos) => dos.bounds(),
+            Obj2::Pt(p) => p.bounds(),
+            Obj2::Pg2(pg) => pg.bounds(),
+            Obj2::Sg2(s) => s.bounds(),
+        }
     }
 }
 
