@@ -258,10 +258,10 @@ impl Map {
     fn adjust_latitude_transform(&mut self) {
         // adjust all point y values according to latitude transform
         self.canvas.mutate_all(|pt| {
-            pt.y.0 = latitude_to_y(pt.y.0);
+            pt.y = latitude_to_y(pt.y);
         });
         if let Some(center) = &mut self.center {
-            center.y.0 = latitude_to_y(center.y.0);
+            center.y = latitude_to_y(center.y);
         }
     }
 
@@ -279,8 +279,8 @@ impl Map {
     fn adjust_centering(&mut self, dest_size: &Size) -> Result<(), MapError> {
         let shift = match self.center {
             Some(desired_center) => Pt2(
-                dest_size.width as f64 / 2.0 - desired_center.x.0,
-                dest_size.height as f64 / 2.0 - desired_center.y.0,
+                dest_size.width as f64 / 2.0 - desired_center.x,
+                dest_size.height as f64 / 2.0 - desired_center.y,
             ),
             None => {
                 let canvas_bounds = self.canvas.bounds();

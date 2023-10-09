@@ -73,8 +73,7 @@ impl<'a> CropGraph<'a> {
 
         if let Some(extant) = self.known_pts.iter().find(|extant| {
             let e = f64::EPSILON * 1_000_000_000.0;
-            relative_eq!(extant.x.0, pt.x.0, epsilon = e)
-                && relative_eq!(extant.y.0, pt.y.0, epsilon = e)
+            relative_eq!(extant.x, pt.x, epsilon = e) && relative_eq!(extant.y, pt.y, epsilon = e)
         }) {
             *extant
         } else {

@@ -49,28 +49,28 @@ impl CurveArc {
 impl Bounded for CurveArc {
     fn bounds(&self) -> crate::bounded::Bounds {
         Bounds {
-            top_bound: self.ctr.y.0
+            top_bound: self.ctr.y
                 + self.radius
                     * if self.angle_range().contains(&FRAC_PI_2) {
                         1.0
                     } else {
                         max(FloatOrd(self.angle_i.sin()), FloatOrd(self.angle_f.sin())).0
                     },
-            bottom_bound: self.ctr.y.0
+            bottom_bound: self.ctr.y
                 + self.radius
                     * if self.angle_range().contains(&(3.0 * FRAC_PI_2)) {
                         -1.0
                     } else {
                         min(FloatOrd(self.angle_i.sin()), FloatOrd(self.angle_f.sin())).0
                     },
-            left_bound: self.ctr.x.0
+            left_bound: self.ctr.x
                 + self.radius
                     * if self.angle_range().contains(&PI) {
                         -1.0
                     } else {
                         min(FloatOrd(self.angle_i.cos()), FloatOrd(self.angle_f.cos())).0
                     },
-            right_bound: self.ctr.x.0
+            right_bound: self.ctr.x
                 + self.radius
                     * if self.angle_range().contains(&TAU) {
                         1.0
@@ -265,9 +265,9 @@ enum IntersectionResult {
 
 /// how to find intersection of segment and curve.
 fn intersections_of_line_and_curvearc(segment: &Sg2, curve_arc: &CurveArc) -> IntersectionResult {
-    let (x_0, y_0) = (curve_arc.ctr.x.0, curve_arc.ctr.y.0);
-    let (x_1, y_1) = (segment.i.x.0, segment.i.y.0);
-    let (x_2, y_2) = (segment.f.x.0, segment.f.y.0);
+    let (x_0, y_0) = (curve_arc.ctr.x, curve_arc.ctr.y);
+    let (x_1, y_1) = (segment.i.x, segment.i.y);
+    let (x_2, y_2) = (segment.f.x, segment.f.y);
     let r = curve_arc.radius;
 
     // d is distance to line. (see (14) in
@@ -348,10 +348,10 @@ fn intersections_of_line_and_curvearc(segment: &Sg2, curve_arc: &CurveArc) -> In
 
                             // (x - x_0)^2 + (y - y_0)^2 = r^2 ==>
                             // y = +/- sqrt(r^2 - (x-x_0)^2) + y_0
-                            one * ((curve_arc.radius).powi(2) - (x - curve_arc.ctr.x.0).powi(2))
+                            one * ((curve_arc.radius).powi(2) - (x - curve_arc.ctr.x).powi(2))
                                 .abs()
                                 .sqrt()
-                                + curve_arc.ctr.y.0
+                                + curve_arc.ctr.y
                         } else {
                             let y_top = -1.0 * (l_a * x + l_c);
                             let y_bottom = l_b;
@@ -632,13 +632,13 @@ mod test {
         let PtLoc(e_pt1, e_sl1, e_cl1) = e_pl1;
         let PtLoc(e_pt2, e_sl2, e_cl2) = e_pl2;
 
-        assert_approx_eq!(f64, pt1.x.0, e_pt1.x.0);
-        assert_approx_eq!(f64, pt1.y.0, e_pt1.y.0);
+        assert_approx_eq!(f64, pt1.x, e_pt1.x);
+        assert_approx_eq!(f64, pt1.y, e_pt1.y);
         assert_approx_eq!(f64, sl1.as_f64(), e_sl1.as_f64());
         assert_approx_eq!(f64, cl1.as_f64(), e_cl1.as_f64());
 
-        assert_approx_eq!(f64, pt2.x.0, e_pt2.x.0);
-        assert_approx_eq!(f64, pt2.y.0, e_pt2.y.0);
+        assert_approx_eq!(f64, pt2.x, e_pt2.x);
+        assert_approx_eq!(f64, pt2.y, e_pt2.y);
         assert_approx_eq!(f64, sl2.as_f64(), e_sl2.as_f64());
         assert_approx_eq!(f64, cl2.as_f64(), e_cl2.as_f64());
     }

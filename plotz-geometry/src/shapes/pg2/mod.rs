@@ -1,5 +1,7 @@
 //! A 2D polygon (or multi&line).
 
+use float_ord::FloatOrd;
+
 use crate::{obj2::Obj2, style::Style};
 
 mod annotated_isxn_result;
@@ -287,7 +289,7 @@ impl Pg2 {
         let o = self
             .to_segments()
             .iter()
-            .map(|segment| (segment.f.x.0 - segment.i.x.0) * (segment.f.y.0 + segment.i.y.0))
+            .map(|segment| (segment.f.x - segment.i.x) * (segment.f.y + segment.i.y))
             .sum::<f64>();
 
         match o {
@@ -308,8 +310,8 @@ impl Pg2 {
     /// same as the center or centroid or whatever.
     pub fn average(&self) -> Pt2 {
         let num: f64 = self.pts.len() as f64;
-        let sum_x: f64 = self.pts.iter().map(|pt| pt.x.0).sum();
-        let sum_y: f64 = self.pts.iter().map(|pt| pt.y.0).sum();
+        let sum_x: f64 = self.pts.iter().map(|pt| pt.x).sum();
+        let sum_y: f64 = self.pts.iter().map(|pt| pt.y).sum();
         Pt2(sum_x / num, sum_y / num)
     }
 
@@ -412,8 +414,8 @@ pub fn abp(o: &Pt2, i: &Pt2, j: &Pt2) -> f64 {
     let a: Pt2 = *i - *o;
     let b: Pt2 = *j - *o;
     let angle = f64::atan2(
-        /*det=*/ a.x.0 * b.y.0 - a.y.0 * b.x.0,
-        /*dot=*/ a.x.0 * b.x.0 + a.y.0 * b.y.0,
+        /*det=*/ a.x * b.y - a.y * b.x,
+        /*dot=*/ a.x * b.x + a.y * b.y,
     );
 
     if approx_eq!(f64, angle, 0.0) {
@@ -511,10 +513,34 @@ impl RemAssign<Pt2> for Pg2 {
 impl Bounded for Pg2 {
     fn bounds(&self) -> crate::bounded::Bounds {
         Bounds {
-            top_bound: self.pts.iter().map(|p| p.y).max().expect("not empty").0,
-            bottom_bound: self.pts.iter().map(|p| p.y).min().expect("not empty").0,
-            left_bound: self.pts.iter().map(|p| p.x).min().expect("not empty").0,
-            right_bound: self.pts.iter().map(|p| p.x).max().expect("not empty").0,
+            top_bound: self
+                .pts
+                .iter()
+                .map(|p| FloatOrd(p.y))
+                .max()
+                .expect("not empty")
+                .0,
+            bottom_bound: self
+                .pts
+                .iter()
+                .map(|p| FloatOrd(p.y))
+                .min()
+                .expect("not empty")
+                .0,
+            left_bound: self
+                .pts
+                .iter()
+                .map(|p| FloatOrd(p.x))
+                .min()
+                .expect("not empty")
+                .0,
+            right_bound: self
+                .pts
+                .iter()
+                .map(|p| FloatOrd(p.x))
+                .max()
+                .expect("not empty")
+                .0,
         }
     }
 }
@@ -555,8 +581,8 @@ impl Annotatable for Pg2 {
             precision,
         } = settings;
         for (_idx, pt) in self.pts.iter().enumerate() {
-            let x = format!("{:.1$}", pt.x.0, precision);
-            let y = format!("{:.1$}", pt.y.0, precision);
+            let x = format!("{:.1$}", pt.x, precision);
+            let y = format!("{:.1$}", pt.y, precision);
             a.push((
                 Txt {
                     pt: *pt,

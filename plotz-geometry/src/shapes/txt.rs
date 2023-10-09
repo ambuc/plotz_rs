@@ -124,8 +124,8 @@ impl DivAssign<Pt2> for Txt {
 }
 impl RemAssign<Pt2> for Txt {
     fn rem_assign(&mut self, rhs: Pt2) {
-        self.pt.x.0 %= rhs.x.0;
-        self.pt.y.0 %= rhs.y.0;
+        self.pt.x %= rhs.x;
+        self.pt.y %= rhs.y;
     }
 }
 

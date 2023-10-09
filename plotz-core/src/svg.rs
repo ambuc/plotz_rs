@@ -51,21 +51,21 @@ pub enum SvgWriteError {
 fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), SvgWriteError> {
     match &doi {
         Obj2::Pt2(p) => {
-            context.line_to(p.x.0, p.y.0);
-            context.line_to(p.x.0 + 1.0, p.y.0 + 1.0);
+            context.line_to(p.x, p.y);
+            context.line_to(p.x + 1.0, p.y + 1.0);
         }
         Obj2::Pg2(polygon) => {
             //
             for p in &polygon.pts {
-                context.line_to(p.x.0, p.y.0);
+                context.line_to(p.x, p.y);
             }
             if polygon.kind == PolygonKind::Closed {
-                context.line_to(polygon.pts[0].x.0, polygon.pts[0].y.0);
+                context.line_to(polygon.pts[0].x, polygon.pts[0].y);
             }
         }
         Obj2::Sg2(segment) => {
-            context.line_to(segment.i.x.0, segment.i.y.0);
-            context.line_to(segment.f.x.0, segment.f.y.0);
+            context.line_to(segment.i.x, segment.i.y);
+            context.line_to(segment.f.x, segment.f.y);
         }
         Obj2::Txt(Txt {
             pt,
@@ -75,7 +75,7 @@ fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), 
             context.select_font_face("serif", cairo::FontSlant::Normal, cairo::FontWeight::Bold);
             context.set_font_size(*font_size);
 
-            context.move_to(pt.x.0, pt.y.0);
+            context.move_to(pt.x, pt.y);
             context.show_text(txt).expect("show text");
         }
         Obj2::Group(group) => {
@@ -84,13 +84,7 @@ fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), 
             }
         }
         Obj2::CurveArc(arc) => {
-            context.arc(
-                arc.ctr.x.0,
-                arc.ctr.y.0,
-                arc.radius,
-                arc.angle_i,
-                arc.angle_f,
-            );
+            context.arc(arc.ctr.x, arc.ctr.y, arc.radius, arc.angle_i, arc.angle_f);
         }
     }
     Ok(())

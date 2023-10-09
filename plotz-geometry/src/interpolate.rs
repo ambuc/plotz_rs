@@ -47,21 +47,21 @@ pub enum Interpolation2dError {
 /// Given the line |ab| defined by points |a| and |b|, and another point |i|
 /// which lies along it, return the percent along |ab| which |i| lies.
 pub fn interpolate_2d_checked(a: Pt2, b: Pt2, i: Pt2) -> Result<f64, Interpolation2dError> {
-    let x_same = approx_eq!(f64, a.x.0, b.x.0);
-    let y_same = approx_eq!(f64, a.y.0, b.y.0);
+    let x_same = approx_eq!(f64, a.x, b.x);
+    let y_same = approx_eq!(f64, a.y, b.y);
     match (x_same, y_same) {
         (true, true) => Err(Interpolation2dError::PointsSame),
         (false, true) => {
-            let v_x = interpolate_checked(a.x.0, b.x.0, i.x.0)?;
+            let v_x = interpolate_checked(a.x, b.x, i.x)?;
             Ok(v_x)
         }
         (true, false) => {
-            let v_y = interpolate_checked(a.y.0, b.y.0, i.y.0)?;
+            let v_y = interpolate_checked(a.y, b.y, i.y)?;
             Ok(v_y)
         }
         (false, false) => {
-            let v_x = interpolate_checked(a.x.0, b.x.0, i.x.0)?;
-            let v_y = interpolate_checked(a.y.0, b.y.0, i.y.0)?;
+            let v_x = interpolate_checked(a.x, b.x, i.x)?;
+            let v_y = interpolate_checked(a.y, b.y, i.y)?;
             match approx_eq!(f64, v_x, v_y, epsilon = 0.0003) {
                 true => Ok(v_x),
                 false => Err(Interpolation2dError::PointNotOnLine),

@@ -9,6 +9,7 @@ use crate::{
     traits::*,
 };
 use float_cmp::approx_eq;
+use float_ord::FloatOrd;
 use std::{
     cmp::PartialOrd,
     f64::consts::{FRAC_PI_2, PI},
@@ -53,8 +54,8 @@ impl Sg2 {
     fn _ccw(&self, other: &Pt2) -> _Orientation {
         use std::cmp::Ordering;
         match PartialOrd::partial_cmp(
-            &((other.y.0 - self.i.y.0) * (self.f.x.0 - self.i.x.0)
-                - (self.f.y.0 - self.i.y.0) * (other.x.0 - self.i.x.0)),
+            &((other.y - self.i.y) * (self.f.x - self.i.x)
+                - (self.f.y - self.i.y) * (other.x - self.i.x)),
             &0_f64,
         ) {
             Some(Ordering::Equal) => _Orientation::_Colinear,
@@ -68,7 +69,7 @@ impl Sg2 {
     /// NB: this is the "elementary school math slope"; i.e. rise over run.
     /// Not the same as the angle of the ray.
     pub fn slope(&self) -> f64 {
-        (self.f.y.0 - self.i.y.0) / (self.f.x.0 - self.i.x.0)
+        (self.f.y - self.i.y) / (self.f.x - self.i.x)
     }
 
     /// The angle from sg.i to sg.f, in radians.
@@ -127,10 +128,10 @@ impl Sg2 {
                 MultipleIntersections::LineSegmentsAreColinear,
             ))
         } else if let Some(pt) = self.get_line_intersection_inner(
-            (self.i.x.0, self.i.y.0),
-            (self.f.x.0, self.f.y.0),
-            (other.i.x.0, other.i.y.0),
-            (other.f.x.0, other.f.y.0),
+            (self.i.x, self.i.y),
+            (self.f.x, self.f.y),
+            (other.i.x, other.i.y),
+            (other.f.x, other.f.y),
         ) {
             Some(IntersectionResult::OneIntersection(
                 Intersection::new(
@@ -173,17 +174,17 @@ impl Sg2 {
     /// Returns the absolute value of the length of this segment.
     pub fn abs(&self) -> f64 {
         let two = 2_f64;
-        ((self.f.y.0 - self.i.y.0).powf(two) + (self.f.x.0 - self.i.x.0).powf(two)).sqrt()
+        ((self.f.y - self.i.y).powf(two) + (self.f.x - self.i.x).powf(two)).sqrt()
     }
 
     /// Takes a lossy cross product of this with another segment (oriented tail-to-tail).
     pub fn cross_z(&self, other: &Sg2) -> f64 {
         let d1 = self.f - self.i;
         let d2 = other.f - other.i;
-        let x1 = d1.x.0;
-        let x2 = d2.x.0;
-        let y1 = d1.y.0;
-        let y2 = d2.y.0;
+        let x1 = d1.x;
+        let x2 = d2.x;
+        let y1 = d1.y;
+        let y2 = d2.y;
         (x1 * y2) - (x2 * y1)
     }
 
@@ -285,10 +286,10 @@ impl RemAssign<Pt2> for Sg2 {
 impl Bounded for Sg2 {
     fn bounds(&self) -> Bounds {
         Bounds {
-            top_bound: std::cmp::max(self.i.y, self.f.y).0,
-            bottom_bound: std::cmp::min(self.i.y, self.f.y).0,
-            left_bound: std::cmp::min(self.i.x, self.f.x).0,
-            right_bound: std::cmp::max(self.i.x, self.f.x).0,
+            top_bound: std::cmp::max(FloatOrd(self.i.y), FloatOrd(self.f.y)).0,
+            bottom_bound: std::cmp::min(FloatOrd(self.i.y), FloatOrd(self.f.y)).0,
+            left_bound: std::cmp::min(FloatOrd(self.i.x), FloatOrd(self.f.x)).0,
+            right_bound: std::cmp::max(FloatOrd(self.i.x), FloatOrd(self.f.x)).0,
         }
     }
 }
@@ -496,10 +497,10 @@ mod tests {
         //      |
         //      |
         //      v
-        assert_float_eq!(s.i.x.0, 0.0, abs <= 0.000_1);
-        assert_float_eq!(s.i.y.0, 1.0, abs <= 0.000_1);
-        assert_float_eq!(s.f.x.0, -0.5, abs <= 0.000_1);
-        assert_float_eq!(s.f.y.0, 1.0, abs <= 0.000_1);
+        assert_float_eq!(s.i.x, 0.0, abs <= 0.000_1);
+        assert_float_eq!(s.i.y, 1.0, abs <= 0.000_1);
+        assert_float_eq!(s.f.x, -0.5, abs <= 0.000_1);
+        assert_float_eq!(s.f.y, 1.0, abs <= 0.000_1);
 
         s.rotate(/*about=*/ &origin, PI / 2.0);
         //      ^
@@ -509,10 +510,10 @@ mod tests {
         //   F  |
         //      |
         //      v
-        assert_float_eq!(s.i.x.0, -1.0, abs <= 0.000_1);
-        assert_float_eq!(s.i.y.0, 0.0, abs <= 0.000_1);
-        assert_float_eq!(s.f.x.0, -1.0, abs <= 0.000_1);
-        assert_float_eq!(s.f.y.0, -0.5, abs <= 0.000_1);
+        assert_float_eq!(s.i.x, -1.0, abs <= 0.000_1);
+        assert_float_eq!(s.i.y, 0.0, abs <= 0.000_1);
+        assert_float_eq!(s.f.x, -1.0, abs <= 0.000_1);
+        assert_float_eq!(s.f.y, -0.5, abs <= 0.000_1);
 
         s.rotate(/*about=*/ &origin, PI / 2.0);
         //      ^
@@ -522,10 +523,10 @@ mod tests {
         //      |
         //      IF
         //      v
-        assert_float_eq!(s.i.x.0, 0.0, abs <= 0.000_1);
-        assert_float_eq!(s.i.y.0, -1.0, abs <= 0.000_1);
-        assert_float_eq!(s.f.x.0, 0.5, abs <= 0.000_1);
-        assert_float_eq!(s.f.y.0, -1.0, abs <= 0.000_1);
+        assert_float_eq!(s.i.x, 0.0, abs <= 0.000_1);
+        assert_float_eq!(s.i.y, -1.0, abs <= 0.000_1);
+        assert_float_eq!(s.f.x, 0.5, abs <= 0.000_1);
+        assert_float_eq!(s.f.y, -1.0, abs <= 0.000_1);
 
         s.rotate(/*about=*/ &origin, PI / 2.0);
         //      ^
@@ -535,10 +536,10 @@ mod tests {
         //      |
         //      |
         //      v
-        assert_float_eq!(s.i.x.0, 1.0, abs <= 0.000_1);
-        assert_float_eq!(s.i.y.0, 0.0, abs <= 0.000_1);
-        assert_float_eq!(s.f.x.0, 1.0, abs <= 0.000_1);
-        assert_float_eq!(s.f.y.0, 0.5, abs <= 0.000_1);
+        assert_float_eq!(s.i.x, 1.0, abs <= 0.000_1);
+        assert_float_eq!(s.i.y, 0.0, abs <= 0.000_1);
+        assert_float_eq!(s.f.x, 1.0, abs <= 0.000_1);
+        assert_float_eq!(s.f.y, 0.5, abs <= 0.000_1);
     }
 
     #[test]

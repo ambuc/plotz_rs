@@ -37,7 +37,7 @@ impl Tile for T1 {
     }
     fn slope(&self) -> f64 {
         let T1([a, _b, c]) = &self;
-        ((c.y.0 - a.y.0) / (c.x.0 - a.x.0)).atan()
+        ((c.y - a.y) / (c.x - a.x)).atan()
     }
 }
 struct T2([Pt2; 3]);
@@ -67,7 +67,7 @@ impl Tile for T2 {
     }
     fn slope(&self) -> f64 {
         let T2([a, _b, c]) = &self;
-        ((c.y.0 - a.y.0) / (c.x.0 - a.x.0)).atan()
+        ((c.y - a.y) / (c.x - a.x)).atan()
     }
 }
 struct T3([Pt2; 4]);
@@ -99,7 +99,7 @@ impl Tile for T3 {
     }
     fn slope(&self) -> f64 {
         let T3([a, _b, c, _d]) = &self;
-        ((c.y.0 - a.y.0) / (c.x.0 - a.x.0)).atan()
+        ((c.y - a.y) / (c.x - a.x)).atan()
     }
 }
 

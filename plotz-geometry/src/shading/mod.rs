@@ -2,6 +2,8 @@
 
 pub mod shade_config;
 
+use float_ord::FloatOrd;
+
 use crate::{
     bounded::{Bounded, BoundingBoxError},
     crop::{CropToPolygonError, Croppable},
@@ -59,8 +61,8 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg2) -> Result<Vec<Sg2>, Sh
 
     let step = compute_vertical_step(config.gap, config.slope);
 
-    while line.i.y > float_ord::FloatOrd(bounds.bottom_bound())
-        || line.f.y > float_ord::FloatOrd(bounds.bottom_bound())
+    while FloatOrd(line.i.y) > FloatOrd(bounds.bottom_bound())
+        || FloatOrd(line.f.y) > FloatOrd(bounds.bottom_bound())
     {
         let cropped_strokes = line.crop_to(polygon);
         segments.extend(cropped_strokes.iter());
