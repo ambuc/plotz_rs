@@ -1,5 +1,7 @@
 // https://tilings.math.uni-bielefeld.de/substitution/cromwell-kite-rhombus-trapezium/
 
+use plotz_geometry::{obj2::Obj2, style::Style};
+
 use {
     plotz_color::*,
     plotz_geometry::{
@@ -233,7 +235,7 @@ trait Tile {
     fn pts_iter_mut(&mut self) -> Box<dyn Iterator<Item = &'_ mut Pt2> + '_>;
 }
 
-pub fn make() -> Vec<StyledObj2> {
+pub fn make() -> Vec<(Obj2, Style)> {
     let ell: f64 = (5.0_f64.sqrt() - 1.0) / 2.0;
 
     let t1 = {
@@ -301,10 +303,13 @@ pub fn make() -> Vec<StyledObj2> {
             let segments = shade_polygon(&config, &p).unwrap();
 
             // std::iter::empty() //
-            std::iter::once(StyledObj2::new(p).with_color(color)).chain([StyledObj2::new(
-                Group::new(segments.into_iter().map(StyledObj2::new)),
-            )
-            .with_color(color)])
+            std::iter::once((Obj2::Pg2(p), Style::builder().color(color).build())).chain([(
+                Obj2::Group(Group::new(segments.into_iter().map(|s| StyledObj2 {
+                    inner: Obj2::Sg2(s),
+                    style: Style::builder().color(color).build(),
+                }))),
+                Style::builder().color(color).build(),
+            )])
         })
         .collect()
 }

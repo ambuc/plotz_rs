@@ -1,11 +1,12 @@
 // https://tilings.math.uni-bielefeld.de/substitution/ammann-beenker-rhomb-triangle/
 
+use plotz_geometry::{obj2::Obj2, style::Style};
+
 use {
     plotz_color::*,
     plotz_geometry::{
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{pg2::Pg2, pt2::Pt2},
-        styled_obj2::StyledObj2,
     },
 };
 
@@ -109,7 +110,7 @@ trait Tile {
     fn slope(&self) -> f64;
 }
 
-pub fn make() -> Vec<StyledObj2> {
+pub fn make() -> Vec<(Obj2, Style)> {
     let origin = Pt2(0.1, 0.1);
 
     let sq2: f64 = 2.0_f64.sqrt();
@@ -139,7 +140,7 @@ pub fn make() -> Vec<StyledObj2> {
         all_tiles = next_layer;
     }
 
-    let dos: Vec<StyledObj2> = all_tiles
+    let dos: Vec<_> = all_tiles
         .into_iter()
         .flat_map(|tile| {
             let color = tile.color();
@@ -158,7 +159,7 @@ pub fn make() -> Vec<StyledObj2> {
             std::iter::empty().chain(
                 segments
                     .into_iter()
-                    .map(|s| StyledObj2::new(s).with_color(color)),
+                    .map(|s| (Obj2::Sg2(s), Style::builder().color(color).build())),
             )
         })
         .collect();

@@ -1,5 +1,7 @@
 // https://tilings.math.uni-bielefeld.de/substitution/danzers-7-fold-original/
 
+use plotz_geometry::{obj2::Obj2, style::Style};
+
 use {
     float_cmp::assert_approx_eq,
     lazy_static::lazy_static,
@@ -10,7 +12,6 @@ use {
             pg2::Pg2,
             pt2::{PolarPt, Pt2},
         },
-        styled_obj2::StyledObj2,
     },
     std::f64::consts::PI,
 };
@@ -187,7 +188,7 @@ fn expand_tile(tile: &Tile) -> Vec<Tile> {
     }
 }
 
-pub fn make() -> Vec<StyledObj2> {
+pub fn make() -> Vec<(Obj2, Style)> {
     let origin = Pt2(0.1, 0.1);
 
     let t0 = Tile(
@@ -247,7 +248,7 @@ pub fn make() -> Vec<StyledObj2> {
         }
     }
 
-    let dos: Vec<StyledObj2> = all_tiles
+    let dos: Vec<(Obj2, Style)> = all_tiles
         .into_iter()
         .flat_map(|tile| {
             let color = tile.kind.color();
@@ -261,12 +262,12 @@ pub fn make() -> Vec<StyledObj2> {
                 .build();
             let segments = shade_polygon(&config, &p).unwrap();
 
-            let mut ret = vec![];
-            ret.push(StyledObj2::new(p));
+            let mut ret: Vec<(Obj2, Style)> = vec![];
+            ret.push((Obj2::Pg2(p), Style::default()));
             ret.extend(
                 segments
                     .into_iter()
-                    .map(|s| StyledObj2::new(s).with_color(color)),
+                    .map(|s| (Obj2::Sg2(s), Style::builder().color(color).build())),
             );
 
             ret

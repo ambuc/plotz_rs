@@ -32,16 +32,12 @@ fn main() {
     let frame_polygon = frame.0.to_pg2().unwrap().clone();
 
     // drain things not in frame
-    dos.retain(|d_o| {
-        d_o.yield_pts()
+    dos.retain(|(obj2, _style)| {
+        obj2.yield_pts()
             .all(|pt| matches!(frame_polygon.contains_pt(pt), PointLoc::Inside))
     });
 
-    let objs = Canvas::from_objs(
-        dos.into_iter().map(|so2| (so2.inner, so2.style)),
-        /*autobucket=*/ false,
-    )
-    .with_frame(frame);
+    let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
 
     //objs.join_adjacent_segments();
 
