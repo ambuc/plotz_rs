@@ -35,10 +35,7 @@ fn main() {
         /*offset=*/ p2!(mgn, mgn),
     );
     {
-        let frame_polygon = match frame.inner {
-            Obj2::Pg2(ref pg) => pg.clone(),
-            _ => unimplemented!(),
-        };
+        let frame_polygon = frame.inner.to_pg2().unwrap();
 
         let frame_ctr = frame.inner.bbox_center();
 
