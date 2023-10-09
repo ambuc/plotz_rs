@@ -10,7 +10,6 @@ use {
     itertools::Itertools,
     plotz_geometry::{
         bounded::{streaming_bbox, Bounded, Bounds},
-        obj2::Obj2,
         shapes::pt2::Pt2,
         styled_obj2::StyledObj2,
         traits::*,
@@ -91,7 +90,9 @@ impl Canvas {
     }
 
     /// Returns an iterator of mutable Object2dInner.
-    pub fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut Obj2> {
+    pub fn objs_iter_mut(
+        &mut self,
+    ) -> impl Iterator<Item = &mut (impl Mutable + TranslatableAssign + ScalableAssign)> {
         self.dos_by_bucket
             .iter_mut()
             .flat_map(|(_bucket, dos)| dos)
