@@ -3,7 +3,6 @@ use {
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
-        p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             pg2::{multiline::Multiline, Pg2},
@@ -166,44 +165,44 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<StyledObj2> 
         let mut ret = vec![];
         ret.push({
             let mut pg: Pg2 = match cell {
-                Fill::Blue => Multiline([p2!(0.25, 0.0), p2!(0.5, 0.25), p2!(0.75, 0.0)]).unwrap(),
+                Fill::Blue => Multiline([Pt2(0.25, 0.0), Pt2(0.5, 0.25), Pt2(0.75, 0.0)]).unwrap(),
                 Fill::Green => Multiline([
-                    p2!(0.25, 0.0),
-                    p2!(0.25, 0.25),
-                    p2!(0.75, 0.25),
-                    p2!(0.75, 0.0),
+                    Pt2(0.25, 0.0),
+                    Pt2(0.25, 0.25),
+                    Pt2(0.75, 0.25),
+                    Pt2(0.75, 0.0),
                 ])
                 .unwrap(),
                 Fill::Red => Multiline([
-                    p2!(0.25, 0.0),
-                    p2!(5.0 / 16.0, 3.0 / 16.0),
-                    p2!(0.5, 0.25),
-                    p2!(11.0 / 16.0, 3.0 / 16.0),
-                    p2!(0.75, 0.0),
+                    Pt2(0.25, 0.0),
+                    Pt2(5.0 / 16.0, 3.0 / 16.0),
+                    Pt2(0.5, 0.25),
+                    Pt2(11.0 / 16.0, 3.0 / 16.0),
+                    Pt2(0.75, 0.0),
                 ])
                 .unwrap(),
                 Fill::White => Multiline([
-                    p2!(0.25, 0.0),
-                    p2!(7.0 / 16.0, 1.0 / 16.0),
-                    p2!(0.5, 0.25),
-                    p2!(9.0 / 16.0, 1.0 / 16.0),
-                    p2!(0.75, 0.0),
+                    Pt2(0.25, 0.0),
+                    Pt2(7.0 / 16.0, 1.0 / 16.0),
+                    Pt2(0.5, 0.25),
+                    Pt2(9.0 / 16.0, 1.0 / 16.0),
+                    Pt2(0.75, 0.0),
                 ])
                 .unwrap(),
             };
 
             pg *= 2.0;
-            pg.rotate(&p2!(1.0, 1.0), rot);
-            pg += p2!(2.0 * row_idx as f64, 2.0 * col_idx as f64);
+            pg.rotate(&Pt2(1.0, 1.0), rot);
+            pg += Pt2(2.0 * row_idx as f64, 2.0 * col_idx as f64);
 
             StyledObj2::new(pg).with_color([&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()])
         });
         ret.extend({
-            let mut pg: Pg2 = Pg2([p2!(0.1, 0.1), p2!(0.5, 0.5), p2!(0.9, 0.1)]);
+            let mut pg: Pg2 = Pg2([Pt2(0.1, 0.1), Pt2(0.5, 0.5), Pt2(0.9, 0.1)]);
 
             pg *= 2.0;
-            pg.rotate(&p2!(1.0, 1.0), rot);
-            pg += p2!(2.0 * row_idx as f64, 2.0 * col_idx as f64);
+            pg.rotate(&Pt2(1.0, 1.0), rot);
+            pg += Pt2(2.0 * row_idx as f64, 2.0 * col_idx as f64);
 
             shade_polygon(&ShadeConfig::builder().gap(0.05).slope(0.0).build(), &pg)
                 .unwrap()
@@ -250,14 +249,14 @@ fn main() {
     }
 
     let mut objs = Canvas::from_objs(obj_vec.into_iter(), /*autobucket=*/ false)
-        .with_frame(make_frame((image_width, image_width), p2!(margin, margin)));
+        .with_frame(make_frame((image_width, image_width), Pt2(margin, margin)));
 
     let scale = image_width / 2.0 / (grid_cardinality as f64);
 
     objs.dos_by_bucket.iter_mut().for_each(|(_bucket, layers)| {
         layers.iter_mut().for_each(|d_o| {
             *d_o *= scale;
-            *d_o += p2!(margin, margin);
+            *d_o += Pt2(margin, margin);
         });
     });
 

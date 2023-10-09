@@ -4,7 +4,6 @@ use plotz_color::*;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
     crop::Croppable,
-    p2,
     shapes::{curve::CurveArc, pg2::multiline::Multiline, pt2::Pt2, sg2::Sg2},
     styled_obj2::StyledObj2,
 };
@@ -41,7 +40,7 @@ fn main() {
 
     let frame: StyledObj2 = make_frame(
         (800.0 - 2.0 * mgn, 1000.0 - 2.0 * mgn),
-        /*offset=*/ p2!(mgn, mgn),
+        /*offset=*/ Pt2(mgn, mgn),
     );
 
     let mut arrows_store: Vec<Sg2> = vec![];

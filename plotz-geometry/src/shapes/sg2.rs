@@ -5,7 +5,6 @@ use crate::{
     interpolate,
     interpolate::interpolate_2d_checked,
     isxn::{Intersection, IsxnResult, MultipleIntersections},
-    p2,
     shapes::{pg2::Pg2, pt2::Pt2, ry2::Ry2},
     traits::*,
 };
@@ -166,7 +165,7 @@ impl Sg2 {
         if (0_f64..=1_f64).contains(&s) && (0_f64..=1_f64).contains(&t) {
             let i_x = p0_x + (t * s1_x);
             let i_y = p0_y + (t * s1_y);
-            return Some(p2!(i_x, i_y));
+            return Some(Pt2(i_x, i_y));
         }
         None
     }
@@ -420,15 +419,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = p2!(0.0, 2.0);
-        let b = p2!(1.0, 2.0);
-        let c = p2!(2.0, 2.0);
-        let d = p2!(0.0, 1.0);
-        let e = p2!(1.0, 1.0);
-        let f = p2!(2.0, 1.0);
-        let g = p2!(0.0, 0.0);
-        let h = p2!(1.0, 0.0);
-        let i = p2!(2.0, 0.0);
+        let a = Pt2(0.0, 2.0);
+        let b = Pt2(1.0, 2.0);
+        let c = Pt2(2.0, 2.0);
+        let d = Pt2(0.0, 1.0);
+        let e = Pt2(1.0, 1.0);
+        let f = Pt2(2.0, 1.0);
+        let g = Pt2(0.0, 0.0);
+        let h = Pt2(1.0, 0.0);
+        let i = Pt2(2.0, 0.0);
 
         // m=0
         assert_eq!(Sg2(g, h).slope(), 0.0);
@@ -478,7 +477,7 @@ mod tests {
         use float_eq::assert_float_eq;
         use std::f64::consts::PI;
 
-        let origin = p2!(0.0, 0.0);
+        let origin = Pt2(0.0, 0.0);
 
         //      ^
         //      |
@@ -487,7 +486,7 @@ mod tests {
         //      |
         //      |
         //      v
-        let mut s = Sg2(p2!(1.0, 0.0), p2!(1.0, 0.5));
+        let mut s = Sg2(Pt2(1.0, 0.0), Pt2(1.0, 0.5));
 
         s.rotate(/*about=*/ &origin, PI / 2.0);
         //      ^
@@ -544,8 +543,8 @@ mod tests {
 
     #[test]
     fn test_equality() {
-        let a = p2!(0.0, 2.0);
-        let b = p2!(1.0, 2.0);
+        let a = Pt2(0.0, 2.0);
+        let b = Pt2(1.0, 2.0);
         assert!(Sg2(a, b) == Sg2(a, b));
         assert!(Sg2(a, b) != Sg2(b, a));
     }
@@ -560,12 +559,12 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = p2!(0.0, 2.0);
-        let b = p2!(1.0, 2.0);
-        let c = p2!(2.0, 2.0);
-        let e = p2!(1.0, 1.0);
-        let g = p2!(0.0, 0.0);
-        let i = p2!(2.0, 0.0);
+        let a = Pt2(0.0, 2.0);
+        let b = Pt2(1.0, 2.0);
+        let c = Pt2(2.0, 2.0);
+        let e = Pt2(1.0, 1.0);
+        let g = Pt2(0.0, 0.0);
+        let i = Pt2(2.0, 0.0);
 
         // colinear
         assert_eq!(
@@ -669,11 +668,11 @@ mod tests {
 
     #[test]
     fn test_abs() {
-        assert_eq!(Sg2(p2!(0.0, 0.0), p2!(0.0, 1.0)).abs(), 1.0);
-        assert_eq!(Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0)).abs(), 2.0_f64.sqrt());
-        assert_eq!(Sg2(p2!(1.0, 1.0), p2!(1.0, 1.0)).abs(), 0.0);
+        assert_eq!(Sg2(Pt2(0.0, 0.0), Pt2(0.0, 1.0)).abs(), 1.0);
+        assert_eq!(Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0)).abs(), 2.0_f64.sqrt());
+        assert_eq!(Sg2(Pt2(1.0, 1.0), Pt2(1.0, 1.0)).abs(), 0.0);
         assert_eq!(
-            Sg2(p2!(-1.0, -1.0), p2!(1.0, 1.0)).abs(),
+            Sg2(Pt2(-1.0, -1.0), Pt2(1.0, 1.0)).abs(),
             2.0 * 2.0_f64.sqrt()
         );
     }
@@ -688,8 +687,8 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = p2!(0.0, 2.0);
-        let c = p2!(2.0, 2.0);
+        let a = Pt2(0.0, 2.0);
+        let c = Pt2(2.0, 2.0);
 
         assert_eq!(
             Sg2(a, c).line_segment_contains_pt(&a).unwrap(),
@@ -700,84 +699,84 @@ mod tests {
     fn test_segment() {
         assert_eq!(
             Sg2 {
-                i: p2!(0, 0),
-                f: p2!(0, 1)
+                i: Pt2(0, 0),
+                f: Pt2(0, 1)
             },
-            Sg2(p2!(0, 0), p2!(0, 1))
+            Sg2(Pt2(0, 0), Pt2(0, 1))
         );
     }
 
     #[test]
     fn test_add() {
         assert_eq!(
-            Sg2(p2!(0, 0), p2!(1, 1)) + p2!(1, 0),
-            Sg2(p2!(1, 0), p2!(2, 1))
+            Sg2(Pt2(0, 0), Pt2(1, 1)) + Pt2(1, 0),
+            Sg2(Pt2(1, 0), Pt2(2, 1))
         );
     }
 
     #[test]
     fn test_add_assign() {
-        let mut s = Sg2(p2!(0, 0), p2!(1, 1));
-        s += p2!(1, 0);
-        assert_eq!(s, Sg2(p2!(1, 0), p2!(2, 1)));
+        let mut s = Sg2(Pt2(0, 0), Pt2(1, 1));
+        s += Pt2(1, 0);
+        assert_eq!(s, Sg2(Pt2(1, 0), Pt2(2, 1)));
     }
 
     #[test]
     fn test_div() {
         assert_eq!(
-            Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0)) / 2.0,
-            Sg2(p2!(0.0, 0.0), p2!(0.5, 0.5))
+            Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0)) / 2.0,
+            Sg2(Pt2(0.0, 0.0), Pt2(0.5, 0.5))
         );
     }
 
     #[test]
     fn test_div_assign() {
-        let mut s = Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0));
+        let mut s = Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0));
         s /= 2.0;
-        assert_eq!(s, Sg2(p2!(0.0, 0.0), p2!(0.5, 0.5)));
+        assert_eq!(s, Sg2(Pt2(0.0, 0.0), Pt2(0.5, 0.5)));
     }
 
     #[test]
     fn test_mul() {
         assert_eq!(
-            Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0)) * 2.0,
-            Sg2(p2!(0.0, 0.0), p2!(2.0, 2.0))
+            Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0)) * 2.0,
+            Sg2(Pt2(0.0, 0.0), Pt2(2.0, 2.0))
         );
     }
 
     #[test]
     fn test_mul_assign() {
-        let mut s = Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0));
+        let mut s = Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0));
         s *= 2.0;
-        assert_eq!(s, Sg2(p2!(0.0, 0.0), p2!(2.0, 2.0)));
+        assert_eq!(s, Sg2(Pt2(0.0, 0.0), Pt2(2.0, 2.0)));
     }
 
     #[test]
     fn test_sub() {
         assert_eq!(
-            Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0)) - p2!(1.0, 2.0),
+            Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0)) - Pt2(1.0, 2.0),
             // --------
-            Sg2(p2!(-1.0, -2.0), p2!(0.0, -1.0))
+            Sg2(Pt2(-1.0, -2.0), Pt2(0.0, -1.0))
         );
     }
 
     #[test]
     fn test_sub_assign() {
-        let mut s = Sg2(p2!(0.0, 0.0), p2!(1.0, 1.0));
-        s -= p2!(1.0, 2.0);
-        assert_eq!(s, Sg2(p2!(-1.0, -2.0), p2!(0.0, -1.0)));
+        let mut s = Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0));
+        s -= Pt2(1.0, 2.0);
+        assert_eq!(s, Sg2(Pt2(-1.0, -2.0), Pt2(0.0, -1.0)));
     }
 
     #[test]
     fn test_bounded_segment() {
-        let s = Sg2(p2!(0, 1), p2!(1, 2));
+        let s = Sg2(Pt2(0, 1), Pt2(1, 2));
         assert_eq!(s.bottom_bound(), 1.0);
         assert_eq!(s.top_bound(), 2.0);
         assert_eq!(s.left_bound(), 0.0);
         assert_eq!(s.right_bound(), 1.0);
-        assert_eq!(s.bl_bound(), p2!(0, 1));
-        assert_eq!(s.tl_bound(), p2!(0, 2));
-        assert_eq!(s.br_bound(), p2!(1, 1));
-        assert_eq!(s.tr_bound(), p2!(1, 2));
+        assert_eq!(s.bl_bound(), Pt2(0, 1));
+        assert_eq!(s.tl_bound(), Pt2(0, 2));
+        assert_eq!(s.br_bound(), Pt2(1, 1));
+        assert_eq!(s.tr_bound(), Pt2(1, 2));
     }
 }

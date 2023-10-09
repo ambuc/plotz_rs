@@ -4,7 +4,6 @@ use {
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
     plotz_geometry::{
         obj2::Obj2,
-        p2,
         shapes::{curve::CurveArc, pt2::Pt2, sg2::Sg2},
         styled_obj2::StyledObj2,
     },
@@ -53,31 +52,31 @@ impl Tile {
 
     // scaled to a unit square.
     fn to_dois(&self) -> Vec<Obj2> {
-        let _a = p2!(0.0, 0.0);
-        let _b = p2!(0.25, 0.0);
-        let c = p2!(0.5, 0.0);
-        let _d = p2!(0.75, 0.0);
-        let _e = p2!(1.0, 0.0);
-        let _f = p2!(0.0, 0.25);
-        let g = p2!(0.25, 0.25);
-        let h = p2!(0.5, 0.25);
-        let i = p2!(0.75, 0.25);
-        let _j = p2!(1.0, 0.25);
-        let k = p2!(0.0, 0.5);
-        let l = p2!(0.25, 0.5);
-        let _m = p2!(0.5, 0.5);
-        let n = p2!(0.75, 0.5);
-        let o = p2!(1.0, 0.5);
-        let _p = p2!(0.0, 0.75);
-        let q = p2!(0.25, 0.75);
-        let r = p2!(0.5, 0.75);
-        let s = p2!(0.75, 0.75);
-        let _t = p2!(1.0, 0.75);
-        let _u = p2!(0.0, 1.0);
-        let _v = p2!(0.25, 1.0);
-        let w = p2!(0.5, 1.0);
-        let _x = p2!(0.75, 1.0);
-        let _y = p2!(1.0, 1.0);
+        let _a = Pt2(0.0, 0.0);
+        let _b = Pt2(0.25, 0.0);
+        let c = Pt2(0.5, 0.0);
+        let _d = Pt2(0.75, 0.0);
+        let _e = Pt2(1.0, 0.0);
+        let _f = Pt2(0.0, 0.25);
+        let g = Pt2(0.25, 0.25);
+        let h = Pt2(0.5, 0.25);
+        let i = Pt2(0.75, 0.25);
+        let _j = Pt2(1.0, 0.25);
+        let k = Pt2(0.0, 0.5);
+        let l = Pt2(0.25, 0.5);
+        let _m = Pt2(0.5, 0.5);
+        let n = Pt2(0.75, 0.5);
+        let o = Pt2(1.0, 0.5);
+        let _p = Pt2(0.0, 0.75);
+        let q = Pt2(0.25, 0.75);
+        let r = Pt2(0.5, 0.75);
+        let s = Pt2(0.75, 0.75);
+        let _t = Pt2(1.0, 0.75);
+        let _u = Pt2(0.0, 1.0);
+        let _v = Pt2(0.25, 1.0);
+        let w = Pt2(0.5, 1.0);
+        let _x = Pt2(0.75, 1.0);
+        let _y = Pt2(1.0, 1.0);
         match self {
             Tile::Cross => {
                 vec![Sg2(k, o).into(), Sg2(c, w).into()]
@@ -155,12 +154,12 @@ fn main() {
     for dx in 0..=width {
         for dy in 0..=height {
             let tile: Tile = rand::random();
-            obj_vec.extend(tile.to_dos().into_iter().map(|d_o| d_o + p2!(dx, dy)));
+            obj_vec.extend(tile.to_dos().into_iter().map(|d_o| d_o + Pt2(dx, dy)));
         }
     }
 
     Canvas::from_objs(obj_vec.into_iter(), /*autobucket=*/ false)
-        .with_frame(make_frame((image_width, image_width), p2!(margin, margin)))
+        .with_frame(make_frame((image_width, image_width), Pt2(margin, margin)))
         .scale_to_fit_frame_or_die()
         .write_to_svg_or_die(
             Size {

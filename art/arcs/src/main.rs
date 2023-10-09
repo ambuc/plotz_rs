@@ -6,7 +6,6 @@ use {
         bounded::Bounded,
         crop::Croppable,
         grid::Grid,
-        p2,
         shapes::{curve::CurveArcs, pt2::Pt2},
         styled_obj2::StyledObj2,
     },
@@ -31,7 +30,7 @@ fn main() {
 
     let frame: StyledObj2 = make_frame(
         (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
-        /*offset=*/ p2!(mgn, mgn),
+        /*offset=*/ Pt2(mgn, mgn),
     );
     {
         let frame_polygon = frame.inner.to_pg2().unwrap();

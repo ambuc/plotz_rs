@@ -5,7 +5,6 @@ use {
     plotz_geometry::{
         group::Group,
         interpolate::extrapolate_2d as extrapolate,
-        p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{
             pg2::Pg2,
@@ -238,15 +237,15 @@ pub fn make() -> Vec<StyledObj2> {
     let ell: f64 = (5.0_f64.sqrt() - 1.0) / 2.0;
 
     let t1 = {
-        let a = p2!(0.0, 0.0);
+        let a = Pt2(0.0, 0.0);
         let b = a + PolarPt(ell, -1.0 * PI / 10.0);
-        let c = p2!(0.0, -1.0);
+        let c = Pt2(0.0, -1.0);
         let d = a + PolarPt(ell, 11.0 * PI / 10.0);
         T1([a, b, c, d])
     };
 
     let _t2 = {
-        let a = p2!(0.0, 0.0);
+        let a = Pt2(0.0, 0.0);
         let b = a + PolarPt(ell, -3.0 * PI / 10.0);
         let c = a + PolarPt(1.0, 15.0 * PI / 10.0);
         let d = a + PolarPt(ell, 13.0 * PI / 10.0);
@@ -254,10 +253,10 @@ pub fn make() -> Vec<StyledObj2> {
     };
 
     let _t3 = {
-        let a = p2!(0.0, 0.0);
-        let b = a + p2!(ell, 0.0);
+        let a = Pt2(0.0, 0.0);
+        let b = a + Pt2(ell, 0.0);
         let c = b + PolarPt(ell, 16.0 * PI / 10.0);
-        let d = c - p2!(1.0, 0.0);
+        let d = c - Pt2(1.0, 0.0);
         let mut t = T3([a, b, c, d]);
         t.pts_iter_mut()
             .for_each(|pt| pt.rotate_inplace(&a, -1.0 * 3.0 * PI / 10.0));
@@ -265,10 +264,10 @@ pub fn make() -> Vec<StyledObj2> {
     };
 
     let _t4 = {
-        let a = p2!(0.0, 0.0);
-        let b = a - p2!(ell, 0.0);
+        let a = Pt2(0.0, 0.0);
+        let b = a - Pt2(ell, 0.0);
         let c = b + PolarPt(ell, 14.0 * PI / 10.0);
-        let d = c + p2!(1.0, 0.0);
+        let d = c + Pt2(1.0, 0.0);
         let mut t = T4([a, b, c, d]);
         t.pts_iter_mut()
             .for_each(|pt| pt.rotate_inplace(&a, 1.0 * 3.0 * PI / 10.0));
@@ -290,9 +289,9 @@ pub fn make() -> Vec<StyledObj2> {
         .flat_map(|tile| {
             let color = tile.color();
             let mut p = Pg2(tile.pts());
-            p *= p2!(1.0, -1.0); // flip
+            p *= Pt2(1.0, -1.0); // flip
             p *= 3500.0;
-            p += p2!(95.0, -300.0); // translate
+            p += Pt2(95.0, -300.0); // translate
 
             let config = ShadeConfig::builder()
                 .gap(1.5)

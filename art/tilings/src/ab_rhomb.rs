@@ -3,7 +3,6 @@
 use {
     plotz_color::*,
     plotz_geometry::{
-        p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{pg2::Pg2, pt2::Pt2},
         styled_obj2::StyledObj2,
@@ -111,23 +110,23 @@ trait Tile {
 }
 
 pub fn make() -> Vec<StyledObj2> {
-    let origin = p2!(0.1, 0.1);
+    let origin = Pt2(0.1, 0.1);
 
     let sq2: f64 = 2.0_f64.sqrt();
     let ell = 1.0;
     let x: f64 = ell / sq2;
 
-    let _t1 = T1([origin, origin + p2!(ell, ell), origin + p2!(2.0 * ell, 0.0)]);
+    let _t1 = T1([origin, origin + Pt2(ell, ell), origin + Pt2(2.0 * ell, 0.0)]);
     let _t2 = T2([
         origin,
-        origin + p2!(ell, -1.0 * ell),
-        origin + p2!(2.0 * ell, 0.0),
+        origin + Pt2(ell, -1.0 * ell),
+        origin + Pt2(2.0 * ell, 0.0),
     ]);
     let t3 = T3([
         origin,
-        origin + p2!(ell, 0.0),
-        origin + p2!(ell + x, -x),
-        origin + p2!(x, -x),
+        origin + Pt2(ell, 0.0),
+        origin + Pt2(ell + x, -x),
+        origin + Pt2(x, -x),
     ]);
 
     let mut all_tiles: Vec<Box<dyn Tile>> = vec![Box::new(t3)];
@@ -145,9 +144,9 @@ pub fn make() -> Vec<StyledObj2> {
         .flat_map(|tile| {
             let color = tile.color();
             let mut p = Pg2(tile.pts());
-            p *= p2!(1.0, -1.0); // flip
+            p *= Pt2(1.0, -1.0); // flip
             p *= 530.0;
-            p += p2!(-17.0, 240.0); // translate
+            p += Pt2(-17.0, 240.0); // translate
 
             let config = ShadeConfig::builder()
                 .gap(1.5)

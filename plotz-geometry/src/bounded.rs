@@ -1,7 +1,6 @@
 //! A trait representing the bounds and bounding box for an object.
 use crate::{
     crop::PointLoc,
-    p2,
     shapes::{
         pg2::{Pg2, PolygonConstructorError},
         pt2::Pt2,
@@ -89,26 +88,26 @@ pub trait Bounded {
     }
     /// The point at the top-left corner of an object's bounding box.
     fn tl_bound(&self) -> Pt2 {
-        p2!(self.left_bound(), self.top_bound())
+        Pt2(self.left_bound(), self.top_bound())
     }
     /// The point at the top-right corner of an object's bounding box.
     fn tr_bound(&self) -> Pt2 {
-        p2!(self.right_bound(), self.top_bound())
+        Pt2(self.right_bound(), self.top_bound())
     }
     /// The point at the bottom-left corner of an object's bounding box.
     fn bl_bound(&self) -> Pt2 {
-        p2!(self.left_bound(), self.bottom_bound())
+        Pt2(self.left_bound(), self.bottom_bound())
     }
     /// The point at the bottom-right corner of an object's bounding box.
     fn br_bound(&self) -> Pt2 {
-        p2!(self.right_bound(), self.bottom_bound())
+        Pt2(self.right_bound(), self.bottom_bound())
     }
 
     /// The center of the bounding box of an object.
     fn bbox_center(&self) -> Pt2 {
-        p2!(
+        Pt2(
             self.left_bound() + (self.width() / 2.0),
-            self.top_bound() + (self.height() / 2.0)
+            self.top_bound() + (self.height() / 2.0),
         )
     }
 
@@ -200,22 +199,19 @@ pub fn streaming_bbox<'a>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use crate::{
-        p2,
-        shapes::{pg2::Pg2, pt2::Pt2},
-    };
+    use crate::shapes::{pg2::Pg2, pt2::Pt2};
 
     #[test]
     fn test_streaming_bbox() {
         let polygons = vec![
-            Pg2([p2!(0, 0), p2!(1, 0), p2!(1, 1)]),
-            Pg2([p2!(2, 0), p2!(3, 0), p2!(3, 1)]),
-            Pg2([p2!(0, 2), p2!(1, 2), p2!(1, 3)]),
+            Pg2([Pt2(0, 0), Pt2(1, 0), Pt2(1, 1)]),
+            Pg2([Pt2(2, 0), Pt2(3, 0), Pt2(3, 1)]),
+            Pg2([Pt2(0, 2), Pt2(1, 2), Pt2(1, 3)]),
         ];
         let bounds = streaming_bbox(&polygons).unwrap();
-        assert_eq!(bounds.bl_bound(), p2!(0, 0));
-        assert_eq!(bounds.tl_bound(), p2!(0, 3));
-        assert_eq!(bounds.tr_bound(), p2!(3, 3));
-        assert_eq!(bounds.br_bound(), p2!(3, 0));
+        assert_eq!(bounds.bl_bound(), Pt2(0, 0));
+        assert_eq!(bounds.tl_bound(), Pt2(0, 3));
+        assert_eq!(bounds.tr_bound(), Pt2(3, 3));
+        assert_eq!(bounds.br_bound(), Pt2(3, 0));
     }
 }

@@ -9,7 +9,6 @@ use {
     },
     plotz_geometry::{
         obj2::Obj2,
-        p2,
         shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
         styled_obj2::StyledObj2,
     },
@@ -35,9 +34,9 @@ impl Default for Oblique {
             u_src: p3!(1, 0, 0),
             v_src: p3!(0, 1, 0),
             w_src: p3!(0, 0, 1),
-            u_dst: p2!(-1.0, spread),
-            v_dst: p2!(1.0, spread),
-            w_dst: p2!(0.0, -1.0),
+            u_dst: Pt2(-1.0, spread),
+            v_dst: Pt2(1.0, spread),
+            w_dst: Pt2(0.0, -1.0),
         }
     }
 }

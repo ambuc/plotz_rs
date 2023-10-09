@@ -11,7 +11,6 @@ use {
         crop::CropType,
         crop::{CropToPolygonError, Croppable, PointLoc},
         isxn::IsxnResult,
-        p2,
         shapes::{
             pt2::Pt2,
             sg2::{Contains, Sg2},
@@ -139,7 +138,7 @@ pub fn Pg2(a: impl IntoIterator<Item = Pt2>) -> Pg2 {
 /// Convenience constructor for rectangles.
 #[allow(non_snake_case)]
 pub fn Rect(tl: Pt2, (w, h): (f64, f64)) -> Result<Pg2, PolygonConstructorError> {
-    TryPolygon([tl, tl + p2!(w, 0.0), tl + p2!(w, h), tl + p2!(0.0, h)])
+    TryPolygon([tl, tl + Pt2(w, 0.0), tl + Pt2(w, h), tl + Pt2(0.0, h)])
 }
 
 /// Whether a curve is positively or negatively oriented (whether its points are
@@ -310,7 +309,7 @@ impl Pg2 {
         let num: f64 = self.pts.len() as f64;
         let sum_x: f64 = self.pts.iter().map(|pt| pt.x.0).sum();
         let sum_y: f64 = self.pts.iter().map(|pt| pt.y.0).sum();
-        p2!(sum_x / num, sum_y / num)
+        Pt2(sum_x / num, sum_y / num)
     }
 
     // check that this and the other are both closed and positively oriented.
@@ -585,27 +584,27 @@ mod tests {
     #[test]
     fn test_multiline_to_segments() {
         assert_eq!(
-            Multiline([p2!(0, 0)]).unwrap_err(),
+            Multiline([Pt2(0, 0)]).unwrap_err(),
             MultilineConstructorError::OneOrFewerPoints
         );
         assert_eq!(
-            Multiline([p2!(0, 0), p2!(0, 1)]).unwrap().to_segments(),
-            [Sg2(p2!(0, 0), p2!(0, 1)),]
+            Multiline([Pt2(0, 0), Pt2(0, 1)]).unwrap().to_segments(),
+            [Sg2(Pt2(0, 0), Pt2(0, 1)),]
         );
         assert_eq!(
-            Multiline([p2!(0, 0), p2!(0, 1), p2!(0, 2)])
+            Multiline([Pt2(0, 0), Pt2(0, 1), Pt2(0, 2)])
                 .unwrap()
                 .to_segments(),
-            [Sg2(p2!(0, 0), p2!(0, 1)), Sg2(p2!(0, 1), p2!(0, 2)),]
+            [Sg2(Pt2(0, 0), Pt2(0, 1)), Sg2(Pt2(0, 1), Pt2(0, 2)),]
         );
         assert_eq!(
-            Multiline([p2!(0, 0), p2!(0, 1), p2!(0, 2), p2!(0, 3)])
+            Multiline([Pt2(0, 0), Pt2(0, 1), Pt2(0, 2), Pt2(0, 3)])
                 .unwrap()
                 .to_segments(),
             [
-                Sg2(p2!(0, 0), p2!(0, 1)),
-                Sg2(p2!(0, 1), p2!(0, 2)),
-                Sg2(p2!(0, 2), p2!(0, 3)),
+                Sg2(Pt2(0, 0), Pt2(0, 1)),
+                Sg2(Pt2(0, 1), Pt2(0, 2)),
+                Sg2(Pt2(0, 2), Pt2(0, 3)),
             ]
         );
     }
@@ -613,26 +612,26 @@ mod tests {
     #[test]
     fn test_polygon_to_segments() {
         assert_eq!(
-            TryPolygon([p2!(0, 0), p2!(0, 1)]).unwrap_err(),
+            TryPolygon([Pt2(0, 0), Pt2(0, 1)]).unwrap_err(),
             PolygonConstructorError::TwoOrFewerPoints,
         );
 
         assert_eq!(
-            Pg2([p2!(0, 0), p2!(0, 1), p2!(0, 2)]).to_segments(),
+            Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(0, 2)]).to_segments(),
             [
-                Sg2(p2!(0, 0), p2!(0, 1)),
-                Sg2(p2!(0, 1), p2!(0, 2)),
-                Sg2(p2!(0, 2), p2!(0, 0)),
+                Sg2(Pt2(0, 0), Pt2(0, 1)),
+                Sg2(Pt2(0, 1), Pt2(0, 2)),
+                Sg2(Pt2(0, 2), Pt2(0, 0)),
             ]
         );
 
         assert_eq!(
-            Pg2([p2!(0, 0), p2!(0, 1), p2!(0, 2), p2!(0, 3)]).to_segments(),
+            Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(0, 2), Pt2(0, 3)]).to_segments(),
             [
-                Sg2(p2!(0, 0), p2!(0, 1)),
-                Sg2(p2!(0, 1), p2!(0, 2)),
-                Sg2(p2!(0, 2), p2!(0, 3)),
-                Sg2(p2!(0, 3), p2!(0, 0)),
+                Sg2(Pt2(0, 0), Pt2(0, 1)),
+                Sg2(Pt2(0, 1), Pt2(0, 2)),
+                Sg2(Pt2(0, 2), Pt2(0, 3)),
+                Sg2(Pt2(0, 3), Pt2(0, 0)),
             ]
         );
     }
@@ -647,15 +646,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = p2!(0, 2);
-        let b = p2!(1, 2);
-        let c = p2!(2, 2);
-        let d = p2!(0, 1);
-        let e = p2!(1, 1);
-        let f = p2!(2, 1);
-        let g = p2!(0, 0);
-        let h = p2!(1, 0);
-        let i = p2!(2, 0);
+        let a = Pt2(0, 2);
+        let b = Pt2(1, 2);
+        let c = Pt2(2, 2);
+        let d = Pt2(0, 1);
+        let e = Pt2(1, 1);
+        let f = Pt2(2, 1);
+        let g = Pt2(0, 0);
+        let h = Pt2(1, 0);
+        let i = Pt2(2, 0);
 
         // Positive area intersection.
         assert!(Pg2([a, c, i, g]).intersects(&Pg2([b, f, h, d])));
@@ -682,15 +681,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = p2!(0, 2);
-        let b = p2!(1, 2);
-        let c = p2!(2, 2);
-        let d = p2!(0, 1);
-        let e = p2!(1, 1);
-        let f = p2!(2, 1);
-        let g = p2!(0, 0);
-        let h = p2!(1, 0);
-        let i = p2!(2, 0);
+        let a = Pt2(0, 2);
+        let b = Pt2(1, 2);
+        let c = Pt2(2, 2);
+        let d = Pt2(0, 1);
+        let e = Pt2(1, 1);
+        let f = Pt2(2, 1);
+        let g = Pt2(0, 0);
+        let h = Pt2(1, 0);
+        let i = Pt2(2, 0);
 
         // circle around E. (quadrants 1, 2, 3, 4)
         assert_float_eq!(abp(&e, &f, &b), PI / 2.0, ulps <= 10);
@@ -745,15 +744,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = p2!(0, 2);
-        let b = p2!(1, 2);
-        let c = p2!(2, 2);
-        let d = p2!(0, 1);
-        let e = p2!(1, 1);
-        let f = p2!(2, 1);
-        let g = p2!(0, 0);
-        let h = p2!(1, 0);
-        let i = p2!(2, 0);
+        let a = Pt2(0, 2);
+        let b = Pt2(1, 2);
+        let c = Pt2(2, 2);
+        let d = Pt2(0, 1);
+        let e = Pt2(1, 1);
+        let f = Pt2(2, 1);
+        let g = Pt2(0, 0);
+        let h = Pt2(1, 0);
+        let i = Pt2(2, 0);
 
         // frame [a,c,i,g] should contain a, b, c, d, e, f, g, h, and i.
         let frame1 = Pg2([a, c, i, g]);
@@ -795,31 +794,31 @@ mod tests {
     #[test]
     fn test_contains_pt_regression() {
         let frame = Pg2([
-            p2!(228.17, 202.35),
-            p2!(231.21, 212.64),
-            p2!(232.45, 228.76),
-            p2!(231.67, 257.09),
-            p2!(230.63, 265.17),
-            p2!(263.66, 335.37),
-            p2!(261.85, 336.27),
-            p2!(295.65, 404.87),
-            p2!(298.24, 409.14),
-            p2!(302.39, 413.67),
-            p2!(305.92, 412.20),
-            p2!(309.33, 417.90),
-            p2!(311.03, 417.06),
-            p2!(312.99, 420.06),
-            p2!(318.55, 420.99),
-            p2!(322.66, 420.45),
-            p2!(325.57, 419.13),
-            p2!(343.70, 406.83),
-            p2!(336.17, 404.87),
-            p2!(230.61, 185.93),
-            p2!(228.83, 189.47),
-            p2!(227.19, 195.84),
-            p2!(228.17, 202.35),
+            Pt2(228.17, 202.35),
+            Pt2(231.21, 212.64),
+            Pt2(232.45, 228.76),
+            Pt2(231.67, 257.09),
+            Pt2(230.63, 265.17),
+            Pt2(263.66, 335.37),
+            Pt2(261.85, 336.27),
+            Pt2(295.65, 404.87),
+            Pt2(298.24, 409.14),
+            Pt2(302.39, 413.67),
+            Pt2(305.92, 412.20),
+            Pt2(309.33, 417.90),
+            Pt2(311.03, 417.06),
+            Pt2(312.99, 420.06),
+            Pt2(318.55, 420.99),
+            Pt2(322.66, 420.45),
+            Pt2(325.57, 419.13),
+            Pt2(343.70, 406.83),
+            Pt2(336.17, 404.87),
+            Pt2(230.61, 185.93),
+            Pt2(228.83, 189.47),
+            Pt2(227.19, 195.84),
+            Pt2(228.17, 202.35),
         ]);
-        let suspicious_pt = p2!(228, 400);
+        let suspicious_pt = Pt2(228, 400);
         assert_eq!(frame.contains_pt(&suspicious_pt), PointLoc::Outside);
     }
 
@@ -827,17 +826,17 @@ mod tests {
     #[should_panic]
 
     fn test_crop_to_polygon_this_not_closed() {
-        let _ = Multiline([p2!(1, 1), p2!(3, 1), p2!(3, 3), p2!(1, 3)])
+        let _ = Multiline([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)])
             .unwrap()
-            .crop_to(&Rect(p2!(0., 0.), (4., 4.)).unwrap());
+            .crop_to(&Rect(Pt2(0., 0.), (4., 4.)).unwrap());
     }
 
     #[test]
     #[should_panic]
     fn test_crop_to_polygon_that_not_closed() {
-        let _ = Rect(p2!(1., 1.), (2., 2.))
+        let _ = Rect(Pt2(1., 1.), (2., 2.))
             .unwrap()
-            .crop_to(&Multiline([p2!(0, 0), p2!(4, 0), p2!(4, 4), p2!(0, 4)]).unwrap());
+            .crop_to(&Multiline([Pt2(0, 0), Pt2(4, 0), Pt2(4, 4), Pt2(0, 4)]).unwrap());
     }
 
     #[test]
@@ -848,8 +847,8 @@ mod tests {
         // ⬜🟧🟧🟧⬜
         // ⬜🟧🟧🟧⬜
         // ⬜⬜⬜⬜⬜ ➡️ x
-        let inner = Pg2([p2!(1, 1), p2!(3, 1), p2!(3, 3), p2!(1, 3)]); // 🟥
-        let frame = Pg2([p2!(1, 1), p2!(3, 1), p2!(3, 3), p2!(1, 3)]); // 🟨
+        let inner = Pg2([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)]); // 🟥
+        let frame = Pg2([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)]); // 🟨
         assert_eq!(inner, frame);
         let crops = inner.crop_to(&frame); // 🟧
         assert_eq!(crops, vec![inner]);
@@ -863,8 +862,8 @@ mod tests {
         // 🟨🟧🟧🟧⬜
         // 🟨🟧🟧🟧⬜
         // 🟨🟨🟨🟨⬜ ➡️ x
-        let inner = Pg2([p2!(1, 1), p2!(3, 1), p2!(3, 3), p2!(1, 3)]); // 🟥
-        let frame = Pg2([p2!(0, 0), p2!(3, 0), p2!(3, 3), p2!(0, 3)]); // 🟨
+        let inner = Pg2([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)]); // 🟥
+        let frame = Pg2([Pt2(0, 0), Pt2(3, 0), Pt2(3, 3), Pt2(0, 3)]); // 🟨
         assert_eq!(inner.crop_to(&frame)[0], inner);
 
         // ⬆️ y
@@ -873,7 +872,7 @@ mod tests {
         // ⬜🟧🟧🟧🟨
         // ⬜🟧🟧🟧🟨
         // ⬜🟨🟨🟨🟨 ➡️ x
-        assert_eq!(inner.crop_to(&(&frame + p2!(1, 0)))[0], inner,);
+        assert_eq!(inner.crop_to(&(&frame + Pt2(1, 0)))[0], inner,);
 
         // ⬆️ y
         // 🟨🟨🟨🟨⬜
@@ -881,7 +880,7 @@ mod tests {
         // 🟨🟧🟧🟧⬜
         // 🟨🟧🟧🟧⬜
         // ⬜⬜⬜⬜⬜ ➡ x
-        assert_eq!(inner.crop_to(&(&frame + p2!(0, 1)))[0], inner);
+        assert_eq!(inner.crop_to(&(&frame + Pt2(0, 1)))[0], inner);
 
         // ⬆️ y
         // ⬜🟨🟨🟨🟨
@@ -889,7 +888,7 @@ mod tests {
         // ⬜🟧🟧🟧🟨
         // ⬜🟧🟧🟧🟨
         // ⬜⬜⬜⬜⬜ ➡ x
-        assert_eq!(inner.crop_to(&(&frame + p2!(1, 1)))[0], inner,);
+        assert_eq!(inner.crop_to(&(&frame + Pt2(1, 1)))[0], inner,);
     }
 
     #[test]
@@ -900,8 +899,8 @@ mod tests {
         // 🟨🟧🟧🟧🟨
         // 🟨🟧🟧🟧🟨
         // 🟨🟨🟨🟨🟨 ➡️ x
-        let inner = Pg2([p2!(1, 1), p2!(3, 1), p2!(3, 3), p2!(1, 3)]); // 🟥
-        let frame = Pg2([p2!(0, 0), p2!(4, 0), p2!(4, 4), p2!(0, 4)]); // 🟨
+        let inner = Pg2([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)]); // 🟥
+        let frame = Pg2([Pt2(0, 0), Pt2(4, 0), Pt2(4, 4), Pt2(0, 4)]); // 🟨
 
         // inner /\ frame == inner
         let crops = inner.crop_to(&frame); // 🟧
@@ -916,9 +915,9 @@ mod tests {
         // 🟨🟧🟧🟥⬜
         // 🟨🟧🟧🟥⬜
         // 🟨🟨🟨⬜⬜ ➡️ x
-        let inner = Pg2([p2!(1, 1), p2!(4, 1), p2!(4, 4), p2!(1, 4)]); // 🟥
-        let frame = Pg2([p2!(0, 0), p2!(3, 0), p2!(3, 3), p2!(0, 3)]); // 🟨
-        let expected = Pg2([p2!(1, 1), p2!(3, 1), p2!(3, 3), p2!(1, 3)]); // 🟧
+        let inner = Pg2([Pt2(1, 1), Pt2(4, 1), Pt2(4, 4), Pt2(1, 4)]); // 🟥
+        let frame = Pg2([Pt2(0, 0), Pt2(3, 0), Pt2(3, 3), Pt2(0, 3)]); // 🟨
+        let expected = Pg2([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)]); // 🟧
 
         let crops = inner.crop_to(&frame);
         assert_eq!(crops, vec![expected.clone()]);
@@ -932,9 +931,9 @@ mod tests {
         // 🟨🟧🟧🟥⬜
         // 🟨🟧🟧🟥⬜
         // ⬜🟥🟥🟥⬜ ➡️ x
-        let inner = Pg2([p2!(1, 0), p2!(4, 0), p2!(4, 3), p2!(1, 3)]); // 🟥
-        let frame = Pg2([p2!(0, 1), p2!(3, 1), p2!(3, 4), p2!(0, 4)]); // 🟨
-        let expected = Pg2([p2!(1, 1), p2!(3, 1), p2!(3, 3), p2!(1, 3)]); // 🟧
+        let inner = Pg2([Pt2(1, 0), Pt2(4, 0), Pt2(4, 3), Pt2(1, 3)]); // 🟥
+        let frame = Pg2([Pt2(0, 1), Pt2(3, 1), Pt2(3, 4), Pt2(0, 4)]); // 🟨
+        let expected = Pg2([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)]); // 🟧
 
         let crops = inner.crop_to(&frame);
         assert_eq!(crops, vec![expected.clone()]);
@@ -949,33 +948,33 @@ mod tests {
         // 🟨🟧🟨🟧🟨
         // ⬜🟥⬜🟥⬜
         let inner = Pg2([
-            p2!(1, 0),
-            p2!(2, 0),
-            p2!(2, 2),
-            p2!(3, 2),
-            p2!(3, 0),
-            p2!(4, 0),
-            p2!(4, 5),
-            p2!(3, 5),
-            p2!(3, 3),
-            p2!(2, 3),
-            p2!(2, 5),
-            p2!(1, 5),
+            Pt2(1, 0),
+            Pt2(2, 0),
+            Pt2(2, 2),
+            Pt2(3, 2),
+            Pt2(3, 0),
+            Pt2(4, 0),
+            Pt2(4, 5),
+            Pt2(3, 5),
+            Pt2(3, 3),
+            Pt2(2, 3),
+            Pt2(2, 5),
+            Pt2(1, 5),
         ]); // 🟥
-        let frame = Pg2([p2!(0, 1), p2!(5, 1), p2!(5, 4), p2!(0, 4)]); // 🟨
+        let frame = Pg2([Pt2(0, 1), Pt2(5, 1), Pt2(5, 4), Pt2(0, 4)]); // 🟨
         let expected = Pg2([
-            p2!(1, 1),
-            p2!(2, 1),
-            p2!(2, 2),
-            p2!(3, 2),
-            p2!(3, 1),
-            p2!(4, 1),
-            p2!(4, 4),
-            p2!(3, 4),
-            p2!(3, 3),
-            p2!(2, 3),
-            p2!(2, 4),
-            p2!(1, 4),
+            Pt2(1, 1),
+            Pt2(2, 1),
+            Pt2(2, 2),
+            Pt2(3, 2),
+            Pt2(3, 1),
+            Pt2(4, 1),
+            Pt2(4, 4),
+            Pt2(3, 4),
+            Pt2(3, 3),
+            Pt2(2, 3),
+            Pt2(2, 4),
+            Pt2(1, 4),
         ]); // 🟧
 
         let crops = inner.crop_to(&frame);
@@ -991,20 +990,20 @@ mod tests {
         // 🟨🟧🟨🟧🟨
         // ⬜⬜⬜⬜⬜
         let inner = Pg2([
-            p2!(1, 1),
-            p2!(2, 1),
-            p2!(2, 2),
-            p2!(3, 2),
-            p2!(3, 1),
-            p2!(4, 1),
-            p2!(4, 4),
-            p2!(3, 4),
-            p2!(3, 3),
-            p2!(2, 3),
-            p2!(2, 4),
-            p2!(1, 4),
+            Pt2(1, 1),
+            Pt2(2, 1),
+            Pt2(2, 2),
+            Pt2(3, 2),
+            Pt2(3, 1),
+            Pt2(4, 1),
+            Pt2(4, 4),
+            Pt2(3, 4),
+            Pt2(3, 3),
+            Pt2(2, 3),
+            Pt2(2, 4),
+            Pt2(1, 4),
         ]); // 🟥
-        let frame = Pg2([p2!(0, 1), p2!(5, 1), p2!(5, 4), p2!(0, 4)]); // 🟨
+        let frame = Pg2([Pt2(0, 1), Pt2(5, 1), Pt2(5, 4), Pt2(0, 4)]); // 🟨
         let expected = inner.clone();
         let crops = inner.crop_to(&frame);
         assert_eq!(crops, vec![expected.clone()]);
@@ -1019,20 +1018,20 @@ mod tests {
         // ⬜🟧🟨🟧⬜
         // ⬜⬜⬜⬜⬜
         let inner = Pg2([
-            p2!(1, 1),
-            p2!(2, 1),
-            p2!(2, 2),
-            p2!(3, 2),
-            p2!(3, 1),
-            p2!(4, 1),
-            p2!(4, 4),
-            p2!(3, 4),
-            p2!(3, 3),
-            p2!(2, 3),
-            p2!(2, 4),
-            p2!(1, 4),
+            Pt2(1, 1),
+            Pt2(2, 1),
+            Pt2(2, 2),
+            Pt2(3, 2),
+            Pt2(3, 1),
+            Pt2(4, 1),
+            Pt2(4, 4),
+            Pt2(3, 4),
+            Pt2(3, 3),
+            Pt2(2, 3),
+            Pt2(2, 4),
+            Pt2(1, 4),
         ]); // 🟥
-        let frame = Pg2([p2!(1, 1), p2!(4, 1), p2!(4, 4), p2!(1, 4)]); // 🟨
+        let frame = Pg2([Pt2(1, 1), Pt2(4, 1), Pt2(4, 4), Pt2(1, 4)]); // 🟨
         let expected = inner.clone();
         let crops = inner.crop_to(&frame);
         assert_eq!(crops, vec![expected.clone()]);
@@ -1048,20 +1047,20 @@ mod tests {
     //     // 🟥🟧🟥🟧🟥
     //     // ⬜🟨⬜🟨⬜
     //     let inner = Pg2([
-    //         p2!(1, 0),
-    //         p2!(2, 0),
-    //         p2!(2, 4),
-    //         p2!(3, 4),
-    //         p2!(3, 0),
-    //         p2!(4, 0),
-    //         p2!(4, 5),
-    //         p2!(1, 5),
+    //         Pt2(1, 0),
+    //         Pt2(2, 0),
+    //         Pt2(2, 4),
+    //         Pt2(3, 4),
+    //         Pt2(3, 0),
+    //         Pt2(4, 0),
+    //         Pt2(4, 5),
+    //         Pt2(1, 5),
     //     ])
     //     .unwrap();
-    //     let frame = Pg2([p2!(0, 1), p2!(5, 1), p2!(5, 3), p2!(0, 3)]).unwrap();
+    //     let frame = Pg2([Pt2(0, 1), Pt2(5, 1), Pt2(5, 3), Pt2(0, 3)]).unwrap();
     //     let expected = vec![
-    //         Pg2([p2!(1, 1), p2!(2, 1), p2!(2, 3), p2!(1, 3)]).unwrap(),
-    //         Pg2([p2!(3, 1), p2!(4, 1), p2!(4, 3), p2!(3, 3)]).unwrap(),
+    //         Pg2([Pt2(1, 1), Pt2(2, 1), Pt2(2, 3), Pt2(1, 3)]).unwrap(),
+    //         Pg2([Pt2(3, 1), Pt2(4, 1), Pt2(4, 3), Pt2(3, 3)]).unwrap(),
     //     ];
     //     let crops = inner.crop_to(&frame).unwrap();
     //     assert_eq!(crops.len(), 2);
@@ -1079,10 +1078,10 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = p2!(0, 2);
-        let c = p2!(2, 2);
-        let g = p2!(0, 0);
-        let i = p2!(2, 0);
+        let a = Pt2(0, 2);
+        let c = Pt2(2, 2);
+        let g = Pt2(0, 0);
+        let i = Pt2(2, 0);
 
         assert_eq!(
             Pg2([a, c, i, g]).get_curve_orientation(),
@@ -1105,10 +1104,10 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = p2!(0, 2);
-        let c = p2!(2, 2);
-        let g = p2!(0, 0);
-        let i = p2!(2, 0);
+        let a = Pt2(0, 2);
+        let c = Pt2(2, 2);
+        let g = Pt2(0, 0);
+        let i = Pt2(2, 0);
         let mut p = Pg2([a, g, i, c]);
         assert_eq!(p.get_curve_orientation(), Some(CurveOrientation::Positive));
         p.orient_curve_positively();
@@ -1118,16 +1117,16 @@ mod tests {
     #[test]
     fn test_add() {
         assert_eq!(
-            &Pg2([p2!(0, 0), p2!(1, 1), p2!(2, 2)]) + p2!(1, 0),
-            Pg2([p2!(1, 0), p2!(2, 1), p2!(3, 2)])
+            &Pg2([Pt2(0, 0), Pt2(1, 1), Pt2(2, 2)]) + Pt2(1, 0),
+            Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(3, 2)])
         );
     }
 
     #[test]
     fn test_sub() {
         assert_eq!(
-            &Pg2([p2!(0, 0), p2!(1, 1), p2!(2, 2)]) - p2!(1, 0),
-            Pg2([p2!(-1, 0), p2!(0, 1), p2!(1, 2)])
+            &Pg2([Pt2(0, 0), Pt2(1, 1), Pt2(2, 2)]) - Pt2(1, 0),
+            Pg2([Pt2(-1, 0), Pt2(0, 1), Pt2(1, 2)])
         );
     }
 
@@ -1141,19 +1140,19 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let h = p2!(1, 0);
-        let f = p2!(2, 1);
-        let b = p2!(1, 2);
-        let d = p2!(0, 1);
+        let h = Pt2(1, 0);
+        let f = Pt2(2, 1);
+        let b = Pt2(1, 2);
+        let d = Pt2(0, 1);
         let p = Pg2([h, f, b, d]);
         assert_eq!(p.top_bound(), 2.0);
         assert_eq!(p.bottom_bound(), 0.0);
         assert_eq!(p.left_bound(), 0.0);
         assert_eq!(p.right_bound(), 2.0);
-        assert_eq!(p.tl_bound(), p2!(0, 2));
-        assert_eq!(p.bl_bound(), p2!(0, 0));
-        assert_eq!(p.tr_bound(), p2!(2, 2));
-        assert_eq!(p.br_bound(), p2!(2, 0));
+        assert_eq!(p.tl_bound(), Pt2(0, 2));
+        assert_eq!(p.bl_bound(), Pt2(0, 0));
+        assert_eq!(p.tr_bound(), Pt2(2, 2));
+        assert_eq!(p.br_bound(), Pt2(2, 0));
     }
 
     #[test]
@@ -1175,57 +1174,57 @@ mod tests {
         // 0 - - 1 - - 2 - - 3 - - 4 - - 5 -> x
 
         let frame = Pg2([
-            p2!(0, 0),
-            p2!(1, 0),
-            p2!(1, 3),
-            p2!(2, 3),
-            p2!(2, 0),
-            p2!(5, 0),
-            p2!(5, 4),
-            p2!(4, 4),
-            p2!(4, 1),
-            p2!(3, 1),
-            p2!(3, 5),
-            p2!(0, 5),
+            Pt2(0, 0),
+            Pt2(1, 0),
+            Pt2(1, 3),
+            Pt2(2, 3),
+            Pt2(2, 0),
+            Pt2(5, 0),
+            Pt2(5, 4),
+            Pt2(4, 4),
+            Pt2(4, 1),
+            Pt2(3, 1),
+            Pt2(3, 5),
+            Pt2(0, 5),
         ]);
-        let segment = Sg2(p2!(0, 2), p2!(5, 2));
+        let segment = Sg2(Pt2(0, 2), Pt2(5, 2));
         assert_eq!(
             segment.crop_to(&frame),
             vec![
-                Sg2(p2!(0, 2), p2!(1, 2)),
-                Sg2(p2!(2, 2), p2!(3, 2)),
-                Sg2(p2!(4, 2), p2!(5, 2)),
+                Sg2(Pt2(0, 2), Pt2(1, 2)),
+                Sg2(Pt2(2, 2), Pt2(3, 2)),
+                Sg2(Pt2(4, 2), Pt2(5, 2)),
             ]
         );
     }
 
     #[test]
     fn test_frame_to_segment_crop() {
-        let frame = Pg2([p2!(1, 0), p2!(2, 1), p2!(1, 2), p2!(0, 1)]);
+        let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
         assert_eq!(
-            Sg2(p2!(0, 2), p2!(2, 0)).crop_to(&frame),
-            vec![Sg2(p2!(0.5, 1.5), p2!(1.5, 0.5))]
+            Sg2(Pt2(0, 2), Pt2(2, 0)).crop_to(&frame),
+            vec![Sg2(Pt2(0.5, 1.5), Pt2(1.5, 0.5))]
         );
     }
     #[test]
     fn test_frame_to_segment_crop_02() {
-        let frame = Pg2([p2!(1, 0), p2!(2, 1), p2!(1, 2), p2!(0, 1)]);
+        let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
         assert_eq!(
-            Sg2(p2!(0, 0), p2!(2, 2)).crop_to(&frame),
-            vec![Sg2(p2!(0.5, 0.5), p2!(1.5, 1.5))]
+            Sg2(Pt2(0, 0), Pt2(2, 2)).crop_to(&frame),
+            vec![Sg2(Pt2(0.5, 0.5), Pt2(1.5, 1.5))]
         );
     }
     #[test]
     fn test_frame_to_segment_crop_empty() {
-        let frame = Pg2([p2!(1, 0), p2!(2, 1), p2!(1, 2), p2!(0, 1)]);
-        assert_eq!(Sg2(p2!(0, 2), p2!(2, 2)).crop_to(&frame), vec![]);
+        let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
+        assert_eq!(Sg2(Pt2(0, 2), Pt2(2, 2)).crop_to(&frame), vec![]);
     }
     #[test]
     fn test_frame_to_segment_crop_unchanged() {
-        let frame = Pg2([p2!(1, 0), p2!(2, 1), p2!(1, 2), p2!(0, 1)]);
+        let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
         assert_eq!(
-            Sg2(p2!(0, 1), p2!(2, 1)).crop_to(&frame),
-            vec![Sg2(p2!(0, 1), p2!(2, 1))]
+            Sg2(Pt2(0, 1), Pt2(2, 1)).crop_to(&frame),
+            vec![Sg2(Pt2(0, 1), Pt2(2, 1))]
         );
     }
 }

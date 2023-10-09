@@ -7,7 +7,7 @@ mod strategy3;
 use {
     argh::FromArgs,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{p2, shapes::pt2::Pt2},
+    plotz_geometry::shapes::pt2::Pt2,
     tracing::*,
     tracing_subscriber::FmtSubscriber,
 };
@@ -45,7 +45,7 @@ fn main() {
     )
     .with_frame(make_frame(
         /*wh=*/ (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
-        /*offset=*/ p2!(margin, margin),
+        /*offset=*/ Pt2(margin, margin),
     ))
     .write_to_svg_or_die(
         Size {

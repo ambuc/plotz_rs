@@ -21,15 +21,6 @@ pub struct Pt2 {
     pub y: FloatOrd<f64>,
 }
 
-/// Pt shortcut.
-/// TODO(jbuckland): Remove this.
-#[macro_export]
-macro_rules! p2 {
-    ($x:expr, $y:expr) => {
-        Pt2($x, $y)
-    };
-}
-
 impl Debug for Pt2 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Pt2 { x, y } = self;
@@ -65,7 +56,7 @@ where
 
 impl From<(f64, f64)> for Pt2 {
     fn from((x, y): (f64, f64)) -> Pt2 {
-        p2!(x, y)
+        Pt2(x, y)
     }
 }
 
@@ -73,14 +64,14 @@ impl Rem<(f64, f64)> for Pt2 {
     type Output = Self;
 
     fn rem(self, modulus: (f64, f64)) -> Self::Output {
-        p2!(self.x.0 % modulus.0, self.y.0 % modulus.1)
+        Pt2(self.x.0 % modulus.0, self.y.0 % modulus.1)
     }
 }
 
 impl Add<Pt2> for Pt2 {
     type Output = Self;
     fn add(self, rhs: Pt2) -> Self::Output {
-        p2!(self.x.0 + rhs.x.0, self.y.0 + rhs.y.0)
+        Pt2(self.x.0 + rhs.x.0, self.y.0 + rhs.y.0)
     }
 }
 impl AddAssign<Pt2> for Pt2 {
@@ -94,13 +85,13 @@ impl AddAssign<Pt2> for Pt2 {
 impl Div<Pt2> for Pt2 {
     type Output = Self;
     fn div(self, rhs: Pt2) -> Self::Output {
-        p2!(self.x.0 / rhs.x.0, self.y.0 / rhs.y.0)
+        Pt2(self.x.0 / rhs.x.0, self.y.0 / rhs.y.0)
     }
 }
 impl Div<f64> for Pt2 {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
-        p2!(self.x.0 / rhs, self.y.0 / rhs)
+        Pt2(self.x.0 / rhs, self.y.0 / rhs)
     }
 }
 impl DivAssign<Pt2> for Pt2 {
@@ -118,13 +109,13 @@ impl DivAssign<f64> for Pt2 {
 impl Mul<Pt2> for Pt2 {
     type Output = Self;
     fn mul(self, rhs: Pt2) -> Self::Output {
-        p2!(self.x.0 * rhs.x.0, self.y.0 * rhs.y.0)
+        Pt2(self.x.0 * rhs.x.0, self.y.0 * rhs.y.0)
     }
 }
 impl Mul<f64> for Pt2 {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
-        p2!(self.x.0 * rhs, self.y.0 * rhs)
+        Pt2(self.x.0 * rhs, self.y.0 * rhs)
     }
 }
 impl MulAssign<Pt2> for Pt2 {
@@ -148,7 +139,7 @@ impl RemAssign<Pt2> for Pt2 {
 impl Sub<Pt2> for Pt2 {
     type Output = Self;
     fn sub(self, rhs: Pt2) -> Self::Output {
-        p2!(self.x.0 - rhs.x.0, self.y.0 - rhs.y.0)
+        Pt2(self.x.0 - rhs.x.0, self.y.0 - rhs.y.0)
     }
 }
 impl SubAssign<Pt2> for Pt2 {
@@ -165,9 +156,9 @@ impl Pt2 {
     /// argument in radians.
     pub fn rotate_inplace(&mut self, about: &Pt2, by: f64) {
         *self -= *about;
-        *self = p2!(
+        *self = Pt2(
             (by.cos() * self.x.0) - (by.sin() * self.y.0),
-            (by.sin() * self.x.0) + (by.cos() * self.y.0)
+            (by.sin() * self.x.0) + (by.cos() * self.y.0),
         );
         *self += *about;
     }
@@ -192,7 +183,7 @@ impl Pt2 {
 
     /// Average of two points.
     pub fn avg(&self, other: &Pt2) -> Pt2 {
-        p2!((self.x.0 + other.x.0) / 2.0, (self.y.0 + other.y.0) / 2.0)
+        Pt2((self.x.0 + other.x.0) / 2.0, (self.y.0 + other.y.0) / 2.0)
     }
 
     /// Flip x
@@ -209,7 +200,7 @@ impl Pt2 {
     pub fn angle_to(&self, other: &Pt2) -> f64 {
         let o = self;
         let j = other;
-        let i = p2!(other.x.0, self.y.0);
+        let i = Pt2(other.x.0, self.y.0);
         abp(o, &i, j)
     }
 }
@@ -285,8 +276,8 @@ mod tests {
         use float_eq::assert_float_eq;
         use std::f64::consts::PI;
 
-        let origin = p2!(0.0, 0.0);
-        let mut p = p2!(1.0, 0.0);
+        let origin = Pt2(0.0, 0.0);
+        let mut p = Pt2(1.0, 0.0);
 
         p.rotate_inplace(/*about=*/ &origin, PI / 2.0);
         assert_float_eq!(p.x.0, 0.0, abs <= 0.000_1);
@@ -307,74 +298,74 @@ mod tests {
 
     #[test]
     fn test_dot() {
-        assert_float_eq!(p2!(1.0, 1.0).dot(&p2!(1.0, 0.0)), 1.0, abs <= 0.000_1);
-        assert_float_eq!(p2!(7.0, 2.0).dot(&p2!(3.0, 6.0)), 33.0, abs <= 0.000_1);
+        assert_float_eq!(Pt2(1.0, 1.0).dot(&Pt2(1.0, 0.0)), 1.0, abs <= 0.000_1);
+        assert_float_eq!(Pt2(7.0, 2.0).dot(&Pt2(3.0, 6.0)), 33.0, abs <= 0.000_1);
     }
 
     #[test]
     fn test_rem() {
-        assert_eq!(p2!(1.5, 1.5) % (1.0, 1.0), p2!(0.5, 0.5));
+        assert_eq!(Pt2(1.5, 1.5) % (1.0, 1.0), Pt2(0.5, 0.5));
     }
 
     #[test]
     fn test_div_assign() {
-        let mut p = p2!(1.5, 1.5);
+        let mut p = Pt2(1.5, 1.5);
         p /= 2.0;
-        assert_eq!(p, p2!(0.75, 0.75));
+        assert_eq!(p, Pt2(0.75, 0.75));
     }
 
     #[test]
     fn test_add() {
-        assert_eq!(p2!(1, 2) + p2!(3, 4), p2!(4, 6));
+        assert_eq!(Pt2(1, 2) + Pt2(3, 4), Pt2(4, 6));
     }
 
     #[test]
     fn test_add_assign() {
-        let mut p = p2!(2, 4);
-        p += p2!(1, 2);
-        assert_eq!(p, p2!(3, 6));
+        let mut p = Pt2(2, 4);
+        p += Pt2(1, 2);
+        assert_eq!(p, Pt2(3, 6));
     }
 
     #[test]
     fn test_sub() {
-        assert_eq!(p2!(1, 2) - p2!(3, 4), p2!(-2, -2));
+        assert_eq!(Pt2(1, 2) - Pt2(3, 4), Pt2(-2, -2));
     }
 
     #[test]
     fn test_sub_assign() {
-        let mut p = p2!(2, 4);
-        p -= p2!(1, 2);
-        assert_eq!(p, p2!(1, 2));
+        let mut p = Pt2(2, 4);
+        p -= Pt2(1, 2);
+        assert_eq!(p, Pt2(1, 2));
     }
 
     #[test]
     fn test_mul() {
-        assert_eq!(p2!(1.0, 2.0) * 2.0, p2!(2.0, 4.0));
+        assert_eq!(Pt2(1.0, 2.0) * 2.0, Pt2(2.0, 4.0));
     }
 
     #[test]
     fn test_div() {
-        assert_eq!(p2!(1.0, 2.0) / 2.0, p2!(0.5, 1.0)); // floats
+        assert_eq!(Pt2(1.0, 2.0) / 2.0, Pt2(0.5, 1.0)); // floats
     }
 
-    #[test_case(p2!(0,0), p2!(1,1), p2!(2,2), true; "colinear diagonal")]
-    #[test_case(p2!(0,0), p2!(1,0), p2!(2,0), true; "colinear vert")]
-    #[test_case(p2!(0,0), p2!(0,1), p2!(0,2), true; "colinear horz")]
-    #[test_case(p2!(0,0), p2!(0,1), p2!(2,2), false; "not colinear")]
-    #[test_case(p2!(0,0), p2!(0,1), p2!(0.1, 0.1), false; "not colinear small")]
-    #[test_case(p2!(0,0), p2!(0,1), p2!(0.0001, 0.0001), false; "not colinear very small")]
+    #[test_case(Pt2(0,0), Pt2(1,1), Pt2(2,2), true; "colinear diagonal")]
+    #[test_case(Pt2(0,0), Pt2(1,0), Pt2(2,0), true; "colinear vert")]
+    #[test_case(Pt2(0,0), Pt2(0,1), Pt2(0,2), true; "colinear horz")]
+    #[test_case(Pt2(0,0), Pt2(0,1), Pt2(2,2), false; "not colinear")]
+    #[test_case(Pt2(0,0), Pt2(0,1), Pt2(0.1, 0.1), false; "not colinear small")]
+    #[test_case(Pt2(0,0), Pt2(0,1), Pt2(0.0001, 0.0001), false; "not colinear very small")]
     fn test_is_colinear_3(a: Pt2, b: Pt2, c: Pt2, expectation: bool) {
         assert_eq!(is_colinear_3(a, b, c), expectation);
     }
 
     #[test_case(&[], false; "empty")]
-    #[test_case(&[p2!(0,0)], false; "one")]
-    #[test_case(&[p2!(0,0), p2!(0,1)], false; "two")]
-    #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2)], true; "three colinear")]
-    #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(0,3)], true; "four colinear")]
-    #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(1,3)], false; "four not colinear")]
-    #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(0,3), p2!(0,4)], true; "five colinear")]
-    #[test_case(&[p2!(0,0), p2!(0,1), p2!(0,2), p2!(0,3), p2!(1,4)], false; "five not colinear")]
+    #[test_case(&[Pt2(0,0)], false; "one")]
+    #[test_case(&[Pt2(0,0), Pt2(0,1)], false; "two")]
+    #[test_case(&[Pt2(0,0), Pt2(0,1), Pt2(0,2)], true; "three colinear")]
+    #[test_case(&[Pt2(0,0), Pt2(0,1), Pt2(0,2), Pt2(0,3)], true; "four colinear")]
+    #[test_case(&[Pt2(0,0), Pt2(0,1), Pt2(0,2), Pt2(1,3)], false; "four not colinear")]
+    #[test_case(&[Pt2(0,0), Pt2(0,1), Pt2(0,2), Pt2(0,3), Pt2(0,4)], true; "five colinear")]
+    #[test_case(&[Pt2(0,0), Pt2(0,1), Pt2(0,2), Pt2(0,3), Pt2(1,4)], false; "five not colinear")]
     fn test_is_colinear_n(pts: &[Pt2], expectation: bool) {
         assert_eq!(is_colinear_n(&pts.to_vec()), expectation);
     }

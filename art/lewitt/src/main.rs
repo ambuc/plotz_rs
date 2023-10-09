@@ -5,7 +5,6 @@ use {
     plotz_geometry::{
         crop::PointLoc,
         grid::grid_layout::{GridLayout, GridLayoutSettings},
-        p2,
         shapes::{curve::CurveArc, pt2::Pt2},
         styled_obj2::StyledObj2,
     },
@@ -37,7 +36,7 @@ fn main() {
 
     let frame: StyledObj2 = make_frame(
         (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
-        /*offset=*/ p2!(mgn, mgn),
+        /*offset=*/ Pt2(mgn, mgn),
     );
 
     {
@@ -58,7 +57,7 @@ fn main() {
                 for color in COLORS[0..3].choose_multiple(&mut rng, 3) {
                     let curve_arc_ctr: Pt2 = || -> Pt2 {
                         loop {
-                            let cand = p2!(rng.gen_range(0.0..800.0), rng.gen_range(0.0..1000.0));
+                            let cand = Pt2(rng.gen_range(0.0..800.0), rng.gen_range(0.0..1000.0));
                             if !matches!(bounds.contains_pt(cand), PointLoc::Inside) {
                                 return cand;
                             }

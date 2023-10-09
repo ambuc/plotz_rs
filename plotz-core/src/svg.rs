@@ -144,7 +144,6 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
 mod test_super {
     use super::*;
     use plotz_geometry::{
-        p2,
         shapes::{pg2::Pg2, pt2::Pt2},
         style::Style,
         styled_obj2::StyledObj2,
@@ -185,7 +184,7 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![&StyledObj2 {
-                inner: Obj2::Pg2(Pg2([p2!(0, 0), p2!(0, 1), p2!(1, 0)])),
+                inner: Obj2::Pg2(Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)])),
                 style: Style::builder().color(&BLACK).thickness(1.0).build(),
             }],
         )
@@ -211,11 +210,11 @@ mod test_super {
             path.to_str().unwrap(),
             vec![
                 &StyledObj2 {
-                    inner: Obj2::Pg2(Pg2([p2!(0, 0), p2!(0, 1), p2!(1, 0)])),
+                    inner: Obj2::Pg2(Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)])),
                     style: Style::builder().color(&BLACK).thickness(1.0).build(),
                 },
                 &StyledObj2 {
-                    inner: Obj2::Pg2(Pg2([p2!(5, 5), p2!(5, 6), p2!(6, 5)])),
+                    inner: Obj2::Pg2(Pg2([Pt2(5, 5), Pt2(5, 6), Pt2(6, 5)])),
                     style: Style::builder().color(&BLACK).thickness(1.0).build(),
                 },
             ],

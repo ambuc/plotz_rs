@@ -19,7 +19,6 @@ use {
         bounded::{Bounded, BoundingBoxError},
         crop::Croppable,
         obj2::Obj2,
-        p2,
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
         style::Style,
@@ -275,15 +274,15 @@ impl Map {
 
     fn adjust_centering(&mut self, dest_size: &Size) -> Result<(), MapError> {
         let shift = match self.center {
-            Some(desired_center) => p2!(
+            Some(desired_center) => Pt2(
                 dest_size.width as f64 / 2.0 - desired_center.x.0,
-                dest_size.height as f64 / 2.0 - desired_center.y.0
+                dest_size.height as f64 / 2.0 - desired_center.y.0,
             ),
             None => {
                 let canvas_bounds = self.canvas.bounds();
-                p2!(
+                Pt2(
                     (dest_size.width as f64 - canvas_bounds.right_bound()) / 2.0,
-                    (dest_size.height as f64 - canvas_bounds.top_bound()) / 2.0
+                    (dest_size.height as f64 - canvas_bounds.top_bound()) / 2.0,
                 )
             }
         };
@@ -375,9 +374,9 @@ impl Map {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             for d_o in dos.iter_mut() {
                 if let Obj2::CurveArc(ca) = &mut d_o.inner {
-                    ca.ctr += p2!(
+                    ca.ctr += Pt2(
                         thread_rng().gen_range(-2.0..=2.0),
-                        thread_rng().gen_range(-2.0..=2.0)
+                        thread_rng().gen_range(-2.0..=2.0),
                     );
                 }
             }
@@ -484,7 +483,7 @@ impl Map {
                     config.size.height as f64 - 2.0 * margin,
                     config.size.width as f64 - 2.0 * margin,
                 ),
-                p2!(margin, margin),
+                Pt2(margin, margin),
             );
             self.canvas.frame = Some(
                 StyledObj2::new(frame.clone())
@@ -591,18 +590,18 @@ mod tests {
         for (initial, expected) in [
             // no shift
             (
-                [p2!(0, 0), p2!(0, 1), p2!(1, 0)],
-                [p2!(0, 0), p2!(0, 1), p2!(1, 0)],
+                [Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)],
+                [Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)],
             ),
             // shift positive
             (
-                [p2!(-1, -1), p2!(-1, 0), p2!(0, -1)],
-                [p2!(0, 0), p2!(0, 1), p2!(1, 0)],
+                [Pt2(-1, -1), Pt2(-1, 0), Pt2(0, -1)],
+                [Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)],
             ),
             // shift negative
             (
-                [p2!(1, 1), p2!(1, 2), p2!(2, 1)],
-                [p2!(0, 0), p2!(0, 1), p2!(1, 0)],
+                [Pt2(1, 1), Pt2(1, 2), Pt2(2, 1)],
+                [Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)],
             ),
         ] {
             let obj = Obj2::Pg2(Pg2(initial));
@@ -640,8 +639,8 @@ mod tests {
                     height: 1024,
                 },
                 0.9,
-                [p2!(0.0, 0.0), p2!(0.0, 1.0), p2!(1.0, 0.0)],
-                [p2!(0.0, 0.0), p2!(0.0, 921.60), p2!(921.60, 0.0)],
+                [Pt2(0.0, 0.0), Pt2(0.0, 1.0), Pt2(1.0, 0.0)],
+                [Pt2(0.0, 0.0), Pt2(0.0, 921.60), Pt2(921.60, 0.0)],
             ),
             // rescale: 100 * 0.9 = 90
             (
@@ -650,8 +649,8 @@ mod tests {
                     height: 1000,
                 },
                 0.9,
-                [p2!(0.0, 0.0), p2!(0.0, 1.0), p2!(1.0, 0.0)],
-                [p2!(0.0, 0.0), p2!(0.0, 900.0), p2!(900.0, 0.0)],
+                [Pt2(0.0, 0.0), Pt2(0.0, 1.0), Pt2(1.0, 0.0)],
+                [Pt2(0.0, 0.0), Pt2(0.0, 900.0), Pt2(900.0, 0.0)],
             ),
         ] {
             let obj = Obj2::Pg2(Pg2(initial));

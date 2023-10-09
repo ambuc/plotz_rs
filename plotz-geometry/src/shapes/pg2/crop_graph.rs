@@ -368,35 +368,35 @@ impl<'a> CropGraph<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{interpolate::extrapolate_2d, p2, shapes::pg2::Rect};
+    use crate::{interpolate::extrapolate_2d, shapes::pg2::Rect};
     use itertools::iproduct;
     use test_case::test_case;
 
     fn u_shape() -> Pg2 {
-        let a = p2!(60, 60);
-        let b = p2!(70, 60);
-        let c = p2!(80, 60);
-        let d = p2!(90, 60);
-        let e = p2!(70, 75);
-        let f = p2!(80, 75);
-        let g = p2!(60, 90);
-        let h = p2!(90, 90);
+        let a = Pt2(60, 60);
+        let b = Pt2(70, 60);
+        let c = Pt2(80, 60);
+        let d = Pt2(90, 60);
+        let e = Pt2(70, 75);
+        let f = Pt2(80, 75);
+        let g = Pt2(60, 90);
+        let h = Pt2(90, 90);
         Pg2([a, b, e, f, c, d, h, g, a])
     }
 
     fn h_shape() -> Pg2 {
-        let a = p2!(60, 40);
-        let b = p2!(70, 40);
-        let c = p2!(70, 70);
-        let d = p2!(80, 70);
-        let e = p2!(80, 40);
-        let f = p2!(90, 40);
-        let g = p2!(90, 110);
-        let h = p2!(80, 110);
-        let i = p2!(80, 80);
-        let j = p2!(70, 80);
-        let k = p2!(70, 110);
-        let l = p2!(60, 110);
+        let a = Pt2(60, 40);
+        let b = Pt2(70, 40);
+        let c = Pt2(70, 70);
+        let d = Pt2(80, 70);
+        let e = Pt2(80, 40);
+        let f = Pt2(90, 40);
+        let g = Pt2(90, 110);
+        let h = Pt2(80, 110);
+        let i = Pt2(80, 80);
+        let j = Pt2(70, 80);
+        let k = Pt2(70, 110);
+        let l = Pt2(60, 110);
         Pg2([a, b, c, d, e, f, g, h, i, j, k, l, a])
     }
 
@@ -405,12 +405,12 @@ mod test {
     #[test_case(h_shape(), CropType::Exclusive; "h-shape, exclusive")]
     #[test_case(h_shape(), CropType::Inclusive; "h-shape, inclusive")]
     fn test_all_crops(shape: Pg2, crop_type: CropType) {
-        let boundary = Rect(p2!(50, 50), (50.0, 50.0)).unwrap();
+        let boundary = Rect(Pt2(50, 50), (50.0, 50.0)).unwrap();
         let margin = 10.0;
         for (_idx, offset) in iproduct!(0..=5, 0..=4).map(|(i, j)| {
             (
                 (i, j),
-                p2!((i as f64 - 3.0) * margin, (j as f64 - 3.0) * margin),
+                Pt2((i as f64 - 3.0) * margin, (j as f64 - 3.0) * margin),
             )
         })
         // .filter(|(idx, _)| *idx == (1, 2))
