@@ -52,17 +52,16 @@ impl Occluder {
     }
 
     // Incorporates an object.
-    pub fn add(&mut self, incoming2: StyledObj2) {
-        let mut incoming_os: Vec<StyledObj2> = vec![incoming2.clone()];
+    pub fn add(&mut self, incoming2: (Obj2, Style)) {
+        let mut incoming_os: Vec<(Obj2, Style)> = vec![incoming2.clone()];
         for (existing_o, _) in &self.objects {
             incoming_os = incoming_os
                 .iter()
-                .flat_map(|incoming_o| Occluder::hide_a_behind_b(&incoming_o.inner, &existing_o))
-                .map(|obj2| StyledObj2::new(obj2).with_style(incoming2.style))
+                .flat_map(|(incoming_obj2, _)| Occluder::hide_a_behind_b(incoming_obj2, existing_o))
+                .map(|obj2| (obj2, incoming2.1))
                 .collect::<Vec<_>>();
         }
-        self.objects
-            .extend(incoming_os.into_iter().map(|so| (so.inner, so.style)));
+        self.objects.extend(incoming_os);
     }
 
     // Exports the occluded 2d objects.

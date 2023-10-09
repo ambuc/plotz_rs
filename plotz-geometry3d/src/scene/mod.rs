@@ -85,7 +85,7 @@ impl Scene {
                         }
                     }
 
-                    occ.add(StyledObj2 { inner: obj2, style });
+                    occ.add((obj2, style));
                 }
                 resultant.extend(occ.export());
                 resultant
