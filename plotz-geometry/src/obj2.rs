@@ -70,7 +70,7 @@ impl YieldPoints for Obj2 {
             Obj2::CurveArc(ca) => ca.yield_pts(),
             Obj2::Group(g) => g.yield_pts(),
             Obj2::Pg2(pg) => Box::new(pg.iter()),
-            Obj2::Sg2(sg) => sg.yield_pts(),
+            Obj2::Sg2(sg) => Box::new(sg.iter()),
         }
     }
 }
@@ -83,7 +83,7 @@ impl YieldPointsMut for Obj2 {
             Obj2::CurveArc(ca) => ca.yield_pts_mut(),
             Obj2::Group(g) => g.yield_pts_mut(),
             Obj2::Pg2(pg) => Box::new(pg.iter_mut()),
-            Obj2::Sg2(sg) => sg.yield_pts_mut(),
+            Obj2::Sg2(sg) => Box::new(sg.iter_mut()),
         }
     }
 }

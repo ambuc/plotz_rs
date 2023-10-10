@@ -244,14 +244,9 @@ impl Pt2 {
     }
 }
 
-impl YieldPoints for Pt2 {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
-        Box::new(std::iter::once(self))
-    }
-}
 impl YieldPointsMut for Pt2 {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
-        Box::new(std::iter::once(self))
+        Box::new(self.iter_mut())
     }
 }
 impl Mutable for Pt2 {}

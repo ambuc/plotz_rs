@@ -205,6 +205,16 @@ impl Sg2 {
         let ray = self.ray_perpendicular();
         (ray.clone().rotate(PI), ray)
     }
+
+    /// Iterator.
+    pub fn iter(&self) -> impl Iterator<Item = &Pt2> {
+        std::iter::once(&self.i).chain(std::iter::once(&self.f))
+    }
+
+    /// Mutable iterator.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt2> {
+        std::iter::once(&mut self.i).chain(std::iter::once(&mut self.f))
+    }
 }
 
 impl Add<Pt2> for Sg2 {
@@ -294,11 +304,6 @@ impl Bounded for Sg2 {
     }
 }
 
-impl YieldPoints for Sg2 {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
-        Box::new([&self.i, &self.f].into_iter())
-    }
-}
 impl YieldPointsMut for Sg2 {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
         Box::new([&mut self.i, &mut self.f].into_iter())
