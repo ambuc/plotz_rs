@@ -7,7 +7,7 @@ use {
         bounded::{Bounded, Bounds, BoundsCollector},
         crop::{CropType, Croppable},
         shapes::{pg2::Pg2, pt2::Pt2},
-        traits::*,
+        *,
     },
     std::ops::*,
 };

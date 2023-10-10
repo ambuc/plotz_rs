@@ -9,7 +9,7 @@ use {
         crop::{Croppable, PointLoc},
         group::Group,
         shapes::{curve::CurveArc, pg2::Pg2, pg2::PolygonKind, pt2::Pt2, sg2::Sg2, txt::Txt},
-        traits::*,
+        *,
     },
     enum_dispatch::enum_dispatch,
     std::{fmt::Debug, ops::*},

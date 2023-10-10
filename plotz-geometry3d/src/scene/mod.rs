@@ -14,7 +14,7 @@ use {
     },
     float_ord::FloatOrd,
     itertools::Itertools,
-    plotz_geometry::{style::Style, traits::Annotatable},
+    plotz_geometry::{style::Style, *},
     std::fmt::Debug,
     typed_builder::TypedBuilder,
 };

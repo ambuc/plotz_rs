@@ -10,7 +10,7 @@ use {
             pt2::{PolarPt, Pt2},
             sg2::Sg2,
         },
-        traits::*,
+        *,
     },
     float_cmp::approx_eq,
     float_ord::FloatOrd,

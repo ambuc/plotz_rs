@@ -1,7 +1,7 @@
 //! A character at a point.
 
 use {
-    crate::{bounded::Bounded, shapes::pt2::Pt2, traits::*},
+    crate::{bounded::Bounded, shapes::pt2::Pt2, *},
     std::ops::*,
 };
 

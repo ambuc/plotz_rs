@@ -3,7 +3,7 @@
 use crate::{
     bounded::{Bounded, Bounds},
     shapes::{pg2::abp, sg2::Sg2},
-    traits::*,
+    *,
 };
 use {
     float_cmp::approx_eq,

@@ -23,7 +23,7 @@ use {
         shading::{shade_config::ShadeConfig, shade_polygon},
         shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
         style::Style,
-        traits::*,
+        *,
     },
     rand::{thread_rng, Rng},
     std::{

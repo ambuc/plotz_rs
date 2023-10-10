@@ -1,5 +1,5 @@
 use {
-    plotz_geometry::{style::Style, traits::AnnotationSettings},
+    plotz_geometry::{style::Style, *},
     std::fmt::Debug,
     typed_builder::TypedBuilder,
 };

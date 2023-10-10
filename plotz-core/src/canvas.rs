@@ -13,7 +13,7 @@ use {
     plotz_geometry::{
         bounded::{streaming_bbox, Bounded, Bounds},
         shapes::pt2::Pt2,
-        traits::*,
+        *,
     },
     std::collections::HashMap,
     tracing::trace,

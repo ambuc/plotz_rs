@@ -1,10 +1,8 @@
-use plotz_geometry::traits::AnnotationSettings;
-
 use {
     argh::FromArgs,
     plotz_color::*,
     plotz_core::{canvas::Canvas, frame::*},
-    plotz_geometry::style::Style,
+    plotz_geometry::{style::Style, *},
     plotz_geometry3d::{
         camera::{Occlusion, Projection},
         scene::{debug::SceneDebug, Scene},

@@ -6,7 +6,7 @@ use {
         obj2::Obj2,
         shapes::{pg2::PolygonKind, txt::Txt},
         style::Style,
-        traits::Nullable,
+        *,
     },
     std::fmt::Debug,
     thiserror::Error,

@@ -1,9 +1,5 @@
 //! A 2D polygon (or multi&line).
 
-use float_ord::FloatOrd;
-
-use crate::{obj2::Obj2, style::Style};
-
 mod annotated_isxn_result;
 mod crop_graph;
 pub mod multiline;
@@ -15,14 +11,17 @@ use {
         crop::CropType,
         crop::{CropToPolygonError, Croppable, PointLoc},
         intersection::IntersectionResult,
+        obj2::Obj2,
         shapes::{
             pt2::Pt2,
             sg2::{Contains, Sg2},
             txt::Txt,
         },
-        traits::*,
+        style::Style,
+        *,
     },
     float_cmp::approx_eq,
+    float_ord::FloatOrd,
     itertools::iproduct,
     std::{
         cmp::{Eq, PartialEq},
