@@ -44,6 +44,14 @@ impl CurveArc {
     fn angle_range(&self) -> RangeInclusive<f64> {
         self.angle_i..=self.angle_f
     }
+    /// Iterator.
+    pub fn iter(&self) -> impl Iterator<Item = &Pt2> {
+        std::iter::once(&self.ctr)
+    }
+    /// Mutable iterator.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt2> {
+        std::iter::once(&mut self.ctr)
+    }
 }
 
 impl Bounded for CurveArc {
@@ -485,11 +493,6 @@ impl Croppable for CurveArc {
     }
 }
 
-impl YieldPoints for CurveArc {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
-        Box::new(std::iter::once(&self.ctr))
-    }
-}
 impl YieldPointsMut for CurveArc {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
         Box::new(std::iter::once(&mut self.ctr))
