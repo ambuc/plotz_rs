@@ -69,7 +69,7 @@ impl YieldPoints for Obj2 {
             Obj2::Txt(ch) => ch.yield_pts(),
             Obj2::CurveArc(ca) => ca.yield_pts(),
             Obj2::Group(g) => g.yield_pts(),
-            Obj2::Pg2(pg) => pg.yield_pts(),
+            Obj2::Pg2(pg) => Box::new(pg.iter()),
             Obj2::Sg2(sg) => sg.yield_pts(),
         }
     }

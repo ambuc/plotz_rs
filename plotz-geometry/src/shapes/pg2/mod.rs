@@ -347,8 +347,8 @@ impl Pg2 {
             .all(|pt| matches!(self.contains_pt(pt), PointLoc::Outside))
     }
 
-    #[allow(unused)]
-    fn iter(&self) -> Pg2Iter<'_> {
+    /// Iterator.
+    pub fn iter(&self) -> Pg2Iter<'_> {
         Pg2Iter { idx: 0, pg2: self }
     }
 }
@@ -439,7 +439,8 @@ impl IntoIterator for Pg2 {
     }
 }
 
-struct Pg2Iter<'a> {
+/// For Iterator.
+pub struct Pg2Iter<'a> {
     idx: usize,
     pg2: &'a Pg2,
 }
@@ -575,11 +576,6 @@ impl Bounded for Pg2 {
                 .expect("not empty")
                 .0,
         }
-    }
-}
-impl YieldPoints for Pg2 {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
-        Box::new(self.pts.iter())
     }
 }
 impl YieldPointsMut for Pg2 {
