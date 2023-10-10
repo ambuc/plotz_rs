@@ -1,6 +1,6 @@
 // https://tilings.math.uni-bielefeld.de/substitution/danzers-7-fold-original/
 
-use plotz_geometry::{obj2::Obj2, style::Style};
+use plotz_geometry::{obj::Obj, style::Style};
 
 use float_cmp::assert_approx_eq;
 use lazy_static::lazy_static;
@@ -8,8 +8,8 @@ use plotz_color::*;
 use plotz_geometry::{
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
-        pg2::Pg2,
-        pt2::{PolarPt, Pt2},
+        pg::Pg,
+        pt::{PolarPt, Pt},
     },
 };
 use std::f64::consts::PI;
@@ -86,11 +86,11 @@ impl Kind {
 #[derive(Debug, Clone, Copy)]
 struct Tile {
     kind: Kind,
-    pts: [Pt2; 3],
+    pts: [Pt; 3],
 }
 
 #[allow(non_snake_case)]
-fn Tile(kind: Kind, p1: Pt2, p2: Pt2, p3: Pt2) -> Tile {
+fn Tile(kind: Kind, p1: Pt, p2: Pt, p3: Pt) -> Tile {
     let e = 1000.0 * f64::EPSILON;
     match kind {
         Kind::T0 => {
@@ -186,8 +186,8 @@ fn expand_tile(tile: &Tile) -> Vec<Tile> {
     }
 }
 
-pub fn make() -> Vec<(Obj2, Style)> {
-    let origin = Pt2(0.1, 0.1);
+pub fn make() -> Vec<(Obj, Style)> {
+    let origin = Pt(0.1, 0.1);
 
     let t0 = Tile(
         Kind::T0,
@@ -218,7 +218,7 @@ pub fn make() -> Vec<(Obj2, Style)> {
 
             // centerings
             t_copy.pts.iter_mut().for_each(|pt| {
-                pt.rotate_inplace(&Pt2(0, 0), 0.0 * PI);
+                pt.rotate_inplace(&Pt(0, 0), 0.0 * PI);
                 *pt *= (1, -1);
                 *pt *= 270.0;
                 *pt += (40.0 + 270.0 * (jdx as f64), 150.0 + 150.0 * (idx as f64));
@@ -246,12 +246,12 @@ pub fn make() -> Vec<(Obj2, Style)> {
         }
     }
 
-    let dos: Vec<(Obj2, Style)> = all_tiles
+    let dos: Vec<(Obj, Style)> = all_tiles
         .into_iter()
         .flat_map(|tile| {
             let color = tile.kind.color();
 
-            let p = Pg2(tile.pts);
+            let p = Pg(tile.pts);
 
             let config = ShadeConfig::builder()
                 .gap(1.0)
@@ -260,11 +260,11 @@ pub fn make() -> Vec<(Obj2, Style)> {
                 .build();
             let segments = shade_polygon(&config, &p).unwrap();
 
-            let mut ret: Vec<(Obj2, Style)> = vec![];
-            ret.push((Obj2::Pg2(p), Style::default()));
+            let mut ret: Vec<(Obj, Style)> = vec![];
+            ret.push((Obj::Pg(p), Style::default()));
             ret.extend(segments.into_iter().map(|s| {
                 (
-                    Obj2::Sg2(s),
+                    Obj::Sg(s),
                     Style {
                         color,
                         ..Default::default()

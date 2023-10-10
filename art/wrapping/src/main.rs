@@ -3,8 +3,8 @@ use plotz_geometry::style::Style;
 use argh::FromArgs;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
-    obj2::Obj2,
-    shapes::{curve::CurveArc, pt2::Pt2, sg2::Sg2},
+    obj::Obj,
+    shapes::{curve::CurveArc, pt::Pt, sg::Sg},
 };
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 use std::f64::consts::*;
@@ -41,12 +41,12 @@ enum Tile {
     Clover2,
 }
 impl Tile {
-    fn to_dos(&self) -> Vec<(Obj2, Style)> {
+    fn to_dos(&self) -> Vec<(Obj, Style)> {
         self.to_dois()
             .into_iter()
-            .map(|obj2| {
+            .map(|obj| {
                 (
-                    obj2,
+                    obj,
                     Style {
                         thickness: 2.0,
                         ..Default::default()
@@ -57,55 +57,55 @@ impl Tile {
     }
 
     // scaled to a unit square.
-    fn to_dois(&self) -> Vec<Obj2> {
-        let _a = Pt2(0, 0);
-        let _b = Pt2(0.25, 0);
-        let c = Pt2(0.5, 0);
-        let _d = Pt2(0.75, 0);
-        let _e = Pt2(1, 0);
-        let _f = Pt2(0, 0.25);
-        let g = Pt2(0.25, 0.25);
-        let h = Pt2(0.5, 0.25);
-        let i = Pt2(0.75, 0.25);
-        let _j = Pt2(1, 0.25);
-        let k = Pt2(0, 0.5);
-        let l = Pt2(0.25, 0.5);
-        let _m = Pt2(0.5, 0.5);
-        let n = Pt2(0.75, 0.5);
-        let o = Pt2(1, 0.5);
-        let _p = Pt2(0, 0.75);
-        let q = Pt2(0.25, 0.75);
-        let r = Pt2(0.5, 0.75);
-        let s = Pt2(0.75, 0.75);
-        let _t = Pt2(1, 0.75);
-        let _u = Pt2(0, 1);
-        let _v = Pt2(0.25, 1);
-        let w = Pt2(0.5, 1);
-        let _x = Pt2(0.75, 1);
-        let _y = Pt2(1, 1);
+    fn to_dois(&self) -> Vec<Obj> {
+        let _a = Pt(0, 0);
+        let _b = Pt(0.25, 0);
+        let c = Pt(0.5, 0);
+        let _d = Pt(0.75, 0);
+        let _e = Pt(1, 0);
+        let _f = Pt(0, 0.25);
+        let g = Pt(0.25, 0.25);
+        let h = Pt(0.5, 0.25);
+        let i = Pt(0.75, 0.25);
+        let _j = Pt(1, 0.25);
+        let k = Pt(0, 0.5);
+        let l = Pt(0.25, 0.5);
+        let _m = Pt(0.5, 0.5);
+        let n = Pt(0.75, 0.5);
+        let o = Pt(1, 0.5);
+        let _p = Pt(0, 0.75);
+        let q = Pt(0.25, 0.75);
+        let r = Pt(0.5, 0.75);
+        let s = Pt(0.75, 0.75);
+        let _t = Pt(1, 0.75);
+        let _u = Pt(0, 1);
+        let _v = Pt(0.25, 1);
+        let w = Pt(0.5, 1);
+        let _x = Pt(0.75, 1);
+        let _y = Pt(1, 1);
         match self {
             Tile::Cross => {
-                vec![Sg2(k, o).into(), Sg2(c, w).into()]
+                vec![Sg(k, o).into(), Sg(c, w).into()]
             }
             Tile::OverUnder => {
-                vec![Sg2(k, l).into(), Sg2(n, o).into(), Sg2(c, w).into()]
+                vec![Sg(k, l).into(), Sg(n, o).into(), Sg(c, w).into()]
             }
             Tile::Swerve => {
                 vec![
-                    Sg2(k, l).into(),
+                    Sg(k, l).into(),
                     CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
-                    Sg2(c, h).into(),
-                    Sg2(n, o).into(),
+                    Sg(c, h).into(),
+                    Sg(n, o).into(),
                     CurveArc(s, PI..=(3.0 * FRAC_PI_2), 0.25).into(),
-                    Sg2(r, w).into(),
+                    Sg(r, w).into(),
                 ]
             }
             Tile::Clover => {
                 vec![
-                    Sg2(c, h).into(),
-                    Sg2(k, l).into(),
-                    Sg2(n, o).into(),
-                    Sg2(r, w).into(),
+                    Sg(c, h).into(),
+                    Sg(k, l).into(),
+                    Sg(n, o).into(),
+                    Sg(r, w).into(),
                     CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
                     CurveArc(i, FRAC_PI_2..=PI, 0.25).into(),
                     CurveArc(s, PI..=(3.0 * FRAC_PI_2), 0.25).into(),
@@ -116,19 +116,19 @@ impl Tile {
             Tile::CloverIn => {
                 vec![
                     //
-                    Sg2(k, o).into(),
-                    Sg2(c, h).into(),
-                    Sg2(r, w).into(),
+                    Sg(k, o).into(),
+                    Sg(c, h).into(),
+                    Sg(r, w).into(),
                     CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
                     CurveArc(q, (3.0 * FRAC_PI_2)..=TAU, 0.25).into(),
                 ]
             }
             Tile::Clover3 => {
                 vec![
-                    Sg2(c, h).into(),
-                    Sg2(k, l).into(),
-                    Sg2(n, o).into(),
-                    Sg2(r, w).into(),
+                    Sg(c, h).into(),
+                    Sg(k, l).into(),
+                    Sg(n, o).into(),
+                    Sg(r, w).into(),
                     CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
                     CurveArc(i, FRAC_PI_2..=PI, 0.25).into(),
                     CurveArc(s, PI..=(3.0 * FRAC_PI_2), 0.25).into(),
@@ -136,9 +136,9 @@ impl Tile {
             }
             Tile::Clover2 => {
                 vec![
-                    Sg2(c, w).into(),
-                    Sg2(k, l).into(),
-                    Sg2(n, o).into(),
+                    Sg(c, w).into(),
+                    Sg(k, l).into(),
+                    Sg(n, o).into(),
                     CurveArc(g, 0.0..=FRAC_PI_2, 0.25).into(),
                     CurveArc(s, PI..=(3.0 * FRAC_PI_2), 0.25).into(),
                 ]
@@ -153,7 +153,7 @@ fn main() {
     let image_width: f64 = 500.0;
     let margin = 10.0;
 
-    let mut obj_vec: Vec<(Obj2, Style)> = vec![];
+    let mut obj_vec: Vec<(Obj, Style)> = vec![];
 
     let width = 10;
     let height = 10;
@@ -163,13 +163,13 @@ fn main() {
             obj_vec.extend(
                 tile.to_dos()
                     .into_iter()
-                    .map(|(obj2, style)| (obj2 + (dx, dy), style)),
+                    .map(|(obj, style)| (obj + (dx, dy), style)),
             );
         }
     }
 
     Canvas::from_objs(obj_vec.into_iter(), /*autobucket=*/ false)
-        .with_frame(make_frame((image_width, image_width), Pt2(margin, margin)))
+        .with_frame(make_frame((image_width, image_width), Pt(margin, margin)))
         .scale_to_fit_frame_or_die()
         .write_to_svg_or_die(
             Size {

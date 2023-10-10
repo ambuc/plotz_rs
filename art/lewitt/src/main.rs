@@ -1,4 +1,4 @@
-use plotz_geometry::{obj2::Obj2, style::Style};
+use plotz_geometry::{obj::Obj, style::Style};
 
 use argh::FromArgs;
 use plotz_color::*;
@@ -6,7 +6,7 @@ use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
     crop::PointLoc,
     grid::grid_layout::{GridLayout, GridLayoutSettings},
-    shapes::{curve::CurveArc, pt2::Pt2},
+    shapes::{curve::CurveArc, pt::Pt},
 };
 use rand::{seq::SliceRandom, thread_rng, Rng};
 use std::f64::consts::*;
@@ -54,9 +54,9 @@ fn main() {
                 let cubby = (i, j);
                 let bounds = grid_layout.get_cubby_bounds(cubby);
                 for color in COLORS[0..3].choose_multiple(&mut rng, 3) {
-                    let curve_arc_ctr: Pt2 = || -> Pt2 {
+                    let curve_arc_ctr: Pt = || -> Pt {
                         loop {
-                            let cand = Pt2(rng.gen_range(0.0..800.0), rng.gen_range(0.0..1000.0));
+                            let cand = Pt(rng.gen_range(0.0..800.0), rng.gen_range(0.0..1000.0));
                             if !matches!(bounds.contains_pt(cand), PointLoc::Inside) {
                                 return cand;
                             }
@@ -67,7 +67,7 @@ fn main() {
                         grid_layout.insert_and_crop_to_cubby(
                             cubby,
                             (
-                                Obj2::CurveArc(CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64)),
+                                Obj::CurveArc(CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64)),
                                 Style {
                                     thickness: 1.0,
                                     color,

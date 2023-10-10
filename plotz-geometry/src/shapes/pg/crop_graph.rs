@@ -5,8 +5,8 @@ use crate::{
     crop::{CropType, PointLoc},
     intersection::{Intersection, IntersectionResult, Pair, Which},
     shapes::{
-        pg2::Pg2,
-        pt2::{is_colinear_n, Pt2},
+        pg::Pg,
+        pt::{is_colinear_n, Pt},
     },
 };
 use approx::*;
@@ -24,11 +24,11 @@ use typed_builder::TypedBuilder;
 #[derive(Debug, TypedBuilder)]
 pub struct CropGraph<'a> {
     #[builder(default)]
-    graph: DiGraphMap<Pt2, ()>,
+    graph: DiGraphMap<Pt, ()>,
 
-    a: &'a Pg2,
+    a: &'a Pg,
 
-    b: &'a Pg2,
+    b: &'a Pg,
 
     // why do we have a known_pts vector?
     //
@@ -40,11 +40,11 @@ pub struct CropGraph<'a> {
     // to one in this vec) before treating it as a hashable value. if it is
     // known,
     #[builder(default)]
-    known_pts: Vec<Pt2>,
+    known_pts: Vec<Pt>,
 }
 
 impl<'a> CropGraph<'a> {
-    pub fn run(a: &Pg2, b: &Pg2, crop_type: CropType) -> (Vec<Pg2>, DiGraphMap<Pt2, ()>) {
+    pub fn run(a: &Pg, b: &Pg, crop_type: CropType) -> (Vec<Pg>, DiGraphMap<Pt, ()>) {
         let mut crop_graph = CropGraph::builder().a(a).b(b).build();
         crop_graph.build_from_polygons(crop_type);
         crop_graph.remove_nodes_outside_polygon(Which::A);
@@ -65,7 +65,7 @@ impl<'a> CropGraph<'a> {
         (crop_graph.trim_and_create_resultant_polygons(), graph)
     }
 
-    fn normalize_pt(&mut self, pt: &Pt2) -> Pt2 {
+    fn normalize_pt(&mut self, pt: &Pt) -> Pt {
         // if something in self.known_pts matches, return that instead.
         // otherwise insert pt into known_pts and return it.
 
@@ -80,7 +80,7 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    fn get(&self, which: Which) -> &Pg2 {
+    fn get(&self, which: Which) -> &Pg {
         Pair {
             a: &self.a,
             b: &self.b,
@@ -271,13 +271,13 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    fn extract_polygon(&mut self) -> Option<Pg2> {
-        let mut pts: Vec<Pt2> = vec![];
+    fn extract_polygon(&mut self) -> Option<Pg> {
+        let mut pts: Vec<Pt> = vec![];
 
         if self.graph.node_count() == 0 {
             return None;
         }
-        let mut curr_node: Pt2 = {
+        let mut curr_node: Pt = {
             //
             if let Some(pt) = self
                 .graph
@@ -299,7 +299,7 @@ impl<'a> CropGraph<'a> {
         while !pts.contains(&curr_node) {
             pts.push(curr_node);
 
-            let next_node: Option<Pt2> = match self
+            let next_node: Option<Pt> = match self
                 .graph
                 .neighbors_directed(curr_node, Outgoing)
                 .collect::<Vec<_>>()[..]
@@ -349,7 +349,7 @@ impl<'a> CropGraph<'a> {
     }
 
     // NB: Destructive, walks and destroys graph.
-    fn trim_and_create_resultant_polygons(mut self) -> Vec<Pg2> {
+    fn trim_and_create_resultant_polygons(mut self) -> Vec<Pg> {
         let mut resultant = vec![];
 
         while let Some(pg) = self.extract_polygon() {
@@ -365,49 +365,49 @@ impl<'a> CropGraph<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{interpolate::extrapolate_2d, shapes::pg2::Rect};
+    use crate::{interpolate::extrapolate_2d, shapes::pg::Rect};
     use itertools::iproduct;
     use test_case::test_case;
 
-    fn u_shape() -> Pg2 {
-        let a = Pt2(60, 60);
-        let b = Pt2(70, 60);
-        let c = Pt2(80, 60);
-        let d = Pt2(90, 60);
-        let e = Pt2(70, 75);
-        let f = Pt2(80, 75);
-        let g = Pt2(60, 90);
-        let h = Pt2(90, 90);
-        Pg2([a, b, e, f, c, d, h, g, a])
+    fn u_shape() -> Pg {
+        let a = Pt(60, 60);
+        let b = Pt(70, 60);
+        let c = Pt(80, 60);
+        let d = Pt(90, 60);
+        let e = Pt(70, 75);
+        let f = Pt(80, 75);
+        let g = Pt(60, 90);
+        let h = Pt(90, 90);
+        Pg([a, b, e, f, c, d, h, g, a])
     }
 
-    fn h_shape() -> Pg2 {
-        let a = Pt2(60, 40);
-        let b = Pt2(70, 40);
-        let c = Pt2(70, 70);
-        let d = Pt2(80, 70);
-        let e = Pt2(80, 40);
-        let f = Pt2(90, 40);
-        let g = Pt2(90, 110);
-        let h = Pt2(80, 110);
-        let i = Pt2(80, 80);
-        let j = Pt2(70, 80);
-        let k = Pt2(70, 110);
-        let l = Pt2(60, 110);
-        Pg2([a, b, c, d, e, f, g, h, i, j, k, l, a])
+    fn h_shape() -> Pg {
+        let a = Pt(60, 40);
+        let b = Pt(70, 40);
+        let c = Pt(70, 70);
+        let d = Pt(80, 70);
+        let e = Pt(80, 40);
+        let f = Pt(90, 40);
+        let g = Pt(90, 110);
+        let h = Pt(80, 110);
+        let i = Pt(80, 80);
+        let j = Pt(70, 80);
+        let k = Pt(70, 110);
+        let l = Pt(60, 110);
+        Pg([a, b, c, d, e, f, g, h, i, j, k, l, a])
     }
 
     #[test_case(u_shape(), CropType::Exclusive; "u-shape, exclusive")]
     #[test_case(u_shape(), CropType::Inclusive; "u-shape, inclusive")]
     #[test_case(h_shape(), CropType::Exclusive; "h-shape, exclusive")]
     #[test_case(h_shape(), CropType::Inclusive; "h-shape, inclusive")]
-    fn test_all_crops(shape: Pg2, crop_type: CropType) {
+    fn test_all_crops(shape: Pg, crop_type: CropType) {
         let boundary = Rect((50, 50), (50, 50)).unwrap();
         let margin = 10.0;
         for (_idx, offset) in iproduct!(0..=5, 0..=4).map(|(i, j)| {
             (
                 (i, j),
-                Pt2((i as f64 - 3.0) * margin, (j as f64 - 3.0) * margin),
+                Pt((i as f64 - 3.0) * margin, (j as f64 - 3.0) * margin),
             )
         })
         // .filter(|(idx, _)| *idx == (1, 2))

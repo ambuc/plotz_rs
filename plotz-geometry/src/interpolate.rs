@@ -1,5 +1,5 @@
 //! General 1D and 2D interpolation and extrapolation algorithms.
-use crate::shapes::pt2::Pt2;
+use crate::shapes::pt::Pt;
 use float_cmp::approx_eq;
 
 /// A general error arising from trying to interpolate a value some percentage
@@ -46,7 +46,7 @@ pub enum Interpolation2dError {
 
 /// Given the line |ab| defined by points |a| and |b|, and another point |i|
 /// which lies along it, return the percent along |ab| which |i| lies.
-pub fn interpolate_2d_checked(a: Pt2, b: Pt2, i: Pt2) -> Result<f64, Interpolation2dError> {
+pub fn interpolate_2d_checked(a: Pt, b: Pt, i: Pt) -> Result<f64, Interpolation2dError> {
     let x_same = approx_eq!(f64, a.x, b.x);
     let y_same = approx_eq!(f64, a.y, b.y);
     match (x_same, y_same) {
@@ -72,7 +72,7 @@ pub fn interpolate_2d_checked(a: Pt2, b: Pt2, i: Pt2) -> Result<f64, Interpolati
 
 /// Given the line |ab| defined by points |a| and |b| and a percentage |p|,
 /// return the interpolated point which lies at a fraction of |i| along |ab|.
-pub fn extrapolate_2d(a: Pt2, b: Pt2, p: f64) -> Pt2 {
+pub fn extrapolate_2d(a: Pt, b: Pt, p: f64) -> Pt {
     a + ((b - a) * p)
 }
 
@@ -91,23 +91,23 @@ mod tests {
 
     #[test]
     fn test_interpolate_2d_checked() {
-        assert!(interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(-0.1, -0.1)).is_err());
+        assert!(interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(-0.1, -0.1)).is_err());
         assert_eq!(
-            interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(0, 0)),
+            interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(0, 0)),
             Ok(0.0)
         );
         assert_eq!(
-            interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(0.5, 0.5)),
+            interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(0.5, 0.5)),
             Ok(0.5)
         );
         assert_eq!(
-            interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(1, 1)),
+            interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(1, 1)),
             Ok(1.0)
         );
-        assert!(interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(1.1, 1.1)).is_err());
+        assert!(interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(1.1, 1.1)).is_err());
 
         // not on line
-        assert!(interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(1, 0)).is_err());
-        assert!(interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(0, 1)).is_err());
+        assert!(interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(1, 0)).is_err());
+        assert!(interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(0, 1)).is_err());
     }
 }

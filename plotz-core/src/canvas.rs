@@ -1,6 +1,6 @@
 //! Many objects.
 
-use plotz_geometry::{obj2::Obj2, style::Style};
+use plotz_geometry::{obj::Obj, style::Style};
 
 use crate::{
     bucket::Bucket,
@@ -11,13 +11,13 @@ use float_ord::FloatOrd;
 use itertools::Itertools;
 use plotz_geometry::{
     bounded::{streaming_bbox, Bounded, Bounds},
-    shapes::pt2::Pt2,
+    shapes::pt::Pt,
     *,
 };
 use std::collections::HashMap;
 use tracing::trace;
 
-type CanvasMap = HashMap<Option<Bucket>, Vec<(Obj2, Style)>>;
+type CanvasMap = HashMap<Option<Bucket>, Vec<(Obj, Style)>>;
 
 /// Many objects.
 #[derive(Debug, Clone)]
@@ -26,7 +26,7 @@ pub struct Canvas {
     pub dos_by_bucket: CanvasMap,
 
     /// the frame, maybe.
-    pub frame: Option<(Obj2, Style)>,
+    pub frame: Option<(Obj, Style)>,
 }
 
 impl Default for Canvas {
@@ -45,15 +45,15 @@ impl Canvas {
     }
 
     /// ctor from objs
-    pub fn from_objs<O: IntoIterator<Item = (Obj2, Style)>>(objs: O, autobucket: bool) -> Canvas {
-        let objs_vec: Vec<(Obj2, Style)> = objs.into_iter().collect();
+    pub fn from_objs<O: IntoIterator<Item = (Obj, Style)>>(objs: O, autobucket: bool) -> Canvas {
+        let objs_vec: Vec<(Obj, Style)> = objs.into_iter().collect();
         if autobucket {
             trace!(
                 "Creating Canvas(autobucket=true) from {:?} objects",
                 objs_vec.len()
             );
             let mut c = Canvas::new();
-            for (b, objs) in &objs_vec.into_iter().group_by(|(_obj2, style)| style.color) {
+            for (b, objs) in &objs_vec.into_iter().group_by(|(_obj, style)| style.color) {
                 c.dos_by_bucket
                     .entry(Some(Bucket::Color(b)))
                     .or_default()
@@ -73,7 +73,7 @@ impl Canvas {
     }
 
     /// with a frame
-    pub fn with_frame(self, frame: (Obj2, Style)) -> Canvas {
+    pub fn with_frame(self, frame: (Obj, Style)) -> Canvas {
         Canvas {
             frame: Some(frame),
             ..self
@@ -85,19 +85,19 @@ impl Canvas {
         self.dos_by_bucket
             .iter()
             .flat_map(|(_bucket, dos)| dos)
-            .map(|(obj2, _style)| obj2)
+            .map(|(obj, _style)| obj)
     }
 
     /// Returns an iterator of mutable Object2dInner.
-    pub fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut Obj2> {
+    pub fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut Obj> {
         self.dos_by_bucket
             .iter_mut()
             .flat_map(|(_bucket, dos)| dos)
-            .map(|(obj2, _style)| obj2)
+            .map(|(obj, _style)| obj)
     }
 
     /// Mutates every object in the canvas according to some |f|.
-    pub fn mutate_all(&mut self, f: impl Fn(&mut Pt2)) {
+    pub fn mutate_all(&mut self, f: impl Fn(&mut Pt)) {
         self.objs_iter_mut().for_each(|o| o.iter_mut().for_each(&f))
     }
 
@@ -123,7 +123,7 @@ impl Canvas {
                 self.dos_by_bucket
                     .iter()
                     .flat_map(|(_bucket, dos)| dos)
-                    .map(|(obj2, _style)| obj2),
+                    .map(|(obj, _style)| obj),
             )?;
 
             let buffer = 0.9;
@@ -132,8 +132,8 @@ impl Canvas {
             let scale = std::cmp::min(FloatOrd(w_scale), FloatOrd(s_scale)).0 * buffer;
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
-                for (obj2, _style) in dos.iter_mut() {
-                    *obj2 *= scale;
+                for (obj, _style) in dos.iter_mut() {
+                    *obj *= scale;
                 }
             });
         }
@@ -144,14 +144,14 @@ impl Canvas {
                 self.dos_by_bucket
                     .values()
                     .flatten()
-                    .map(|(obj2, _style)| obj2),
+                    .map(|(obj, _style)| obj),
             )?;
 
             let translate_diff = frame_bounds.bbox_center() - inner_bounds.bbox_center();
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
-                dos.iter_mut().for_each(|(obj2, _style)| {
-                    obj2.iter_mut().for_each(|pt: &mut Pt2| {
+                dos.iter_mut().for_each(|(obj, _style)| {
+                    obj.iter_mut().for_each(|pt: &mut Pt| {
                         *pt += translate_diff;
                     });
                 });
@@ -173,14 +173,14 @@ impl Canvas {
         {
             trace!("Writing to all.");
             let name = format!("{}_all.svg", prefix);
-            let mut all: Vec<(Obj2, Style)> = vec![];
+            let mut all: Vec<(Obj, Style)> = vec![];
             if let Some(frame) = self.frame.clone() {
                 all.push(frame);
             }
             for dos in self.dos_by_bucket.values() {
                 all.extend(dos.clone());
             }
-            let pgs: Vec<(Obj2, Style)> = all.into_iter().collect::<Vec<_>>();
+            let pgs: Vec<(Obj, Style)> = all.into_iter().collect::<Vec<_>>();
             write_layer_to_svg(size, name, &pgs)?;
         }
 

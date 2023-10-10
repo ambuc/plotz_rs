@@ -4,10 +4,10 @@ use plotz_geometry::{
     crop::PointLoc,
     intersection::{Intersection, IntersectionResult},
     shapes::{
-        pg2::Pg2,
-        pt2::{PolarPt, Pt2},
-        ry2::Ry2,
-        sg2::Sg2,
+        pg::Pg,
+        pt::{PolarPt, Pt},
+        ry::Ry,
+        sg::Sg,
     },
 };
 use rand::seq::SliceRandom;
@@ -95,9 +95,9 @@ impl Tile {
 
     // what's naive about this? SO glad you asked bestie. it's the right shape
     // but that's it. you have to place this somewhere sensible upon usage.
-    pub fn to_naive_pg2(&self) -> Pg2 {
+    pub fn to_naive_pg(&self) -> Pg {
         let vertex_turn_angles: &[f64] = &self.angles_deg();
-        let mut cursor_position = Pt2(0, 0);
+        let mut cursor_position = Pt(0, 0);
         let mut cursor_angle_rad = 0.0;
         let mut accumulated = vec![cursor_position];
         for vertex_turn_angle in vertex_turn_angles
@@ -110,11 +110,11 @@ impl Tile {
             accumulated.push(cursor_position)
         }
         // we are constructing a closed polygon -- so we techincally don't need that
-        // very last point, Pg2() automatically closes it for us.
+        // very last point, Pg() automatically closes it for us.
         accumulated.pop();
-        let mut pg2 = Pg2(accumulated);
-        pg2.rotate(&Pt2(0, 0), 0.00001);
-        pg2
+        let mut pg = Pg(accumulated);
+        pg.rotate(&Pt(0, 0), 0.00001);
+        pg
     }
 
     pub fn color(&self) -> &'static ColorRGB {
@@ -122,7 +122,7 @@ impl Tile {
     }
 
     pub fn place(self, c: Constraint) -> PlacedTile {
-        let naive_pg = self.to_naive_pg2();
+        let naive_pg = self.to_naive_pg();
         let naive_sg = naive_pg.to_segments()[c.src_index];
 
         let mut modified_pg = naive_pg;
@@ -136,37 +136,37 @@ impl Tile {
         modified_pg.rotate(&modified_sg.midpoint(), rotation);
 
         PlacedTile {
-            pg2: modified_pg,
+            pg: modified_pg,
             tile: self,
         }
     }
 }
 
-// place tile sg #{usize} along real segment {Sg2}.
+// place tile sg #{usize} along real segment {Sg}.
 // because girih tiles all have the same length, this will involve rotation and
 // translation but never scaling.
 #[derive(Debug)]
 pub struct Constraint<'a> {
     pub src_index: usize,
-    pub target: &'a Sg2,
+    pub target: &'a Sg,
 }
 
 #[derive(Debug)]
 pub struct PlacedTile {
-    pub pg2: Pg2,
+    pub pg: Pg,
     pub tile: Tile,
 }
 
 impl PlacedTile {
-    pub fn to_strapwork(&self) -> Vec<Sg2> {
+    pub fn to_strapwork(&self) -> Vec<Sg> {
         let g = self.tile.enum_type;
         let mut strapwork = vec![];
 
         for (edge1, edgeb) in self
-            .pg2
+            .pg
             .to_segments()
             .iter()
-            .zip(self.pg2.to_segments().iter().cycle().skip(1))
+            .zip(self.pg.to_segments().iter().cycle().skip(1))
         {
             let a_ray_angle = {
                 let a_angle = edge1.ray_angle();
@@ -176,23 +176,23 @@ impl PlacedTile {
 
                 let sg_1_f = edge1.midpoint() + PolarPt(0.1, angle_1);
                 let sg_2_f = edge1.midpoint() + PolarPt(0.1, angle_2);
-                match (self.pg2.contains_pt(&sg_1_f), self.pg2.contains_pt(&sg_2_f)) {
+                match (self.pg.contains_pt(&sg_1_f), self.pg.contains_pt(&sg_2_f)) {
                     (PointLoc::Inside, _) => angle_1,
                     (_, PointLoc::Inside) => angle_2,
                     _ => panic!("oh"),
                 }
             };
 
-            let a_ray: Ry2 = Ry2(edge1.midpoint(), a_ray_angle);
+            let a_ray: Ry = Ry(edge1.midpoint(), a_ray_angle);
 
             if let Some(IntersectionResult::OneIntersection(_)) = a_ray.intersects_sg(edgeb) {
-                strapwork.push(Sg2(edge1.midpoint(), edgeb.midpoint()));
+                strapwork.push(Sg(edge1.midpoint(), edgeb.midpoint()));
             } else {
                 // imagine a bridge from a_mdpt to b_mdpt.
                 // out of the center of the bridge rise2 a perpendicular tower.
-                let bridge = Sg2(edge1.midpoint(), edgeb.midpoint());
-                let tower_a = Ry2(bridge.midpoint(), bridge.ray_angle() - FRAC_PI_2);
-                let tower_b = Ry2(bridge.midpoint(), bridge.ray_angle() + FRAC_PI_2);
+                let bridge = Sg(edge1.midpoint(), edgeb.midpoint());
+                let tower_a = Ry(bridge.midpoint(), bridge.ray_angle() - FRAC_PI_2);
+                let tower_b = Ry(bridge.midpoint(), bridge.ray_angle() + FRAC_PI_2);
 
                 // ztex lies at the intersection of a_ray and the tower.
                 let ztex = match (tower_a.intersects(&a_ray), tower_b.intersects(&a_ray)) {
@@ -201,7 +201,7 @@ impl PlacedTile {
                     _ => panic!("oh"),
                 };
 
-                strapwork.extend(&[Sg2(edge1.midpoint(), ztex), Sg2(ztex, edgeb.midpoint())]);
+                strapwork.extend(&[Sg(edge1.midpoint(), ztex), Sg(ztex, edgeb.midpoint())]);
             }
         }
 
@@ -211,9 +211,9 @@ impl PlacedTile {
 
         let mut s_ver = vec![];
 
-        let tile_contains = |sg: &Sg2| {
-            self.pg2.point_is_inside_or_on_border(&sg.i)
-                && self.pg2.point_is_inside_or_on_border(&sg.f)
+        let tile_contains = |sg: &Sg| {
+            self.pg.point_is_inside_or_on_border(&sg.i)
+                && self.pg.point_is_inside_or_on_border(&sg.f)
         };
 
         for s in strapwork {
@@ -226,11 +226,11 @@ impl PlacedTile {
                     // perpendicular to a line of symmetry. Don't ask me how I
                     // know it. And don't ask me to generalize it.
                     let (perp_ray_1, perp_ray_2) =
-                        self.pg2.to_segments()[0].rays_perpendicular_both();
+                        self.pg.to_segments()[0].rays_perpendicular_both();
 
                     let pt_inside = match (
-                        self.pg2.point_is_inside_or_on_border(&s.i),
-                        self.pg2.point_is_inside_or_on_border(&s.f),
+                        self.pg.point_is_inside_or_on_border(&s.i),
+                        self.pg.point_is_inside_or_on_border(&s.f),
                     ) {
                         (true, false) => s.i,
                         (false, true) => s.f,
@@ -239,10 +239,10 @@ impl PlacedTile {
 
                     match (perp_ray_1.intersects_sg(&s), perp_ray_2.intersects_sg(&s)) {
                         (Some(IntersectionResult::OneIntersection(Intersection { pt, .. })), _) => {
-                            s_ver.push(Sg2(pt_inside, pt));
+                            s_ver.push(Sg(pt_inside, pt));
                         }
                         (_, Some(IntersectionResult::OneIntersection(Intersection { pt, .. }))) => {
-                            s_ver.push(Sg2(pt_inside, pt));
+                            s_ver.push(Sg(pt_inside, pt));
                         }
                         _ => panic!("OH"),
                     }
@@ -256,15 +256,15 @@ impl PlacedTile {
     }
 
     pub fn to_annotated_placed_tiles(&self) -> AnnotatedPlacedTile {
-        let axis = Pt2(0, 0);
+        let axis = Pt(0, 0);
         let offset = 0.01;
 
         AnnotatedPlacedTile {
             girih: self.tile.enum_type,
-            outline: self.pg2.clone(),
+            outline: self.pg.clone(),
             straps: (PlacedTile {
-                pg2: {
-                    let mut m = self.pg2.clone();
+                pg: {
+                    let mut m = self.pg.clone();
                     m.rotate(&axis, offset);
                     m
                 },
@@ -280,24 +280,24 @@ impl PlacedTile {
         }
     }
 
-    pub fn test_pts(&self) -> Vec<Pt2> {
-        let cand_ctr = self.pg2.bbox_center();
+    pub fn test_pts(&self) -> Vec<Pt> {
+        let cand_ctr = self.pg.bbox_center();
         std::iter::once(cand_ctr)
             .chain(
-                self.pg2
+                self.pg
                     .to_segments()
                     .iter()
-                    .map(|sg2| -> Pt2 { sg2.midpoint() }),
+                    .map(|sg| -> Pt { sg.midpoint() }),
             )
-            .chain(self.pg2.pts.iter().map(|pt| pt.avg(&cand_ctr)))
+            .chain(self.pg.pts.iter().map(|pt| pt.avg(&cand_ctr)))
             .collect::<Vec<_>>()
     }
 }
 
 pub struct AnnotatedPlacedTile {
     pub girih: Girih,
-    pub outline: Pg2,
-    pub straps: Vec<Sg2>,
+    pub outline: Pg,
+    pub straps: Vec<Sg>,
 }
 
 #[cfg(test)]

@@ -5,9 +5,9 @@ use crate::{
     crop::{CropType, Croppable, PointLoc},
     interpolate::interpolate_2d_checked,
     shapes::{
-        pg2::{abp, Pg2},
-        pt2::{PolarPt, Pt2},
-        sg2::Sg2,
+        pg::{abp, Pg},
+        pt::{PolarPt, Pt},
+        sg::Sg,
     },
     *,
 };
@@ -23,7 +23,7 @@ use std::{
 /// A single curvearc, i.e. some section of a circle.
 pub struct CurveArc {
     /// The center of the circle.
-    pub ctr: Pt2,
+    pub ctr: Pt,
     /// The initial angle of the circle. 0 <= a <= TAU, angle_i <= angle_f.
     pub angle_i: f64,
     /// The final angle of the circle. 0 <= a <= TAU, angle_i <= angle_f.
@@ -33,21 +33,21 @@ pub struct CurveArc {
 }
 
 impl CurveArc {
-    fn pt_i(&self) -> Pt2 {
+    fn pt_i(&self) -> Pt {
         self.ctr + PolarPt(self.radius, self.angle_i)
     }
-    fn pt_f(&self) -> Pt2 {
+    fn pt_f(&self) -> Pt {
         self.ctr + PolarPt(self.radius, self.angle_f)
     }
     fn angle_range(&self) -> RangeInclusive<f64> {
         self.angle_i..=self.angle_f
     }
     /// Iterator.
-    pub fn iter(&self) -> impl Iterator<Item = &Pt2> {
+    pub fn iter(&self) -> impl Iterator<Item = &Pt> {
         std::iter::once(&self.ctr)
     }
     /// Mutable iterator.
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt2> {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         std::iter::once(&mut self.ctr)
     }
 }
@@ -89,7 +89,7 @@ impl Bounded for CurveArc {
 
 #[allow(non_snake_case)]
 /// A single curvearc, i.e. some section of a circle.
-pub fn CurveArc(ctr: Pt2, sweep: RangeInclusive<f64>, radius: f64) -> CurveArc {
+pub fn CurveArc(ctr: Pt, sweep: RangeInclusive<f64>, radius: f64) -> CurveArc {
     assert!(sweep.start() <= sweep.end(), "sweep: {:?}", sweep);
     assert!(
         (-1.0 * TAU..=TAU).contains(sweep.start()),
@@ -146,23 +146,23 @@ fn split_range(
 /// |CurveArcs(..)| will happily do the arithmetic and return a set of
 /// |CurveArc| objects which circle the center the correct fractional number of
 /// times. This is nice on a pen plotter.
-pub fn CurveArcs(ctr: Pt2, sweep: RangeInclusive<f64>, radius: f64) -> Vec<CurveArc> {
+pub fn CurveArcs(ctr: Pt, sweep: RangeInclusive<f64>, radius: f64) -> Vec<CurveArc> {
     split_range(sweep, 0.0..=TAU)
         .map(|r| CurveArc(ctr, r, radius))
         .collect::<Vec<_>>()
 }
 
-impl Add<Pt2> for CurveArc {
+impl Add<Pt> for CurveArc {
     type Output = Self;
-    fn add(self, rhs: Pt2) -> Self::Output {
+    fn add(self, rhs: Pt) -> Self::Output {
         CurveArc {
             ctr: self.ctr + rhs,
             ..self
         }
     }
 }
-impl AddAssign<Pt2> for CurveArc {
-    fn add_assign(&mut self, rhs: Pt2) {
+impl AddAssign<Pt> for CurveArc {
+    fn add_assign(&mut self, rhs: Pt) {
         self.ctr += rhs;
     }
 }
@@ -190,22 +190,22 @@ impl MulAssign<f64> for CurveArc {
         self.radius *= rhs;
     }
 }
-impl Sub<Pt2> for CurveArc {
+impl Sub<Pt> for CurveArc {
     type Output = Self;
-    fn sub(self, rhs: Pt2) -> Self::Output {
+    fn sub(self, rhs: Pt) -> Self::Output {
         CurveArc {
             ctr: self.ctr - rhs,
             ..self
         }
     }
 }
-impl SubAssign<Pt2> for CurveArc {
-    fn sub_assign(&mut self, rhs: Pt2) {
+impl SubAssign<Pt> for CurveArc {
+    fn sub_assign(&mut self, rhs: Pt) {
         self.ctr -= rhs;
     }
 }
-impl RemAssign<Pt2> for CurveArc {
-    fn rem_assign(&mut self, rhs: Pt2) {
+impl RemAssign<Pt> for CurveArc {
+    fn rem_assign(&mut self, rhs: Pt) {
         self.ctr %= rhs;
     }
 }
@@ -260,7 +260,7 @@ impl CurveLoc {
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
-struct PtLoc(Pt2, SegmentLoc, CurveLoc);
+struct PtLoc(Pt, SegmentLoc, CurveLoc);
 
 #[derive(Debug, PartialEq)]
 enum IntersectionResult {
@@ -270,7 +270,7 @@ enum IntersectionResult {
 }
 
 /// how to find intersection of segment and curve.
-fn intersections_of_line_and_curvearc(segment: &Sg2, curve_arc: &CurveArc) -> IntersectionResult {
+fn intersections_of_line_and_curvearc(segment: &Sg, curve_arc: &CurveArc) -> IntersectionResult {
     let (x_0, y_0) = (curve_arc.ctr.x, curve_arc.ctr.y);
     let (x_1, y_1) = (segment.i.x, segment.i.y);
     let (x_2, y_2) = (segment.f.x, segment.f.y);
@@ -369,7 +369,7 @@ fn intersections_of_line_and_curvearc(segment: &Sg2, curve_arc: &CurveArc) -> In
                             }
                         };
 
-                        Pt2(x, y)
+                        Pt(x, y)
                     })
                     .collect::<Vec<_>>()[..]
                 {
@@ -417,7 +417,7 @@ fn intersections_of_line_and_curvearc(segment: &Sg2, curve_arc: &CurveArc) -> In
 
 impl Croppable for CurveArc {
     type Output = CurveArc;
-    fn crop(&self, frame: &Pg2, crop_type: CropType) -> Vec<Self::Output>
+    fn crop(&self, frame: &Pg, crop_type: CropType) -> Vec<Self::Output>
     where
         Self: Sized,
     {
@@ -483,7 +483,7 @@ impl Croppable for CurveArc {
 
         r
     }
-    fn crop_excluding(&self, _other: &Pg2) -> Vec<Self::Output>
+    fn crop_excluding(&self, _other: &Pg) -> Vec<Self::Output>
     where
         Self: Sized,
     {
@@ -504,8 +504,8 @@ impl Nullable for CurveArc {
 mod test {
     use super::*;
     use crate::shapes::{
-        pg2::{Pg2, Rect},
-        sg2::Sg2,
+        pg::{Pg, Rect},
+        sg::Sg,
     };
     use assert_matches::assert_matches;
     use float_cmp::assert_approx_eq;
@@ -515,47 +515,47 @@ mod test {
     fn test_curve_zero_intersections() {
         assert_matches!(
             intersections_of_line_and_curvearc(
-                &Sg2((0, 0), (3, 0)),
-                &CurveArc(Pt2(1, 1), 0.0..=PI, 0.5)
+                &Sg((0, 0), (3, 0)),
+                &CurveArc(Pt(1, 1), 0.0..=PI, 0.5)
             ),
             IntersectionResult::None
         );
     }
 
     #[test_case(
-        CurveArc(Pt2(1, 1), 0.0..=PI, 1.0), SegmentLoc::M(0.5),
+        CurveArc(Pt(1, 1), 0.0..=PI, 1.0), SegmentLoc::M(0.5),
         CurveLoc::M(0.5); "segment m, curve m"
     )]
     #[test_case(
-        CurveArc(Pt2(1, 1), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), SegmentLoc::M(0.5),
+        CurveArc(Pt(1, 1), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), SegmentLoc::M(0.5),
         CurveLoc::F; "segment m, curve f"
     )]
     #[test_case(
-        CurveArc(Pt2(1, 1), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), SegmentLoc::M(0.5),
+        CurveArc(Pt(1, 1), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), SegmentLoc::M(0.5),
         CurveLoc::I; "segment m, curve i"
     )]
     #[test_case(
-        CurveArc(Pt2(0, 1), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), SegmentLoc::I,
+        CurveArc(Pt(0, 1), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), SegmentLoc::I,
         CurveLoc::F; "segment i, curve f"
     )]
     #[test_case(
-        CurveArc(Pt2(0, 1), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), SegmentLoc::I,
+        CurveArc(Pt(0, 1), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), SegmentLoc::I,
         CurveLoc::I; "segment i, curve i"
     )]
     #[test_case(
-        CurveArc(Pt2(0, 1), 0.0..=PI, 1.0), SegmentLoc::I,
+        CurveArc(Pt(0, 1), 0.0..=PI, 1.0), SegmentLoc::I,
         CurveLoc::M(0.5); "segment i, curve m"
     )]
     #[test_case(
-        CurveArc(Pt2(2, 1), 0.0..=PI, 1.0), SegmentLoc::F,
+        CurveArc(Pt(2, 1), 0.0..=PI, 1.0), SegmentLoc::F,
         CurveLoc::M(0.5); "segment f, curve m"
     )]
     #[test_case(
-        CurveArc(Pt2(2, 1), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), SegmentLoc::F,
+        CurveArc(Pt(2, 1), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), SegmentLoc::F,
         CurveLoc::I; "segment f, curve i"
     )]
     #[test_case(
-        CurveArc(Pt2(2, 1), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), SegmentLoc::F,
+        CurveArc(Pt(2, 1), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), SegmentLoc::F,
         CurveLoc::F; "segment f, curve f"
     )]
     fn test_curve_one_intersection_tangent(
@@ -563,7 +563,7 @@ mod test {
         expected_segment_loc: SegmentLoc,
         expected_curve_loc: CurveLoc,
     ) {
-        let segment = Sg2((0, 0), (2, 0));
+        let segment = Sg((0, 0), (2, 0));
 
         let (sl, cl) = assert_matches!(
             intersections_of_line_and_curvearc(&segment, &curve_arc),
@@ -574,21 +574,21 @@ mod test {
     }
 
     #[test_case(
-        Sg2((0, 0), (2, 0)),
-        CurveArc(Pt2(1, 0), FRAC_PI_2..=3.0 * FRAC_PI_2, 0.5),
-        (Pt2(0.50, 0), SegmentLoc::M(0.25), CurveLoc::M(0.5));
+        Sg((0, 0), (2, 0)),
+        CurveArc(Pt(1, 0), FRAC_PI_2..=3.0 * FRAC_PI_2, 0.5),
+        (Pt(0.50, 0), SegmentLoc::M(0.25), CurveLoc::M(0.5));
         "intersection 1"
     )]
     #[test_case(
-        Sg2((2, 0), (2, 2)),
-        CurveArc(Pt2(2, 0), 0.0..=3.0 * FRAC_PI_2, 1.0),
-        (Pt2(2, 1), SegmentLoc::M(0.5), CurveLoc::M(1.0 / 3.0));
+        Sg((2, 0), (2, 2)),
+        CurveArc(Pt(2, 0), 0.0..=3.0 * FRAC_PI_2, 1.0),
+        (Pt(2, 1), SegmentLoc::M(0.5), CurveLoc::M(1.0 / 3.0));
         "intersection 2"
     )]
     fn test_curve_one_intersection_crossing(
-        segment: Sg2,
+        segment: Sg,
         curve_arc: CurveArc,
-        (expected_point_loc, expected_segment_loc, expected_curve_loc): (Pt2, SegmentLoc, CurveLoc),
+        (expected_point_loc, expected_segment_loc, expected_curve_loc): (Pt, SegmentLoc, CurveLoc),
     ) {
         let (pl, sl, cl) = assert_matches!(
             intersections_of_line_and_curvearc(&segment, &curve_arc),
@@ -600,20 +600,20 @@ mod test {
     }
 
     #[test_case(
-        Sg2((0., 0.), (3., 0.)),
-        CurveArc(Pt2(1.5, 0), 0.0..=PI, 0.5),
-        PtLoc(Pt2(1, 0), SegmentLoc::M(1.0 / 3.0), CurveLoc::F),
-        PtLoc(Pt2(2, 0), SegmentLoc::M(2.0 / 3.0), CurveLoc::I);
+        Sg((0., 0.), (3., 0.)),
+        CurveArc(Pt(1.5, 0), 0.0..=PI, 0.5),
+        PtLoc(Pt(1, 0), SegmentLoc::M(1.0 / 3.0), CurveLoc::F),
+        PtLoc(Pt(2, 0), SegmentLoc::M(2.0 / 3.0), CurveLoc::I);
         "segment m curve i, segment m curve f"
     )]
     #[test_case(
-        Sg2((0, 2), (0, 0.18)),
-        CurveArc(Pt2(1, 1), 0.0..=TAU, 1.1),
-        PtLoc(Pt2(0, 0.5417424305044158), SegmentLoc::M(0.8012404227997715), CurveLoc::M(0.5683888259129364)),
-        PtLoc(Pt2(0, 1.4582575694955842), SegmentLoc::M(0.29766067610132735), CurveLoc::M(0.4316111740870635));
+        Sg((0, 2), (0, 0.18)),
+        CurveArc(Pt(1, 1), 0.0..=TAU, 1.1),
+        PtLoc(Pt(0, 0.5417424305044158), SegmentLoc::M(0.8012404227997715), CurveLoc::M(0.5683888259129364)),
+        PtLoc(Pt(0, 1.4582575694955842), SegmentLoc::M(0.29766067610132735), CurveLoc::M(0.4316111740870635));
         "vertical")
     ]
-    fn test_curve_two_intersections(segment: Sg2, curve_arc: CurveArc, e_pl1: PtLoc, e_pl2: PtLoc) {
+    fn test_curve_two_intersections(segment: Sg, curve_arc: CurveArc, e_pl1: PtLoc, e_pl2: PtLoc) {
         let (pl1, pl2) = assert_matches!(
             intersections_of_line_and_curvearc(&segment, &curve_arc),
             IntersectionResult::Two(pl1, pl2) => (pl1, pl2)
@@ -637,40 +637,40 @@ mod test {
 
     #[test_case(
         Rect((0, 0), (2, 2)).unwrap(),
-        CurveArc(Pt2(2, 0), 0.0..=3.0 * FRAC_PI_2, 1.0),
+        CurveArc(Pt(2, 0), 0.0..=3.0 * FRAC_PI_2, 1.0),
         vec![
-            CurveArc(Pt2(2, 0), FRAC_PI_2..=PI, 1.0)
+            CurveArc(Pt(2, 0), FRAC_PI_2..=PI, 1.0)
         ];
         "two intersections, one resultant"
     )]
     #[test_case(
         Rect((0, 0), (2, 2)).unwrap(),
-        CurveArc(Pt2(1, 1), 0.0..=TAU, 0.5),
+        CurveArc(Pt(1, 1), 0.0..=TAU, 0.5),
         vec![
-            CurveArc(Pt2(1.0, 1.0), 0.0..=TAU, 0.5)
+            CurveArc(Pt(1.0, 1.0), 0.0..=TAU, 0.5)
         ];
         "no intersections"
     )]
     #[test_case(
         Rect((0, 0), (2, 2)).unwrap(),
-        CurveArc(Pt2(1, 1), 0.0..=TAU, 1.0),
+        CurveArc(Pt(1, 1), 0.0..=TAU, 1.0),
         vec![
-            CurveArc(Pt2(1, 1), 0.0..=TAU, 1.0)
+            CurveArc(Pt(1, 1), 0.0..=TAU, 1.0)
         ];
         "four intersections, all tangent"
     )]
     #[test_case(
         Rect((0, 0), (2, 2)).unwrap(),
-        CurveArc(Pt2(1, 1), 0.0..=TAU, 1.1),
+        CurveArc(Pt(1, 1), 0.0..=TAU, 1.1),
         vec![
-            CurveArc(Pt2(1, 1), 0.4296996661514249..=1.141096660643471, 1.1),
-            CurveArc(Pt2(1, 1), 2.0004959929463215..=2.711892987438368, 1.1),
-            CurveArc(Pt2(1, 1), 3.5712923197412176..=4.282689314233265, 1.1),
-            CurveArc(Pt2(1, 1), 5.1420886465361150..=5.853485641028161, 1.1),
+            CurveArc(Pt(1, 1), 0.4296996661514249..=1.141096660643471, 1.1),
+            CurveArc(Pt(1, 1), 2.0004959929463215..=2.711892987438368, 1.1),
+            CurveArc(Pt(1, 1), 3.5712923197412176..=4.282689314233265, 1.1),
+            CurveArc(Pt(1, 1), 5.1420886465361150..=5.853485641028161, 1.1),
         ];
         "four intersections, all passthrough"
     )]
-    fn test_curvearc_crop(rect: Pg2, curvearc: CurveArc, expected_curvearcs: Vec<CurveArc>) {
+    fn test_curvearc_crop(rect: Pg, curvearc: CurveArc, expected_curvearcs: Vec<CurveArc>) {
         let actual_curvearcs = curvearc.crop_to(&rect);
         assert_eq!(actual_curvearcs.len(), expected_curvearcs.len());
 

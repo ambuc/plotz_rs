@@ -3,8 +3,8 @@
 pub mod grid_layout;
 
 use crate::{
-    obj2::Obj2,
-    shapes::{pt2::Pt2, sg2::Sg2},
+    obj::Obj,
+    shapes::{pt::Pt, sg::Sg},
     style::Style,
 };
 use num::range_step;
@@ -43,16 +43,16 @@ pub struct Grid {
 
 impl Grid {
     /// Renders the grid to a set of object2ds for plotting.
-    pub fn to_segments(&self) -> Vec<(Obj2, Style)> {
+    pub fn to_segments(&self) -> Vec<(Obj, Style)> {
         let h = self.height as f64;
         let w = self.width as f64;
 
         let mut v = vec![];
         for x in range_step(self.x_init, self.x_init + self.width, self.minor_every) {
-            let i = Pt2((self.x_init + x) as f64, (self.y_init) as f64);
+            let i = Pt((self.x_init + x) as f64, (self.y_init) as f64);
             let f = i + (0, h);
             v.push((
-                Sg2(i, f).into(),
+                Sg(i, f).into(),
                 Style {
                     color: self.minor_color,
                     thickness: self.minor_thickness,
@@ -61,10 +61,10 @@ impl Grid {
             ));
         }
         for x in range_step(self.x_init, self.x_init + self.width, self.major_every) {
-            let i = Pt2((self.x_init + x) as f64, (self.y_init) as f64);
+            let i = Pt((self.x_init + x) as f64, (self.y_init) as f64);
             let f = i + (0, h);
             v.push((
-                Sg2(i, f).into(),
+                Sg(i, f).into(),
                 Style {
                     color: self.major_color,
                     thickness: self.minor_thickness,
@@ -73,10 +73,10 @@ impl Grid {
             ));
         }
         for y in range_step(self.y_init, self.y_init + self.height, self.minor_every) {
-            let i = Pt2((self.x_init) as f64, (self.y_init + y) as f64);
+            let i = Pt((self.x_init) as f64, (self.y_init + y) as f64);
             let f = i + (w, 0);
             v.push((
-                Sg2(i, f).into(),
+                Sg(i, f).into(),
                 Style {
                     color: self.minor_color,
                     thickness: self.minor_thickness,
@@ -85,10 +85,10 @@ impl Grid {
             ));
         }
         for y in range_step(self.y_init, self.y_init + self.height, self.major_every) {
-            let i = Pt2((self.x_init) as f64, (self.y_init + y) as f64);
+            let i = Pt((self.x_init) as f64, (self.y_init + y) as f64);
             let f = i + (w, 0);
             v.push((
-                Sg2(i, f).into(),
+                Sg(i, f).into(),
                 Style {
                     color: self.major_color,
                     thickness: self.major_thickness,

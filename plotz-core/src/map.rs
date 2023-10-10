@@ -17,9 +17,9 @@ use plotz_geojson::GeoJsonConversionError;
 use plotz_geometry::{
     bounded::{Bounded, BoundingBoxError},
     crop::Croppable,
-    obj2::Obj2,
+    obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
+    shapes::{pg::Pg, pt::Pt, sg::Sg},
     style::Style,
     *,
 };
@@ -61,14 +61,14 @@ pub enum MapError {
 #[derive(Debug)]
 /// A polygon with some annotations (bucket, color, tags, etc.).
 pub struct AnnotatedObject2d {
-    obj: Obj2,
+    obj: Obj,
     style: Style,
     bucket: Bucket,
     _tags: Vec<(String, String)>,
 }
 impl AnnotatedObject2d {
     /// Consumes an AnnotatedPolygon and casts down to a ColoredPolygon.
-    pub fn to_object2d(self) -> (Obj2, Style) {
+    pub fn to_object2d(self) -> (Obj, Style) {
         (self.obj, self.style)
     }
 }
@@ -189,12 +189,12 @@ pub struct Map {
     canvas: Canvas,
 
     // user-configurable, there might be a desired pt to put at the center of the output.
-    center: Option<Pt2>,
+    center: Option<Pt>,
 }
 impl Map {
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
     /// unadjusted Map instance.
-    pub fn new(map_config: &MapConfig, center: Option<Pt2>) -> Result<Map, MapError> {
+    pub fn new(map_config: &MapConfig, center: Option<Pt>) -> Result<Map, MapError> {
         let bucketer = DefaultBucketer2 {};
 
         let mut canvas = Canvas::new();
@@ -275,13 +275,13 @@ impl Map {
 
     fn adjust_centering(&mut self, dest_size: &Size) -> Result<(), MapError> {
         let shift = match self.center {
-            Some(desired_center) => Pt2(
+            Some(desired_center) => Pt(
                 dest_size.width as f64 / 2.0 - desired_center.x,
                 dest_size.height as f64 / 2.0 - desired_center.y,
             ),
             None => {
                 let canvas_bounds = self.canvas.bounds();
-                Pt2(
+                Pt(
                     (dest_size.width as f64 - canvas_bounds.right_bound()) / 2.0,
                     (dest_size.height as f64 - canvas_bounds.top_bound()) / 2.0,
                 )
@@ -316,19 +316,19 @@ impl Map {
                 if let Some((shade_and_outline, ref shade_config)) =
                     map_bucket_to_shadeconfig(bucket)
                 {
-                    let mut v: Vec<(Obj2, Style)> = vec![];
+                    let mut v: Vec<(Obj, Style)> = vec![];
                     // keep the frame, add the crosshatchings.
-                    let crosshatchings: Vec<(Obj2, Style)> = layers
+                    let crosshatchings: Vec<(Obj, Style)> = layers
                         .iter()
                         .filter_map(|(obj, style)| match &obj {
-                            Obj2::Pg2(p) => match shade_polygon(shade_config, p) {
+                            Obj::Pg(p) => match shade_polygon(shade_config, p) {
                                 Err(_) => None,
                                 Ok(segments) => Some(
                                     segments
                                         .into_iter()
                                         .map(|s| {
                                             (
-                                                Obj2::Sg2(s),
+                                                Obj::Sg(s),
                                                 Style {
                                                     thickness: shade_config.thickness,
                                                     ..*style
@@ -375,8 +375,8 @@ impl Map {
     /// should stay.
     pub fn randomize_circles(&mut self) {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
-            for (ref mut obj2, _style) in dos.iter_mut() {
-                if let Obj2::CurveArc(mut ca) = &obj2 {
+            for (ref mut obj, _style) in dos.iter_mut() {
+                if let Obj::CurveArc(mut ca) = &obj {
                     ca.ctr += (
                         thread_rng().gen_range(-2.0..=2.0),
                         thread_rng().gen_range(-2.0..=2.0),
@@ -388,14 +388,12 @@ impl Map {
 
     /// Crop everything everywhere to the frame polygon. (Passed in here for
     /// Flexibility.)
-    pub fn crop_to_frame(&mut self, frame: &Pg2) {
+    pub fn crop_to_frame(&mut self, frame: &Pg) {
         trace!("Cropping all to frame.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             *dos = dos
                 .iter_mut()
-                .flat_map(|(obj2, style)| {
-                    obj2.crop_to(frame).into_iter().map(|obj2| (obj2, *style))
-                })
+                .flat_map(|(obj, style)| obj.crop_to(frame).into_iter().map(|obj| (obj, *style)))
                 .collect();
         }
     }
@@ -408,9 +406,9 @@ impl Map {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             *dos = dos
                 .iter_mut()
-                .flat_map(|(obj2, style)| {
-                    match obj2.clone() {
-                        Obj2::Pg2(pg) => pg.to_segments().into_iter().map(Obj2::from).collect(),
+                .flat_map(|(obj, style)| {
+                    match obj.clone() {
+                        Obj::Pg(pg) => pg.to_segments().into_iter().map(Obj::from).collect(),
                         x => vec![x],
                     }
                     .into_iter()
@@ -426,12 +424,12 @@ impl Map {
         trace!("Quantizing layers.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             let q = 0.5;
-            for (ref mut obj2, _style) in dos.iter_mut() {
-                match obj2 {
-                    Obj2::Sg2(ref mut sg) => {
+            for (ref mut obj, _style) in dos.iter_mut() {
+                match obj {
+                    Obj::Sg(ref mut sg) => {
                         sg.round_to_nearest(q);
                     }
-                    Obj2::Pg2(ref mut pg) => {
+                    Obj::Pg(ref mut pg) => {
                         pg.round_to_nearest(q);
                     }
                     _ => {}
@@ -456,9 +454,9 @@ impl Map {
                 .map(|bucket| map_bucket_to_color(&bucket))
                 .unwrap_or(Some(&BLACK))
                 .unwrap();
-            let mut hs = HashSet::<Sg2>::new();
-            for (obj2, _style) in dos.iter() {
-                if let Obj2::Sg2(sg) = obj2 {
+            let mut hs = HashSet::<Sg>::new();
+            for (obj, _style) in dos.iter() {
+                if let Obj::Sg(sg) = obj {
                     hs.insert(*sg);
                     // TODO(ambuc): really, deduplicate this way but then store and restore the original.
                 }
@@ -467,7 +465,7 @@ impl Map {
                 .into_iter()
                 .map(|sg| {
                     (
-                        Obj2::Sg2(sg),
+                        Obj::Sg(sg),
                         Style {
                             color,
                             ..Default::default()
@@ -499,11 +497,11 @@ impl Map {
                     config.size.height as f64 - 2.0 * margin,
                     config.size.width as f64 - 2.0 * margin,
                 ),
-                Pt2(margin, margin),
+                Pt(margin, margin),
             );
-            let frame_pg2: Pg2 = frame.0.clone().try_into().unwrap();
+            let frame_pg: Pg = frame.0.clone().try_into().unwrap();
             self.canvas.frame = Some(frame);
-            let () = self.crop_to_frame(&frame_pg2);
+            let () = self.crop_to_frame(&frame_pg);
         }
 
         self.canvas
@@ -562,8 +560,8 @@ mod tests {
         {
             let mut rolling_bbox = BoundsCollector::default();
             map.canvas.dos_by_bucket.iter().for_each(|(_bucket, dos)| {
-                dos.iter().for_each(|(obj2, _)| {
-                    rolling_bbox.incorporate(obj2);
+                dos.iter().for_each(|(obj, _)| {
+                    rolling_bbox.incorporate(obj);
                 });
             });
             assert_eq!(rolling_bbox.items_seen(), 4);
@@ -583,8 +581,8 @@ mod tests {
         {
             let mut rolling_bbox = BoundsCollector::default();
             map.canvas.dos_by_bucket.iter().for_each(|(_bucket, dos)| {
-                dos.iter().for_each(|(obj2, _)| {
-                    rolling_bbox.incorporate(obj2);
+                dos.iter().for_each(|(obj, _)| {
+                    rolling_bbox.incorporate(obj);
                 })
             });
             assert_float_eq!(rolling_bbox.left_bound(), 51.200, abs <= 0.000_01);
@@ -608,7 +606,7 @@ mod tests {
             // shift negative
             ([(1, 1), (1, 2), (2, 1)], [(0, 0), (0, 1), (1, 0)]),
         ] {
-            let obj = Obj2::Pg2(Pg2(initial));
+            let obj = Obj::Pg(Pg(initial));
             let mut map = Map {
                 canvas: {
                     let mut canvas = Canvas::new();
@@ -630,7 +628,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].0, Obj2::Pg2(Pg2(expected)));
+            assert_eq!(x.next().unwrap()[0].0, Obj::Pg(Pg(expected)));
         }
     }
 
@@ -646,8 +644,8 @@ mod tests {
                     height: 1024,
                 },
                 0.9,
-                [Pt2(0, 0), Pt2(0, 1.0), Pt2(1.0, 0)],
-                [Pt2(0, 0), Pt2(0, 921.60), Pt2(921.60, 0)],
+                [Pt(0, 0), Pt(0, 1.0), Pt(1.0, 0)],
+                [Pt(0, 0), Pt(0, 921.60), Pt(921.60, 0)],
             ),
             // rescale: 100 * 0.9 = 90
             (
@@ -656,11 +654,11 @@ mod tests {
                     height: 1000,
                 },
                 0.9,
-                [Pt2(0, 0), Pt2(0, 1), Pt2(1, 0)],
-                [Pt2(0, 0), Pt2(0, 900), Pt2(900, 0)],
+                [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
+                [Pt(0, 0), Pt(0, 900), Pt(900, 0)],
             ),
         ] {
-            let obj = Obj2::Pg2(Pg2(initial));
+            let obj = Obj::Pg(Pg(initial));
             let mut map = Map {
                 center: None,
                 canvas: {
@@ -682,7 +680,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].0, Obj2::Pg2(Pg2(expected)));
+            assert_eq!(x.next().unwrap()[0].0, Obj::Pg(Pg(expected)));
         }
     }
 }

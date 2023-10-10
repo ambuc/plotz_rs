@@ -7,9 +7,9 @@ use crate::{
     crop::{CropToPolygonError, Croppable},
     shading::shade_config::ShadeConfig,
     shapes::{
-        pg2::{Pg2, PolygonKind},
-        pt2::Pt2,
-        sg2::Sg2,
+        pg::{Pg, PolygonKind},
+        pt::Pt,
+        sg::Sg,
     },
 };
 use float_ord::FloatOrd;
@@ -34,23 +34,23 @@ fn compute_vertical_step(gap: f64, slope: f64) -> f64 {
 
 /// Gap controls how far to step between crosshatched lines
 /// Slope controls the angle of the lines.
-pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg2) -> Result<Vec<Sg2>, ShadePolygonError> {
+pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Sg>, ShadePolygonError> {
     if polygon.kind == PolygonKind::Open {
         return Err(ShadePolygonError::PolygonIsOpen);
     }
 
     let bounds = polygon.bounds();
-    let mut segments: Vec<Sg2> = vec![];
+    let mut segments: Vec<Sg> = vec![];
 
-    let xnudge = Pt2(1, -1);
-    let ynudge = Pt2(-1, 1);
+    let xnudge = Pt(1, -1);
+    let ynudge = Pt(-1, 1);
     let mut line = if config.slope > 0.0 {
-        Sg2(
+        Sg(
             bounds.tl_bound() - xnudge,
             bounds.tl_bound() + (bounds.width(), bounds.width() * config.slope) + xnudge,
         )
     } else {
-        Sg2(
+        Sg(
             bounds.tr_bound() - ynudge,
             bounds.tr_bound()
                 + (-1.0 * bounds.width(), -1.0 * bounds.width() * config.slope)
@@ -77,9 +77,9 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg2) -> Result<Vec<Sg2>, Sh
             .zip([true, false].iter().cycle())
             .map(|((sa, sb), should_alternate)| {
                 if *should_alternate {
-                    Sg2(sa.i, sb.f)
+                    Sg(sa.i, sb.f)
                 } else {
-                    Sg2(sb.i, sa.f)
+                    Sg(sb.i, sa.f)
                 }
             })
             .collect())

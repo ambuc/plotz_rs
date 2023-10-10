@@ -6,9 +6,9 @@ use crate::{
     group::Group,
     shapes::{
         curve::CurveArc,
-        pg2::{Pg2, PolygonKind},
-        pt2::Pt2,
-        sg2::Sg2,
+        pg::{Pg, PolygonKind},
+        pt::Pt,
+        sg::Sg,
         txt::Txt,
     },
     style::Style,
@@ -20,13 +20,13 @@ use std::{fmt::Debug, ops::*};
 /// Either a polygon or a segment.
 #[derive(Debug, PartialEq, Clone)]
 #[enum_dispatch]
-pub enum Obj2 {
+pub enum Obj {
     /// A point.
-    Pt2(Pt2),
+    Pt(Pt),
     /// A polygon.
-    Pg2(Pg2),
+    Pg(Pg),
     /// A segment.
-    Sg2(Sg2),
+    Sg(Sg),
     /// An arc.
     CurveArc(CurveArc),
     /// A character to be printed in SVG, at a point.
@@ -35,236 +35,236 @@ pub enum Obj2 {
     Group(Group<Style>),
 }
 
-impl Obj2 {
+impl Obj {
     /// Iterator.
-    pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
+    pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
         match self {
-            Obj2::Pt2(p) => Box::new(p.iter()),
-            Obj2::Txt(ch) => Box::new(ch.iter()),
-            Obj2::CurveArc(ca) => Box::new(ca.iter()),
-            Obj2::Group(g) => Box::new(g.iter()),
-            Obj2::Pg2(pg) => Box::new(pg.iter()),
-            Obj2::Sg2(sg) => Box::new(sg.iter()),
+            Obj::Pt(p) => Box::new(p.iter()),
+            Obj::Txt(ch) => Box::new(ch.iter()),
+            Obj::CurveArc(ca) => Box::new(ca.iter()),
+            Obj::Group(g) => Box::new(g.iter()),
+            Obj::Pg(pg) => Box::new(pg.iter()),
+            Obj::Sg(sg) => Box::new(sg.iter()),
         }
     }
 
     /// Mutable iterator.
-    pub fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
+    pub fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
         match self {
-            Obj2::Pt2(p) => Box::new(p.iter_mut()),
-            Obj2::Txt(ch) => Box::new(ch.iter_mut()),
-            Obj2::CurveArc(ca) => Box::new(ca.iter_mut()),
-            Obj2::Group(g) => Box::new(g.iter_mut()),
-            Obj2::Pg2(pg) => Box::new(pg.iter_mut()),
-            Obj2::Sg2(sg) => Box::new(sg.iter_mut()),
+            Obj::Pt(p) => Box::new(p.iter_mut()),
+            Obj::Txt(ch) => Box::new(ch.iter_mut()),
+            Obj::CurveArc(ca) => Box::new(ca.iter_mut()),
+            Obj::Group(g) => Box::new(g.iter_mut()),
+            Obj::Pg(pg) => Box::new(pg.iter_mut()),
+            Obj::Sg(sg) => Box::new(sg.iter_mut()),
         }
     }
 }
 
-impl<T> RemAssign<T> for Obj2
+impl<T> RemAssign<T> for Obj
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
     fn rem_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
         match self {
-            Obj2::Pt2(p) => {
+            Obj::Pt(p) => {
                 *p %= rhs;
             }
-            Obj2::Txt(ch) => {
+            Obj::Txt(ch) => {
                 *ch %= rhs;
             }
-            Obj2::CurveArc(ca) => {
+            Obj::CurveArc(ca) => {
                 *ca %= rhs;
             }
-            Obj2::Group(g) => {
+            Obj::Group(g) => {
                 *g %= rhs;
             }
-            Obj2::Pg2(pg) => {
+            Obj::Pg(pg) => {
                 *pg %= rhs;
             }
-            Obj2::Sg2(sg) => {
+            Obj::Sg(sg) => {
                 *sg %= rhs;
             }
         }
     }
 }
 
-impl<T> Add<T> for Obj2
+impl<T> Add<T> for Obj
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
-    type Output = Obj2;
+    type Output = Obj;
     fn add(self, rhs: T) -> Self::Output {
         let rhs = rhs.into();
         match self {
-            Obj2::Pt2(p) => Obj2::from(p + rhs),
-            Obj2::Txt(ch) => Obj2::from(ch + rhs),
-            Obj2::CurveArc(ca) => Obj2::from(ca + rhs),
-            Obj2::Group(g) => Obj2::from(g + rhs),
-            Obj2::Pg2(pg) => Obj2::from(pg + rhs),
-            Obj2::Sg2(sg) => Obj2::from(sg + rhs),
+            Obj::Pt(p) => Obj::from(p + rhs),
+            Obj::Txt(ch) => Obj::from(ch + rhs),
+            Obj::CurveArc(ca) => Obj::from(ca + rhs),
+            Obj::Group(g) => Obj::from(g + rhs),
+            Obj::Pg(pg) => Obj::from(pg + rhs),
+            Obj::Sg(sg) => Obj::from(sg + rhs),
         }
     }
 }
 
-impl<T> Sub<T> for Obj2
+impl<T> Sub<T> for Obj
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
-    type Output = Obj2;
+    type Output = Obj;
     fn sub(self, rhs: T) -> Self::Output {
         let rhs = rhs.into();
         match self {
-            Obj2::Pt2(p) => Obj2::from(p - rhs),
-            Obj2::Txt(ch) => Obj2::from(ch - rhs),
-            Obj2::CurveArc(ca) => Obj2::from(ca - rhs),
-            Obj2::Group(g) => Obj2::from(g - rhs),
-            Obj2::Pg2(pg) => Obj2::from(pg - rhs),
-            Obj2::Sg2(sg) => Obj2::from(sg - rhs),
+            Obj::Pt(p) => Obj::from(p - rhs),
+            Obj::Txt(ch) => Obj::from(ch - rhs),
+            Obj::CurveArc(ca) => Obj::from(ca - rhs),
+            Obj::Group(g) => Obj::from(g - rhs),
+            Obj::Pg(pg) => Obj::from(pg - rhs),
+            Obj::Sg(sg) => Obj::from(sg - rhs),
         }
     }
 }
-impl Mul<f64> for Obj2 {
-    type Output = Obj2;
+impl Mul<f64> for Obj {
+    type Output = Obj;
     fn mul(self, rhs: f64) -> Self::Output {
         match self {
-            Obj2::Pt2(p) => Obj2::from(p * rhs),
-            Obj2::Txt(ch) => Obj2::from(ch * rhs),
-            Obj2::CurveArc(ca) => Obj2::from(ca * rhs),
-            Obj2::Group(g) => Obj2::from(g * rhs),
-            Obj2::Pg2(pg) => Obj2::from(pg * rhs),
-            Obj2::Sg2(sg) => Obj2::from(sg * rhs),
+            Obj::Pt(p) => Obj::from(p * rhs),
+            Obj::Txt(ch) => Obj::from(ch * rhs),
+            Obj::CurveArc(ca) => Obj::from(ca * rhs),
+            Obj::Group(g) => Obj::from(g * rhs),
+            Obj::Pg(pg) => Obj::from(pg * rhs),
+            Obj::Sg(sg) => Obj::from(sg * rhs),
         }
     }
 }
-impl Div<f64> for Obj2 {
-    type Output = Obj2;
+impl Div<f64> for Obj {
+    type Output = Obj;
     fn div(self, rhs: f64) -> Self::Output {
         match self {
-            Obj2::Pt2(p) => Obj2::from(p / rhs),
-            Obj2::Txt(ch) => Obj2::from(ch / rhs),
-            Obj2::CurveArc(ca) => Obj2::from(ca / rhs),
-            Obj2::Group(g) => Obj2::from(g / rhs),
-            Obj2::Pg2(pg) => Obj2::from(pg / rhs),
-            Obj2::Sg2(sg) => Obj2::from(sg / rhs),
+            Obj::Pt(p) => Obj::from(p / rhs),
+            Obj::Txt(ch) => Obj::from(ch / rhs),
+            Obj::CurveArc(ca) => Obj::from(ca / rhs),
+            Obj::Group(g) => Obj::from(g / rhs),
+            Obj::Pg(pg) => Obj::from(pg / rhs),
+            Obj::Sg(sg) => Obj::from(sg / rhs),
         }
     }
 }
-impl<T> AddAssign<T> for Obj2
+impl<T> AddAssign<T> for Obj
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
     fn add_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
         match self {
-            Obj2::Pt2(p) => {
+            Obj::Pt(p) => {
                 *p += rhs;
             }
-            Obj2::Txt(ch) => {
+            Obj::Txt(ch) => {
                 *ch += rhs;
             }
-            Obj2::CurveArc(ca) => {
+            Obj::CurveArc(ca) => {
                 *ca += rhs;
             }
-            Obj2::Group(g) => {
+            Obj::Group(g) => {
                 *g += rhs;
             }
-            Obj2::Pg2(pg) => {
+            Obj::Pg(pg) => {
                 *pg += rhs;
             }
-            Obj2::Sg2(sg) => {
+            Obj::Sg(sg) => {
                 *sg += rhs;
             }
         }
     }
 }
-impl<T> SubAssign<T> for Obj2
+impl<T> SubAssign<T> for Obj
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
     fn sub_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
         match self {
-            Obj2::Pt2(p) => {
+            Obj::Pt(p) => {
                 *p -= rhs;
             }
-            Obj2::Txt(ch) => {
+            Obj::Txt(ch) => {
                 *ch -= rhs;
             }
-            Obj2::CurveArc(ca) => {
+            Obj::CurveArc(ca) => {
                 *ca -= rhs;
             }
-            Obj2::Group(g) => {
+            Obj::Group(g) => {
                 *g -= rhs;
             }
-            Obj2::Pg2(pg) => {
+            Obj::Pg(pg) => {
                 *pg -= rhs;
             }
-            Obj2::Sg2(sg) => {
+            Obj::Sg(sg) => {
                 *sg -= rhs;
             }
         }
     }
 }
 
-impl MulAssign<f64> for Obj2 {
+impl MulAssign<f64> for Obj {
     fn mul_assign(&mut self, rhs: f64) {
         match self {
-            Obj2::Pt2(p) => {
+            Obj::Pt(p) => {
                 *p *= rhs;
             }
-            Obj2::Txt(ch) => {
+            Obj::Txt(ch) => {
                 *ch *= rhs;
             }
-            Obj2::CurveArc(ca) => {
+            Obj::CurveArc(ca) => {
                 *ca *= rhs;
             }
-            Obj2::Group(g) => {
+            Obj::Group(g) => {
                 *g *= rhs;
             }
-            Obj2::Pg2(pg) => {
+            Obj::Pg(pg) => {
                 *pg *= rhs;
             }
-            Obj2::Sg2(sg) => {
+            Obj::Sg(sg) => {
                 *sg *= rhs;
             }
         }
     }
 }
 
-impl DivAssign<f64> for Obj2 {
+impl DivAssign<f64> for Obj {
     fn div_assign(&mut self, rhs: f64) {
         match self {
-            Obj2::Pt2(p) => {
+            Obj::Pt(p) => {
                 *p /= rhs;
             }
-            Obj2::Txt(ch) => {
+            Obj::Txt(ch) => {
                 *ch /= rhs;
             }
-            Obj2::CurveArc(ca) => {
+            Obj::CurveArc(ca) => {
                 *ca /= rhs;
             }
-            Obj2::Group(g) => {
+            Obj::Group(g) => {
                 *g /= rhs;
             }
-            Obj2::Pg2(pg) => {
+            Obj::Pg(pg) => {
                 *pg /= rhs;
             }
-            Obj2::Sg2(sg) => {
+            Obj::Sg(sg) => {
                 *sg /= rhs;
             }
         }
     }
 }
 
-impl Scalable<f64> for Obj2 {}
+impl Scalable<f64> for Obj {}
 
-impl Croppable for Obj2 {
-    type Output = Obj2;
-    fn crop(&self, frame: &Pg2, crop_type: CropType) -> Vec<Self::Output> {
+impl Croppable for Obj {
+    type Output = Obj;
+    fn crop(&self, frame: &Pg, crop_type: CropType) -> Vec<Self::Output> {
         match &self {
-            Obj2::Pt2(pt) => {
+            Obj::Pt(pt) => {
                 assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(pt), PointLoc::Outside) {
                     vec![self.clone()]
@@ -272,30 +272,30 @@ impl Croppable for Obj2 {
                     vec![]
                 }
             }
-            Obj2::Pg2(pg) => match pg.kind {
+            Obj::Pg(pg) => match pg.kind {
                 PolygonKind::Open => pg
                     .to_segments()
                     .into_iter()
                     .flat_map(|sg| sg.crop(frame, crop_type))
-                    .map(Obj2::from)
+                    .map(Obj::from)
                     .collect::<Vec<_>>(),
                 PolygonKind::Closed => pg
                     .crop(frame, crop_type)
                     .into_iter()
-                    .map(Obj2::from)
+                    .map(Obj::from)
                     .collect::<Vec<_>>(),
             },
-            Obj2::Sg2(sg) => sg
+            Obj::Sg(sg) => sg
                 .crop(frame, crop_type)
                 .into_iter()
-                .map(Obj2::from)
+                .map(Obj::from)
                 .collect::<Vec<_>>(),
-            Obj2::CurveArc(ca) => ca
+            Obj::CurveArc(ca) => ca
                 .crop(frame, crop_type)
                 .into_iter()
-                .map(Obj2::from)
+                .map(Obj::from)
                 .collect::<Vec<_>>(),
-            Obj2::Txt(ch) => {
+            Obj::Txt(ch) => {
                 assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(&ch.pt), PointLoc::Outside) {
                     vec![self.clone()]
@@ -303,71 +303,71 @@ impl Croppable for Obj2 {
                     vec![]
                 }
             }
-            Obj2::Group(g) => g
+            Obj::Group(g) => g
                 .crop(frame, crop_type)
                 .into_iter()
-                .map(Obj2::from)
+                .map(Obj::from)
                 .collect::<Vec<_>>(),
         }
     }
 
-    fn crop_excluding(&self, other: &Pg2) -> Vec<Self::Output>
+    fn crop_excluding(&self, other: &Pg) -> Vec<Self::Output>
     where
         Self: Sized,
     {
         match &self {
-            Obj2::Pt2(pt) => {
+            Obj::Pt(pt) => {
                 if matches!(other.contains_pt(pt), PointLoc::Outside) {
                     vec![]
                 } else {
                     vec![self.clone()]
                 }
             }
-            Obj2::Pg2(pg) => match pg.kind {
+            Obj::Pg(pg) => match pg.kind {
                 PolygonKind::Open => pg
                     .to_segments()
                     .into_iter()
                     .flat_map(|sg| sg.crop_excluding(other))
-                    .map(Obj2::from)
+                    .map(Obj::from)
                     .collect::<Vec<_>>(),
                 PolygonKind::Closed => pg
                     .crop_excluding(other)
                     .into_iter()
-                    .map(Obj2::from)
+                    .map(Obj::from)
                     .collect::<Vec<_>>(),
             },
-            Obj2::Sg2(sg) => sg
+            Obj::Sg(sg) => sg
                 .crop_excluding(other)
                 .into_iter()
-                .map(Obj2::from)
+                .map(Obj::from)
                 .collect::<Vec<_>>(),
-            Obj2::CurveArc(ca) => ca
+            Obj::CurveArc(ca) => ca
                 .crop_excluding(other)
                 .into_iter()
-                .map(Obj2::from)
+                .map(Obj::from)
                 .collect::<Vec<_>>(),
-            Obj2::Txt(ch) => {
+            Obj::Txt(ch) => {
                 if matches!(other.contains_pt(&ch.pt), PointLoc::Outside) {
                     vec![]
                 } else {
                     vec![self.clone()]
                 }
             }
-            Obj2::Group(g) => g
+            Obj::Group(g) => g
                 .crop_excluding(other)
                 .into_iter()
-                .map(Obj2::from)
+                .map(Obj::from)
                 .collect::<Vec<_>>(),
         }
     }
 }
 
-impl Annotatable for Obj2 {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj2, Style)> {
+impl Annotatable for Obj {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
         match self {
-            Obj2::Pg2(pg) => pg.annotate(settings),
-            Obj2::Group(g) => g.annotate(settings),
-            Obj2::Pt2(_) | Obj2::Sg2(_) | Obj2::CurveArc(_) | Obj2::Txt(_) => vec![],
+            Obj::Pg(pg) => pg.annotate(settings),
+            Obj::Group(g) => g.annotate(settings),
+            Obj::Pt(_) | Obj::Sg(_) | Obj::CurveArc(_) | Obj::Txt(_) => vec![],
         }
     }
 }

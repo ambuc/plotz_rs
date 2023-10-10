@@ -8,7 +8,7 @@ use plotz_core::{
     map::{Map, MapConfig},
     svg::Size,
 };
-use plotz_geometry::shapes::pt2::Pt2;
+use plotz_geometry::shapes::pt::Pt;
 
 #[derive(FromArgs, Debug)]
 #[argh(description = "...")]
@@ -64,7 +64,7 @@ fn main_inner(args: Args) {
     let map = Map::new(
         &map_config,
         match (args.center_lat, args.center_lng) {
-            (Some(x), Some(y)) => Some(Pt2(y, x)),
+            (Some(x), Some(y)) => Some(Pt(y, x)),
             _ => None,
         },
     )

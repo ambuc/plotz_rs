@@ -4,13 +4,13 @@
 //! structs.
 
 use plotz_geometry::{
-    obj2::Obj2,
+    obj::Obj,
     shapes::{
-        pg2::{
+        pg::{
             multiline::{Multiline, MultilineConstructorError},
-            Pg2, PolygonConstructorError, TryPolygon,
+            Pg, PolygonConstructorError, TryPolygon,
         },
-        pt2::Pt2,
+        pt::Pt,
     },
 };
 use serde_json::Value;
@@ -68,11 +68,11 @@ fn add_tags(value: &Value, tagslist: &mut TagsList) {
 }
 
 /// Parses aGeoJSON file and returns a list of tagged polygons.
-pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj2, TagsList)>, GeoJsonConversionError> {
+pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>, GeoJsonConversionError> {
     let features = geo_json["features"].as_array().expect("features not array");
 
     info!("Parsing geojson file with {:?} features.", features.len());
-    let mut lines: Vec<(Obj2, TagsList)> = vec![];
+    let mut lines: Vec<(Obj, TagsList)> = vec![];
 
     let mut stats = HashMap::<GeomType, usize>::new();
 
@@ -91,7 +91,7 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj2, TagsList)>, GeoJsonCo
 
         let coords = &feature["geometry"]["coordinates"];
 
-        let result: Result<Vec<Obj2>, GeoJsonConversionError> = match geom_type {
+        let result: Result<Vec<Obj>, GeoJsonConversionError> = match geom_type {
             "LineString" => parse_to_linestring(coords).map(|v| {
                 stats
                     .entry(GeomType::LineString)
@@ -146,10 +146,10 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj2, TagsList)>, GeoJsonCo
     Ok(lines)
 }
 
-fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj2>, GeoJsonConversionError> {
-    Ok(vec![Obj2::from(Multiline(
+fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj>, GeoJsonConversionError> {
+    Ok(vec![Obj::from(Multiline(
         coordinates.as_array().expect("not array").iter().map(|p| {
-            Pt2(
+            Pt(
                 p[0].as_f64().expect("value not f64"),
                 p[1].as_f64().expect("value not f64"),
             )
@@ -157,15 +157,15 @@ fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj2>, GeoJsonConversi
     )?)])
 }
 
-fn parse_to_multilinestring(coordinates: &Value) -> Result<Vec<Obj2>, GeoJsonConversionError> {
-    let mut lines: Vec<Obj2> = vec![];
+fn parse_to_multilinestring(coordinates: &Value) -> Result<Vec<Obj>, GeoJsonConversionError> {
+    let mut lines: Vec<Obj> = vec![];
     for linestring in coordinates.as_array().expect("not array").iter() {
         lines.append(&mut parse_to_linestring(linestring)?);
     }
     Ok(lines)
 }
 
-fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<Obj2>, GeoJsonConversionError> {
+fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<Obj>, GeoJsonConversionError> {
     let mut lines: Vec<_> = vec![];
     for coordinates in coordinates.as_array().expect("not array") {
         lines.extend(parse_to_polygon(coordinates)?);
@@ -173,31 +173,31 @@ fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<Obj2>, GeoJsonConver
     Ok(lines)
 }
 
-fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj2>, GeoJsonConversionError> {
+fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj>, GeoJsonConversionError> {
     Ok(coordinates
         .as_array()
         .expect("not array")
         .iter()
         .map(|points_list| {
             TryPolygon(points_list.as_array().expect("not array").iter().map(|p| {
-                Pt2(
+                Pt(
                     p[0].as_f64().expect("value not f64"),
                     p[1].as_f64().expect("value not f64"),
                 )
             }))
         })
         .collect::<Result<_, _>>()?)
-    .map(|v: Vec<Pg2>| v.into_iter().map(Obj2::from).collect::<Vec<_>>())
+    .map(|v: Vec<Pg>| v.into_iter().map(Obj::from).collect::<Vec<_>>())
 }
 
-fn parse_to_circle(_coords: &Value) -> Result<Vec<Obj2>, GeoJsonConversionError> {
+fn parse_to_circle(_coords: &Value) -> Result<Vec<Obj>, GeoJsonConversionError> {
     // For now, don't print circles at all.
     Ok(vec![])
     // let array = &coords.as_array().expect("not array");
     // if let Some(x) = array.get(0).and_then(|o| o.as_f64()) {
     //     if let Some(y) = array.get(1).and_then(|o| o.as_f64()) {
     //         return Ok(vec![Object2d::from(CurveArc(
-    //             Pt2(x, y),
+    //             Pt(x, y),
     //             0.0..=TAU,
     //             0.0001,
     //         ))]);
@@ -236,7 +236,7 @@ mod tests {
         ]]);
         assert_eq!(
             parse_to_polygon(&geojson).unwrap(),
-            vec![Obj2::from(Pg2([
+            vec![Obj::from(Pg([
                 (-74.015_651_1, 40.721_544_6),
                 (-74.015_493_9, 40.721_526_2),
                 (-74.014_280_9, 40.721_384_4),
@@ -257,7 +257,7 @@ mod tests {
         ]);
         assert_eq!(
             parse_to_linestring(&geojson).unwrap(),
-            vec![Obj2::from(
+            vec![Obj::from(
                 Multiline([
                     (-74.015_651_1, 40.721_544_6),
                     (-74.015_493_9, 40.721_526_2),
@@ -280,7 +280,7 @@ mod tests {
         assert_eq!(polygons.len(), 4);
         assert_eq!(
             polygons[0].0,
-            Obj2::from(Pg2([(0.0, 0.0), (1.0, 2.5), (2.0, 5.0)]))
+            Obj::from(Pg([(0.0, 0.0), (1.0, 2.5), (2.0, 5.0)]))
         );
 
         // assert_symbol_tuple_list(
@@ -294,7 +294,7 @@ mod tests {
 
         assert_eq!(
             polygons[1].0,
-            Obj2::from(Multiline([(1.0, 1.0), (1.0, 2.5), (2.0, 5.0)]).unwrap())
+            Obj::from(Multiline([(1.0, 1.0), (1.0, 2.5), (2.0, 5.0)]).unwrap())
         );
         // assert_symbol_tuple_list(
         //     polygons[1].1.clone(),
@@ -310,12 +310,12 @@ mod tests {
 
         assert_eq!(
             polygons[2].0,
-            Obj2::from(Pg2([(2.0, 2.0), (1.0, 2.5), (2.0, 5.0)]))
+            Obj::from(Pg([(2.0, 2.0), (1.0, 2.5), (2.0, 5.0)]))
         );
 
         assert_eq!(
             polygons[3].0,
-            Obj2::from(Pg2([(3.0, 3.0), (1.0, 2.5), (2.0, 5.0)]))
+            Obj::from(Pg([(3.0, 3.0), (1.0, 2.5), (2.0, 5.0)]))
         );
     }
 }

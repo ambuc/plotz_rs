@@ -9,8 +9,8 @@ use crate::{
     styled_obj3::StyledObj3,
 };
 use plotz_geometry::{
-    obj2::Obj2,
-    shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
+    obj::Obj,
+    shapes::{pg::Pg, pt::Pt, sg::Sg},
 };
 
 // Any oblique projection.  https://en.wikipedia.org/wiki/3D_projection#Oblique_projection
@@ -18,9 +18,9 @@ pub struct Oblique {
     u_src: Pt3,
     v_src: Pt3,
     w_src: Pt3,
-    u_dst: Pt2,
-    v_dst: Pt2,
-    w_dst: Pt2,
+    u_dst: Pt,
+    v_dst: Pt,
+    w_dst: Pt,
 }
 
 impl Default for Oblique {
@@ -33,9 +33,9 @@ impl Default for Oblique {
             u_src: p3!(1, 0, 0),
             v_src: p3!(0, 1, 0),
             w_src: p3!(0, 0, 1),
-            u_dst: Pt2(-1, spread),
-            v_dst: Pt2(1, spread),
-            w_dst: Pt2(0, -1),
+            u_dst: Pt(-1, spread),
+            v_dst: Pt(1, spread),
+            w_dst: Pt(0, -1),
         }
     }
 }
@@ -45,24 +45,24 @@ impl Oblique {
         p3!(0, 0, 0) - self.u_src - self.v_src - self.w_src
     }
 
-    pub fn project_pt3(&self, pt3d: &Pt3) -> Pt2 {
+    pub fn project_pt3(&self, pt3d: &Pt3) -> Pt {
         (self.u_dst * pt3d.dot(&self.u_src))
             + (self.v_dst * pt3d.dot(&self.v_src))
             + (self.w_dst * pt3d.dot(&self.w_src))
     }
-    pub fn project_sg3(&self, sg3: &Sg3) -> Sg2 {
-        Sg2(self.project_pt3(&sg3.i), self.project_pt3(&sg3.f))
+    pub fn project_sg3(&self, sg3: &Sg3) -> Sg {
+        Sg(self.project_pt3(&sg3.i), self.project_pt3(&sg3.f))
     }
-    pub fn project_pg3(&self, pg3: &Pg3) -> Pg2 {
-        Pg2(pg3.pts.iter().map(|pt3d| self.project_pt3(pt3d)))
+    pub fn project_pg3(&self, pg3: &Pg3) -> Pg {
+        Pg(pg3.pts.iter().map(|pt3d| self.project_pt3(pt3d)))
     }
-    pub fn project_obj3(&self, obj3: &Obj3) -> Obj2 {
+    pub fn project_obj3(&self, obj3: &Obj3) -> Obj {
         match obj3 {
-            Obj3::Pg3(pg3d) => Obj2::Pg2(self.project_pg3(pg3d)),
-            Obj3::Sg3(sg3d) => Obj2::Sg2(self.project_sg3(sg3d)),
+            Obj3::Pg3(pg3d) => Obj::Pg(self.project_pg3(pg3d)),
+            Obj3::Sg3(sg3d) => Obj::Sg(self.project_sg3(sg3d)),
         }
     }
-    pub fn project_styled_obj3(&self, sobj3: &StyledObj3) -> (Obj2, Style) {
+    pub fn project_styled_obj3(&self, sobj3: &StyledObj3) -> (Obj, Style) {
         (
             self.project_obj3(&sobj3.inner),
             sobj3.style.unwrap_or_default(),

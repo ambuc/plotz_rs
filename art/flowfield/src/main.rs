@@ -4,12 +4,12 @@ use plotz_color::*;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
     crop::Croppable,
-    obj2::Obj2,
+    obj::Obj,
     shapes::{
         curve::CurveArc,
-        pg2::{multiline::Multiline, Pg2},
-        pt2::Pt2,
-        sg2::Sg2,
+        pg::{multiline::Multiline, Pg},
+        pt::Pt,
+        sg::Sg,
     },
     style::Style,
 };
@@ -36,11 +36,11 @@ struct Args {
 }
 
 fn main() {
-    let uniform_shift = Pt2(0, 0);
+    let uniform_shift = Pt(0, 0);
 
     let args: Args = argh::from_env();
 
-    let mut dos: Vec<(Obj2, Style)> = vec![];
+    let mut dos: Vec<(Obj, Style)> = vec![];
     let mgn = 25.0;
 
     let frame = make_frame(
@@ -48,27 +48,27 @@ fn main() {
         /*offset=*/ (mgn, mgn),
     );
 
-    let mut arrows_store: Vec<Sg2> = vec![];
+    let mut arrows_store: Vec<Sg> = vec![];
 
     for i in (0..=(900 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
         for j in (0..=(700 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
             let dx = thread_rng().gen_range(ARROW_RANGE.clone());
             let dy = thread_rng().gen_range(ARROW_RANGE.clone());
-            let arrow_i = Pt2(i as f64, j as f64);
+            let arrow_i = Pt(i as f64, j as f64);
             let arrow_f = arrow_i + (dx, dy) + uniform_shift;
-            let arrow = Sg2(arrow_i, arrow_f);
+            let arrow = Sg(arrow_i, arrow_f);
             arrows_store.push(arrow);
             if PRINT_ARROWS {
                 dos.extend([
                     (
-                        Obj2::Sg2(arrow),
+                        Obj::Sg(arrow),
                         Style {
                             thickness: 2.0,
                             ..Default::default()
                         },
                     ),
                     (
-                        Obj2::CurveArc(CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0)),
+                        Obj::CurveArc(CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0)),
                         Style {
                             thickness: 1.0,
                             color: &RED,
@@ -76,7 +76,7 @@ fn main() {
                         },
                     ),
                     (
-                        Obj2::CurveArc(CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0)),
+                        Obj::CurveArc(CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0)),
                         Style {
                             thickness: 1.0,
                             color: &GREEN,
@@ -96,7 +96,7 @@ fn main() {
                 let cluster_color = random_color();
                 let rx = thread_rng().gen_range(0..=900);
                 let ry = thread_rng().gen_range(0..=700);
-                let cluster_center = Pt2(rx, ry);
+                let cluster_center = Pt(rx, ry);
 
                 (0..NUM_PTS_PER_CLUSTER)
                     .into_par_iter()
@@ -110,20 +110,20 @@ fn main() {
                         let num_steps = thread_rng().gen_range(NUM_STEPS_RANGE.clone());
                         for _ in 0..=num_steps {
                             let last = history.last().unwrap();
-                            let del: Pt2 = arrows_store
+                            let del: Pt = arrows_store
                                 .iter()
                                 .map(|arrow| {
                                     let scaling_factor: f64 = last.dist(&arrow.i).sqrt();
                                     (arrow.f - arrow.i) * scaling_factor / MOMENTUM
                                 })
-                                .fold(Pt2(0, 0), |acc, x| acc + x);
-                            let next: Pt2 = *last + del;
+                                .fold(Pt(0, 0), |acc, x| acc + x);
+                            let next: Pt = *last + del;
                             history.push(next);
                         }
 
                         let sg = Multiline(history).expect("multiline");
                         (
-                            Obj2::Pg2(sg),
+                            Obj::Pg(sg),
                             Style {
                                 color: cluster_color,
                                 ..Default::default()
@@ -135,10 +135,10 @@ fn main() {
             .collect::<Vec<_>>(),
     );
 
-    let frame_pg2: Pg2 = frame.0.clone().try_into().unwrap();
+    let frame_pg: Pg = frame.0.clone().try_into().unwrap();
     let objs = Canvas::from_objs(
-        dos.into_iter().flat_map(|(obj2, style)| {
-            obj2.crop_to(&frame_pg2)
+        dos.into_iter().flat_map(|(obj, style)| {
+            obj.crop_to(&frame_pg)
                 .into_iter()
                 .map(|o| (o, style))
                 .collect::<Vec<_>>()

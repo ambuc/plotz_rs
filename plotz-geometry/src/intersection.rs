@@ -1,6 +1,6 @@
 //! An intefield2section between two segments.
 
-use crate::shapes::pt2::Pt2;
+use crate::shapes::pt::Pt;
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::fmt::Debug;
@@ -82,7 +82,7 @@ impl<'a, T> Pair<'a, T> {
 #[derive(PartialEq, Copy, Clone)]
 pub struct Intersection {
     /// pt
-    pub pt: Pt2,
+    pub pt: Pt,
     /// a_pct
     a_pct: Percent,
     /// b_pct
@@ -91,7 +91,7 @@ pub struct Intersection {
 
 impl Intersection {
     /// A new intersection value, witnessed.
-    pub fn new(pt: Pt2, a: f64, b: f64) -> Option<Intersection> {
+    pub fn new(pt: Pt, a: f64, b: f64) -> Option<Intersection> {
         Some(Intersection {
             pt,
             a_pct: Percent::new(a)?,
@@ -100,7 +100,7 @@ impl Intersection {
     }
 
     /// The point.
-    pub fn pt(&self) -> Pt2 {
+    pub fn pt(&self) -> Pt {
         self.pt
     }
 

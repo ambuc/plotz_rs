@@ -2,8 +2,8 @@
 use crate::{
     crop::PointLoc,
     shapes::{
-        pg2::{Pg2, PolygonConstructorError},
-        pt2::Pt2,
+        pg::{Pg, PolygonConstructorError},
+        pt::Pt,
     },
 };
 use enum_dispatch::enum_dispatch;
@@ -36,8 +36,8 @@ pub struct Bounds {
 
 impl Bounds {
     /// Creates a frame, suitable for cropping.
-    pub fn to_polygon(&self) -> Pg2 {
-        Pg2([
+    pub fn to_polygon(&self) -> Pg {
+        Pg([
             self.tl_bound(),
             self.tr_bound(),
             self.br_bound(),
@@ -46,7 +46,7 @@ impl Bounds {
         ])
     }
     /// Whether or not bounds contain a point.
-    pub fn contains_pt(&self, pt: Pt2) -> PointLoc {
+    pub fn contains_pt(&self, pt: Pt) -> PointLoc {
         self.to_polygon().contains_pt(&pt)
     }
 }
@@ -62,7 +62,7 @@ impl Bounded for Bounds {
 /// center of that object.
 ///
 /// Unlike most graphics systems, we assume that (0,0) is in the bottom-left.
-#[enum_dispatch(Obj2)]
+#[enum_dispatch(Obj)]
 pub trait Bounded {
     /// The right bound of an object.
     fn right_bound(&self) -> f64 {
@@ -89,25 +89,25 @@ pub trait Bounded {
         self.bottom_bound() - self.top_bound()
     }
     /// The point at the top-left corner of an object's bounding box.
-    fn tl_bound(&self) -> Pt2 {
-        Pt2(self.left_bound(), self.top_bound())
+    fn tl_bound(&self) -> Pt {
+        Pt(self.left_bound(), self.top_bound())
     }
     /// The point at the top-right corner of an object's bounding box.
-    fn tr_bound(&self) -> Pt2 {
-        Pt2(self.right_bound(), self.top_bound())
+    fn tr_bound(&self) -> Pt {
+        Pt(self.right_bound(), self.top_bound())
     }
     /// The point at the bottom-left corner of an object's bounding box.
-    fn bl_bound(&self) -> Pt2 {
-        Pt2(self.left_bound(), self.bottom_bound())
+    fn bl_bound(&self) -> Pt {
+        Pt(self.left_bound(), self.bottom_bound())
     }
     /// The point at the bottom-right corner of an object's bounding box.
-    fn br_bound(&self) -> Pt2 {
-        Pt2(self.right_bound(), self.bottom_bound())
+    fn br_bound(&self) -> Pt {
+        Pt(self.right_bound(), self.bottom_bound())
     }
 
     /// The center of the bounding box of an object.
-    fn bbox_center(&self) -> Pt2 {
-        Pt2(
+    fn bbox_center(&self) -> Pt {
+        Pt(
             self.left_bound() + (self.width() / 2.0),
             self.top_bound() + (self.height() / 2.0),
         )
@@ -201,19 +201,19 @@ pub fn streaming_bbox<'a>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use crate::shapes::{pg2::Pg2, pt2::Pt2};
+    use crate::shapes::{pg::Pg, pt::Pt};
 
     #[test]
     fn test_streaming_bbox() {
         let polygons = vec![
-            Pg2([(0, 0), (1, 0), (1, 1)]),
-            Pg2([(2, 0), (3, 0), (3, 1)]),
-            Pg2([(0, 2), (1, 2), (1, 3)]),
+            Pg([(0, 0), (1, 0), (1, 1)]),
+            Pg([(2, 0), (3, 0), (3, 1)]),
+            Pg([(0, 2), (1, 2), (1, 3)]),
         ];
         let bounds = streaming_bbox(&polygons).unwrap();
-        assert_eq!(bounds.bl_bound(), Pt2(0, 0));
-        assert_eq!(bounds.tl_bound(), Pt2(0, 3));
-        assert_eq!(bounds.tr_bound(), Pt2(3, 3));
-        assert_eq!(bounds.br_bound(), Pt2(3, 0));
+        assert_eq!(bounds.bl_bound(), Pt(0, 0));
+        assert_eq!(bounds.tl_bound(), Pt(0, 3));
+        assert_eq!(bounds.tr_bound(), Pt(3, 3));
+        assert_eq!(bounds.br_bound(), Pt(3, 0));
     }
 }

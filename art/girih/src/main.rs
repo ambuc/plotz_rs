@@ -32,10 +32,10 @@ fn main() {
         strategy3::run()
             // strategy2::run()
             .into_iter()
-            .map(|(mut obj2, style)| {
-                obj2 *= 40.0;
-                obj2 += (500, 400);
-                (obj2, style)
+            .map(|(mut obj, style)| {
+                obj *= 40.0;
+                obj += (500, 400);
+                (obj, style)
             })
             .map(|so2| (so2.0, so2.1)),
         /*autobucket=*/

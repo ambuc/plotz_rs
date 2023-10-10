@@ -1,7 +1,7 @@
 use crate::geom::*;
 use indicatif::ProgressBar;
 use itertools::Itertools;
-use plotz_geometry::shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2};
+use plotz_geometry::shapes::{pg::Pg, pt::Pt, sg::Sg};
 use rand::seq::SliceRandom;
 use std::f64::consts::TAU;
 
@@ -24,8 +24,8 @@ impl Settings {
 
 #[derive(Debug, Clone)]
 pub struct AnnotatedPlacedTiles {
-    pub outlines: Vec<(Girih, Pg2)>,
-    pub straps: Vec<(Girih, Sg2)>,
+    pub outlines: Vec<(Girih, Pg)>,
+    pub straps: Vec<(Girih, Sg)>,
 }
 
 pub struct Layout {
@@ -54,28 +54,24 @@ impl Layout {
         spts
     }
 
-    fn next_bare_edge(&self) -> Sg2 {
+    fn next_bare_edge(&self) -> Sg {
         let mut bare_edges = vec![];
         for placed_tile in &self.placed_tiles {
-            for segment in placed_tile.pg2.to_segments() {
+            for segment in placed_tile.pg.to_segments() {
                 // both rays which emit from the midpoint.
                 let (ray_a, ray_b) = segment.rays_perpendicular_both();
                 let offset = segment.abs() * 0.1;
                 // if there is any point adjacent to the segment (a tiny offset away)
-                for pt in [ray_a.to_sg2(offset).f, ray_b.to_sg2(offset).f] {
+                for pt in [ray_a.to_sg(offset).f, ray_b.to_sg(offset).f] {
                     // for which it is outside of _ALL_ known placed tiles
-                    if self
-                        .placed_tiles
-                        .iter()
-                        .all(|t| t.pg2.point_is_outside(&pt))
-                    {
+                    if self.placed_tiles.iter().all(|t| t.pg.point_is_outside(&pt)) {
                         bare_edges.push(segment);
                     }
                 }
             }
         }
 
-        let ctr: Pt2 = Pt2(0, 0);
+        let ctr: Pt = Pt(0, 0);
         bare_edges
             .into_iter()
             .min_by_key(|sg| float_ord::FloatOrd(sg.midpoint().dist(&ctr)))
@@ -97,7 +93,7 @@ impl Layout {
             .cartesian_product(test_pts.iter())
             .collect::<Vec<_>>()
             .iter()
-            .any(|(extant_tile, test_pt)| extant_tile.pg2.point_is_inside(test_pt))
+            .any(|(extant_tile, test_pt)| extant_tile.pg.point_is_inside(test_pt))
         {
             return false;
         }
@@ -109,10 +105,10 @@ impl Layout {
         // could fill.
 
         // if there's _any_ collision, return false;
-        if cand.pg2.to_segments().iter().any(|cand_sg| -> bool {
+        if cand.pg.to_segments().iter().any(|cand_sg| -> bool {
             // returns true if there's a collision
             let mut results: Vec<bool> = vec![];
-            let mut rotor = Sg2(cand_sg.i, cand_sg.midpoint());
+            let mut rotor = Sg(cand_sg.i, cand_sg.midpoint());
             rotor.rotate(&cand_sg.i, 0.001 * TAU); // offset
             for _ in 0..=10 {
                 // ten times, rotate the rotor by TAU/10 (or, (2PI)/10)
@@ -121,11 +117,11 @@ impl Layout {
 
                 let trial_pt = rotor.f;
                 results.push(
-                    cand.pg2.point_is_inside(&trial_pt)
+                    cand.pg.point_is_inside(&trial_pt)
                         || self
                             .placed_tiles
                             .iter()
-                            .any(|extant_tile| extant_tile.pg2.point_is_inside(&trial_pt)),
+                            .any(|extant_tile| extant_tile.pg.point_is_inside(&trial_pt)),
                 );
             }
             if results
@@ -153,7 +149,7 @@ impl Layout {
             return true;
         }
 
-        let next_bare_edge: Sg2 = self.next_bare_edge();
+        let next_bare_edge: Sg = self.next_bare_edge();
 
         for g in self.settings.choices() {
             let next_tiles: Vec<_> = [next_bare_edge, next_bare_edge.flip()]

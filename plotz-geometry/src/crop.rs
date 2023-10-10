@@ -1,7 +1,7 @@
 //! Crop
 use crate::{
     bounded::Bounds,
-    shapes::pg2::{Pg2, PolygonConstructorError},
+    shapes::pg::{Pg, PolygonConstructorError},
 };
 use thiserror::Error;
 
@@ -73,7 +73,7 @@ pub trait Croppable {
     type Output;
 
     /// Crop self to an outer frame
-    fn crop_to(&self, other: &Pg2) -> Vec<Self::Output>
+    fn crop_to(&self, other: &Pg) -> Vec<Self::Output>
     where
         Self: Sized,
     {
@@ -81,7 +81,7 @@ pub trait Croppable {
     }
 
     /// Crop self so that the portion of self overlapping other is removed.
-    fn crop_excluding(&self, other: &Pg2) -> Vec<Self::Output>
+    fn crop_excluding(&self, other: &Pg) -> Vec<Self::Output>
     where
         Self: Sized,
     {
@@ -97,5 +97,5 @@ pub trait Croppable {
     }
 
     /// general crop -- could be either type.
-    fn crop(&self, other: &Pg2, crop_type: CropType) -> Vec<Self::Output>;
+    fn crop(&self, other: &Pg, crop_type: CropType) -> Vec<Self::Output>;
 }

@@ -1,14 +1,14 @@
 // https://tilings.math.uni-bielefeld.de/substitution/ammann-beenker-rhomb-triangle/
 
-use plotz_geometry::{obj2::Obj2, style::Style};
+use plotz_geometry::{obj::Obj, style::Style};
 
 use plotz_color::*;
 use plotz_geometry::{
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{pg2::Pg2, pt2::Pt2},
+    shapes::{pg::Pg, pt::Pt},
 };
 
-struct T1([Pt2; 3]);
+struct T1([Pt; 3]);
 impl Tile for T1 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let sq2: f64 = 2.0_f64.sqrt();
@@ -30,7 +30,7 @@ impl Tile for T1 {
     fn color(&self) -> &'static ColorRGB {
         &WHITE
     }
-    fn pts(&self) -> Vec<Pt2> {
+    fn pts(&self) -> Vec<Pt> {
         self.0.to_vec()
     }
     fn slope(&self) -> f64 {
@@ -38,7 +38,7 @@ impl Tile for T1 {
         ((c.y - a.y) / (c.x - a.x)).atan()
     }
 }
-struct T2([Pt2; 3]);
+struct T2([Pt; 3]);
 impl Tile for T2 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let sq2: f64 = 2.0_f64.sqrt();
@@ -60,7 +60,7 @@ impl Tile for T2 {
     fn color(&self) -> &'static ColorRGB {
         &WHITE
     }
-    fn pts(&self) -> Vec<Pt2> {
+    fn pts(&self) -> Vec<Pt> {
         self.0.to_vec()
     }
     fn slope(&self) -> f64 {
@@ -68,7 +68,7 @@ impl Tile for T2 {
         ((c.y - a.y) / (c.x - a.x)).atan()
     }
 }
-struct T3([Pt2; 4]);
+struct T3([Pt; 4]);
 impl Tile for T3 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let T3([a, b, c, d]) = self;
@@ -92,7 +92,7 @@ impl Tile for T3 {
     fn color(&self) -> &'static ColorRGB {
         &BLUE
     }
-    fn pts(&self) -> Vec<Pt2> {
+    fn pts(&self) -> Vec<Pt> {
         self.0.to_vec()
     }
     fn slope(&self) -> f64 {
@@ -104,12 +104,12 @@ impl Tile for T3 {
 trait Tile {
     fn expand(&self) -> Vec<Box<dyn Tile>>;
     fn color(&self) -> &'static ColorRGB;
-    fn pts(&self) -> Vec<Pt2>;
+    fn pts(&self) -> Vec<Pt>;
     fn slope(&self) -> f64;
 }
 
-pub fn make() -> Vec<(Obj2, Style)> {
-    let origin = Pt2(0.1, 0.1);
+pub fn make() -> Vec<(Obj, Style)> {
+    let origin = Pt(0.1, 0.1);
 
     let sq2: f64 = 2.0_f64.sqrt();
     let ell = 1.0;
@@ -138,7 +138,7 @@ pub fn make() -> Vec<(Obj2, Style)> {
         .into_iter()
         .flat_map(|tile| {
             let color = tile.color();
-            let mut p = Pg2(tile.pts());
+            let mut p = Pg(tile.pts());
             p *= (1, -1); // flip
             p *= 530.0;
             p += (-17, 240); // translate
@@ -152,7 +152,7 @@ pub fn make() -> Vec<(Obj2, Style)> {
 
             std::iter::empty().chain(segments.into_iter().map(|s| {
                 (
-                    Obj2::Sg2(s),
+                    Obj::Sg(s),
                     Style {
                         color,
                         ..Default::default()

@@ -1,4 +1,4 @@
-use plotz_geometry::shapes::pg2::Pg2;
+use plotz_geometry::shapes::pg::Pg;
 
 use argh::FromArgs;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
@@ -29,11 +29,11 @@ fn main() {
     };
 
     let frame = make_frame((720.0, 720.0 * 1.3), /*offset=*/ (20, 20));
-    let frame_polygon: Pg2 = frame.0.clone().try_into().unwrap();
+    let frame_polygon: Pg = frame.0.clone().try_into().unwrap();
 
     // drain things not in frame
-    dos.retain(|(obj2, _style)| {
-        obj2.iter()
+    dos.retain(|(obj, _style)| {
+        obj.iter()
             .all(|pt| matches!(frame_polygon.contains_pt(pt), PointLoc::Inside))
     });
 

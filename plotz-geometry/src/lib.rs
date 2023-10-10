@@ -7,31 +7,31 @@ pub mod crop;
 pub mod group;
 pub mod interpolate;
 pub mod intersection;
-pub mod obj2;
+pub mod obj;
 pub mod style;
 
 pub mod grid;
 pub mod shading;
 pub mod shapes;
 
-use crate::{obj2::Obj2, shapes::pt2::Pt2, style::Style};
+use crate::{obj::Obj, shapes::pt::Pt, style::Style};
 use enum_dispatch::enum_dispatch;
 use std::ops::*;
 use typed_builder::TypedBuilder;
 
 /// A geometric figure which can be translated by an xy shift (represented by a Point).
-#[enum_dispatch(Obj2)]
-pub trait Translatable: Add<Pt2> + AddAssign<Pt2> + Sub<Pt2> + SubAssign<Pt2> + Sized {}
+#[enum_dispatch(Obj)]
+pub trait Translatable: Add<Pt> + AddAssign<Pt> + Sub<Pt> + SubAssign<Pt> + Sized {}
 
 /// A geometric figure which can be scaled by a factor of |f|.
 pub trait Scalable<T>: Mul<T> + MulAssign<T> + Div<T> + DivAssign<T> + Sized {}
 
 /// The same as |Translatable|, but in-place. (See add vs. add_assign.)
-#[enum_dispatch(Obj2)]
-pub trait TranslatableAssign: AddAssign<Pt2> + SubAssign<Pt2> {}
+#[enum_dispatch(Obj)]
+pub trait TranslatableAssign: AddAssign<Pt> + SubAssign<Pt> {}
 
 /// The same as |Scalable|, but in-place. (See add vs. add_assign.)
-#[enum_dispatch(Obj2)]
+#[enum_dispatch(Obj)]
 pub trait ScalableAssign: MulAssign<f64> + DivAssign<f64> {}
 
 /// A geometric figure made of points with floating-point xy components which
@@ -43,7 +43,7 @@ pub trait Roundable {
 }
 
 /// A geometric figure which can be empty. Most can't.
-#[enum_dispatch(Obj2)]
+#[enum_dispatch(Obj)]
 pub trait Nullable {
     /// Is it empty?
     fn is_empty(&self) -> bool;
@@ -61,7 +61,7 @@ pub struct AnnotationSettings {
 /// Something which can have its points and segments labelled.
 pub trait Annotatable {
     /// Return the labelled points and segments.
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj2, Style)>;
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)>;
 }
 
 impl Default for AnnotationSettings {

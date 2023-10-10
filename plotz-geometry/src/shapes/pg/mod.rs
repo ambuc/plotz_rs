@@ -9,10 +9,10 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropToPolygonError, CropType, Croppable, PointLoc},
     intersection::IntersectionResult,
-    obj2::Obj2,
+    obj::Obj,
     shapes::{
-        pt2::Pt2,
-        sg2::{Contains, Sg2},
+        pt::Pt,
+        sg::{Contains, Sg},
         txt::Txt,
     },
     style::Style,
@@ -44,24 +44,24 @@ pub enum PolygonKind {
 /// If constructed with PolygonKind::Open, this is a multiline (unshaded).
 /// If constructed with PolygonKind::Closed, this is a closed, shaded polygon.
 #[derive(Clone)]
-pub struct Pg2 {
+pub struct Pg {
     /// The points which describe a polygon or multiline.
-    pub pts: Vec<Pt2>,
+    pub pts: Vec<Pt>,
     /// Whether this polygon is open or closed.
     pub kind: PolygonKind,
 }
 
-impl Debug for Pg2 {
+impl Debug for Pg {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Pg2 { pts, kind } = self;
+        let Pg { pts, kind } = self;
         match kind {
             PolygonKind::Open => write!(f, "Multiline({:?})", pts),
-            PolygonKind::Closed => write!(f, "Pg2({:?})", pts),
+            PolygonKind::Closed => write!(f, "Pg({:?})", pts),
         }
     }
 }
 
-impl PartialEq for Pg2 {
+impl PartialEq for Pg {
     fn eq(&self, other: &Self) -> bool {
         let self_idx_of_min = self
             .pts
@@ -97,7 +97,7 @@ impl PartialEq for Pg2 {
     }
 }
 
-/// A general error arising from trying to construct a Pg2.
+/// A general error arising from trying to construct a Pg.
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum PolygonConstructorError {
     /// It is not possible to construct a polygon from two or fewer points.
@@ -110,9 +110,9 @@ pub enum PolygonConstructorError {
 /// result in a PolygonConstructorErrorip
 #[allow(non_snake_case)]
 pub fn TryPolygon(
-    a: impl IntoIterator<Item = impl Into<Pt2>>,
-) -> Result<Pg2, PolygonConstructorError> {
-    let mut pts: Vec<Pt2> = a.into_iter().map(|x| x.into()).collect();
+    a: impl IntoIterator<Item = impl Into<Pt>>,
+) -> Result<Pg, PolygonConstructorError> {
+    let mut pts: Vec<Pt> = a.into_iter().map(|x| x.into()).collect();
     if pts.len() <= 2 {
         return Err(PolygonConstructorError::TwoOrFewerPoints);
     }
@@ -121,7 +121,7 @@ pub fn TryPolygon(
         let _ = pts.pop();
     }
 
-    let mut p = Pg2 {
+    let mut p = Pg {
         pts,
         kind: PolygonKind::Closed,
     };
@@ -132,20 +132,20 @@ pub fn TryPolygon(
 }
 /// Definitely makes a polygon. Trust me.
 #[allow(non_snake_case)]
-pub fn Pg2(a: impl IntoIterator<Item = impl Into<Pt2>>) -> Pg2 {
+pub fn Pg(a: impl IntoIterator<Item = impl Into<Pt>>) -> Pg {
     TryPolygon(a).unwrap()
 }
 
 /// Convenience constructor for rectangles.
 #[allow(non_snake_case)]
-pub fn Rect<T1, T2>(tl: impl Into<Pt2>, (w, h): (T1, T2)) -> Result<Pg2, PolygonConstructorError>
+pub fn Rect<T1, T2>(tl: impl Into<Pt>, (w, h): (T1, T2)) -> Result<Pg, PolygonConstructorError>
 where
     f64: From<T1>,
     f64: From<T2>,
     T1: std::marker::Copy,
     T2: std::marker::Copy,
 {
-    let tl: Pt2 = tl.into();
+    let tl: Pt = tl.into();
     TryPolygon([tl, tl + (w, 0), tl + (w, h), tl + (0, h)])
 }
 
@@ -159,7 +159,7 @@ pub enum CurveOrientation {
     Positive,
 }
 
-impl Pg2 {
+impl Pg {
     /// Returns the segments of a polygon, one at a time.
     ///
     /// If this is an open polygon, we return only the line segments without the
@@ -169,38 +169,38 @@ impl Pg2 {
     ///
     /// See test_multiline_to_segments() and test_polygon_to_segments() for
     /// examples.
-    pub fn to_segments(&self) -> Vec<Sg2> {
+    pub fn to_segments(&self) -> Vec<Sg> {
         match self.kind {
             PolygonKind::Open => zip(self.pts.iter(), self.pts.iter().skip(1))
-                .map(|(x, y)| Sg2(*x, *y))
+                .map(|(x, y)| Sg(*x, *y))
                 .collect(),
             PolygonKind::Closed => zip(self.pts.iter(), self.pts.iter().cycle().skip(1))
-                .map(|(x, y)| Sg2(*x, *y))
+                .map(|(x, y)| Sg(*x, *y))
                 .collect(),
         }
     }
 
     /// A rotation operation, for rotating one polygon about a point. Accepts a
     /// |by| argument in radians.
-    pub fn rotate(&mut self, about: &Pt2, by: f64) {
+    pub fn rotate(&mut self, about: &Pt, by: f64) {
         self.pts
             .iter_mut()
             .for_each(|pt| pt.rotate_inplace(about, by))
     }
 
-    /// Returns true if any line Sg2 from this polygon intersects any line
+    /// Returns true if any line Sg from this polygon intersects any line
     /// segment from the other polygon.
-    pub fn intersects(&self, other: &Pg2) -> bool {
+    pub fn intersects(&self, other: &Pg) -> bool {
         self.intersects_detailed(other).count() != 0
     }
 
     /// Returns the detailed set of intersection outcomes between this polygon's
     /// segments and another polygon's segments.
-    pub fn intersects_detailed(&self, other: &Pg2) -> impl Iterator<Item = IntersectionResult> {
+    pub fn intersects_detailed(&self, other: &Pg) -> impl Iterator<Item = IntersectionResult> {
         iproduct!(self.to_segments(), other.to_segments()).flat_map(|(l1, l2)| l1.intersects(&l2))
     }
 
-    fn annotated_intersects_detailed(&self, other: &Pg2) -> Vec<AnnotatedIsxnResult> {
+    fn annotated_intersects_detailed(&self, other: &Pg) -> Vec<AnnotatedIsxnResult> {
         iproduct!(
             self.to_segments().iter().enumerate(),
             other.to_segments().iter().enumerate()
@@ -216,7 +216,7 @@ impl Pg2 {
     }
 
     /// Returns true if any line segment from this polygon intersects other.
-    pub fn intersects_segment(&self, other: &Sg2) -> bool {
+    pub fn intersects_segment(&self, other: &Sg) -> bool {
         self.to_segments()
             .iter()
             .any(|l| l.intersects(other).is_some())
@@ -224,7 +224,7 @@ impl Pg2 {
 
     /// Returns the detailed set of intersection outcomes between this polygon's
     /// segments and another segment.
-    pub fn intersects_segment_detailed(&self, other: &Sg2) -> Vec<IntersectionResult> {
+    pub fn intersects_segment_detailed(&self, other: &Sg) -> Vec<IntersectionResult> {
         self.to_segments()
             .iter()
             .flat_map(|l| l.intersects(other))
@@ -233,10 +233,10 @@ impl Pg2 {
 
     /// Calculates whether a point is within, without, or along a closed polygon
     /// using the https://en.wikipedia.org/wiki/Winding_number method.
-    pub fn contains_pt(&self, other: &Pt2) -> PointLoc {
+    pub fn contains_pt(&self, other: &Pt) -> PointLoc {
         // If |self| is open, error out.
         if self.kind == PolygonKind::Open {
-            panic!("Pg2 is open.");
+            panic!("Pg is open.");
         }
 
         for (idx, pt) in self.pts.iter().enumerate() {
@@ -268,7 +268,7 @@ impl Pg2 {
     }
 
     /// True if the area or points/edges of this polygon contain a point.
-    pub fn point_is_inside_or_on_border(&self, other: &Pt2) -> bool {
+    pub fn point_is_inside_or_on_border(&self, other: &Pt) -> bool {
         matches!(
             self.contains_pt(other),
             PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_)
@@ -276,12 +276,12 @@ impl Pg2 {
     }
 
     /// True if the area of this polygon contains a point.
-    pub fn point_is_inside(&self, other: &Pt2) -> bool {
+    pub fn point_is_inside(&self, other: &Pt) -> bool {
         matches!(self.contains_pt(other), PointLoc::Inside)
     }
 
     /// True if the point is totally outside the polygon.
-    pub fn point_is_outside(&self, pt: &Pt2) -> bool {
+    pub fn point_is_outside(&self, pt: &Pt) -> bool {
         matches!(self.contains_pt(pt), PointLoc::Outside)
     }
 
@@ -313,15 +313,15 @@ impl Pg2 {
 
     /// Returns the average point across all points in the polygon. NB: Not the
     /// same as the center or centroid or whatever.
-    pub fn average(&self) -> Pt2 {
+    pub fn average(&self) -> Pt {
         let num: f64 = self.pts.len() as f64;
         let sum_x: f64 = self.pts.iter().map(|pt| pt.x).sum();
         let sum_y: f64 = self.pts.iter().map(|pt| pt.y).sum();
-        Pt2(sum_x / num, sum_y / num)
+        Pt(sum_x / num, sum_y / num)
     }
 
     // check that this and the other are both closed and positively oriented.
-    fn crop_check_prerequisites(&self, b: &Pg2) -> Result<(), CropToPolygonError> {
+    fn crop_check_prerequisites(&self, b: &Pg) -> Result<(), CropToPolygonError> {
         if self.kind != PolygonKind::Closed {
             return Err(CropToPolygonError::ThisPolygonNotClosed);
         }
@@ -336,7 +336,7 @@ impl Pg2 {
 
     // check if this polygon totally contains another.
     // assumes no intersections.
-    fn totally_contains(&self, other: &Pg2) -> bool {
+    fn totally_contains(&self, other: &Pg) -> bool {
         other
             .pts
             .iter()
@@ -345,7 +345,7 @@ impl Pg2 {
 
     // check if the other polygon isn't inside of or intersecting this one at all.
     // assumes no intersections.
-    fn contains_not_at_all(&self, other: &Pg2) -> bool {
+    fn contains_not_at_all(&self, other: &Pg) -> bool {
         other
             .pts
             .iter()
@@ -353,35 +353,35 @@ impl Pg2 {
     }
 
     /// Iterator.
-    pub fn iter(&self) -> impl Iterator<Item = &Pt2> {
+    pub fn iter(&self) -> impl Iterator<Item = &Pt> {
         self.pts.iter()
     }
 
     /// Mutable iterator.
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt2> {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         self.pts.iter_mut()
     }
 }
 
-impl Croppable for Pg2 {
-    type Output = Pg2;
+impl Croppable for Pg {
+    type Output = Pg;
     /// Crop this polygon to some frame (b). Returns a list of resultant polygons.
     /// Both polygons must already be closed and positively oriented.
     ///
     /// Known bug: If multiple resultant polygons are present, this will return
     /// only one.
-    fn crop(&self, b: &Pg2, crop_type: CropType) -> Vec<Self::Output> {
+    fn crop(&self, b: &Pg, crop_type: CropType) -> Vec<Self::Output> {
         // tracing::info!("Cropping self \n\t{:?} \n\tto b \n\t{:?}", self, b);
-        let a: &Pg2 = self;
+        let a: &Pg = self;
 
         if a == b {
             return vec![a.clone()];
         }
 
-        Pg2::crop_check_prerequisites(a, b).expect("failed prerequisites");
+        Pg::crop_check_prerequisites(a, b).expect("failed prerequisites");
 
         // scenario with no intersections.
-        if Pg2::annotated_intersects_detailed(a, b).is_empty() {
+        if Pg::annotated_intersects_detailed(a, b).is_empty() {
             match crop_type {
                 CropType::Inclusive => {
                     // if inclusive, then we want the bit of |a| in |b|.
@@ -425,9 +425,9 @@ impl Croppable for Pg2 {
 }
 
 /// Angle between points. Projects OI onto OJ and finds the angle IOJ.
-pub fn abp(o: &Pt2, i: &Pt2, j: &Pt2) -> f64 {
-    let a: Pt2 = *i - *o;
-    let b: Pt2 = *j - *o;
+pub fn abp(o: &Pt, i: &Pt, j: &Pt) -> f64 {
+    let a: Pt = *i - *o;
+    let b: Pt = *j - *o;
     let angle = f64::atan2(
         /*det=*/ a.x * b.y - a.y * b.x,
         /*dot=*/ a.x * b.x + a.y * b.y,
@@ -440,137 +440,137 @@ pub fn abp(o: &Pt2, i: &Pt2, j: &Pt2) -> f64 {
     }
 }
 
-impl IntoIterator for Pg2 {
-    type Item = Pt2;
-    type IntoIter = std::vec::IntoIter<Pt2>;
+impl IntoIterator for Pg {
+    type Item = Pt;
+    type IntoIter = std::vec::IntoIter<Pt>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.pts.into_iter()
     }
 }
 
-impl<T> Add<T> for &Pg2
+impl<T> Add<T> for &Pg
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
-    type Output = Pg2;
+    type Output = Pg;
     fn add(self, rhs: T) -> Self::Output {
         let rhs = rhs.into();
-        Pg2(self.pts.iter().map(|p| *p + rhs))
+        Pg(self.pts.iter().map(|p| *p + rhs))
     }
 }
-impl<T> Add<T> for Pg2
+impl<T> Add<T> for Pg
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
-    type Output = Pg2;
+    type Output = Pg;
     fn add(self, rhs: T) -> Self::Output {
         let rhs = rhs.into();
         &self + rhs
     }
 }
-impl<T> AddAssign<T> for Pg2
+impl<T> AddAssign<T> for Pg
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
     fn add_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
         self.pts.iter_mut().for_each(|p| *p += rhs);
     }
 }
-impl<T> Div<T> for Pg2
+impl<T> Div<T> for Pg
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
-    type Output = Pg2;
+    type Output = Pg;
     fn div(self, rhs: T) -> Self::Output {
         let rhs = rhs.into();
-        Pg2(self.pts.iter().map(|p| *p / rhs))
+        Pg(self.pts.iter().map(|p| *p / rhs))
     }
 }
-impl Div<f64> for Pg2 {
-    type Output = Pg2;
+impl Div<f64> for Pg {
+    type Output = Pg;
     fn div(self, rhs: f64) -> Self::Output {
-        Pg2(self.pts.iter().map(|p| *p / rhs))
+        Pg(self.pts.iter().map(|p| *p / rhs))
     }
 }
-impl<T> DivAssign<T> for Pg2
+impl<T> DivAssign<T> for Pg
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
     fn div_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
         self.pts.iter_mut().for_each(|p| *p /= rhs);
     }
 }
-impl DivAssign<f64> for Pg2 {
+impl DivAssign<f64> for Pg {
     fn div_assign(&mut self, rhs: f64) {
         self.pts.iter_mut().for_each(|p| *p /= rhs);
     }
 }
-impl<T> Mul<T> for Pg2
+impl<T> Mul<T> for Pg
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
-    type Output = Pg2;
-    fn mul(self, rhs: T) -> Pg2 {
+    type Output = Pg;
+    fn mul(self, rhs: T) -> Pg {
         let rhs = rhs.into();
-        Pg2(self.pts.iter().map(|p| *p * rhs))
+        Pg(self.pts.iter().map(|p| *p * rhs))
     }
 }
-impl Mul<f64> for Pg2 {
-    type Output = Pg2;
-    fn mul(mut self, rhs: f64) -> Pg2 {
+impl Mul<f64> for Pg {
+    type Output = Pg;
+    fn mul(mut self, rhs: f64) -> Pg {
         self *= rhs;
         self
     }
 }
-impl<T> MulAssign<T> for Pg2
+impl<T> MulAssign<T> for Pg
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
     fn mul_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
         self.pts.iter_mut().for_each(|p| *p *= rhs);
     }
 }
-impl MulAssign<f64> for Pg2 {
+impl MulAssign<f64> for Pg {
     fn mul_assign(&mut self, rhs: f64) {
         self.pts.iter_mut().for_each(|p| *p *= rhs);
     }
 }
-impl<T> Sub<T> for &Pg2
+impl<T> Sub<T> for &Pg
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
-    type Output = Pg2;
+    type Output = Pg;
     fn sub(self, rhs: T) -> Self::Output {
         let rhs = rhs.into();
-        Pg2(self.pts.iter().map(|p| *p - rhs))
+        Pg(self.pts.iter().map(|p| *p - rhs))
     }
 }
-impl<T> Sub<T> for Pg2
+impl<T> Sub<T> for Pg
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
-    type Output = Pg2;
+    type Output = Pg;
     fn sub(self, rhs: T) -> Self::Output {
         let rhs = rhs.into();
-        Pg2(self.pts.iter().map(|p| *p - rhs))
+        Pg(self.pts.iter().map(|p| *p - rhs))
     }
 }
-impl<T> SubAssign<T> for Pg2
+impl<T> SubAssign<T> for Pg
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
     fn sub_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
         self.pts.iter_mut().for_each(|p| *p -= rhs);
     }
 }
-impl<T> RemAssign<T> for Pg2
+impl<T> RemAssign<T> for Pg
 where
-    T: Into<Pt2>,
+    T: Into<Pt>,
 {
     fn rem_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
@@ -578,7 +578,7 @@ where
     }
 }
 
-impl Bounded for Pg2 {
+impl Bounded for Pg {
     fn bounds(&self) -> crate::bounded::Bounds {
         Bounds {
             top_bound: self
@@ -613,24 +613,24 @@ impl Bounded for Pg2 {
     }
 }
 
-impl Translatable for Pg2 {}
-impl Scalable<Pt2> for Pg2 {}
-impl Scalable<f64> for Pg2 {}
+impl Translatable for Pg {}
+impl Scalable<Pt> for Pg {}
+impl Scalable<f64> for Pg {}
 
-impl Roundable for Pg2 {
+impl Roundable for Pg {
     fn round_to_nearest(&mut self, f: f64) {
         self.pts.iter_mut().for_each(|pt| pt.round_to_nearest(f));
     }
 }
 
-impl Nullable for Pg2 {
+impl Nullable for Pg {
     fn is_empty(&self) -> bool {
         self.pts.is_empty()
     }
 }
 
-impl Annotatable for Pg2 {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj2, Style)> {
+impl Annotatable for Pg {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
         let mut a = vec![];
 
         let AnnotationSettings {
@@ -664,7 +664,7 @@ impl Annotatable for Pg2 {
 
 #[cfg(test)]
 mod tests {
-    use crate::shapes::pg2::multiline::{Multiline, MultilineConstructorError};
+    use crate::shapes::pg::multiline::{Multiline, MultilineConstructorError};
 
     use super::*;
     use float_eq::assert_float_eq;
@@ -677,21 +677,17 @@ mod tests {
         );
         assert_eq!(
             Multiline([(0, 0), (0, 1)]).unwrap().to_segments(),
-            [Sg2((0, 0), (0, 1)),]
+            [Sg((0, 0), (0, 1)),]
         );
         assert_eq!(
             Multiline([(0, 0), (0, 1), (0, 2)]).unwrap().to_segments(),
-            [Sg2((0, 0), (0, 1)), Sg2((0, 1), (0, 2)),]
+            [Sg((0, 0), (0, 1)), Sg((0, 1), (0, 2)),]
         );
         assert_eq!(
             Multiline([(0, 0), (0, 1), (0, 2), (0, 3)])
                 .unwrap()
                 .to_segments(),
-            [
-                Sg2((0, 0), (0, 1)),
-                Sg2((0, 1), (0, 2)),
-                Sg2((0, 2), (0, 3)),
-            ]
+            [Sg((0, 0), (0, 1)), Sg((0, 1), (0, 2)), Sg((0, 2), (0, 3)),]
         );
     }
 
@@ -703,21 +699,17 @@ mod tests {
         );
 
         assert_eq!(
-            Pg2([(0, 0), (0, 1), (0, 2)]).to_segments(),
-            [
-                Sg2((0, 0), (0, 1)),
-                Sg2((0, 1), (0, 2)),
-                Sg2((0, 2), (0, 0)),
-            ]
+            Pg([(0, 0), (0, 1), (0, 2)]).to_segments(),
+            [Sg((0, 0), (0, 1)), Sg((0, 1), (0, 2)), Sg((0, 2), (0, 0)),]
         );
 
         assert_eq!(
-            Pg2([(0, 0), (0, 1), (0, 2), (0, 3)]).to_segments(),
+            Pg([(0, 0), (0, 1), (0, 2), (0, 3)]).to_segments(),
             [
-                Sg2((0, 0), (0, 1)),
-                Sg2((0, 1), (0, 2)),
-                Sg2((0, 2), (0, 3)),
-                Sg2((0, 3), (0, 0)),
+                Sg((0, 0), (0, 1)),
+                Sg((0, 1), (0, 2)),
+                Sg((0, 2), (0, 3)),
+                Sg((0, 3), (0, 0)),
             ]
         );
     }
@@ -732,28 +724,28 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt2(0, 2);
-        let b = Pt2(1, 2);
-        let c = Pt2(2, 2);
-        let d = Pt2(0, 1);
-        let e = Pt2(1, 1);
-        let f = Pt2(2, 1);
-        let g = Pt2(0, 0);
-        let h = Pt2(1, 0);
-        let i = Pt2(2, 0);
+        let a = Pt(0, 2);
+        let b = Pt(1, 2);
+        let c = Pt(2, 2);
+        let d = Pt(0, 1);
+        let e = Pt(1, 1);
+        let f = Pt(2, 1);
+        let g = Pt(0, 0);
+        let h = Pt(1, 0);
+        let i = Pt(2, 0);
 
         // Positive area intersection.
-        assert!(Pg2([a, c, i, g]).intersects(&Pg2([b, f, h, d])));
-        assert!(Pg2([a, c, i, g]).intersects(&Pg2([a, b, e, d])));
-        assert!(Pg2([a, c, i, g]).intersects(&Pg2([e, f, i, h])));
+        assert!(Pg([a, c, i, g]).intersects(&Pg([b, f, h, d])));
+        assert!(Pg([a, c, i, g]).intersects(&Pg([a, b, e, d])));
+        assert!(Pg([a, c, i, g]).intersects(&Pg([e, f, i, h])));
 
         // Shares a corner.
-        assert!(Pg2([a, b, e, d]).intersects(&Pg2([e, f, i, h])));
-        assert!(Pg2([a, b, e, d]).intersects(&Pg2([b, c, f, e])));
+        assert!(Pg([a, b, e, d]).intersects(&Pg([e, f, i, h])));
+        assert!(Pg([a, b, e, d]).intersects(&Pg([b, c, f, e])));
 
         // No intersection.
-        assert!(!Pg2([a, b, d]).intersects(&Pg2([e, f, h])));
-        assert!(!Pg2([a, b, d]).intersects(&Pg2([f, h, i])));
+        assert!(!Pg([a, b, d]).intersects(&Pg([e, f, h])));
+        assert!(!Pg([a, b, d]).intersects(&Pg([f, h, i])));
     }
 
     #[test]
@@ -767,15 +759,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt2(0, 2);
-        let b = Pt2(1, 2);
-        let c = Pt2(2, 2);
-        let d = Pt2(0, 1);
-        let e = Pt2(1, 1);
-        let f = Pt2(2, 1);
-        let g = Pt2(0, 0);
-        let h = Pt2(1, 0);
-        let i = Pt2(2, 0);
+        let a = Pt(0, 2);
+        let b = Pt(1, 2);
+        let c = Pt(2, 2);
+        let d = Pt(0, 1);
+        let e = Pt(1, 1);
+        let f = Pt(2, 1);
+        let g = Pt(0, 0);
+        let h = Pt(1, 0);
+        let i = Pt(2, 0);
 
         // circle around E. (quadrants 1, 2, 3, 4)
         assert_float_eq!(abp(&e, &f, &b), PI / 2.0, ulps <= 10);
@@ -830,18 +822,18 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt2(0, 2);
-        let b = Pt2(1, 2);
-        let c = Pt2(2, 2);
-        let d = Pt2(0, 1);
-        let e = Pt2(1, 1);
-        let f = Pt2(2, 1);
-        let g = Pt2(0, 0);
-        let h = Pt2(1, 0);
-        let i = Pt2(2, 0);
+        let a = Pt(0, 2);
+        let b = Pt(1, 2);
+        let c = Pt(2, 2);
+        let d = Pt(0, 1);
+        let e = Pt(1, 1);
+        let f = Pt(2, 1);
+        let g = Pt(0, 0);
+        let h = Pt(1, 0);
+        let i = Pt(2, 0);
 
         // frame [a,c,i,g] should contain a, b, c, d, e, f, g, h, and i.
-        let frame1 = Pg2([a, c, i, g]);
+        let frame1 = Pg([a, c, i, g]);
         {
             let p = e;
             assert_eq!(frame1.contains_pt(&p), PointLoc::Inside);
@@ -857,7 +849,7 @@ mod tests {
         assert_eq!(frame1.contains_pt(&h), PointLoc::OnSegment(0));
 
         // frame [a,b,e,d] should contain a, b, d, e...
-        let frame2 = Pg2([a, b, e, d]);
+        let frame2 = Pg([a, b, e, d]);
         assert_eq!(frame2.contains_pt(&a), PointLoc::OnPoint(3));
         assert_eq!(frame2.contains_pt(&b), PointLoc::OnPoint(2));
         assert_eq!(frame2.contains_pt(&e), PointLoc::OnPoint(1));
@@ -866,7 +858,7 @@ mod tests {
             assert_eq!(frame2.contains_pt(&p), PointLoc::Outside);
         }
 
-        let frame3 = Pg2([b, f, h, d]);
+        let frame3 = Pg([b, f, h, d]);
         assert_eq!(frame3.contains_pt(&b), PointLoc::OnPoint(3));
         assert_eq!(frame3.contains_pt(&f), PointLoc::OnPoint(2));
         assert_eq!(frame3.contains_pt(&h), PointLoc::OnPoint(1));
@@ -879,7 +871,7 @@ mod tests {
 
     #[test]
     fn test_contains_pt_regression() {
-        let frame = Pg2([
+        let frame = Pg([
             (228.17, 202.35),
             (231.21, 212.64),
             (232.45, 228.76),
@@ -904,7 +896,7 @@ mod tests {
             (227.19, 195.84),
             (228.17, 202.35),
         ]);
-        let suspicious_pt = Pt2(228, 400);
+        let suspicious_pt = Pt(228, 400);
         assert_eq!(frame.contains_pt(&suspicious_pt), PointLoc::Outside);
     }
 
@@ -933,8 +925,8 @@ mod tests {
         // ⬜🟧🟧🟧⬜
         // ⬜🟧🟧🟧⬜
         // ⬜⬜⬜⬜⬜ ➡️ x
-        let inner = Pg2([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟥
-        let frame = Pg2([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟨
+        let inner = Pg([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟥
+        let frame = Pg([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟨
         assert_eq!(inner, frame);
         let crops = inner.crop_to(&frame); // 🟧
         assert_eq!(crops, vec![inner]);
@@ -948,8 +940,8 @@ mod tests {
         // 🟨🟧🟧🟧⬜
         // 🟨🟧🟧🟧⬜
         // 🟨🟨🟨🟨⬜ ➡️ x
-        let inner = Pg2([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟥
-        let frame = Pg2([(0, 0), (3, 0), (3, 3), (0, 3)]); // 🟨
+        let inner = Pg([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟥
+        let frame = Pg([(0, 0), (3, 0), (3, 3), (0, 3)]); // 🟨
         assert_eq!(inner.crop_to(&frame)[0], inner);
 
         // ⬆️ y
@@ -985,8 +977,8 @@ mod tests {
         // 🟨🟧🟧🟧🟨
         // 🟨🟧🟧🟧🟨
         // 🟨🟨🟨🟨🟨 ➡️ x
-        let inner = Pg2([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟥
-        let frame = Pg2([(0, 0), (4, 0), (4, 4), (0, 4)]); // 🟨
+        let inner = Pg([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟥
+        let frame = Pg([(0, 0), (4, 0), (4, 4), (0, 4)]); // 🟨
 
         // inner /\ frame == inner
         let crops = inner.crop_to(&frame); // 🟧
@@ -1001,9 +993,9 @@ mod tests {
         // 🟨🟧🟧🟥⬜
         // 🟨🟧🟧🟥⬜
         // 🟨🟨🟨⬜⬜ ➡️ x
-        let inner = Pg2([(1, 1), (4, 1), (4, 4), (1, 4)]); // 🟥
-        let frame = Pg2([(0, 0), (3, 0), (3, 3), (0, 3)]); // 🟨
-        let expected = Pg2([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟧
+        let inner = Pg([(1, 1), (4, 1), (4, 4), (1, 4)]); // 🟥
+        let frame = Pg([(0, 0), (3, 0), (3, 3), (0, 3)]); // 🟨
+        let expected = Pg([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟧
 
         let crops = inner.crop_to(&frame);
         assert_eq!(crops, vec![expected.clone()]);
@@ -1017,9 +1009,9 @@ mod tests {
         // 🟨🟧🟧🟥⬜
         // 🟨🟧🟧🟥⬜
         // ⬜🟥🟥🟥⬜ ➡️ x
-        let inner = Pg2([(1, 0), (4, 0), (4, 3), (1, 3)]); // 🟥
-        let frame = Pg2([(0, 1), (3, 1), (3, 4), (0, 4)]); // 🟨
-        let expected = Pg2([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟧
+        let inner = Pg([(1, 0), (4, 0), (4, 3), (1, 3)]); // 🟥
+        let frame = Pg([(0, 1), (3, 1), (3, 4), (0, 4)]); // 🟨
+        let expected = Pg([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟧
 
         let crops = inner.crop_to(&frame);
         assert_eq!(crops, vec![expected.clone()]);
@@ -1033,7 +1025,7 @@ mod tests {
         // 🟨🟧🟧🟧🟨
         // 🟨🟧🟨🟧🟨
         // ⬜🟥⬜🟥⬜
-        let inner = Pg2([
+        let inner = Pg([
             (1, 0),
             (2, 0),
             (2, 2),
@@ -1047,8 +1039,8 @@ mod tests {
             (2, 5),
             (1, 5),
         ]); // 🟥
-        let frame = Pg2([(0, 1), (5, 1), (5, 4), (0, 4)]); // 🟨
-        let expected = Pg2([
+        let frame = Pg([(0, 1), (5, 1), (5, 4), (0, 4)]); // 🟨
+        let expected = Pg([
             (1, 1),
             (2, 1),
             (2, 2),
@@ -1075,7 +1067,7 @@ mod tests {
         // 🟨🟧🟧🟧🟨
         // 🟨🟧🟨🟧🟨
         // ⬜⬜⬜⬜⬜
-        let inner = Pg2([
+        let inner = Pg([
             (1, 1),
             (2, 1),
             (2, 2),
@@ -1089,7 +1081,7 @@ mod tests {
             (2, 4),
             (1, 4),
         ]); // 🟥
-        let frame = Pg2([(0, 1), (5, 1), (5, 4), (0, 4)]); // 🟨
+        let frame = Pg([(0, 1), (5, 1), (5, 4), (0, 4)]); // 🟨
         let expected = inner.clone();
         let crops = inner.crop_to(&frame);
         assert_eq!(crops, vec![expected.clone()]);
@@ -1103,7 +1095,7 @@ mod tests {
         // ⬜🟧🟧🟧⬜
         // ⬜🟧🟨🟧⬜
         // ⬜⬜⬜⬜⬜
-        let inner = Pg2([
+        let inner = Pg([
             (1, 1),
             (2, 1),
             (2, 2),
@@ -1117,42 +1109,11 @@ mod tests {
             (2, 4),
             (1, 4),
         ]); // 🟥
-        let frame = Pg2([(1, 1), (4, 1), (4, 4), (1, 4)]); // 🟨
+        let frame = Pg([(1, 1), (4, 1), (4, 4), (1, 4)]); // 🟨
         let expected = inner.clone();
         let crops = inner.crop_to(&frame);
         assert_eq!(crops, vec![expected.clone()]);
     }
-
-    // #[test]
-    // #[ignore]
-    // fn test_crop_to_polygon_concavities_01() {
-    //     // ⬆️ y
-    //     // ⬜🟨🟨🟨⬜
-    //     // ⬜🟨⬜🟨⬜
-    //     // 🟥🟧🟥🟧🟥
-    //     // 🟥🟧🟥🟧🟥
-    //     // ⬜🟨⬜🟨⬜
-    //     let inner = Pg2([
-    //         (1, 0),
-    //         (2, 0),
-    //         (2, 4),
-    //         (3, 4),
-    //         (3, 0),
-    //         (4, 0),
-    //         (4, 5),
-    //         (1, 5),
-    //     ])
-    //     .unwrap();
-    //     let frame = Pg2([(0, 1), (5, 1), (5, 3), (0, 3)]).unwrap();
-    //     let expected = vec![
-    //         Pg2([(1, 1), (2, 1), (2, 3), (1, 3)]).unwrap(),
-    //         Pg2([(3, 1), (4, 1), (4, 3), (3, 3)]).unwrap(),
-    //     ];
-    //     let crops = inner.crop_to(&frame).unwrap();
-    //     assert_eq!(crops.len(), 2);
-    //     assert_eq!(crops[0], expected[0]);
-    //     assert_eq!(crops[1], expected[1]);
-    // }
 
     #[test]
     fn test_polygon_get_curve_orientation() {
@@ -1164,17 +1125,17 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt2(0, 2);
-        let c = Pt2(2, 2);
-        let g = Pt2(0, 0);
-        let i = Pt2(2, 0);
+        let a = Pt(0, 2);
+        let c = Pt(2, 2);
+        let g = Pt(0, 0);
+        let i = Pt(2, 0);
 
         assert_eq!(
-            Pg2([a, c, i, g]).get_curve_orientation(),
+            Pg([a, c, i, g]).get_curve_orientation(),
             Some(CurveOrientation::Positive)
         );
         assert_eq!(
-            Pg2([a, g, i, c]).get_curve_orientation(),
+            Pg([a, g, i, c]).get_curve_orientation(),
             Some(CurveOrientation::Positive)
         );
     }
@@ -1190,11 +1151,11 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt2(0, 2);
-        let c = Pt2(2, 2);
-        let g = Pt2(0, 0);
-        let i = Pt2(2, 0);
-        let mut p = Pg2([a, g, i, c]);
+        let a = Pt(0, 2);
+        let c = Pt(2, 2);
+        let g = Pt(0, 0);
+        let i = Pt(2, 0);
+        let mut p = Pg([a, g, i, c]);
         assert_eq!(p.get_curve_orientation(), Some(CurveOrientation::Positive));
         p.orient_curve_positively();
         assert_eq!(p.get_curve_orientation(), Some(CurveOrientation::Negative));
@@ -1203,16 +1164,16 @@ mod tests {
     #[test]
     fn test_add() {
         assert_eq!(
-            &Pg2([(0, 0), (1, 1), (2, 2)]) + (1, 0),
-            Pg2([(1, 0), (2, 1), (3, 2)])
+            &Pg([(0, 0), (1, 1), (2, 2)]) + (1, 0),
+            Pg([(1, 0), (2, 1), (3, 2)])
         );
     }
 
     #[test]
     fn test_sub() {
         assert_eq!(
-            &Pg2([(0, 0), (1, 1), (2, 2)]) - (1, 0),
-            Pg2([(-1, 0), (0, 1), (1, 2)])
+            &Pg([(0, 0), (1, 1), (2, 2)]) - (1, 0),
+            Pg([(-1, 0), (0, 1), (1, 2)])
         );
     }
 
@@ -1226,19 +1187,19 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let h = Pt2(1, 0);
-        let f = Pt2(2, 1);
-        let b = Pt2(1, 2);
-        let d = Pt2(0, 1);
-        let p = Pg2([h, f, b, d]);
+        let h = Pt(1, 0);
+        let f = Pt(2, 1);
+        let b = Pt(1, 2);
+        let d = Pt(0, 1);
+        let p = Pg([h, f, b, d]);
         assert_eq!(p.top_bound(), 2.0);
         assert_eq!(p.bottom_bound(), 0.0);
         assert_eq!(p.left_bound(), 0.0);
         assert_eq!(p.right_bound(), 2.0);
-        assert_eq!(p.tl_bound(), Pt2(0, 2));
-        assert_eq!(p.bl_bound(), Pt2(0, 0));
-        assert_eq!(p.tr_bound(), Pt2(2, 2));
-        assert_eq!(p.br_bound(), Pt2(2, 0));
+        assert_eq!(p.tl_bound(), Pt(0, 2));
+        assert_eq!(p.bl_bound(), Pt(0, 0));
+        assert_eq!(p.tr_bound(), Pt(2, 2));
+        assert_eq!(p.br_bound(), Pt(2, 0));
     }
 
     #[test]
@@ -1259,7 +1220,7 @@ mod tests {
         // |xxxxx| .   |xxxxx|xxxxx|xxxxx|
         // 0 - - 1 - - 2 - - 3 - - 4 - - 5 -> x
 
-        let frame = Pg2([
+        let frame = Pg([
             (0, 0),
             (1, 0),
             (1, 3),
@@ -1273,58 +1234,51 @@ mod tests {
             (3, 5),
             (0, 5),
         ]);
-        let segment = Sg2((0, 2), (5, 2));
+        let segment = Sg((0, 2), (5, 2));
         assert_eq!(
             segment.crop_to(&frame),
-            vec![
-                Sg2((0, 2), (1, 2)),
-                Sg2((2, 2), (3, 2)),
-                Sg2((4, 2), (5, 2)),
-            ]
+            vec![Sg((0, 2), (1, 2)), Sg((2, 2), (3, 2)), Sg((4, 2), (5, 2)),]
         );
     }
 
     #[test]
     fn test_frame_to_segment_crop() {
-        let frame = Pg2([(1, 0), (2, 1), (1, 2), (0, 1)]);
+        let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)]);
         assert_eq!(
-            Sg2((0, 2), (2, 0)).crop_to(&frame),
-            vec![Sg2((0.5, 1.5), (1.5, 0.5))]
+            Sg((0, 2), (2, 0)).crop_to(&frame),
+            vec![Sg((0.5, 1.5), (1.5, 0.5))]
         );
     }
     #[test]
     fn test_frame_to_segment_crop_02() {
-        let frame = Pg2([(1, 0), (2, 1), (1, 2), (0, 1)]);
+        let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)]);
         assert_eq!(
-            Sg2((0, 0), (2, 2)).crop_to(&frame),
-            vec![Sg2((0.5, 0.5), (1.5, 1.5))]
+            Sg((0, 0), (2, 2)).crop_to(&frame),
+            vec![Sg((0.5, 0.5), (1.5, 1.5))]
         );
     }
     #[test]
     fn test_frame_to_segment_crop_empty() {
-        let frame = Pg2([(1, 0), (2, 1), (1, 2), (0, 1)]);
-        assert_eq!(Sg2((0, 2), (2, 2)).crop_to(&frame), vec![]);
+        let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)]);
+        assert_eq!(Sg((0, 2), (2, 2)).crop_to(&frame), vec![]);
     }
     #[test]
     fn test_frame_to_segment_crop_unchanged() {
-        let frame = Pg2([(1, 0), (2, 1), (1, 2), (0, 1)]);
-        assert_eq!(
-            Sg2((0, 1), (2, 1)).crop_to(&frame),
-            vec![Sg2((0, 1), (2, 1))]
-        );
+        let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)]);
+        assert_eq!(Sg((0, 1), (2, 1)).crop_to(&frame), vec![Sg((0, 1), (2, 1))]);
     }
 
     #[test]
     fn test_into_iter() {
-        let frame = Pg2([(1, 0), (2, 1), (1, 2), (0, 1)]);
-        let pts: Vec<Pt2> = frame.into_iter().collect();
-        assert_eq!(pts, vec![Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
+        let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)]);
+        let pts: Vec<Pt> = frame.into_iter().collect();
+        assert_eq!(pts, vec![Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]);
     }
 
     #[test]
     fn test_iter() {
-        let src = vec![Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)];
-        let frame = Pg2(src.clone());
+        let src = vec![Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)];
+        let frame = Pg(src.clone());
         for (idx, p) in frame.iter().enumerate() {
             assert_eq!(src[idx], *p);
         }

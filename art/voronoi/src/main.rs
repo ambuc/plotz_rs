@@ -1,11 +1,11 @@
-use plotz_geometry::{obj2::Obj2, style::Style};
+use plotz_geometry::{obj::Obj, style::Style};
 
 use argh::FromArgs;
 use plotz_color::{ColorRGB, *};
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{pg2::Pg2, pt2::Pt2},
+    shapes::{pg::Pg, pt::Pt},
 };
 use rand::{prelude::SliceRandom, Rng};
 use std::f64::consts::*;
@@ -82,9 +82,9 @@ fn main() {
         .build()
         .expect("build vornoi");
 
-    let polygons: Vec<Pg2> = vornoi
+    let polygons: Vec<Pg> = vornoi
         .iter_cells()
-        .map(|cell| Pg2(cell.iter_vertices().map(|vertex| (vertex.x, vertex.y))) * DIM + (20, 20))
+        .map(|cell| Pg(cell.iter_vertices().map(|vertex| (vertex.x, vertex.y))) * DIM + (20, 20))
         .collect();
 
     let mut dos = vec![];
@@ -97,7 +97,7 @@ fn main() {
                 .iter()
                 .map(|sg| {
                     (
-                        Obj2::Sg2(*sg),
+                        Obj::Sg(*sg),
                         Style {
                             color: shade.color,
                             ..Default::default()
@@ -116,7 +116,7 @@ fn main() {
     // TODO(ambuc): split by group color before printing
 
     let canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true)
-        .with_frame(make_frame((DIM, DIM), Pt2(20, 20)));
+        .with_frame(make_frame((DIM, DIM), Pt(20, 20)));
 
     canvas.write_to_svg_or_die(
         Size {

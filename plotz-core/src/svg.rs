@@ -2,8 +2,8 @@
 //!
 use plotz_color::BLACK;
 use plotz_geometry::{
-    obj2::Obj2,
-    shapes::{pg2::PolygonKind, txt::Txt},
+    obj::Obj,
+    shapes::{pg::PolygonKind, txt::Txt},
     style::Style,
     *,
 };
@@ -46,13 +46,13 @@ pub enum SvgWriteError {
     CairoError(#[from] cairo::Error),
 }
 
-fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), SvgWriteError> {
+fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<(), SvgWriteError> {
     match &doi {
-        Obj2::Pt2(p) => {
+        Obj::Pt(p) => {
             context.line_to(p.x, p.y);
             context.line_to(p.x + 1.0, p.y + 1.0);
         }
-        Obj2::Pg2(polygon) => {
+        Obj::Pg(polygon) => {
             //
             for p in &polygon.pts {
                 context.line_to(p.x, p.y);
@@ -61,11 +61,11 @@ fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), 
                 context.line_to(polygon.pts[0].x, polygon.pts[0].y);
             }
         }
-        Obj2::Sg2(segment) => {
+        Obj::Sg(segment) => {
             context.line_to(segment.i.x, segment.i.y);
             context.line_to(segment.f.x, segment.f.y);
         }
-        Obj2::Txt(Txt {
+        Obj::Txt(Txt {
             pt,
             inner: txt,
             font_size,
@@ -76,12 +76,12 @@ fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), 
             context.move_to(pt.x, pt.y);
             context.show_text(txt).expect("show text");
         }
-        Obj2::Group(group) => {
+        Obj::Group(group) => {
             for s in group.iter_objects() {
                 write_obj_to_context(s, context).expect("write");
             }
         }
-        Obj2::CurveArc(arc) => {
+        Obj::CurveArc(arc) => {
             context.arc(arc.ctr.x, arc.ctr.y, arc.radius, arc.angle_i, arc.angle_f);
         }
     }
@@ -89,14 +89,14 @@ fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<(), 
 }
 
 fn write_obj_to_context(
-    (obj2, style): &(Obj2, Style),
+    (obj, style): &(Obj, Style),
     context: &mut cairo::Context,
 ) -> Result<(), SvgWriteError> {
-    if obj2.is_empty() {
+    if obj.is_empty() {
         return Ok(());
     }
 
-    write_doi_to_context(obj2, context)?;
+    write_doi_to_context(obj, context)?;
 
     context.set_source_rgb(style.color.r, style.color.g, style.color.b);
     context.set_line_width(style.thickness);
@@ -109,7 +109,7 @@ fn write_obj_to_context(
 pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     path: P,
-    polygons: impl IntoIterator<Item = &'a (Obj2, Style)>,
+    polygons: impl IntoIterator<Item = &'a (Obj, Style)>,
 ) -> Result<usize, SvgWriteError> {
     let svg_surface = cairo::SvgSurface::new(size.width as f64, size.height as f64, Some(path))?;
     let mut ctx = cairo::Context::new(&svg_surface)?;
@@ -124,7 +124,7 @@ pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
 fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     paths: impl IntoIterator<Item = P>,
-    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a (Obj2, Style)>>,
+    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a (Obj, Style)>>,
 ) -> Result<(), SvgWriteError> {
     for (path, polygons) in paths.into_iter().zip(polygon_layers.into_iter()) {
         write_layer_to_svg(size, path, polygons)?;
@@ -135,7 +135,7 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use plotz_geometry::{shapes::pg2::Pg2, style::Style};
+    use plotz_geometry::{shapes::pg::Pg, style::Style};
     use tempdir::TempDir;
 
     #[test]
@@ -171,7 +171,7 @@ mod test_super {
                 height: 1024,
             },
             path.to_str().unwrap(),
-            vec![&(Obj2::Pg2(Pg2([(0, 0), (0, 1), (1, 0)])), Style::default())],
+            vec![&(Obj::Pg(Pg([(0, 0), (0, 1), (1, 0)])), Style::default())],
         )
         .unwrap();
 
@@ -194,8 +194,8 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![
-                &(Obj2::Pg2(Pg2([(0, 0), (0, 1), (1, 0)])), Style::default()),
-                &(Obj2::Pg2(Pg2([(5, 5), (5, 6), (6, 5)])), Style::default()),
+                &(Obj::Pg(Pg([(0, 0), (0, 1), (1, 0)])), Style::default()),
+                &(Obj::Pg(Pg([(5, 5), (5, 6), (6, 5)])), Style::default()),
             ],
         )
         .unwrap();

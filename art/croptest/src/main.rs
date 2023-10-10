@@ -1,4 +1,4 @@
-use plotz_geometry::{obj2::Obj2, style::Style};
+use plotz_geometry::{obj::Obj, style::Style};
 
 use argh::FromArgs;
 use itertools::iproduct;
@@ -9,8 +9,8 @@ use plotz_geometry::{
     grid::grid_layout::{GridLayout, GridLayoutSettings},
     group::Group,
     shapes::{
-        pg2::{Pg2, Rect},
-        pt2::Pt2,
+        pg::{Pg, Rect},
+        pt::Pt,
     },
 };
 
@@ -49,15 +49,15 @@ fn main() {
 
     let f = 10.0;
     for (idx, offset) in iproduct!(0..=5, 0..=4)
-        .map(|(i, j)| ((i, j), Pt2((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
+        .map(|(i, j)| ((i, j), Pt((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
     // .filter(|(idx, _)| *idx == (1, 2))
     {
-        let mut v: Vec<(Obj2, Style)> = vec![];
+        let mut v: Vec<(Obj, Style)> = vec![];
 
         let r = Rect((50, 50), (50, 50)).unwrap();
 
         let base_sq = (
-            Obj2::Pg2(r.clone()),
+            Obj::Pg(r.clone()),
             Style {
                 thickness: 2.0,
                 ..Default::default()
@@ -67,33 +67,33 @@ fn main() {
         // v.extend(base_sq.annotate(&AnnotationSettings::default()));
 
         let pts = if false {
-            let a = Pt2(60, 60);
-            let b = Pt2(70, 60);
-            let c = Pt2(80, 60);
-            let d = Pt2(90, 60);
-            let e = Pt2(70, 75);
-            let f = Pt2(80, 75);
-            let g = Pt2(60, 90);
-            let h = Pt2(90, 90);
+            let a = Pt(60, 60);
+            let b = Pt(70, 60);
+            let c = Pt(80, 60);
+            let d = Pt(90, 60);
+            let e = Pt(70, 75);
+            let f = Pt(80, 75);
+            let g = Pt(60, 90);
+            let h = Pt(90, 90);
             vec![a, b, e, f, c, d, h, g, a]
         } else {
-            let a = Pt2(60, 40);
-            let b = Pt2(70, 40);
-            let c = Pt2(70, 70);
-            let d = Pt2(80, 70);
-            let e = Pt2(80, 40);
-            let f = Pt2(90, 40);
-            let g = Pt2(90, 110);
-            let h = Pt2(80, 110);
-            let i = Pt2(80, 80);
-            let j = Pt2(70, 80);
-            let k = Pt2(70, 110);
-            let l = Pt2(60, 110);
+            let a = Pt(60, 40);
+            let b = Pt(70, 40);
+            let c = Pt(70, 70);
+            let d = Pt(80, 70);
+            let e = Pt(80, 40);
+            let f = Pt(90, 40);
+            let g = Pt(90, 110);
+            let h = Pt(80, 110);
+            let i = Pt(80, 80);
+            let j = Pt(70, 80);
+            let k = Pt(70, 110);
+            let l = Pt(60, 110);
             vec![a, b, c, d, e, f, g, h, i, j, k, l, a]
         };
 
         let subject_sq = (
-            Obj2::Pg2(Pg2(pts)) + offset,
+            Obj::Pg(Pg(pts)) + offset,
             Style {
                 color: &RED,
                 ..Default::default()
@@ -132,7 +132,7 @@ fn main() {
 
         gl.insert_and_rescale_to_cubby(
             idx,
-            (Obj2::Group(Group::new(v.into_iter())), Style::default()),
+            (Obj::Group(Group::new(v.into_iter())), Style::default()),
             1.00,
         );
     }
