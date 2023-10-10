@@ -45,8 +45,11 @@ pub struct Sg2 {
 
 /// An alternate constructor for segments.
 #[allow(non_snake_case)]
-pub fn Sg2(i: Pt2, f: Pt2) -> Sg2 {
-    Sg2 { i, f }
+pub fn Sg2(i: impl Into<Pt2>, f: impl Into<Pt2>) -> Sg2 {
+    Sg2 {
+        i: i.into(),
+        f: f.into(),
+    }
 }
 
 impl Sg2 {
@@ -485,7 +488,7 @@ mod tests {
         //      |
         //      |
         //      v
-        let mut s = Sg2(Pt2(1, 0), Pt2(1, 0.5));
+        let mut s = Sg2((1, 0), (1, 0.5));
 
         s.rotate(/*about=*/ &origin, PI / 2.0);
         //      ^
@@ -667,10 +670,10 @@ mod tests {
 
     #[test]
     fn test_abs() {
-        assert_eq!(Sg2(Pt2(0, 0), Pt2(0, 1)).abs(), 1.0);
-        assert_eq!(Sg2(Pt2(0, 0), Pt2(1, 1)).abs(), 2.0_f64.sqrt());
-        assert_eq!(Sg2(Pt2(1, 1), Pt2(1, 1)).abs(), 0.0);
-        assert_eq!(Sg2(Pt2(-1, -1), Pt2(1, 1)).abs(), 2.0 * 2.0_f64.sqrt());
+        assert_eq!(Sg2((0, 0), (0, 1)).abs(), 1.0);
+        assert_eq!(Sg2((0, 0), (1, 1)).abs(), 2.0_f64.sqrt());
+        assert_eq!(Sg2((1, 1), (1, 1)).abs(), 0.0);
+        assert_eq!(Sg2((-1, -1), (1, 1)).abs(), 2.0 * 2.0_f64.sqrt());
     }
 
     #[test]
@@ -698,71 +701,65 @@ mod tests {
                 i: Pt2(0, 0),
                 f: Pt2(0, 1)
             },
-            Sg2(Pt2(0, 0), Pt2(0, 1))
+            Sg2((0, 0), (0, 1))
         );
     }
 
     #[test]
     fn test_add() {
-        assert_eq!(
-            Sg2(Pt2(0, 0), Pt2(1, 1)) + Pt2(1, 0),
-            Sg2(Pt2(1, 0), Pt2(2, 1))
-        );
+        assert_eq!(Sg2((0, 0), (1, 1)) + Pt2(1, 0), Sg2((1, 0), (2, 1)));
     }
 
     #[test]
     fn test_add_assign() {
-        let mut s = Sg2(Pt2(0, 0), Pt2(1, 1));
+        let mut s = Sg2((0, 0), (1, 1));
         s += Pt2(1, 0);
-        assert_eq!(s, Sg2(Pt2(1, 0), Pt2(2, 1)));
+        assert_eq!(s, Sg2((1, 0), (2, 1)));
     }
 
     #[test]
     fn test_div() {
-        assert_eq!(
-            Sg2(Pt2(0, 0), Pt2(1, 1)) / 2.0,
-            Sg2(Pt2(0, 0), Pt2(0.5, 0.5))
-        );
+        assert_eq!(Sg2((0, 0), (1, 1)) / 2.0, Sg2((0, 0), (0.5, 0.5)));
     }
 
     #[test]
     fn test_div_assign() {
-        let mut s = Sg2(Pt2(0, 0), Pt2(1, 1));
+        let mut s = Sg2((0, 0), (1, 1));
         s /= 2.0;
-        assert_eq!(s, Sg2(Pt2(0, 0), Pt2(0.5, 0.5)));
+        assert_eq!(s, Sg2((0, 0), (0.5, 0.5)));
     }
 
     #[test]
     fn test_mul() {
-        assert_eq!(Sg2(Pt2(0, 0), Pt2(1, 1)) * 2.0, Sg2(Pt2(0, 0), Pt2(2, 2)));
+        assert_eq!(Sg2((0, 0), (1, 1)) * 2.0, Sg2((0, 0), (2, 2)));
     }
 
     #[test]
     fn test_mul_assign() {
-        let mut s = Sg2(Pt2(0, 0), Pt2(1, 1));
+        let mut s = Sg2((0, 0), (1, 1));
         s *= 2.0;
-        assert_eq!(s, Sg2(Pt2(0, 0), Pt2(2, 2)));
+        assert_eq!(s, Sg2((0, 0), (2, 2)));
     }
 
     #[test]
     fn test_sub() {
         assert_eq!(
-            Sg2(Pt2(0, 0), Pt2(1, 1)) - Pt2(1, 2),
+            Sg2((0, 0), (1, 1)) - Pt2(1, 2),
             // --------
-            Sg2(Pt2(-1, -2), Pt2(0, -1))
+            Sg2((-1, -2), (0, -1))
         );
     }
 
     #[test]
     fn test_sub_assign() {
-        let mut s = Sg2(Pt2(0, 0), Pt2(1, 1));
+        let mut s = Sg2((0, 0), (1, 1));
         s -= Pt2(1, 2);
-        assert_eq!(s, Sg2(Pt2(-1, -2), Pt2(0, -1)));
+        assert_eq!(s, Sg2((-1, -2), (0, -1)));
     }
 
     #[test]
     fn test_bounded_segment() {
-        let s = Sg2(Pt2(0, 1), Pt2(1, 2));
+        let s = Sg2((0, 1), (1, 2));
         assert_eq!(s.bottom_bound(), 1.0);
         assert_eq!(s.top_bound(), 2.0);
         assert_eq!(s.left_bound(), 0.0);

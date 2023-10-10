@@ -631,22 +631,22 @@ mod tests {
         );
         assert_eq!(
             Multiline([Pt2(0, 0), Pt2(0, 1)]).unwrap().to_segments(),
-            [Sg2(Pt2(0, 0), Pt2(0, 1)),]
+            [Sg2((0, 0), (0, 1)),]
         );
         assert_eq!(
             Multiline([Pt2(0, 0), Pt2(0, 1), Pt2(0, 2)])
                 .unwrap()
                 .to_segments(),
-            [Sg2(Pt2(0, 0), Pt2(0, 1)), Sg2(Pt2(0, 1), Pt2(0, 2)),]
+            [Sg2((0, 0), (0, 1)), Sg2((0, 1), (0, 2)),]
         );
         assert_eq!(
             Multiline([Pt2(0, 0), Pt2(0, 1), Pt2(0, 2), Pt2(0, 3)])
                 .unwrap()
                 .to_segments(),
             [
-                Sg2(Pt2(0, 0), Pt2(0, 1)),
-                Sg2(Pt2(0, 1), Pt2(0, 2)),
-                Sg2(Pt2(0, 2), Pt2(0, 3)),
+                Sg2((0, 0), (0, 1)),
+                Sg2((0, 1), (0, 2)),
+                Sg2((0, 2), (0, 3)),
             ]
         );
     }
@@ -661,19 +661,19 @@ mod tests {
         assert_eq!(
             Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(0, 2)]).to_segments(),
             [
-                Sg2(Pt2(0, 0), Pt2(0, 1)),
-                Sg2(Pt2(0, 1), Pt2(0, 2)),
-                Sg2(Pt2(0, 2), Pt2(0, 0)),
+                Sg2((0, 0), (0, 1)),
+                Sg2((0, 1), (0, 2)),
+                Sg2((0, 2), (0, 0)),
             ]
         );
 
         assert_eq!(
             Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(0, 2), Pt2(0, 3)]).to_segments(),
             [
-                Sg2(Pt2(0, 0), Pt2(0, 1)),
-                Sg2(Pt2(0, 1), Pt2(0, 2)),
-                Sg2(Pt2(0, 2), Pt2(0, 3)),
-                Sg2(Pt2(0, 3), Pt2(0, 0)),
+                Sg2((0, 0), (0, 1)),
+                Sg2((0, 1), (0, 2)),
+                Sg2((0, 2), (0, 3)),
+                Sg2((0, 3), (0, 0)),
             ]
         );
     }
@@ -1229,13 +1229,13 @@ mod tests {
             Pt2(3, 5),
             Pt2(0, 5),
         ]);
-        let segment = Sg2(Pt2(0, 2), Pt2(5, 2));
+        let segment = Sg2((0, 2), (5, 2));
         assert_eq!(
             segment.crop_to(&frame),
             vec![
-                Sg2(Pt2(0, 2), Pt2(1, 2)),
-                Sg2(Pt2(2, 2), Pt2(3, 2)),
-                Sg2(Pt2(4, 2), Pt2(5, 2)),
+                Sg2((0, 2), (1, 2)),
+                Sg2((2, 2), (3, 2)),
+                Sg2((4, 2), (5, 2)),
             ]
         );
     }
@@ -1244,29 +1244,29 @@ mod tests {
     fn test_frame_to_segment_crop() {
         let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
         assert_eq!(
-            Sg2(Pt2(0, 2), Pt2(2, 0)).crop_to(&frame),
-            vec![Sg2(Pt2(0.5, 1.5), Pt2(1.5, 0.5))]
+            Sg2((0, 2), (2, 0)).crop_to(&frame),
+            vec![Sg2((0.5, 1.5), (1.5, 0.5))]
         );
     }
     #[test]
     fn test_frame_to_segment_crop_02() {
         let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
         assert_eq!(
-            Sg2(Pt2(0, 0), Pt2(2, 2)).crop_to(&frame),
-            vec![Sg2(Pt2(0.5, 0.5), Pt2(1.5, 1.5))]
+            Sg2((0, 0), (2, 2)).crop_to(&frame),
+            vec![Sg2((0.5, 0.5), (1.5, 1.5))]
         );
     }
     #[test]
     fn test_frame_to_segment_crop_empty() {
         let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
-        assert_eq!(Sg2(Pt2(0, 2), Pt2(2, 2)).crop_to(&frame), vec![]);
+        assert_eq!(Sg2((0, 2), (2, 2)).crop_to(&frame), vec![]);
     }
     #[test]
     fn test_frame_to_segment_crop_unchanged() {
         let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
         assert_eq!(
-            Sg2(Pt2(0, 1), Pt2(2, 1)).crop_to(&frame),
-            vec![Sg2(Pt2(0, 1), Pt2(2, 1))]
+            Sg2((0, 1), (2, 1)).crop_to(&frame),
+            vec![Sg2((0, 1), (2, 1))]
         );
     }
 
