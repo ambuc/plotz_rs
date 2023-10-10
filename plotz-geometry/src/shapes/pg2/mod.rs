@@ -449,26 +449,42 @@ impl IntoIterator for Pg2 {
     }
 }
 
-impl Add<Pt2> for &Pg2 {
+impl<T> Add<T> for &Pg2
+where
+    T: Into<Pt2>,
+{
     type Output = Pg2;
-    fn add(self, rhs: Pt2) -> Self::Output {
+    fn add(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
         Pg2(self.pts.iter().map(|p| *p + rhs))
     }
 }
-impl Add<Pt2> for Pg2 {
+impl<T> Add<T> for Pg2
+where
+    T: Into<Pt2>,
+{
     type Output = Pg2;
-    fn add(self, rhs: Pt2) -> Self::Output {
+    fn add(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
         &self + rhs
     }
 }
-impl AddAssign<Pt2> for Pg2 {
-    fn add_assign(&mut self, rhs: Pt2) {
+impl<T> AddAssign<T> for Pg2
+where
+    T: Into<Pt2>,
+{
+    fn add_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
         self.pts.iter_mut().for_each(|p| *p += rhs);
     }
 }
-impl Div<Pt2> for Pg2 {
+impl<T> Div<T> for Pg2
+where
+    T: Into<Pt2>,
+{
     type Output = Pg2;
-    fn div(self, rhs: Pt2) -> Self::Output {
+    fn div(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
         Pg2(self.pts.iter().map(|p| *p / rhs))
     }
 }
@@ -478,8 +494,12 @@ impl Div<f64> for Pg2 {
         Pg2(self.pts.iter().map(|p| *p / rhs))
     }
 }
-impl DivAssign<Pt2> for Pg2 {
-    fn div_assign(&mut self, rhs: Pt2) {
+impl<T> DivAssign<T> for Pg2
+where
+    T: Into<Pt2>,
+{
+    fn div_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
         self.pts.iter_mut().for_each(|p| *p /= rhs);
     }
 }
@@ -488,9 +508,13 @@ impl DivAssign<f64> for Pg2 {
         self.pts.iter_mut().for_each(|p| *p /= rhs);
     }
 }
-impl Mul<Pt2> for Pg2 {
+impl<T> Mul<T> for Pg2
+where
+    T: Into<Pt2>,
+{
     type Output = Pg2;
-    fn mul(self, rhs: Pt2) -> Pg2 {
+    fn mul(self, rhs: T) -> Pg2 {
+        let rhs = rhs.into();
         Pg2(self.pts.iter().map(|p| *p * rhs))
     }
 }
@@ -501,8 +525,12 @@ impl Mul<f64> for Pg2 {
         self
     }
 }
-impl MulAssign<Pt2> for Pg2 {
-    fn mul_assign(&mut self, rhs: Pt2) {
+impl<T> MulAssign<T> for Pg2
+where
+    T: Into<Pt2>,
+{
+    fn mul_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
         self.pts.iter_mut().for_each(|p| *p *= rhs);
     }
 }
@@ -511,25 +539,41 @@ impl MulAssign<f64> for Pg2 {
         self.pts.iter_mut().for_each(|p| *p *= rhs);
     }
 }
-impl Sub<Pt2> for &Pg2 {
+impl<T> Sub<T> for &Pg2
+where
+    T: Into<Pt2>,
+{
     type Output = Pg2;
-    fn sub(self, rhs: Pt2) -> Self::Output {
+    fn sub(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
         Pg2(self.pts.iter().map(|p| *p - rhs))
     }
 }
-impl Sub<Pt2> for Pg2 {
+impl<T> Sub<T> for Pg2
+where
+    T: Into<Pt2>,
+{
     type Output = Pg2;
-    fn sub(self, rhs: Pt2) -> Self::Output {
+    fn sub(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
         Pg2(self.pts.iter().map(|p| *p - rhs))
     }
 }
-impl SubAssign<Pt2> for Pg2 {
-    fn sub_assign(&mut self, rhs: Pt2) {
+impl<T> SubAssign<T> for Pg2
+where
+    T: Into<Pt2>,
+{
+    fn sub_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
         self.pts.iter_mut().for_each(|p| *p -= rhs);
     }
 }
-impl RemAssign<Pt2> for Pg2 {
-    fn rem_assign(&mut self, rhs: Pt2) {
+impl<T> RemAssign<T> for Pg2
+where
+    T: Into<Pt2>,
+{
+    fn rem_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
         self.pts.iter_mut().for_each(|p| *p %= rhs);
     }
 }
