@@ -499,7 +499,6 @@ impl YieldPointsMut for CurveArc {
     }
 }
 
-impl Mutable for CurveArc {}
 impl Translatable for CurveArc {}
 impl Scalable<f64> for CurveArc {}
 

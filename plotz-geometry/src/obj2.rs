@@ -111,8 +111,6 @@ impl YieldPointsMut for Obj2 {
     }
 }
 
-impl Mutable for Obj2 {}
-
 impl Bounded for Obj2 {
     fn bounds(&self) -> Bounds {
         match self {

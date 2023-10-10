@@ -28,13 +28,6 @@ impl<T> Group<T> {
         Box::new(self.0.iter())
     }
 
-    /// Mutates each point in each object in the group. See |Mutable|.
-    pub fn mutate(&mut self, f: impl Fn(&mut Pt2)) {
-        for (obj, _) in &mut self.0 {
-            obj.mutate(&f);
-        }
-    }
-
     /// Iterator.
     pub fn iter(&self) -> impl Iterator<Item = &Pt2> {
         self.0.iter().flat_map(|(x, _)| x.yield_pts())

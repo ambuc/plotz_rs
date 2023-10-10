@@ -568,7 +568,6 @@ impl YieldPointsMut for Pg2 {
         Box::new(self.iter_mut())
     }
 }
-impl Mutable for Pg2 {}
 
 impl Translatable for Pg2 {}
 impl Scalable<Pt2> for Pg2 {}

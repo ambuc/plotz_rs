@@ -16,15 +16,6 @@ pub trait YieldPointsMut {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_>;
 }
 
-/// A geometric figure made of points which can be maniuplated by passing f:
-/// impl Fn(&mut Pt) and mutating each one.
-pub trait Mutable: YieldPointsMut {
-    /// Mutate the points of a geometric figure by applying f(pt) to each of them.
-    fn mutate(&mut self, f: impl Fn(&mut Pt2)) {
-        self.yield_pts_mut().for_each(f)
-    }
-}
-
 /// A geometric figure which can be translated by an xy shift (represented by a Point).
 pub trait Translatable: Add<Pt2> + AddAssign<Pt2> + Sub<Pt2> + SubAssign<Pt2> + Sized {}
 

@@ -135,7 +135,6 @@ impl RemAssign<Pt2> for Txt {
     }
 }
 
-impl Mutable for Txt {}
 impl Translatable for Txt {}
 impl Scalable<Pt2> for Txt {}
 impl Scalable<f64> for Txt {}

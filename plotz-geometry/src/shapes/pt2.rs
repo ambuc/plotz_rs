@@ -249,7 +249,6 @@ impl YieldPointsMut for Pt2 {
         Box::new(self.iter_mut())
     }
 }
-impl Mutable for Pt2 {}
 
 impl Bounded for Pt2 {
     fn bounds(&self) -> crate::bounded::Bounds {

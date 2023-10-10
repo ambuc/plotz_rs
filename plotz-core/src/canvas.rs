@@ -91,9 +91,7 @@ impl Canvas {
     }
 
     /// Returns an iterator of mutable Object2dInner.
-    pub fn objs_iter_mut(
-        &mut self,
-    ) -> impl Iterator<Item = &mut (impl Mutable + TranslatableAssign + ScalableAssign)> {
+    pub fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut Obj2> {
         self.dos_by_bucket
             .iter_mut()
             .flat_map(|(_bucket, dos)| dos)
@@ -102,9 +100,7 @@ impl Canvas {
 
     /// Mutates every object in the canvas according to some |f|.
     pub fn mutate_all(&mut self, f: impl Fn(&mut Pt2)) {
-        self.objs_iter_mut().for_each(|obj| {
-            obj.mutate(&f);
-        })
+        self.objs_iter_mut().for_each(|o| o.iter_mut().for_each(&f))
     }
 
     /// Translates every object in the canvas according to some |f|.
@@ -157,7 +153,7 @@ impl Canvas {
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
                 dos.iter_mut().for_each(|(obj2, _style)| {
-                    obj2.mutate(|pt: &mut Pt2| {
+                    obj2.iter_mut().for_each(|pt: &mut Pt2| {
                         *pt += translate_diff;
                     });
                 });

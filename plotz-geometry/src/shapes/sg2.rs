@@ -309,7 +309,6 @@ impl YieldPointsMut for Sg2 {
         Box::new([&mut self.i, &mut self.f].into_iter())
     }
 }
-impl Mutable for Sg2 {}
 
 impl Croppable for Sg2 {
     type Output = Sg2;
