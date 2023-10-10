@@ -35,13 +35,7 @@ impl<T> Group<T> {
 
     /// Mutable iterator.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt2> {
-        self.0.iter_mut().flat_map(|(x, _)| x.yield_pts_mut())
-    }
-}
-
-impl<T> YieldPointsMut for Group<T> {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
-        Box::new(self.0.iter_mut().flat_map(|(obj, _)| obj.yield_pts_mut()))
+        self.0.iter_mut().flat_map(|(x, _)| x.iter_mut())
     }
 }
 

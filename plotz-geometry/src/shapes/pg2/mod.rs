@@ -563,11 +563,6 @@ impl Bounded for Pg2 {
         }
     }
 }
-impl YieldPointsMut for Pg2 {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
-        Box::new(self.iter_mut())
-    }
-}
 
 impl Translatable for Pg2 {}
 impl Scalable<Pt2> for Pg2 {}

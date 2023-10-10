@@ -304,12 +304,6 @@ impl Bounded for Sg2 {
     }
 }
 
-impl YieldPointsMut for Sg2 {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
-        Box::new([&mut self.i, &mut self.f].into_iter())
-    }
-}
-
 impl Croppable for Sg2 {
     type Output = Sg2;
 

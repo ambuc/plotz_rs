@@ -493,12 +493,6 @@ impl Croppable for CurveArc {
     }
 }
 
-impl YieldPointsMut for CurveArc {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
-        Box::new(std::iter::once(&mut self.ctr))
-    }
-}
-
 impl Translatable for CurveArc {}
 impl Scalable<f64> for CurveArc {}
 

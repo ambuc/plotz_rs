@@ -4,12 +4,6 @@ use crate::{obj2::Obj2, style::Style};
 
 use {crate::shapes::pt2::Pt2, std::ops::*, typed_builder::TypedBuilder};
 
-/// A geometric figure made of points which might emit a boxed iterator of mutable points.
-pub trait YieldPointsMut {
-    /// Possibly yields a boxed iterator of mutable points.
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_>;
-}
-
 /// A geometric figure which can be translated by an xy shift (represented by a Point).
 pub trait Translatable: Add<Pt2> + AddAssign<Pt2> + Sub<Pt2> + SubAssign<Pt2> + Sized {}
 

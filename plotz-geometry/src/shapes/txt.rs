@@ -34,12 +34,6 @@ impl Bounded for Txt {
     }
 }
 
-impl YieldPointsMut for Txt {
-    fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
-        Box::new(std::iter::once(&mut self.pt))
-    }
-}
-
 impl Add<Pt2> for Txt {
     type Output = Self;
     fn add(self, rhs: Pt2) -> Self::Output {
