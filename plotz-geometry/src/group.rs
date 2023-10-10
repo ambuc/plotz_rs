@@ -34,13 +34,18 @@ impl<T> Group<T> {
             obj.mutate(&f);
         }
     }
-}
 
-impl<T> YieldPoints for Group<T> {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
-        Box::new(self.0.iter().flat_map(|(obj, _)| obj.yield_pts()))
+    /// Iterator.
+    pub fn iter(&self) -> impl Iterator<Item = &Pt2> {
+        self.0.iter().flat_map(|(x, _)| x.yield_pts())
+    }
+
+    /// Mutable iterator.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt2> {
+        self.0.iter_mut().flat_map(|(x, _)| x.yield_pts_mut())
     }
 }
+
 impl<T> YieldPointsMut for Group<T> {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
         Box::new(self.0.iter_mut().flat_map(|(obj, _)| obj.yield_pts_mut()))
@@ -50,7 +55,7 @@ impl<T> YieldPointsMut for Group<T> {
 impl<T> Bounded for Group<T> {
     fn bounds(&self) -> Bounds {
         let mut bc = BoundsCollector::default();
-        for pt in self.yield_pts() {
+        for pt in self.iter() {
             bc.incorporate(pt);
         }
         bc.bounds()
