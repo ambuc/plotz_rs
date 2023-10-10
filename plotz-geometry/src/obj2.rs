@@ -11,12 +11,13 @@ use {
         shapes::{curve::CurveArc, pg2::Pg2, pg2::PolygonKind, pt2::Pt2, sg2::Sg2, txt::Txt},
         traits::*,
     },
-    derive_more::From,
+    derive_more::{From, TryInto},
     std::{fmt::Debug, ops::*},
 };
 
 /// Either a polygon or a segment.
-#[derive(Debug, PartialEq, Clone, From)]
+#[derive(Debug, PartialEq, Clone, From, TryInto)]
+#[try_into(owned, ref, ref_mut)]
 pub enum Obj2 {
     /// A point.
     Pt2(Pt2),
@@ -33,20 +34,6 @@ pub enum Obj2 {
 }
 
 impl Obj2 {
-    /// Cast to sg2, if possible
-    pub fn to_sg2(&self) -> Option<&Sg2> {
-        match self {
-            Obj2::Sg2(x) => Some(x),
-            _ => None,
-        }
-    }
-    /// Cast to pg2, if possible
-    pub fn to_pg2(&self) -> Option<&Pg2> {
-        match self {
-            Obj2::Pg2(x) => Some(x),
-            _ => None,
-        }
-    }
     /// Iterator.
     pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
         match self {

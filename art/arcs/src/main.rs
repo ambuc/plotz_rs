@@ -1,4 +1,4 @@
-use plotz_geometry::{obj2::Obj2, style::Style};
+use plotz_geometry::{obj2::Obj2, shapes::pg2::Pg2, style::Style};
 
 use {
     argh::FromArgs,
@@ -34,7 +34,7 @@ fn main() {
         /*offset=*/ Pt2(mgn, mgn),
     );
     {
-        let frame_polygon = frame.0.to_pg2().unwrap();
+        let frame_polygon: Pg2 = frame.0.clone().try_into().unwrap();
 
         let frame_ctr = frame.0.bbox_center();
 
@@ -51,7 +51,7 @@ fn main() {
 
             let cas = CurveArcs(ctr, angle_1..=angle_2, radius);
 
-            dos.extend(cas.iter().flat_map(|ca| ca.crop_to(frame_polygon)).map(
+            dos.extend(cas.iter().flat_map(|ca| ca.crop_to(&frame_polygon)).map(
                 |ca| -> (Obj2, Style) {
                     (
                         Obj2::CurveArc(ca),

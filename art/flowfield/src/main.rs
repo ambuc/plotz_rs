@@ -5,7 +5,12 @@ use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
     crop::Croppable,
     obj2::Obj2,
-    shapes::{curve::CurveArc, pg2::multiline::Multiline, pt2::Pt2, sg2::Sg2},
+    shapes::{
+        curve::CurveArc,
+        pg2::{multiline::Multiline, Pg2},
+        pt2::Pt2,
+        sg2::Sg2,
+    },
     style::Style,
 };
 use rand::thread_rng;
@@ -131,10 +136,10 @@ fn main() {
             .collect::<Vec<_>>(),
     );
 
-    let frame_pg2 = frame.0.to_pg2().unwrap();
+    let frame_pg2: Pg2 = frame.0.clone().try_into().unwrap();
     let objs = Canvas::from_objs(
         dos.into_iter().flat_map(|(obj2, style)| {
-            obj2.crop_to(frame_pg2)
+            obj2.crop_to(&frame_pg2)
                 .into_iter()
                 .map(|o| (o, style))
                 .collect::<Vec<_>>()

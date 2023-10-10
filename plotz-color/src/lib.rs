@@ -704,7 +704,7 @@ color!(
 
 pub mod subway {
     //! Colors used only in plotting the NYC subway.
-    use super::*;
+    use super::ColorRGB;
 
     color!(BLUE_ACE, 0.0, 0.22, 0.6);
     color!(ORANGE_BDFM, 1.0, 0.39, 0.1);

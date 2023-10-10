@@ -1,3 +1,5 @@
+use plotz_geometry::shapes::pg2::Pg2;
+
 use {
     argh::FromArgs,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
@@ -29,7 +31,7 @@ fn main() {
     };
 
     let frame = make_frame((720.0, 720.0 * 1.3), /*offset=*/ Pt2(20.0, 20.0));
-    let frame_polygon = frame.0.to_pg2().unwrap().clone();
+    let frame_polygon: Pg2 = frame.0.clone().try_into().unwrap();
 
     // drain things not in frame
     dos.retain(|(obj2, _style)| {
