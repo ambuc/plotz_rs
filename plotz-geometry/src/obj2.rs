@@ -48,13 +48,27 @@ impl Obj2 {
         }
     }
     /// Iterator.
-    pub fn iter(&self) -> impl Iterator<Item = &Pt2> {
-        self.yield_pts()
+    pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
+        match self {
+            Obj2::Pt2(p) => Box::new(p.iter()),
+            Obj2::Txt(ch) => Box::new(ch.iter()),
+            Obj2::CurveArc(ca) => Box::new(ca.iter()),
+            Obj2::Group(g) => Box::new(g.iter()),
+            Obj2::Pg2(pg) => Box::new(pg.iter()),
+            Obj2::Sg2(sg) => Box::new(sg.iter()),
+        }
     }
 
     /// Mutable iterator.
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt2> {
-        self.yield_pts_mut()
+    pub fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
+        match self {
+            Obj2::Pt2(p) => Box::new(p.iter_mut()),
+            Obj2::Txt(ch) => Box::new(ch.iter_mut()),
+            Obj2::CurveArc(ca) => Box::new(ca.iter_mut()),
+            Obj2::Group(g) => Box::new(g.iter_mut()),
+            Obj2::Pg2(pg) => Box::new(pg.iter_mut()),
+            Obj2::Sg2(sg) => Box::new(sg.iter_mut()),
+        }
     }
 }
 
