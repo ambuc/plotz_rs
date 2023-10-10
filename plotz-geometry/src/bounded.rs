@@ -206,9 +206,9 @@ mod test_super {
     #[test]
     fn test_streaming_bbox() {
         let polygons = vec![
-            Pg2([Pt2(0, 0), Pt2(1, 0), Pt2(1, 1)]),
-            Pg2([Pt2(2, 0), Pt2(3, 0), Pt2(3, 1)]),
-            Pg2([Pt2(0, 2), Pt2(1, 2), Pt2(1, 3)]),
+            Pg2([(0, 0), (1, 0), (1, 1)]),
+            Pg2([(2, 0), (3, 0), (3, 1)]),
+            Pg2([(0, 2), (1, 2), (1, 3)]),
         ];
         let bounds = streaming_bbox(&polygons).unwrap();
         assert_eq!(bounds.bl_bound(), Pt2(0, 0));

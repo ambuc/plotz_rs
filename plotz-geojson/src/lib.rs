@@ -280,7 +280,7 @@ mod tests {
         assert_eq!(polygons.len(), 4);
         assert_eq!(
             polygons[0].0,
-            Obj2::from(Pg2([Pt2(0, 0), Pt2(1.0, 2.5), Pt2(2.0, 5.0)]))
+            Obj2::from(Pg2([(0.0, 0.0), (1.0, 2.5), (2.0, 5.0)]))
         );
 
         // assert_symbol_tuple_list(
@@ -310,12 +310,12 @@ mod tests {
 
         assert_eq!(
             polygons[2].0,
-            Obj2::from(Pg2([Pt2(2, 2), Pt2(1.0, 2.5), Pt2(2.0, 5.0)]))
+            Obj2::from(Pg2([(2.0, 2.0), (1.0, 2.5), (2.0, 5.0)]))
         );
 
         assert_eq!(
             polygons[3].0,
-            Obj2::from(Pg2([Pt2(3, 3), Pt2(1.0, 2.5), Pt2(2.0, 5.0)]))
+            Obj2::from(Pg2([(3.0, 3.0), (1.0, 2.5), (2.0, 5.0)]))
         );
     }
 }

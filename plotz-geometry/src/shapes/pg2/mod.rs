@@ -109,8 +109,10 @@ pub enum PolygonConstructorError {
 /// three or more points. Constructing a polygon from two or fewer points will
 /// result in a PolygonConstructorErrorip
 #[allow(non_snake_case)]
-pub fn TryPolygon(a: impl IntoIterator<Item = Pt2>) -> Result<Pg2, PolygonConstructorError> {
-    let mut pts: Vec<Pt2> = a.into_iter().collect();
+pub fn TryPolygon(
+    a: impl IntoIterator<Item = impl Into<Pt2>>,
+) -> Result<Pg2, PolygonConstructorError> {
+    let mut pts: Vec<Pt2> = a.into_iter().map(|x| x.into()).collect();
     if pts.len() <= 2 {
         return Err(PolygonConstructorError::TwoOrFewerPoints);
     }
@@ -130,7 +132,7 @@ pub fn TryPolygon(a: impl IntoIterator<Item = Pt2>) -> Result<Pg2, PolygonConstr
 }
 /// Definitely makes a polygon. Trust me.
 #[allow(non_snake_case)]
-pub fn Pg2(a: impl IntoIterator<Item = Pt2>) -> Pg2 {
+pub fn Pg2(a: impl IntoIterator<Item = impl Into<Pt2>>) -> Pg2 {
     TryPolygon(a).unwrap()
 }
 
@@ -652,12 +654,12 @@ mod tests {
     #[test]
     fn test_polygon_to_segments() {
         assert_eq!(
-            TryPolygon([Pt2(0, 0), Pt2(0, 1)]).unwrap_err(),
+            TryPolygon([(0, 0), (0, 1)]).unwrap_err(),
             PolygonConstructorError::TwoOrFewerPoints,
         );
 
         assert_eq!(
-            Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(0, 2)]).to_segments(),
+            Pg2([(0, 0), (0, 1), (0, 2)]).to_segments(),
             [
                 Sg2((0, 0), (0, 1)),
                 Sg2((0, 1), (0, 2)),
@@ -666,7 +668,7 @@ mod tests {
         );
 
         assert_eq!(
-            Pg2([Pt2(0, 0), Pt2(0, 1), Pt2(0, 2), Pt2(0, 3)]).to_segments(),
+            Pg2([(0, 0), (0, 1), (0, 2), (0, 3)]).to_segments(),
             [
                 Sg2((0, 0), (0, 1)),
                 Sg2((0, 1), (0, 2)),
@@ -887,8 +889,8 @@ mod tests {
         // ⬜🟧🟧🟧⬜
         // ⬜🟧🟧🟧⬜
         // ⬜⬜⬜⬜⬜ ➡️ x
-        let inner = Pg2([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)]); // 🟥
-        let frame = Pg2([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)]); // 🟨
+        let inner = Pg2([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟥
+        let frame = Pg2([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟨
         assert_eq!(inner, frame);
         let crops = inner.crop_to(&frame); // 🟧
         assert_eq!(crops, vec![inner]);
@@ -902,8 +904,8 @@ mod tests {
         // 🟨🟧🟧🟧⬜
         // 🟨🟧🟧🟧⬜
         // 🟨🟨🟨🟨⬜ ➡️ x
-        let inner = Pg2([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)]); // 🟥
-        let frame = Pg2([Pt2(0, 0), Pt2(3, 0), Pt2(3, 3), Pt2(0, 3)]); // 🟨
+        let inner = Pg2([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟥
+        let frame = Pg2([(0, 0), (3, 0), (3, 3), (0, 3)]); // 🟨
         assert_eq!(inner.crop_to(&frame)[0], inner);
 
         // ⬆️ y
@@ -939,8 +941,8 @@ mod tests {
         // 🟨🟧🟧🟧🟨
         // 🟨🟧🟧🟧🟨
         // 🟨🟨🟨🟨🟨 ➡️ x
-        let inner = Pg2([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)]); // 🟥
-        let frame = Pg2([Pt2(0, 0), Pt2(4, 0), Pt2(4, 4), Pt2(0, 4)]); // 🟨
+        let inner = Pg2([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟥
+        let frame = Pg2([(0, 0), (4, 0), (4, 4), (0, 4)]); // 🟨
 
         // inner /\ frame == inner
         let crops = inner.crop_to(&frame); // 🟧
@@ -955,9 +957,9 @@ mod tests {
         // 🟨🟧🟧🟥⬜
         // 🟨🟧🟧🟥⬜
         // 🟨🟨🟨⬜⬜ ➡️ x
-        let inner = Pg2([Pt2(1, 1), Pt2(4, 1), Pt2(4, 4), Pt2(1, 4)]); // 🟥
-        let frame = Pg2([Pt2(0, 0), Pt2(3, 0), Pt2(3, 3), Pt2(0, 3)]); // 🟨
-        let expected = Pg2([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)]); // 🟧
+        let inner = Pg2([(1, 1), (4, 1), (4, 4), (1, 4)]); // 🟥
+        let frame = Pg2([(0, 0), (3, 0), (3, 3), (0, 3)]); // 🟨
+        let expected = Pg2([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟧
 
         let crops = inner.crop_to(&frame);
         assert_eq!(crops, vec![expected.clone()]);
@@ -971,9 +973,9 @@ mod tests {
         // 🟨🟧🟧🟥⬜
         // 🟨🟧🟧🟥⬜
         // ⬜🟥🟥🟥⬜ ➡️ x
-        let inner = Pg2([Pt2(1, 0), Pt2(4, 0), Pt2(4, 3), Pt2(1, 3)]); // 🟥
-        let frame = Pg2([Pt2(0, 1), Pt2(3, 1), Pt2(3, 4), Pt2(0, 4)]); // 🟨
-        let expected = Pg2([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)]); // 🟧
+        let inner = Pg2([(1, 0), (4, 0), (4, 3), (1, 3)]); // 🟥
+        let frame = Pg2([(0, 1), (3, 1), (3, 4), (0, 4)]); // 🟨
+        let expected = Pg2([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟧
 
         let crops = inner.crop_to(&frame);
         assert_eq!(crops, vec![expected.clone()]);
@@ -988,33 +990,33 @@ mod tests {
         // 🟨🟧🟨🟧🟨
         // ⬜🟥⬜🟥⬜
         let inner = Pg2([
-            Pt2(1, 0),
-            Pt2(2, 0),
-            Pt2(2, 2),
-            Pt2(3, 2),
-            Pt2(3, 0),
-            Pt2(4, 0),
-            Pt2(4, 5),
-            Pt2(3, 5),
-            Pt2(3, 3),
-            Pt2(2, 3),
-            Pt2(2, 5),
-            Pt2(1, 5),
+            (1, 0),
+            (2, 0),
+            (2, 2),
+            (3, 2),
+            (3, 0),
+            (4, 0),
+            (4, 5),
+            (3, 5),
+            (3, 3),
+            (2, 3),
+            (2, 5),
+            (1, 5),
         ]); // 🟥
-        let frame = Pg2([Pt2(0, 1), Pt2(5, 1), Pt2(5, 4), Pt2(0, 4)]); // 🟨
+        let frame = Pg2([(0, 1), (5, 1), (5, 4), (0, 4)]); // 🟨
         let expected = Pg2([
-            Pt2(1, 1),
-            Pt2(2, 1),
-            Pt2(2, 2),
-            Pt2(3, 2),
-            Pt2(3, 1),
-            Pt2(4, 1),
-            Pt2(4, 4),
-            Pt2(3, 4),
-            Pt2(3, 3),
-            Pt2(2, 3),
-            Pt2(2, 4),
-            Pt2(1, 4),
+            (1, 1),
+            (2, 1),
+            (2, 2),
+            (3, 2),
+            (3, 1),
+            (4, 1),
+            (4, 4),
+            (3, 4),
+            (3, 3),
+            (2, 3),
+            (2, 4),
+            (1, 4),
         ]); // 🟧
 
         let crops = inner.crop_to(&frame);
@@ -1030,20 +1032,20 @@ mod tests {
         // 🟨🟧🟨🟧🟨
         // ⬜⬜⬜⬜⬜
         let inner = Pg2([
-            Pt2(1, 1),
-            Pt2(2, 1),
-            Pt2(2, 2),
-            Pt2(3, 2),
-            Pt2(3, 1),
-            Pt2(4, 1),
-            Pt2(4, 4),
-            Pt2(3, 4),
-            Pt2(3, 3),
-            Pt2(2, 3),
-            Pt2(2, 4),
-            Pt2(1, 4),
+            (1, 1),
+            (2, 1),
+            (2, 2),
+            (3, 2),
+            (3, 1),
+            (4, 1),
+            (4, 4),
+            (3, 4),
+            (3, 3),
+            (2, 3),
+            (2, 4),
+            (1, 4),
         ]); // 🟥
-        let frame = Pg2([Pt2(0, 1), Pt2(5, 1), Pt2(5, 4), Pt2(0, 4)]); // 🟨
+        let frame = Pg2([(0, 1), (5, 1), (5, 4), (0, 4)]); // 🟨
         let expected = inner.clone();
         let crops = inner.crop_to(&frame);
         assert_eq!(crops, vec![expected.clone()]);
@@ -1058,20 +1060,20 @@ mod tests {
         // ⬜🟧🟨🟧⬜
         // ⬜⬜⬜⬜⬜
         let inner = Pg2([
-            Pt2(1, 1),
-            Pt2(2, 1),
-            Pt2(2, 2),
-            Pt2(3, 2),
-            Pt2(3, 1),
-            Pt2(4, 1),
-            Pt2(4, 4),
-            Pt2(3, 4),
-            Pt2(3, 3),
-            Pt2(2, 3),
-            Pt2(2, 4),
-            Pt2(1, 4),
+            (1, 1),
+            (2, 1),
+            (2, 2),
+            (3, 2),
+            (3, 1),
+            (4, 1),
+            (4, 4),
+            (3, 4),
+            (3, 3),
+            (2, 3),
+            (2, 4),
+            (1, 4),
         ]); // 🟥
-        let frame = Pg2([Pt2(1, 1), Pt2(4, 1), Pt2(4, 4), Pt2(1, 4)]); // 🟨
+        let frame = Pg2([(1, 1), (4, 1), (4, 4), (1, 4)]); // 🟨
         let expected = inner.clone();
         let crops = inner.crop_to(&frame);
         assert_eq!(crops, vec![expected.clone()]);
@@ -1087,20 +1089,20 @@ mod tests {
     //     // 🟥🟧🟥🟧🟥
     //     // ⬜🟨⬜🟨⬜
     //     let inner = Pg2([
-    //         Pt2(1, 0),
-    //         Pt2(2, 0),
-    //         Pt2(2, 4),
-    //         Pt2(3, 4),
-    //         Pt2(3, 0),
-    //         Pt2(4, 0),
-    //         Pt2(4, 5),
-    //         Pt2(1, 5),
+    //         (1, 0),
+    //         (2, 0),
+    //         (2, 4),
+    //         (3, 4),
+    //         (3, 0),
+    //         (4, 0),
+    //         (4, 5),
+    //         (1, 5),
     //     ])
     //     .unwrap();
-    //     let frame = Pg2([Pt2(0, 1), Pt2(5, 1), Pt2(5, 3), Pt2(0, 3)]).unwrap();
+    //     let frame = Pg2([(0, 1), (5, 1), (5, 3), (0, 3)]).unwrap();
     //     let expected = vec![
-    //         Pg2([Pt2(1, 1), Pt2(2, 1), Pt2(2, 3), Pt2(1, 3)]).unwrap(),
-    //         Pg2([Pt2(3, 1), Pt2(4, 1), Pt2(4, 3), Pt2(3, 3)]).unwrap(),
+    //         Pg2([(1, 1), (2, 1), (2, 3), (1, 3)]).unwrap(),
+    //         Pg2([(3, 1), (4, 1), (4, 3), (3, 3)]).unwrap(),
     //     ];
     //     let crops = inner.crop_to(&frame).unwrap();
     //     assert_eq!(crops.len(), 2);
@@ -1157,16 +1159,16 @@ mod tests {
     #[test]
     fn test_add() {
         assert_eq!(
-            &Pg2([Pt2(0, 0), Pt2(1, 1), Pt2(2, 2)]) + Pt2(1, 0),
-            Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(3, 2)])
+            &Pg2([(0, 0), (1, 1), (2, 2)]) + Pt2(1, 0),
+            Pg2([(1, 0), (2, 1), (3, 2)])
         );
     }
 
     #[test]
     fn test_sub() {
         assert_eq!(
-            &Pg2([Pt2(0, 0), Pt2(1, 1), Pt2(2, 2)]) - Pt2(1, 0),
-            Pg2([Pt2(-1, 0), Pt2(0, 1), Pt2(1, 2)])
+            &Pg2([(0, 0), (1, 1), (2, 2)]) - Pt2(1, 0),
+            Pg2([(-1, 0), (0, 1), (1, 2)])
         );
     }
 
@@ -1214,18 +1216,18 @@ mod tests {
         // 0 - - 1 - - 2 - - 3 - - 4 - - 5 -> x
 
         let frame = Pg2([
-            Pt2(0, 0),
-            Pt2(1, 0),
-            Pt2(1, 3),
-            Pt2(2, 3),
-            Pt2(2, 0),
-            Pt2(5, 0),
-            Pt2(5, 4),
-            Pt2(4, 4),
-            Pt2(4, 1),
-            Pt2(3, 1),
-            Pt2(3, 5),
-            Pt2(0, 5),
+            (0, 0),
+            (1, 0),
+            (1, 3),
+            (2, 3),
+            (2, 0),
+            (5, 0),
+            (5, 4),
+            (4, 4),
+            (4, 1),
+            (3, 1),
+            (3, 5),
+            (0, 5),
         ]);
         let segment = Sg2((0, 2), (5, 2));
         assert_eq!(
@@ -1240,7 +1242,7 @@ mod tests {
 
     #[test]
     fn test_frame_to_segment_crop() {
-        let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
+        let frame = Pg2([(1, 0), (2, 1), (1, 2), (0, 1)]);
         assert_eq!(
             Sg2((0, 2), (2, 0)).crop_to(&frame),
             vec![Sg2((0.5, 1.5), (1.5, 0.5))]
@@ -1248,7 +1250,7 @@ mod tests {
     }
     #[test]
     fn test_frame_to_segment_crop_02() {
-        let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
+        let frame = Pg2([(1, 0), (2, 1), (1, 2), (0, 1)]);
         assert_eq!(
             Sg2((0, 0), (2, 2)).crop_to(&frame),
             vec![Sg2((0.5, 0.5), (1.5, 1.5))]
@@ -1256,12 +1258,12 @@ mod tests {
     }
     #[test]
     fn test_frame_to_segment_crop_empty() {
-        let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
+        let frame = Pg2([(1, 0), (2, 1), (1, 2), (0, 1)]);
         assert_eq!(Sg2((0, 2), (2, 2)).crop_to(&frame), vec![]);
     }
     #[test]
     fn test_frame_to_segment_crop_unchanged() {
-        let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
+        let frame = Pg2([(1, 0), (2, 1), (1, 2), (0, 1)]);
         assert_eq!(
             Sg2((0, 1), (2, 1)).crop_to(&frame),
             vec![Sg2((0, 1), (2, 1))]
@@ -1270,7 +1272,7 @@ mod tests {
 
     #[test]
     fn test_into_iter() {
-        let frame = Pg2([Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
+        let frame = Pg2([(1, 0), (2, 1), (1, 2), (0, 1)]);
         let pts: Vec<Pt2> = frame.into_iter().collect();
         assert_eq!(pts, vec![Pt2(1, 0), Pt2(2, 1), Pt2(1, 2), Pt2(0, 1)]);
     }
