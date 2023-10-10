@@ -30,7 +30,7 @@ impl<T> Group<T> {
 
     /// Iterator.
     pub fn iter(&self) -> impl Iterator<Item = &Pt2> {
-        self.0.iter().flat_map(|(x, _)| x.yield_pts())
+        self.0.iter().flat_map(|(x, _)| x.iter())
     }
 
     /// Mutable iterator.

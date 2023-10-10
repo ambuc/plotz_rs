@@ -4,12 +4,6 @@ use crate::{obj2::Obj2, style::Style};
 
 use {crate::shapes::pt2::Pt2, std::ops::*, typed_builder::TypedBuilder};
 
-/// A geometric figure made of points which might emit a boxed iterator of immutable points.
-pub trait YieldPoints {
-    /// Possibly yields a boxed iterator of immutable points.
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_>;
-}
-
 /// A geometric figure made of points which might emit a boxed iterator of mutable points.
 pub trait YieldPointsMut {
     /// Possibly yields a boxed iterator of mutable points.
