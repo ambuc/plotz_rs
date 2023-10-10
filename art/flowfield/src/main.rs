@@ -45,7 +45,7 @@ fn main() {
 
     let frame = make_frame(
         (800.0 - 2.0 * mgn, 1000.0 - 2.0 * mgn),
-        /*offset=*/ Pt2(mgn, mgn),
+        /*offset=*/ (mgn, mgn),
     );
 
     let mut arrows_store: Vec<Sg2> = vec![];

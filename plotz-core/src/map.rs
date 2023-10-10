@@ -377,7 +377,7 @@ impl Map {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             for (ref mut obj2, _style) in dos.iter_mut() {
                 if let Obj2::CurveArc(mut ca) = &obj2 {
-                    ca.ctr += Pt2(
+                    ca.ctr += (
                         thread_rng().gen_range(-2.0..=2.0),
                         thread_rng().gen_range(-2.0..=2.0),
                     );

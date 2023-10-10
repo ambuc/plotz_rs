@@ -5,14 +5,14 @@ use plotz_geometry::{obj2::Obj2, style::Style};
 use plotz_geometry::shapes::{pg2::Pg2, pt2::Pt2};
 
 /// Makes a frame given (width, height) and (x,y) offset.
-pub fn make_frame_pg((w, h): (f64, f64), offset: Pt2) -> Pg2 {
+pub fn make_frame_pg((w, h): (f64, f64), offset: impl Into<Pt2>) -> Pg2 {
     let mut p = Pg2([(0.0, 0.0), (0.0, w), (h, w), (h, 0.0)]) + offset;
     p.orient_curve_positively();
     p
 }
 
 /// Makes a frame given (width, height) and (x,y) offset.
-pub fn make_frame(wh: (f64, f64), offset: Pt2) -> (Obj2, Style) {
+pub fn make_frame(wh: (f64, f64), offset: impl Into<Pt2>) -> (Obj2, Style) {
     (
         Obj2::Pg2(make_frame_pg(wh, offset)),
         Style {

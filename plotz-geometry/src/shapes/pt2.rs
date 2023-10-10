@@ -384,25 +384,25 @@ mod tests {
 
     #[test]
     fn test_add() {
-        assert_eq!(Pt2(1, 2) + Pt2(3, 4), Pt2(4, 6));
+        assert_eq!(Pt2(1, 2) + (3, 4), Pt2(4, 6));
     }
 
     #[test]
     fn test_add_assign() {
         let mut p = Pt2(2, 4);
-        p += Pt2(1, 2);
+        p += (1, 2);
         assert_eq!(p, Pt2(3, 6));
     }
 
     #[test]
     fn test_sub() {
-        assert_eq!(Pt2(1, 2) - Pt2(3, 4), Pt2(-2, -2));
+        assert_eq!(Pt2(1, 2) - (3, 4), Pt2(-2, -2));
     }
 
     #[test]
     fn test_sub_assign() {
         let mut p = Pt2(2, 4);
-        p -= Pt2(1, 2);
+        p -= (1, 2);
         assert_eq!(p, Pt2(1, 2));
     }
 

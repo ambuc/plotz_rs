@@ -35,7 +35,7 @@ fn main() {
 
     let frame = make_frame(
         (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
-        /*offset=*/ Pt2(mgn, mgn),
+        /*offset=*/ (mgn, mgn),
     );
 
     {

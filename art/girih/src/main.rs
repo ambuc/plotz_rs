@@ -6,7 +6,6 @@ mod strategy3;
 
 use argh::FromArgs;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
-use plotz_geometry::shapes::pt2::Pt2;
 use tracing::*;
 use tracing_subscriber::FmtSubscriber;
 
@@ -35,7 +34,7 @@ fn main() {
             .into_iter()
             .map(|(mut obj2, style)| {
                 obj2 *= 40.0;
-                obj2 += Pt2(500, 400);
+                obj2 += (500, 400);
                 (obj2, style)
             })
             .map(|so2| (so2.0, so2.1)),
@@ -44,7 +43,7 @@ fn main() {
     )
     .with_frame(make_frame(
         /*wh=*/ (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
-        /*offset=*/ Pt2(margin, margin),
+        /*offset=*/ (margin, margin),
     ))
     .write_to_svg_or_die(
         Size {

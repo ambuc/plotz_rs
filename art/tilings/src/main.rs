@@ -2,7 +2,7 @@ use plotz_geometry::shapes::pg2::Pg2;
 
 use argh::FromArgs;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
-use plotz_geometry::{crop::PointLoc, shapes::pt2::Pt2};
+use plotz_geometry::crop::PointLoc;
 
 mod ab_rhomb;
 mod cromwell;
@@ -28,7 +28,7 @@ fn main() {
         _ => vec![],
     };
 
-    let frame = make_frame((720.0, 720.0 * 1.3), /*offset=*/ Pt2(20, 20));
+    let frame = make_frame((720.0, 720.0 * 1.3), /*offset=*/ (20, 20));
     let frame_polygon: Pg2 = frame.0.clone().try_into().unwrap();
 
     // drain things not in frame
