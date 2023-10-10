@@ -232,6 +232,16 @@ impl Pt2 {
         let i = Pt2(other.x, self.y);
         abp(o, &i, j)
     }
+
+    /// Iterator.
+    pub fn iter(&self) -> impl Iterator<Item = &Pt2> {
+        std::iter::once(self)
+    }
+
+    /// Mutable iterator.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt2> {
+        std::iter::once(self)
+    }
 }
 
 impl YieldPoints for Pt2 {

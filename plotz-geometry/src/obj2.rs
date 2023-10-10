@@ -65,7 +65,7 @@ impl Nullable for Obj2 {
 impl YieldPoints for Obj2 {
     fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
         match self {
-            Obj2::Pt2(p) => p.yield_pts(),
+            Obj2::Pt2(p) => Box::new(p.iter()),
             Obj2::Txt(ch) => ch.yield_pts(),
             Obj2::CurveArc(ca) => ca.yield_pts(),
             Obj2::Group(g) => g.yield_pts(),
@@ -78,7 +78,7 @@ impl YieldPoints for Obj2 {
 impl YieldPointsMut for Obj2 {
     fn yield_pts_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt2> + '_> {
         match self {
-            Obj2::Pt2(p) => p.yield_pts_mut(),
+            Obj2::Pt2(p) => Box::new(p.iter_mut()),
             Obj2::Txt(ch) => ch.yield_pts_mut(),
             Obj2::CurveArc(ca) => ca.yield_pts_mut(),
             Obj2::Group(g) => g.yield_pts_mut(),
