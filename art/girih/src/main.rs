@@ -35,7 +35,7 @@ fn main() {
             .into_iter()
             .map(|(mut obj2, style)| {
                 obj2 *= 40.0;
-                obj2 += Pt2(500, 400);
+                obj2 += (500, 400);
                 (obj2, style)
             })
             .map(|so2| (so2.0, so2.1)),

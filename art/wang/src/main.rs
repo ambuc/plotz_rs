@@ -188,7 +188,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj2, Style
 
             pg *= 2.0;
             pg.rotate(&Pt2(1, 1), rot);
-            pg += Pt2(2.0 * row_idx as f64, 2.0 * col_idx as f64);
+            pg += (2.0 * row_idx as f64, 2.0 * col_idx as f64);
 
             (
                 Obj2::Pg2(pg),
@@ -203,7 +203,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj2, Style
 
             pg *= 2.0;
             pg.rotate(&Pt2(1, 1), rot);
-            pg += Pt2(2.0 * row_idx as f64, 2.0 * col_idx as f64);
+            pg += (2.0 * row_idx as f64, 2.0 * col_idx as f64);
 
             shade_polygon(&ShadeConfig::builder().gap(0.05).slope(0.0).build(), &pg)
                 .unwrap()
@@ -261,7 +261,7 @@ fn main() {
     objs.dos_by_bucket.iter_mut().for_each(|(_bucket, layers)| {
         layers.iter_mut().for_each(|(ref mut obj2, _style)| {
             *obj2 *= scale;
-            *obj2 += Pt2(margin, margin);
+            *obj2 += (margin, margin);
         });
     });
 

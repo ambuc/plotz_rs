@@ -47,13 +47,13 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg2) -> Result<Vec<Sg2>, Sh
     let mut line = if config.slope > 0.0 {
         Sg2(
             bounds.tl_bound() - xnudge,
-            bounds.tl_bound() + Pt2(bounds.width(), bounds.width() * config.slope) + xnudge,
+            bounds.tl_bound() + (bounds.width(), bounds.width() * config.slope) + xnudge,
         )
     } else {
         Sg2(
             bounds.tr_bound() - ynudge,
             bounds.tr_bound()
-                + Pt2(-1.0 * bounds.width(), -1.0 * bounds.width() * config.slope)
+                + (-1.0 * bounds.width(), -1.0 * bounds.width() * config.slope)
                 + ynudge,
         )
     };
@@ -67,7 +67,7 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg2) -> Result<Vec<Sg2>, Sh
         segments.extend(cropped_strokes.iter());
         // segments.push(line);
 
-        line -= Pt2(0, step);
+        line -= (0, step);
     }
 
     if config.switchback {

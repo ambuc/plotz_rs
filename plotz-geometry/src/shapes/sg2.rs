@@ -743,13 +743,13 @@ mod tests {
 
     #[test]
     fn test_add() {
-        assert_eq!(Sg2((0, 0), (1, 1)) + Pt2(1, 0), Sg2((1, 0), (2, 1)));
+        assert_eq!(Sg2((0, 0), (1, 1)) + (1, 0), Sg2((1, 0), (2, 1)));
     }
 
     #[test]
     fn test_add_assign() {
         let mut s = Sg2((0, 0), (1, 1));
-        s += Pt2(1, 0);
+        s += (1, 0);
         assert_eq!(s, Sg2((1, 0), (2, 1)));
     }
 
@@ -780,7 +780,7 @@ mod tests {
     #[test]
     fn test_sub() {
         assert_eq!(
-            Sg2((0, 0), (1, 1)) - Pt2(1, 2),
+            Sg2((0, 0), (1, 1)) - (1, 2),
             // --------
             Sg2((-1, -2), (0, -1))
         );
@@ -789,7 +789,7 @@ mod tests {
     #[test]
     fn test_sub_assign() {
         let mut s = Sg2((0, 0), (1, 1));
-        s -= Pt2(1, 2);
+        s -= (1, 2);
         assert_eq!(s, Sg2((-1, -2), (0, -1)));
     }
 

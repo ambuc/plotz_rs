@@ -163,7 +163,7 @@ fn main() {
             obj_vec.extend(
                 tile.to_dos()
                     .into_iter()
-                    .map(|(obj2, style)| (obj2 + Pt2(dx, dy), style)),
+                    .map(|(obj2, style)| (obj2 + (dx, dy), style)),
             );
         }
     }

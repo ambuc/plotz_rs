@@ -50,7 +50,7 @@ impl Grid {
         let mut v = vec![];
         for x in range_step(self.x_init, self.x_init + self.width, self.minor_every) {
             let i = Pt2((self.x_init + x) as f64, (self.y_init) as f64);
-            let f = i + Pt2(0, h);
+            let f = i + (0, h);
             v.push((
                 Sg2(i, f).into(),
                 Style {
@@ -62,7 +62,7 @@ impl Grid {
         }
         for x in range_step(self.x_init, self.x_init + self.width, self.major_every) {
             let i = Pt2((self.x_init + x) as f64, (self.y_init) as f64);
-            let f = i + Pt2(0, h);
+            let f = i + (0, h);
             v.push((
                 Sg2(i, f).into(),
                 Style {
@@ -74,7 +74,7 @@ impl Grid {
         }
         for y in range_step(self.y_init, self.y_init + self.height, self.minor_every) {
             let i = Pt2((self.x_init) as f64, (self.y_init + y) as f64);
-            let f = i + Pt2(w, 0);
+            let f = i + (w, 0);
             v.push((
                 Sg2(i, f).into(),
                 Style {
@@ -86,7 +86,7 @@ impl Grid {
         }
         for y in range_step(self.y_init, self.y_init + self.height, self.major_every) {
             let i = Pt2((self.x_init) as f64, (self.y_init + y) as f64);
-            let f = i + Pt2(w, 0);
+            let f = i + (w, 0);
             v.push((
                 Sg2(i, f).into(),
                 Style {
