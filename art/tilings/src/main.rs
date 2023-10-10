@@ -1,7 +1,7 @@
 use {
     argh::FromArgs,
     plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{crop::PointLoc, shapes::pt2::Pt2, traits::YieldPoints},
+    plotz_geometry::{crop::PointLoc, shapes::pt2::Pt2},
 };
 
 mod ab_rhomb;
@@ -33,7 +33,7 @@ fn main() {
 
     // drain things not in frame
     dos.retain(|(obj2, _style)| {
-        obj2.yield_pts()
+        obj2.iter()
             .all(|pt| matches!(frame_polygon.contains_pt(pt), PointLoc::Inside))
     });
 

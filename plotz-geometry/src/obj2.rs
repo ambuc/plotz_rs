@@ -47,6 +47,15 @@ impl Obj2 {
             _ => None,
         }
     }
+    /// Iterator.
+    pub fn iter(&self) -> impl Iterator<Item = &Pt2> {
+        self.yield_pts()
+    }
+
+    /// Mutable iterator.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt2> {
+        self.yield_pts_mut()
+    }
 }
 
 impl Nullable for Obj2 {
