@@ -16,15 +16,21 @@ pub struct Txt {
     pub font_size: f64,
 }
 
-impl Bounded for Txt {
-    fn bounds(&self) -> crate::bounded::Bounds {
-        self.pt.bounds()
+impl Txt {
+    /// Iterator.
+    pub fn iter(&self) -> impl Iterator<Item = &Pt2> {
+        std::iter::once(&self.pt)
+    }
+
+    /// Mutable iterator.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt2> {
+        std::iter::once(&mut self.pt)
     }
 }
 
-impl YieldPoints for Txt {
-    fn yield_pts(&self) -> Box<dyn Iterator<Item = &Pt2> + '_> {
-        Box::new(std::iter::once(&self.pt))
+impl Bounded for Txt {
+    fn bounds(&self) -> crate::bounded::Bounds {
+        self.pt.bounds()
     }
 }
 
