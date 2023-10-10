@@ -3,22 +3,20 @@
 //! A crate for reading GeoJSON files and parsing them to plotz_geometry
 //! structs.
 
-use {
-    plotz_geometry::{
-        obj2::Obj2,
-        shapes::{
-            pg2::{
-                multiline::{Multiline, MultilineConstructorError},
-                Pg2, PolygonConstructorError, TryPolygon,
-            },
-            pt2::Pt2,
+use plotz_geometry::{
+    obj2::Obj2,
+    shapes::{
+        pg2::{
+            multiline::{Multiline, MultilineConstructorError},
+            Pg2, PolygonConstructorError, TryPolygon,
         },
+        pt2::Pt2,
     },
-    serde_json::Value,
-    std::collections::HashMap,
-    thiserror::Error,
-    tracing::*,
 };
+use serde_json::Value;
+use std::collections::HashMap;
+use thiserror::Error;
+use tracing::*;
 
 type KeySymbol = String;
 type ValueSymbol = String;

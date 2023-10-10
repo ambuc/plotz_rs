@@ -1,16 +1,14 @@
 use plotz_geometry::{obj2::Obj2, style::Style};
 
-use {
-    argh::FromArgs,
-    plotz_color::{ColorRGB, *},
-    plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{
-        shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{pg2::Pg2, pt2::Pt2},
-    },
-    rand::{prelude::SliceRandom, Rng},
-    std::f64::consts::*,
+use argh::FromArgs;
+use plotz_color::{ColorRGB, *};
+use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_geometry::{
+    shading::{shade_config::ShadeConfig, shade_polygon},
+    shapes::{pg2::Pg2, pt2::Pt2},
 };
+use rand::{prelude::SliceRandom, Rng};
+use std::f64::consts::*;
 
 static DIM: f64 = 750.0;
 

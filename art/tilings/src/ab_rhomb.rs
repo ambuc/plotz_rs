@@ -2,12 +2,10 @@
 
 use plotz_geometry::{obj2::Obj2, style::Style};
 
-use {
-    plotz_color::*,
-    plotz_geometry::{
-        shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{pg2::Pg2, pt2::Pt2},
-    },
+use plotz_color::*;
+use plotz_geometry::{
+    shading::{shade_config::ShadeConfig, shade_polygon},
+    shapes::{pg2::Pg2, pt2::Pt2},
 };
 
 struct T1([Pt2; 3]);

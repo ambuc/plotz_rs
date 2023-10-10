@@ -1,6 +1,7 @@
 //! Crop logic for polygons.
 
-use {crate::intersection::IntersectionResult, std::fmt::Debug};
+use crate::intersection::IntersectionResult;
+use std::fmt::Debug;
 
 /// An IsxnResult which knows the polygon segments of its two lines.
 #[derive(PartialEq, Copy, Clone)]

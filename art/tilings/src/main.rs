@@ -1,10 +1,8 @@
 use plotz_geometry::shapes::pg2::Pg2;
 
-use {
-    argh::FromArgs,
-    plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{crop::PointLoc, shapes::pt2::Pt2},
-};
+use argh::FromArgs;
+use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_geometry::{crop::PointLoc, shapes::pt2::Pt2};
 
 mod ab_rhomb;
 mod cromwell;

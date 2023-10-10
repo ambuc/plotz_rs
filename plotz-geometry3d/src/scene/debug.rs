@@ -1,8 +1,6 @@
-use {
-    plotz_geometry::{style::Style, *},
-    std::fmt::Debug,
-    typed_builder::TypedBuilder,
-};
+use plotz_geometry::{style::Style, *};
+use std::fmt::Debug;
+use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone, TypedBuilder)]
 pub struct SceneDebug {

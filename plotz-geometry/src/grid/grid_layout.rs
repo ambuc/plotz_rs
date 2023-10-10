@@ -1,16 +1,14 @@
 //! GridLayout for grid...layouts... what do you want from me.
 
-use crate::{obj2::Obj2, style::Style};
-
-use {
-    crate::{
-        bounded::{Bounded, Bounds},
-        crop::Croppable,
-        shapes::pt2::Pt2,
-    },
-    float_ord::FloatOrd,
-    typed_builder::TypedBuilder,
+use crate::{
+    bounded::{Bounded, Bounds},
+    crop::Croppable,
+    obj2::Obj2,
+    shapes::pt2::Pt2,
+    style::Style,
 };
+use float_ord::FloatOrd;
+use typed_builder::TypedBuilder;
 
 #[derive(Debug, TypedBuilder, Copy, Clone)]
 /// Settings struct.

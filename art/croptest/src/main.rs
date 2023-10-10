@@ -1,18 +1,16 @@
 use plotz_geometry::{obj2::Obj2, style::Style};
 
-use {
-    argh::FromArgs,
-    itertools::iproduct,
-    plotz_color::*,
-    plotz_core::{canvas::Canvas, frame::*, svg::Size},
-    plotz_geometry::{
-        crop::Croppable,
-        grid::grid_layout::{GridLayout, GridLayoutSettings},
-        group::Group,
-        shapes::{
-            pg2::{Pg2, Rect},
-            pt2::Pt2,
-        },
+use argh::FromArgs;
+use itertools::iproduct;
+use plotz_color::*;
+use plotz_core::{canvas::Canvas, frame::*, svg::Size};
+use plotz_geometry::{
+    crop::Croppable,
+    grid::grid_layout::{GridLayout, GridLayoutSettings},
+    group::Group,
+    shapes::{
+        pg2::{Pg2, Rect},
+        pt2::Pt2,
     },
 };
 

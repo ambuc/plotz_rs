@@ -2,22 +2,20 @@
 
 use plotz_geometry::{obj2::Obj2, style::Style};
 
-use {
-    crate::{
-        bucket::Bucket,
-        svg::{write_layer_to_svg, Size},
-    },
-    anyhow::Error,
-    float_ord::FloatOrd,
-    itertools::Itertools,
-    plotz_geometry::{
-        bounded::{streaming_bbox, Bounded, Bounds},
-        shapes::pt2::Pt2,
-        *,
-    },
-    std::collections::HashMap,
-    tracing::trace,
+use crate::{
+    bucket::Bucket,
+    svg::{write_layer_to_svg, Size},
 };
+use anyhow::Error;
+use float_ord::FloatOrd;
+use itertools::Itertools;
+use plotz_geometry::{
+    bounded::{streaming_bbox, Bounded, Bounds},
+    shapes::pt2::Pt2,
+    *,
+};
+use std::collections::HashMap;
+use tracing::trace;
 
 type CanvasMap = HashMap<Option<Bucket>, Vec<(Obj2, Style)>>;
 

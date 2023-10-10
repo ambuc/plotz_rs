@@ -1,10 +1,8 @@
 //! A segment in 3d.
 
-use {
-    crate::shapes::pt3::Pt3,
-    float_ord::FloatOrd,
-    std::{fmt::Debug, ops::*},
-};
+use crate::shapes::pt3::Pt3;
+use float_ord::FloatOrd;
+use std::{fmt::Debug, ops::*};
 
 // A segment in 3d space, with initial and final points.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]

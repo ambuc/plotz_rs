@@ -1,11 +1,9 @@
 //! Crop
-use {
-    crate::{
-        bounded::Bounds,
-        shapes::pg2::{Pg2, PolygonConstructorError},
-    },
-    thiserror::Error,
+use crate::{
+    bounded::Bounds,
+    shapes::pg2::{Pg2, PolygonConstructorError},
 };
+use thiserror::Error;
 
 /// A general error arising from trying to inspect whether a point lies in a
 /// polygon.

@@ -1,7 +1,5 @@
 //! A 2D ray.
 
-use std::f64::consts::TAU;
-
 use crate::{
     intersection::IntersectionResult,
     shapes::{
@@ -9,6 +7,7 @@ use crate::{
         sg2::Sg2,
     },
 };
+use std::f64::consts::TAU;
 
 /// A ray which emits from a pt and goes in a direction.
 #[derive(Copy, Clone)]

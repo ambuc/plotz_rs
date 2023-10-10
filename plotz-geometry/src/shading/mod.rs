@@ -2,8 +2,6 @@
 
 pub mod shade_config;
 
-use float_ord::FloatOrd;
-
 use crate::{
     bounded::{Bounded, BoundingBoxError},
     crop::{CropToPolygonError, Croppable},
@@ -14,6 +12,7 @@ use crate::{
         sg2::Sg2,
     },
 };
+use float_ord::FloatOrd;
 
 /// A general error arising from shading a polygon.
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]

@@ -1,9 +1,7 @@
 //! An inner object.
 
-use {
-    crate::shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
-    derive_more::From,
-};
+use crate::shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3};
+use derive_more::From;
 
 #[derive(Debug, Clone, From)]
 pub enum Obj3 {

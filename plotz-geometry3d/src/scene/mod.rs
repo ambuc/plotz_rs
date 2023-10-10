@@ -6,18 +6,16 @@ use plotz_geometry::obj2::Obj2;
 pub mod debug;
 mod occluder;
 
-use {
-    crate::{
-        camera::{Occlusion, Projection},
-        scene::{debug::SceneDebug, occluder::Occluder},
-        styled_obj3::StyledObj3,
-    },
-    float_ord::FloatOrd,
-    itertools::Itertools,
-    plotz_geometry::{style::Style, *},
-    std::fmt::Debug,
-    typed_builder::TypedBuilder,
+use crate::{
+    camera::{Occlusion, Projection},
+    scene::{debug::SceneDebug, occluder::Occluder},
+    styled_obj3::StyledObj3,
 };
+use float_ord::FloatOrd;
+use itertools::Itertools;
+use plotz_geometry::{style::Style, *};
+use std::fmt::Debug;
+use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone, TypedBuilder)]
 pub struct Scene {

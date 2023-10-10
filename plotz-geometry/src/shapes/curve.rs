@@ -1,24 +1,22 @@
 //! A curve.
 
-use {
-    crate::{
-        bounded::{Bounded, Bounds},
-        crop::{CropType, Croppable, PointLoc},
-        interpolate::interpolate_2d_checked,
-        shapes::{
-            pg2::{abp, Pg2},
-            pt2::{PolarPt, Pt2},
-            sg2::Sg2,
-        },
-        *,
+use crate::{
+    bounded::{Bounded, Bounds},
+    crop::{CropType, Croppable, PointLoc},
+    interpolate::interpolate_2d_checked,
+    shapes::{
+        pg2::{abp, Pg2},
+        pt2::{PolarPt, Pt2},
+        sg2::Sg2,
     },
-    float_cmp::approx_eq,
-    float_ord::FloatOrd,
-    std::{
-        cmp::{max, min, Ordering},
-        f64::consts::*,
-        ops::*,
-    },
+    *,
+};
+use float_cmp::approx_eq;
+use float_ord::FloatOrd;
+use std::{
+    cmp::{max, min, Ordering},
+    f64::consts::*,
+    ops::*,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -504,16 +502,14 @@ impl Nullable for CurveArc {
 
 #[cfg(test)]
 mod test {
-    use {
-        super::*,
-        crate::shapes::{
-            pg2::{Pg2, Rect},
-            sg2::Sg2,
-        },
-        assert_matches::assert_matches,
-        float_cmp::assert_approx_eq,
-        test_case::test_case,
+    use super::*;
+    use crate::shapes::{
+        pg2::{Pg2, Rect},
+        sg2::Sg2,
     };
+    use assert_matches::assert_matches;
+    use float_cmp::assert_approx_eq;
+    use test_case::test_case;
 
     #[test]
     fn test_curve_zero_intersections() {

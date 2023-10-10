@@ -1,9 +1,7 @@
 //! A character at a point.
 
-use {
-    crate::{bounded::Bounded, shapes::pt2::Pt2, *},
-    std::ops::*,
-};
+use crate::{bounded::Bounded, shapes::pt2::Pt2, *};
+use std::ops::*;
 
 #[derive(Debug, PartialEq, Clone)]
 /// A character laid out at a point.

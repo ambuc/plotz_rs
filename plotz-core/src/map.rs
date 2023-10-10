@@ -2,41 +2,38 @@
 
 #![allow(clippy::let_unit_value)]
 
-use crate::frame::make_frame;
-
-use {
-    crate::{
-        bucket::{Area, Bucket, Highway, Path as BucketPath, Subway},
-        bucketer::{Bucketer2, DefaultBucketer2},
-        canvas::Canvas,
-        svg::{Size, SvgWriteError},
-    },
-    float_ord::FloatOrd,
-    itertools::Itertools,
-    lazy_static::lazy_static,
-    plotz_color::{subway::*, *},
-    plotz_geojson::GeoJsonConversionError,
-    plotz_geometry::{
-        bounded::{Bounded, BoundingBoxError},
-        crop::Croppable,
-        obj2::Obj2,
-        shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
-        style::Style,
-        *,
-    },
-    rand::{thread_rng, Rng},
-    std::{
-        cmp::Ord,
-        collections::HashSet,
-        fs::File,
-        io::BufReader,
-        path::{Path, PathBuf},
-    },
-    thiserror::Error,
-    tracing::*,
-    typed_builder::TypedBuilder,
+use crate::{
+    bucket::{Area, Bucket, Highway, Path as BucketPath, Subway},
+    bucketer::{Bucketer2, DefaultBucketer2},
+    canvas::Canvas,
+    frame::make_frame,
+    svg::{Size, SvgWriteError},
 };
+use float_ord::FloatOrd;
+use itertools::Itertools;
+use lazy_static::lazy_static;
+use plotz_color::{subway::*, *};
+use plotz_geojson::GeoJsonConversionError;
+use plotz_geometry::{
+    bounded::{Bounded, BoundingBoxError},
+    crop::Croppable,
+    obj2::Obj2,
+    shading::{shade_config::ShadeConfig, shade_polygon},
+    shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
+    style::Style,
+    *,
+};
+use rand::{thread_rng, Rng};
+use std::{
+    cmp::Ord,
+    collections::HashSet,
+    fs::File,
+    io::BufReader,
+    path::{Path, PathBuf},
+};
+use thiserror::Error;
+use tracing::*;
+use typed_builder::TypedBuilder;
 
 #[derive(Debug, Error)]
 /// A general error you might encounter when rendering a Map.

@@ -1,15 +1,15 @@
 //! Grid (for debugging, mostly)
 
-use crate::{obj2::Obj2, style::Style};
-
 pub mod grid_layout;
 
-use {
-    crate::shapes::{pt2::Pt2, sg2::Sg2},
-    num::range_step,
-    plotz_color::*,
-    typed_builder::TypedBuilder,
+use crate::{
+    obj2::Obj2,
+    shapes::{pt2::Pt2, sg2::Sg2},
+    style::Style,
 };
+use num::range_step;
+use plotz_color::*;
+use typed_builder::TypedBuilder;
 
 #[derive(Debug, TypedBuilder)]
 /// A grid.

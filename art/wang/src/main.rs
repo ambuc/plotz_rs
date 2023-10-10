@@ -1,19 +1,17 @@
 use plotz_geometry::{obj2::Obj2, style::Style};
 
-use {
-    argh::FromArgs,
-    plotz_color::*,
-    plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{
-        shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{
-            pg2::{multiline::Multiline, Pg2},
-            pt2::Pt2,
-        },
+use argh::FromArgs;
+use plotz_color::*;
+use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_geometry::{
+    shading::{shade_config::ShadeConfig, shade_polygon},
+    shapes::{
+        pg2::{multiline::Multiline, Pg2},
+        pt2::Pt2,
     },
-    rand::prelude::SliceRandom,
-    std::f64::consts::*,
 };
+use rand::prelude::SliceRandom;
+use std::f64::consts::*;
 
 #[derive(FromArgs)]
 #[argh(description = "...")]

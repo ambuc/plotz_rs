@@ -1,16 +1,14 @@
 //! SVG plotting utilities.
 //!
-use {
-    plotz_color::BLACK,
-    plotz_geometry::{
-        obj2::Obj2,
-        shapes::{pg2::PolygonKind, txt::Txt},
-        style::Style,
-        *,
-    },
-    std::fmt::Debug,
-    thiserror::Error,
+use plotz_color::BLACK;
+use plotz_geometry::{
+    obj2::Obj2,
+    shapes::{pg2::PolygonKind, txt::Txt},
+    style::Style,
+    *,
 };
+use std::fmt::Debug;
+use thiserror::Error;
 
 /// The size of a canvas.
 #[derive(Debug, Copy, Clone)]

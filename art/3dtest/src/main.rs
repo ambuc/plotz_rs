@@ -1,14 +1,12 @@
-use {
-    argh::FromArgs,
-    plotz_color::*,
-    plotz_core::{canvas::Canvas, frame::*},
-    plotz_geometry::{style::Style, *},
-    plotz_geometry3d::{
-        camera::{Occlusion, Projection},
-        scene::{debug::SceneDebug, Scene},
-    },
-    tracing::*,
+use argh::FromArgs;
+use plotz_color::*;
+use plotz_core::{canvas::Canvas, frame::*};
+use plotz_geometry::{style::Style, *};
+use plotz_geometry3d::{
+    camera::{Occlusion, Projection},
+    scene::{debug::SceneDebug, Scene},
 };
+use tracing::*;
 
 #[derive(FromArgs)]
 #[argh(description = "...")]

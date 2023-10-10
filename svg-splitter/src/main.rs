@@ -2,8 +2,10 @@ use anyhow::Result;
 use argh::FromArgs;
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::fs::File;
-use std::io::{self, BufRead, BufReader, BufWriter, Lines, Write};
+use std::{
+    fs::File,
+    io::{self, BufRead, BufReader, BufWriter, Lines, Write},
+};
 
 #[derive(FromArgs)]
 #[argh(description = "...")]

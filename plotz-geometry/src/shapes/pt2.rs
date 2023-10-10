@@ -5,12 +5,9 @@ use crate::{
     shapes::{pg2::abp, sg2::Sg2},
     *,
 };
-use {
-    float_cmp::approx_eq,
-    float_ord::FloatOrd,
-    std::hash::Hash,
-    std::{convert::From, fmt::Debug, ops::*},
-};
+use float_cmp::approx_eq;
+use float_ord::FloatOrd;
+use std::{convert::From, fmt::Debug, hash::Hash, ops::*};
 
 /// A point in 2D space.
 #[derive(Copy, Clone)]

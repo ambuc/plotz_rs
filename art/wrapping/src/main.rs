@@ -1,15 +1,13 @@
 use plotz_geometry::style::Style;
 
-use {
-    argh::FromArgs,
-    plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{
-        obj2::Obj2,
-        shapes::{curve::CurveArc, pt2::Pt2, sg2::Sg2},
-    },
-    rand::{distributions::Standard, prelude::Distribution, Rng},
-    std::f64::consts::*,
+use argh::FromArgs;
+use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_geometry::{
+    obj2::Obj2,
+    shapes::{curve::CurveArc, pt2::Pt2, sg2::Sg2},
 };
+use rand::{distributions::Standard, prelude::Distribution, Rng};
+use std::f64::consts::*;
 
 #[derive(FromArgs)]
 #[argh(description = "...")]

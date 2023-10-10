@@ -2,19 +2,17 @@
 
 use plotz_geometry::{obj2::Obj2, style::Style};
 
-use {
-    plotz_color::*,
-    plotz_geometry::{
-        group::Group,
-        interpolate::extrapolate_2d as extrapolate,
-        shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{
-            pg2::Pg2,
-            pt2::{PolarPt, Pt2},
-        },
+use plotz_color::*;
+use plotz_geometry::{
+    group::Group,
+    interpolate::extrapolate_2d as extrapolate,
+    shading::{shade_config::ShadeConfig, shade_polygon},
+    shapes::{
+        pg2::Pg2,
+        pt2::{PolarPt, Pt2},
     },
-    std::f64::consts::PI,
 };
+use std::f64::consts::PI;
 
 // kite, green
 struct T1([Pt2; 4]);

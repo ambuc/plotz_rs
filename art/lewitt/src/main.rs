@@ -1,19 +1,17 @@
 use plotz_geometry::{obj2::Obj2, style::Style};
 
-use {
-    argh::FromArgs,
-    plotz_color::*,
-    plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{
-        crop::PointLoc,
-        grid::grid_layout::{GridLayout, GridLayoutSettings},
-        shapes::{curve::CurveArc, pt2::Pt2},
-    },
-    rand::{seq::SliceRandom, thread_rng, Rng},
-    std::f64::consts::*,
-    tracing::*,
-    tracing_subscriber::FmtSubscriber,
+use argh::FromArgs;
+use plotz_color::*;
+use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_geometry::{
+    crop::PointLoc,
+    grid::grid_layout::{GridLayout, GridLayoutSettings},
+    shapes::{curve::CurveArc, pt2::Pt2},
 };
+use rand::{seq::SliceRandom, thread_rng, Rng};
+use std::f64::consts::*;
+use tracing::*;
+use tracing_subscriber::FmtSubscriber;
 
 #[derive(FromArgs)]
 #[argh(description = "...")]

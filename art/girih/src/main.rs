@@ -4,13 +4,11 @@ mod strategy1;
 mod strategy2;
 mod strategy3;
 
-use {
-    argh::FromArgs,
-    plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::shapes::pt2::Pt2,
-    tracing::*,
-    tracing_subscriber::FmtSubscriber,
-};
+use argh::FromArgs;
+use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_geometry::shapes::pt2::Pt2;
+use tracing::*;
+use tracing_subscriber::FmtSubscriber;
 
 #[derive(FromArgs)]
 #[argh(description = "...")]

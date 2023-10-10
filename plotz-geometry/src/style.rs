@@ -1,6 +1,8 @@
 #![allow(missing_docs)]
 
-use {crate::shading::shade_config::ShadeConfig, plotz_color::*, std::fmt::Debug};
+use crate::shading::shade_config::ShadeConfig;
+use plotz_color::*;
+use std::fmt::Debug;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Style {

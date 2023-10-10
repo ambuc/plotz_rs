@@ -1,18 +1,16 @@
 use plotz_geometry::{obj2::Obj2, shapes::pg2::Pg2, style::Style};
 
-use {
-    argh::FromArgs,
-    plotz_color::*,
-    plotz_core::{canvas::Canvas, frame::make_frame, svg::Size},
-    plotz_geometry::{
-        bounded::Bounded,
-        crop::Croppable,
-        grid::Grid,
-        shapes::{curve::CurveArcs, pt2::Pt2},
-    },
-    rand::Rng,
-    std::f64::consts::*,
+use argh::FromArgs;
+use plotz_color::*;
+use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_geometry::{
+    bounded::Bounded,
+    crop::Croppable,
+    grid::Grid,
+    shapes::{curve::CurveArcs, pt2::Pt2},
 };
+use rand::Rng;
+use std::f64::consts::*;
 
 #[derive(FromArgs)]
 #[argh(description = "...")]

@@ -1,27 +1,25 @@
 //! Crop graph for polygons.
 
-use {
-    super::TryPolygon,
-    crate::{
-        crop::{CropType, PointLoc},
-        intersection::{Intersection, IntersectionResult, Pair, Which},
-        shapes::{
-            pg2::Pg2,
-            pt2::{is_colinear_n, Pt2},
-        },
+use super::TryPolygon;
+use crate::{
+    crop::{CropType, PointLoc},
+    intersection::{Intersection, IntersectionResult, Pair, Which},
+    shapes::{
+        pg2::Pg2,
+        pt2::{is_colinear_n, Pt2},
     },
-    approx::*,
-    float_ord::FloatOrd,
-    itertools::Itertools,
-    petgraph::{
-        dot::{Config, Dot},
-        prelude::DiGraphMap,
-        Direction,
-        Direction::{Incoming, Outgoing},
-    },
-    std::fmt::Debug,
-    typed_builder::TypedBuilder,
 };
+use approx::*;
+use float_ord::FloatOrd;
+use itertools::Itertools;
+use petgraph::{
+    dot::{Config, Dot},
+    prelude::DiGraphMap,
+    Direction,
+    Direction::{Incoming, Outgoing},
+};
+use std::fmt::Debug;
+use typed_builder::TypedBuilder;
 
 #[derive(Debug, TypedBuilder)]
 pub struct CropGraph<'a> {

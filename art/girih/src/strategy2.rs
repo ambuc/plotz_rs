@@ -1,19 +1,21 @@
 #![allow(unused)]
 
-use crate::layout::{Layout, Settings};
-use crate::{geom::*, layout::AnnotatedPlacedTiles};
+use crate::{
+    geom::*,
+    layout::{AnnotatedPlacedTiles, Layout, Settings},
+};
 use indicatif::ProgressBar;
 use itertools::Itertools;
 use plotz_color::BLACK;
-use plotz_geometry::obj2::Obj2;
-use plotz_geometry::style::Style;
 use plotz_geometry::{
+    obj2::Obj2,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
         pg2::{multiline::Multiline, Pg2},
         pt2::Pt2,
         sg2::Sg2,
     },
+    style::Style,
 };
 use rand::seq::SliceRandom;
 use std::f64::consts::TAU;

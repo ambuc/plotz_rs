@@ -14,12 +14,10 @@ pub mod grid;
 pub mod shading;
 pub mod shapes;
 
-use {
-    crate::{obj2::Obj2, shapes::pt2::Pt2, style::Style},
-    enum_dispatch::enum_dispatch,
-    std::ops::*,
-    typed_builder::TypedBuilder,
-};
+use crate::{obj2::Obj2, shapes::pt2::Pt2, style::Style};
+use enum_dispatch::enum_dispatch;
+use std::ops::*;
+use typed_builder::TypedBuilder;
 
 /// A geometric figure which can be translated by an xy shift (represented by a Point).
 #[enum_dispatch(Obj2)]

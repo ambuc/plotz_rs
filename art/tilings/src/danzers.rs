@@ -2,19 +2,17 @@
 
 use plotz_geometry::{obj2::Obj2, style::Style};
 
-use {
-    float_cmp::assert_approx_eq,
-    lazy_static::lazy_static,
-    plotz_color::*,
-    plotz_geometry::{
-        shading::{shade_config::ShadeConfig, shade_polygon},
-        shapes::{
-            pg2::Pg2,
-            pt2::{PolarPt, Pt2},
-        },
+use float_cmp::assert_approx_eq;
+use lazy_static::lazy_static;
+use plotz_color::*;
+use plotz_geometry::{
+    shading::{shade_config::ShadeConfig, shade_polygon},
+    shapes::{
+        pg2::Pg2,
+        pt2::{PolarPt, Pt2},
     },
-    std::f64::consts::PI,
 };
+use std::f64::consts::PI;
 
 lazy_static! {
     static ref A: f64 = (PI / 7.0).sin();

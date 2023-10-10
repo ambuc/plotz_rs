@@ -1,10 +1,8 @@
 //! A 3D point.
 //!
-use {
-    crate::shapes::sg3::Sg3,
-    float_ord::FloatOrd,
-    std::{convert::From, fmt::Debug, hash::Hash, ops::*},
-};
+use crate::shapes::sg3::Sg3;
+use float_ord::FloatOrd;
+use std::{convert::From, fmt::Debug, hash::Hash, ops::*};
 
 #[derive(Hash, Copy, Clone, PartialOrd, PartialEq, Eq, Ord)]
 pub struct Pt3 {

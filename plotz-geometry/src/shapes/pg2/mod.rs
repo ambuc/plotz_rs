@@ -4,33 +4,30 @@ mod annotated_isxn_result;
 mod crop_graph;
 pub mod multiline;
 
-use {
-    self::{annotated_isxn_result::*, crop_graph::*},
-    crate::{
-        bounded::{Bounded, Bounds},
-        crop::CropType,
-        crop::{CropToPolygonError, Croppable, PointLoc},
-        intersection::IntersectionResult,
-        obj2::Obj2,
-        shapes::{
-            pt2::Pt2,
-            sg2::{Contains, Sg2},
-            txt::Txt,
-        },
-        style::Style,
-        *,
+use self::{annotated_isxn_result::*, crop_graph::*};
+use crate::{
+    bounded::{Bounded, Bounds},
+    crop::{CropToPolygonError, CropType, Croppable, PointLoc},
+    intersection::IntersectionResult,
+    obj2::Obj2,
+    shapes::{
+        pt2::Pt2,
+        sg2::{Contains, Sg2},
+        txt::Txt,
     },
-    float_cmp::approx_eq,
-    float_ord::FloatOrd,
-    itertools::iproduct,
-    std::{
-        cmp::{Eq, PartialEq},
-        fmt::Debug,
-        iter::zip,
-        ops::*,
-    },
-    thiserror::Error,
+    style::Style,
+    *,
 };
+use float_cmp::approx_eq;
+use float_ord::FloatOrd;
+use itertools::iproduct;
+use std::{
+    cmp::{Eq, PartialEq},
+    fmt::Debug,
+    iter::zip,
+    ops::*,
+};
+use thiserror::Error;
 
 /// Whether a polygon is open (there should be no line drawn between its last
 /// and first points) or closed (a line should be drawn between its last and

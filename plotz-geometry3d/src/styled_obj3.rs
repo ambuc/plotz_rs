@@ -1,6 +1,9 @@
 //! A 3d object.
 
-use {crate::obj3::Obj3, plotz_color::ColorRGB, plotz_geometry::style::Style, std::fmt::Debug};
+use crate::obj3::Obj3;
+use plotz_color::ColorRGB;
+use plotz_geometry::style::Style;
+use std::fmt::Debug;
 
 #[derive(Clone)]
 pub struct StyledObj3 {

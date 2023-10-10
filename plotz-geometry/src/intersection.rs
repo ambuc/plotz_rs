@@ -1,10 +1,9 @@
 //! An intefield2section between two segments.
 
 use crate::shapes::pt2::Pt2;
-use std::fmt::Debug;
-
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
+use std::fmt::Debug;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 /// Guaranteed to be 0.0 <= f <= 1.0. Witness type.

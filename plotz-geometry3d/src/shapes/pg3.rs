@@ -4,10 +4,8 @@ use std::fmt::Debug;
 
 use float_ord::FloatOrd;
 
-use {
-    crate::{p3, shapes::pt3::Pt3},
-    std::ops::*,
-};
+use crate::{p3, shapes::pt3::Pt3};
+use std::ops::*;
 
 // A multiline is a list of points rendered with connecting line segments.
 #[derive(Clone)]

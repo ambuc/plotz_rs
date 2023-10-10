@@ -2,15 +2,13 @@
 
 use crate::{obj2::Obj2, style::Style};
 
-use {
-    crate::{
-        bounded::{Bounded, Bounds, BoundsCollector},
-        crop::{CropType, Croppable},
-        shapes::{pg2::Pg2, pt2::Pt2},
-        *,
-    },
-    std::ops::*,
+use crate::{
+    bounded::{Bounded, Bounds, BoundsCollector},
+    crop::{CropType, Croppable},
+    shapes::{pg2::Pg2, pt2::Pt2},
+    *,
 };
+use std::ops::*;
 
 #[derive(Debug, PartialEq, Clone)]
 /// A group of objects.

@@ -1,19 +1,17 @@
 use plotz_color::{subway::PURPLE_7, ColorRGB, LIGHTBLUE, LIMEGREEN, ORANGERED, YELLOW};
-use {
-    plotz_geometry::{
-        bounded::Bounded,
-        crop::PointLoc,
-        intersection::{Intersection, IntersectionResult},
-        shapes::{
-            pg2::Pg2,
-            pt2::{PolarPt, Pt2},
-            ry2::Ry2,
-            sg2::Sg2,
-        },
+use plotz_geometry::{
+    bounded::Bounded,
+    crop::PointLoc,
+    intersection::{Intersection, IntersectionResult},
+    shapes::{
+        pg2::Pg2,
+        pt2::{PolarPt, Pt2},
+        ry2::Ry2,
+        sg2::Sg2,
     },
-    rand::seq::SliceRandom,
-    std::f64::consts::*,
 };
+use rand::seq::SliceRandom;
+use std::f64::consts::*;
 
 // girih tiles https://en.m.wikipedia.org/wiki/Girih_tiles. The five shapes of
 // the tiles, and their Persian names, are:

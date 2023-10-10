@@ -2,17 +2,15 @@
 
 use plotz_geometry::style::Style;
 
-use {
-    crate::{
-        obj3::Obj3,
-        p3,
-        shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
-        styled_obj3::StyledObj3,
-    },
-    plotz_geometry::{
-        obj2::Obj2,
-        shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
-    },
+use crate::{
+    obj3::Obj3,
+    p3,
+    shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
+    styled_obj3::StyledObj3,
+};
+use plotz_geometry::{
+    obj2::Obj2,
+    shapes::{pg2::Pg2, pt2::Pt2, sg2::Sg2},
 };
 
 // Any oblique projection.  https://en.wikipedia.org/wiki/3D_projection#Oblique_projection
