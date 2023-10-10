@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 approx = "*"
 derive_more = "*"
+enum_dispatch = "*"
 float-cmp = "*"
 float-ord = "*"
 itertools = "*"

@@ -11,13 +11,13 @@ use {
         shapes::{curve::CurveArc, pg2::Pg2, pg2::PolygonKind, pt2::Pt2, sg2::Sg2, txt::Txt},
         traits::*,
     },
-    derive_more::{From, TryInto},
+    enum_dispatch::enum_dispatch,
     std::{fmt::Debug, ops::*},
 };
 
 /// Either a polygon or a segment.
-#[derive(Debug, PartialEq, Clone, From, TryInto)]
-#[try_into(owned, ref, ref_mut)]
+#[derive(Debug, PartialEq, Clone)]
+#[enum_dispatch]
 pub enum Obj2 {
     /// A point.
     Pt2(Pt2),
@@ -55,32 +55,6 @@ impl Obj2 {
             Obj2::Group(g) => Box::new(g.iter_mut()),
             Obj2::Pg2(pg) => Box::new(pg.iter_mut()),
             Obj2::Sg2(sg) => Box::new(sg.iter_mut()),
-        }
-    }
-}
-
-impl Nullable for Obj2 {
-    fn is_empty(&self) -> bool {
-        match self {
-            Obj2::Pg2(p) => p.is_empty(),
-            Obj2::Group(dois) => dois.is_empty(),
-            Obj2::Pt2(pt) => pt.is_empty(),
-            Obj2::Sg2(sg) => sg.is_empty(),
-            Obj2::Txt(ch) => ch.is_empty(),
-            Obj2::CurveArc(ca) => ca.is_empty(),
-        }
-    }
-}
-
-impl Bounded for Obj2 {
-    fn bounds(&self) -> Bounds {
-        match self {
-            Obj2::Txt(ch) => ch.bounds(),
-            Obj2::CurveArc(arc) => arc.bounds(),
-            Obj2::Group(dos) => dos.bounds(),
-            Obj2::Pt2(p) => p.bounds(),
-            Obj2::Pg2(pg) => pg.bounds(),
-            Obj2::Sg2(s) => s.bounds(),
         }
     }
 }
@@ -262,10 +236,7 @@ impl DivAssign<f64> for Obj2 {
     }
 }
 
-impl Translatable for Obj2 {}
 impl Scalable<f64> for Obj2 {}
-impl ScalableAssign for Obj2 {}
-impl TranslatableAssign for Obj2 {}
 
 impl Croppable for Obj2 {
     type Output = Obj2;

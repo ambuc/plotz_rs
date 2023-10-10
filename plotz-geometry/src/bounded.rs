@@ -6,6 +6,7 @@ use crate::{
         pt2::Pt2,
     },
 };
+use enum_dispatch::enum_dispatch;
 use float_ord::FloatOrd;
 
 /// A general error arising from trying to derive the bounding box for a thing.
@@ -61,6 +62,7 @@ impl Bounded for Bounds {
 /// center of that object.
 ///
 /// Unlike most graphics systems, we assume that (0,0) is in the bottom-left.
+#[enum_dispatch(Obj2)]
 pub trait Bounded {
     /// The right bound of an object.
     fn right_bound(&self) -> f64 {

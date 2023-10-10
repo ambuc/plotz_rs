@@ -1,19 +1,25 @@
 //! Traits.
 
-use crate::{obj2::Obj2, style::Style};
-
-use {crate::shapes::pt2::Pt2, std::ops::*, typed_builder::TypedBuilder};
+use {
+    crate::{obj2::Obj2, shapes::pt2::Pt2, style::Style},
+    enum_dispatch::enum_dispatch,
+    std::ops::*,
+    typed_builder::TypedBuilder,
+};
 
 /// A geometric figure which can be translated by an xy shift (represented by a Point).
+#[enum_dispatch(Obj2)]
 pub trait Translatable: Add<Pt2> + AddAssign<Pt2> + Sub<Pt2> + SubAssign<Pt2> + Sized {}
 
 /// A geometric figure which can be scaled by a factor of |f|.
 pub trait Scalable<T>: Mul<T> + MulAssign<T> + Div<T> + DivAssign<T> + Sized {}
 
 /// The same as |Translatable|, but in-place. (See add vs. add_assign.)
+#[enum_dispatch(Obj2)]
 pub trait TranslatableAssign: AddAssign<Pt2> + SubAssign<Pt2> {}
 
 /// The same as |Scalable|, but in-place. (See add vs. add_assign.)
+#[enum_dispatch(Obj2)]
 pub trait ScalableAssign: MulAssign<f64> + DivAssign<f64> {}
 
 /// A geometric figure made of points with floating-point xy components which
@@ -25,6 +31,7 @@ pub trait Roundable {
 }
 
 /// A geometric figure which can be empty. Most can't.
+#[enum_dispatch(Obj2)]
 pub trait Nullable {
     /// Is it empty?
     fn is_empty(&self) -> bool;
