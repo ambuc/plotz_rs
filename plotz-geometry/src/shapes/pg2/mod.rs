@@ -348,8 +348,13 @@ impl Pg2 {
     }
 
     /// Iterator.
-    pub fn iter(&self) -> Pg2Iter<'_> {
-        Pg2Iter { idx: 0, pg2: self }
+    pub fn iter(&self) -> impl Iterator<Item = &Pt2> {
+        self.pts.iter()
+    }
+
+    /// Mutable iterator.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt2> {
+        self.pts.iter_mut()
     }
 }
 
@@ -436,26 +441,6 @@ impl IntoIterator for Pg2 {
 
     fn into_iter(self) -> Self::IntoIter {
         self.pts.into_iter()
-    }
-}
-
-/// For Iterator.
-pub struct Pg2Iter<'a> {
-    idx: usize,
-    pg2: &'a Pg2,
-}
-
-impl<'a> Iterator for Pg2Iter<'a> {
-    type Item = &'a Pt2;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.pg2.pts.get(self.idx) {
-            Some(x) => {
-                self.idx += 1;
-                Some(x)
-            }
-            None => None,
-        }
     }
 }
 
