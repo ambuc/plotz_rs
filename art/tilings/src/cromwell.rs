@@ -253,9 +253,9 @@ pub fn make() -> Vec<(Obj2, Style)> {
 
     let _t3 = {
         let a = Pt2(0, 0);
-        let b = a + Pt2(ell, 0);
+        let b = a + (ell, 0);
         let c = b + PolarPt(ell, 16.0 * PI / 10.0);
-        let d = c - Pt2(1, 0);
+        let d = c - (1, 0);
         let mut t = T3([a, b, c, d]);
         t.pts_iter_mut()
             .for_each(|pt| pt.rotate_inplace(&a, -1.0 * 3.0 * PI / 10.0));
@@ -264,9 +264,9 @@ pub fn make() -> Vec<(Obj2, Style)> {
 
     let _t4 = {
         let a = Pt2(0, 0);
-        let b = a - Pt2(ell, 0);
+        let b = a - (ell, 0);
         let c = b + PolarPt(ell, 14.0 * PI / 10.0);
-        let d = c + Pt2(1, 0);
+        let d = c + (1, 0);
         let mut t = T4([a, b, c, d]);
         t.pts_iter_mut()
             .for_each(|pt| pt.rotate_inplace(&a, 1.0 * 3.0 * PI / 10.0));
@@ -288,9 +288,9 @@ pub fn make() -> Vec<(Obj2, Style)> {
         .flat_map(|tile| {
             let color = tile.color();
             let mut p = Pg2(tile.pts());
-            p *= Pt2(1, -1); // flip
+            p *= (1, -1); // flip
             p *= 3500.0;
-            p += Pt2(95, -300); // translate
+            p += (95, -300); // translate
 
             let config = ShadeConfig::builder()
                 .gap(1.5)

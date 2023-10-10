@@ -193,14 +193,14 @@ pub fn make() -> Vec<(Obj2, Style)> {
         Kind::T0,
         origin,
         origin + PolarPt(*A, PI - T0.angle_md_rad),
-        origin + Pt2(-1.0 * *C, 0),
+        origin + (-1.0 * *C, 0),
     );
 
     let t1 = Tile(
         Kind::T1,
         origin,
         origin + PolarPt(*A, -1.0 * T1.angle_base_rad),
-        origin + Pt2(*C, 0),
+        origin + (*C, 0),
     );
 
     let t2 = Tile(
@@ -219,18 +219,18 @@ pub fn make() -> Vec<(Obj2, Style)> {
             // centerings
             t_copy.pts.iter_mut().for_each(|pt| {
                 pt.rotate_inplace(&Pt2(0, 0), 0.0 * PI);
-                *pt *= Pt2(1, -1);
+                *pt *= (1, -1);
                 *pt *= 270.0;
-                *pt += Pt2(40.0 + 270.0 * (jdx as f64), 150.0 + 150.0 * (idx as f64));
+                *pt += (40.0 + 270.0 * (jdx as f64), 150.0 + 150.0 * (idx as f64));
                 match t.kind {
                     Kind::T0 => {
-                        *pt += Pt2(230, 0);
+                        *pt += (230, 0);
                     }
                     Kind::T1 => {
-                        *pt += Pt2(-20, 25);
+                        *pt += (-20, 25);
                     }
                     Kind::T2 => {
-                        *pt += Pt2(0, 110);
+                        *pt += (0, 110);
                     }
                 }
             });

@@ -55,7 +55,7 @@ fn main() {
             let dx = thread_rng().gen_range(ARROW_RANGE.clone());
             let dy = thread_rng().gen_range(ARROW_RANGE.clone());
             let arrow_i = Pt2(i as f64, j as f64);
-            let arrow_f = arrow_i + Pt2(dx, dy) + uniform_shift;
+            let arrow_f = arrow_i + (dx, dy) + uniform_shift;
             let arrow = Sg2(arrow_i, arrow_f);
             arrows_store.push(arrow);
             if PRINT_ARROWS {
@@ -104,7 +104,7 @@ fn main() {
                     .map(|_| {
                         let rx = thread_rng().gen_range(CLUSTER_RANGE.clone());
                         let ry = thread_rng().gen_range(CLUSTER_RANGE.clone());
-                        let pt = cluster_center + Pt2(rx, ry);
+                        let pt = cluster_center + (rx, ry);
 
                         let mut history = vec![pt];
                         let num_steps = thread_rng().gen_range(NUM_STEPS_RANGE.clone());

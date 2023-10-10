@@ -61,8 +61,12 @@ impl Obj2 {
     }
 }
 
-impl RemAssign<Pt2> for Obj2 {
-    fn rem_assign(&mut self, rhs: Pt2) {
+impl<T> RemAssign<T> for Obj2
+where
+    T: Into<Pt2>,
+{
+    fn rem_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
         match self {
             Obj2::Pt2(p) => {
                 *p %= rhs;
@@ -86,9 +90,13 @@ impl RemAssign<Pt2> for Obj2 {
     }
 }
 
-impl Add<Pt2> for Obj2 {
+impl<T> Add<T> for Obj2
+where
+    T: Into<Pt2>,
+{
     type Output = Obj2;
-    fn add(self, rhs: Pt2) -> Self::Output {
+    fn add(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
         match self {
             Obj2::Pt2(p) => Obj2::from(p + rhs),
             Obj2::Txt(ch) => Obj2::from(ch + rhs),
@@ -100,9 +108,13 @@ impl Add<Pt2> for Obj2 {
     }
 }
 
-impl Sub<Pt2> for Obj2 {
+impl<T> Sub<T> for Obj2
+where
+    T: Into<Pt2>,
+{
     type Output = Obj2;
-    fn sub(self, rhs: Pt2) -> Self::Output {
+    fn sub(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
         match self {
             Obj2::Pt2(p) => Obj2::from(p - rhs),
             Obj2::Txt(ch) => Obj2::from(ch - rhs),
@@ -139,8 +151,12 @@ impl Div<f64> for Obj2 {
         }
     }
 }
-impl AddAssign<Pt2> for Obj2 {
-    fn add_assign(&mut self, rhs: Pt2) {
+impl<T> AddAssign<T> for Obj2
+where
+    T: Into<Pt2>,
+{
+    fn add_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
         match self {
             Obj2::Pt2(p) => {
                 *p += rhs;
@@ -163,8 +179,12 @@ impl AddAssign<Pt2> for Obj2 {
         }
     }
 }
-impl SubAssign<Pt2> for Obj2 {
-    fn sub_assign(&mut self, rhs: Pt2) {
+impl<T> SubAssign<T> for Obj2
+where
+    T: Into<Pt2>,
+{
+    fn sub_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
         match self {
             Obj2::Pt2(p) => {
                 *p -= rhs;

@@ -84,9 +84,7 @@ fn main() {
 
     let polygons: Vec<Pg2> = vornoi
         .iter_cells()
-        .map(|cell| {
-            Pg2(cell.iter_vertices().map(|vertex| Pt2(vertex.x, vertex.y))) * DIM + Pt2(20, 20)
-        })
+        .map(|cell| Pg2(cell.iter_vertices().map(|vertex| (vertex.x, vertex.y))) * DIM + (20, 20))
         .collect();
 
     let mut dos = vec![];
