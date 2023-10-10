@@ -54,7 +54,7 @@ fn main() {
     {
         let mut v: Vec<(Obj2, Style)> = vec![];
 
-        let r = Rect(Pt2(50.0, 50.0), (50.0, 50.0)).unwrap();
+        let r = Rect((50, 50), (50, 50)).unwrap();
 
         let base_sq = (
             Obj2::Pg2(r.clone()),
@@ -67,28 +67,28 @@ fn main() {
         // v.extend(base_sq.annotate(&AnnotationSettings::default()));
 
         let pts = if false {
-            let a = Pt2(60.0, 60.0);
-            let b = Pt2(70.0, 60.0);
-            let c = Pt2(80.0, 60.0);
-            let d = Pt2(90.0, 60.0);
-            let e = Pt2(70.0, 75.0);
-            let f = Pt2(80.0, 75.0);
-            let g = Pt2(60.0, 90.0);
-            let h = Pt2(90.0, 90.0);
+            let a = Pt2(60, 60);
+            let b = Pt2(70, 60);
+            let c = Pt2(80, 60);
+            let d = Pt2(90, 60);
+            let e = Pt2(70, 75);
+            let f = Pt2(80, 75);
+            let g = Pt2(60, 90);
+            let h = Pt2(90, 90);
             vec![a, b, e, f, c, d, h, g, a]
         } else {
-            let a = Pt2(60.0, 40.0);
-            let b = Pt2(70.0, 40.0);
-            let c = Pt2(70.0, 70.0);
-            let d = Pt2(80.0, 70.0);
-            let e = Pt2(80.0, 40.0);
-            let f = Pt2(90.0, 40.0);
-            let g = Pt2(90.0, 110.0);
-            let h = Pt2(80.0, 110.0);
-            let i = Pt2(80.0, 80.0);
-            let j = Pt2(70.0, 80.0);
-            let k = Pt2(70.0, 110.0);
-            let l = Pt2(60.0, 110.0);
+            let a = Pt2(60, 40);
+            let b = Pt2(70, 40);
+            let c = Pt2(70, 70);
+            let d = Pt2(80, 70);
+            let e = Pt2(80, 40);
+            let f = Pt2(90, 40);
+            let g = Pt2(90, 110);
+            let h = Pt2(80, 110);
+            let i = Pt2(80, 80);
+            let j = Pt2(70, 80);
+            let k = Pt2(70, 110);
+            let l = Pt2(60, 110);
             vec![a, b, c, d, e, f, g, h, i, j, k, l, a]
         };
 

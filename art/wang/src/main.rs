@@ -164,34 +164,31 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj2, Style
         let mut ret = vec![];
         ret.push({
             let mut pg: Pg2 = match cell {
-                Fill::Blue => Multiline([Pt2(0.25, 0.0), Pt2(0.5, 0.25), Pt2(0.75, 0.0)]).unwrap(),
-                Fill::Green => Multiline([
-                    Pt2(0.25, 0.0),
-                    Pt2(0.25, 0.25),
-                    Pt2(0.75, 0.25),
-                    Pt2(0.75, 0.0),
-                ])
-                .unwrap(),
+                Fill::Blue => Multiline([Pt2(0.25, 0), Pt2(0.5, 0.25), Pt2(0.75, 0)]).unwrap(),
+                Fill::Green => {
+                    Multiline([Pt2(0.25, 0), Pt2(0.25, 0.25), Pt2(0.75, 0.25), Pt2(0.75, 0)])
+                        .unwrap()
+                }
                 Fill::Red => Multiline([
-                    Pt2(0.25, 0.0),
+                    Pt2(0.25, 0),
                     Pt2(5.0 / 16.0, 3.0 / 16.0),
                     Pt2(0.5, 0.25),
                     Pt2(11.0 / 16.0, 3.0 / 16.0),
-                    Pt2(0.75, 0.0),
+                    Pt2(0.75, 0),
                 ])
                 .unwrap(),
                 Fill::White => Multiline([
-                    Pt2(0.25, 0.0),
+                    Pt2(0.25, 0),
                     Pt2(7.0 / 16.0, 1.0 / 16.0),
                     Pt2(0.5, 0.25),
                     Pt2(9.0 / 16.0, 1.0 / 16.0),
-                    Pt2(0.75, 0.0),
+                    Pt2(0.75, 0),
                 ])
                 .unwrap(),
             };
 
             pg *= 2.0;
-            pg.rotate(&Pt2(1.0, 1.0), rot);
+            pg.rotate(&Pt2(1, 1), rot);
             pg += Pt2(2.0 * row_idx as f64, 2.0 * col_idx as f64);
 
             (
@@ -206,7 +203,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj2, Style
             let mut pg: Pg2 = Pg2([Pt2(0.1, 0.1), Pt2(0.5, 0.5), Pt2(0.9, 0.1)]);
 
             pg *= 2.0;
-            pg.rotate(&Pt2(1.0, 1.0), rot);
+            pg.rotate(&Pt2(1, 1), rot);
             pg += Pt2(2.0 * row_idx as f64, 2.0 * col_idx as f64);
 
             shade_polygon(&ShadeConfig::builder().gap(0.05).slope(0.0).build(), &pg)

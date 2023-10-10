@@ -136,8 +136,15 @@ pub fn Pg2(a: impl IntoIterator<Item = Pt2>) -> Pg2 {
 
 /// Convenience constructor for rectangles.
 #[allow(non_snake_case)]
-pub fn Rect(tl: Pt2, (w, h): (f64, f64)) -> Result<Pg2, PolygonConstructorError> {
-    TryPolygon([tl, tl + Pt2(w, 0.0), tl + Pt2(w, h), tl + Pt2(0.0, h)])
+pub fn Rect<T1, T2>(tl: impl Into<Pt2>, (w, h): (T1, T2)) -> Result<Pg2, PolygonConstructorError>
+where
+    f64: From<T1>,
+    f64: From<T2>,
+    T1: std::marker::Copy,
+    T2: std::marker::Copy,
+{
+    let tl: Pt2 = tl.into();
+    TryPolygon([tl, tl + Pt2(w, 0), tl + Pt2(w, h), tl + Pt2(0, h)])
 }
 
 /// Whether a curve is positively or negatively oriented (whether its points are
@@ -863,13 +870,13 @@ mod tests {
     fn test_crop_to_polygon_this_not_closed() {
         let _ = Multiline([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)])
             .unwrap()
-            .crop_to(&Rect(Pt2(0., 0.), (4., 4.)).unwrap());
+            .crop_to(&Rect((0, 0), (4, 4)).unwrap());
     }
 
     #[test]
     #[should_panic]
     fn test_crop_to_polygon_that_not_closed() {
-        let _ = Rect(Pt2(1., 1.), (2., 2.))
+        let _ = Rect((1, 1), (2, 2))
             .unwrap()
             .crop_to(&Multiline([Pt2(0, 0), Pt2(4, 0), Pt2(4, 4), Pt2(0, 4)]).unwrap());
     }

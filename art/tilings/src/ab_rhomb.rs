@@ -115,15 +115,15 @@ pub fn make() -> Vec<(Obj2, Style)> {
     let ell = 1.0;
     let x: f64 = ell / sq2;
 
-    let _t1 = T1([origin, origin + Pt2(ell, ell), origin + Pt2(2.0 * ell, 0.0)]);
+    let _t1 = T1([origin, origin + Pt2(ell, ell), origin + Pt2(2.0 * ell, 0)]);
     let _t2 = T2([
         origin,
         origin + Pt2(ell, -1.0 * ell),
-        origin + Pt2(2.0 * ell, 0.0),
+        origin + Pt2(2.0 * ell, 0),
     ]);
     let t3 = T3([
         origin,
-        origin + Pt2(ell, 0.0),
+        origin + Pt2(ell, 0),
         origin + Pt2(ell + x, -x),
         origin + Pt2(x, -x),
     ]);
@@ -143,9 +143,9 @@ pub fn make() -> Vec<(Obj2, Style)> {
         .flat_map(|tile| {
             let color = tile.color();
             let mut p = Pg2(tile.pts());
-            p *= Pt2(1.0, -1.0); // flip
+            p *= Pt2(1, -1); // flip
             p *= 530.0;
-            p += Pt2(-17.0, 240.0); // translate
+            p += Pt2(-17, 240); // translate
 
             let config = ShadeConfig::builder()
                 .gap(1.5)

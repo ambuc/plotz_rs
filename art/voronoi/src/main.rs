@@ -85,7 +85,7 @@ fn main() {
     let polygons: Vec<Pg2> = vornoi
         .iter_cells()
         .map(|cell| {
-            Pg2(cell.iter_vertices().map(|vertex| Pt2(vertex.x, vertex.y))) * DIM + Pt2(20.0, 20.0)
+            Pg2(cell.iter_vertices().map(|vertex| Pt2(vertex.x, vertex.y))) * DIM + Pt2(20, 20)
         })
         .collect();
 
@@ -118,7 +118,7 @@ fn main() {
     // TODO(ambuc): split by group color before printing
 
     let canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true)
-        .with_frame(make_frame((DIM, DIM), Pt2(20.0, 20.0)));
+        .with_frame(make_frame((DIM, DIM), Pt2(20, 20)));
 
     canvas.write_to_svg_or_die(
         Size {

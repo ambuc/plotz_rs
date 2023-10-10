@@ -91,23 +91,23 @@ mod tests {
 
     #[test]
     fn test_interpolate_2d_checked() {
-        assert!(interpolate_2d_checked(Pt2(0.0, 0.0), Pt2(1.0, 1.0), Pt2(-0.1, -0.1)).is_err());
+        assert!(interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(-0.1, -0.1)).is_err());
         assert_eq!(
-            interpolate_2d_checked(Pt2(0.0, 0.0), Pt2(1.0, 1.0), Pt2(0.0, 0.0)),
+            interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(0, 0)),
             Ok(0.0)
         );
         assert_eq!(
-            interpolate_2d_checked(Pt2(0.0, 0.0), Pt2(1.0, 1.0), Pt2(0.5, 0.5)),
+            interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(0.5, 0.5)),
             Ok(0.5)
         );
         assert_eq!(
-            interpolate_2d_checked(Pt2(0.0, 0.0), Pt2(1.0, 1.0), Pt2(1.0, 1.0)),
+            interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(1, 1)),
             Ok(1.0)
         );
-        assert!(interpolate_2d_checked(Pt2(0.0, 0.0), Pt2(1.0, 1.0), Pt2(1.1, 1.1)).is_err());
+        assert!(interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(1.1, 1.1)).is_err());
 
         // not on line
-        assert!(interpolate_2d_checked(Pt2(0.0, 0.0), Pt2(1.0, 1.0), Pt2(1.0, 0.0)).is_err());
-        assert!(interpolate_2d_checked(Pt2(0.0, 0.0), Pt2(1.0, 1.0), Pt2(0.0, 1.0)).is_err());
+        assert!(interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(1, 0)).is_err());
+        assert!(interpolate_2d_checked(Pt2(0, 0), Pt2(1, 1), Pt2(0, 1)).is_err());
     }
 }

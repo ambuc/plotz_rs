@@ -56,13 +56,27 @@ impl Debug for Pt2 {
 
 /// An alternate constructor for points.
 #[allow(non_snake_case)]
-pub fn Pt2<T>(x: T, y: T) -> Pt2
+pub fn Pt2<T1, T2>(x: T1, y: T2) -> Pt2
 where
-    f64: From<T>,
+    f64: From<T1>,
+    f64: From<T2>,
 {
     Pt2 {
         x: x.into(),
         y: y.into(),
+    }
+}
+
+impl<T1, T2> From<(T1, T2)> for Pt2
+where
+    f64: From<T1>,
+    f64: From<T2>,
+{
+    fn from((x, y): (T1, T2)) -> Self {
+        Pt2 {
+            x: x.into(),
+            y: y.into(),
+        }
     }
 }
 
@@ -77,12 +91,6 @@ where
     Pt2 {
         x: r * theta.cos(),
         y: r * theta.sin(),
-    }
-}
-
-impl From<(f64, f64)> for Pt2 {
-    fn from((x, y): (f64, f64)) -> Pt2 {
-        Pt2(x, y)
     }
 }
 
@@ -300,8 +308,8 @@ mod tests {
         use float_eq::assert_float_eq;
         use std::f64::consts::PI;
 
-        let origin = Pt2(0.0, 0.0);
-        let mut p = Pt2(1.0, 0.0);
+        let origin = Pt2(0, 0);
+        let mut p = Pt2(1, 0);
 
         p.rotate_inplace(/*about=*/ &origin, PI / 2.0);
         assert_float_eq!(p.x, 0.0, abs <= 0.000_1);
@@ -322,8 +330,8 @@ mod tests {
 
     #[test]
     fn test_dot() {
-        assert_float_eq!(Pt2(1.0, 1.0).dot(&Pt2(1.0, 0.0)), 1.0, abs <= 0.000_1);
-        assert_float_eq!(Pt2(7.0, 2.0).dot(&Pt2(3.0, 6.0)), 33.0, abs <= 0.000_1);
+        assert_float_eq!(Pt2(1, 1).dot(&Pt2(1, 0)), 1.0, abs <= 0.000_1);
+        assert_float_eq!(Pt2(7, 2).dot(&Pt2(3, 6)), 33.0, abs <= 0.000_1);
     }
 
     #[test]

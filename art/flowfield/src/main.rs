@@ -36,7 +36,7 @@ struct Args {
 }
 
 fn main() {
-    let uniform_shift: Pt2 = Pt2(0.0, 0.0);
+    let uniform_shift = Pt2(0, 0);
 
     let args: Args = argh::from_env();
 
@@ -116,7 +116,7 @@ fn main() {
                                     let scaling_factor: f64 = last.dist(&arrow.i).sqrt();
                                     (arrow.f - arrow.i) * scaling_factor / MOMENTUM
                                 })
-                                .fold(Pt2(0.0, 0.0), |acc, x| acc + x);
+                                .fold(Pt2(0, 0), |acc, x| acc + x);
                             let next: Pt2 = *last + del;
                             history.push(next);
                         }

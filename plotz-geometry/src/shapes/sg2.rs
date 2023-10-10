@@ -418,15 +418,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt2(0.0, 2.0);
-        let b = Pt2(1.0, 2.0);
-        let c = Pt2(2.0, 2.0);
-        let d = Pt2(0.0, 1.0);
-        let e = Pt2(1.0, 1.0);
-        let f = Pt2(2.0, 1.0);
-        let g = Pt2(0.0, 0.0);
-        let h = Pt2(1.0, 0.0);
-        let i = Pt2(2.0, 0.0);
+        let a = Pt2(0, 2);
+        let b = Pt2(1, 2);
+        let c = Pt2(2, 2);
+        let d = Pt2(0, 1);
+        let e = Pt2(1, 1);
+        let f = Pt2(2, 1);
+        let g = Pt2(0, 0);
+        let h = Pt2(1, 0);
+        let i = Pt2(2, 0);
 
         // m=0
         assert_eq!(Sg2(g, h).slope(), 0.0);
@@ -476,7 +476,7 @@ mod tests {
         use float_eq::assert_float_eq;
         use std::f64::consts::PI;
 
-        let origin = Pt2(0.0, 0.0);
+        let origin = Pt2(0, 0);
 
         //      ^
         //      |
@@ -485,7 +485,7 @@ mod tests {
         //      |
         //      |
         //      v
-        let mut s = Sg2(Pt2(1.0, 0.0), Pt2(1.0, 0.5));
+        let mut s = Sg2(Pt2(1, 0), Pt2(1, 0.5));
 
         s.rotate(/*about=*/ &origin, PI / 2.0);
         //      ^
@@ -542,8 +542,8 @@ mod tests {
 
     #[test]
     fn test_equality() {
-        let a = Pt2(0.0, 2.0);
-        let b = Pt2(1.0, 2.0);
+        let a = Pt2(0, 2);
+        let b = Pt2(1, 2);
         assert!(Sg2(a, b) == Sg2(a, b));
         assert!(Sg2(a, b) != Sg2(b, a));
     }
@@ -558,12 +558,12 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt2(0.0, 2.0);
-        let b = Pt2(1.0, 2.0);
-        let c = Pt2(2.0, 2.0);
-        let e = Pt2(1.0, 1.0);
-        let g = Pt2(0.0, 0.0);
-        let i = Pt2(2.0, 0.0);
+        let a = Pt2(0, 2);
+        let b = Pt2(1, 2);
+        let c = Pt2(2, 2);
+        let e = Pt2(1, 1);
+        let g = Pt2(0, 0);
+        let i = Pt2(2, 0);
 
         // colinear
         assert_eq!(
@@ -667,13 +667,10 @@ mod tests {
 
     #[test]
     fn test_abs() {
-        assert_eq!(Sg2(Pt2(0.0, 0.0), Pt2(0.0, 1.0)).abs(), 1.0);
-        assert_eq!(Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0)).abs(), 2.0_f64.sqrt());
-        assert_eq!(Sg2(Pt2(1.0, 1.0), Pt2(1.0, 1.0)).abs(), 0.0);
-        assert_eq!(
-            Sg2(Pt2(-1.0, -1.0), Pt2(1.0, 1.0)).abs(),
-            2.0 * 2.0_f64.sqrt()
-        );
+        assert_eq!(Sg2(Pt2(0, 0), Pt2(0, 1)).abs(), 1.0);
+        assert_eq!(Sg2(Pt2(0, 0), Pt2(1, 1)).abs(), 2.0_f64.sqrt());
+        assert_eq!(Sg2(Pt2(1, 1), Pt2(1, 1)).abs(), 0.0);
+        assert_eq!(Sg2(Pt2(-1, -1), Pt2(1, 1)).abs(), 2.0 * 2.0_f64.sqrt());
     }
 
     #[test]
@@ -686,8 +683,8 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt2(0.0, 2.0);
-        let c = Pt2(2.0, 2.0);
+        let a = Pt2(0, 2);
+        let c = Pt2(2, 2);
 
         assert_eq!(
             Sg2(a, c).line_segment_contains_pt(&a).unwrap(),
@@ -723,47 +720,44 @@ mod tests {
     #[test]
     fn test_div() {
         assert_eq!(
-            Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0)) / 2.0,
-            Sg2(Pt2(0.0, 0.0), Pt2(0.5, 0.5))
+            Sg2(Pt2(0, 0), Pt2(1, 1)) / 2.0,
+            Sg2(Pt2(0, 0), Pt2(0.5, 0.5))
         );
     }
 
     #[test]
     fn test_div_assign() {
-        let mut s = Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0));
+        let mut s = Sg2(Pt2(0, 0), Pt2(1, 1));
         s /= 2.0;
-        assert_eq!(s, Sg2(Pt2(0.0, 0.0), Pt2(0.5, 0.5)));
+        assert_eq!(s, Sg2(Pt2(0, 0), Pt2(0.5, 0.5)));
     }
 
     #[test]
     fn test_mul() {
-        assert_eq!(
-            Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0)) * 2.0,
-            Sg2(Pt2(0.0, 0.0), Pt2(2.0, 2.0))
-        );
+        assert_eq!(Sg2(Pt2(0, 0), Pt2(1, 1)) * 2.0, Sg2(Pt2(0, 0), Pt2(2, 2)));
     }
 
     #[test]
     fn test_mul_assign() {
-        let mut s = Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0));
+        let mut s = Sg2(Pt2(0, 0), Pt2(1, 1));
         s *= 2.0;
-        assert_eq!(s, Sg2(Pt2(0.0, 0.0), Pt2(2.0, 2.0)));
+        assert_eq!(s, Sg2(Pt2(0, 0), Pt2(2, 2)));
     }
 
     #[test]
     fn test_sub() {
         assert_eq!(
-            Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0)) - Pt2(1.0, 2.0),
+            Sg2(Pt2(0, 0), Pt2(1, 1)) - Pt2(1, 2),
             // --------
-            Sg2(Pt2(-1.0, -2.0), Pt2(0.0, -1.0))
+            Sg2(Pt2(-1, -2), Pt2(0, -1))
         );
     }
 
     #[test]
     fn test_sub_assign() {
-        let mut s = Sg2(Pt2(0.0, 0.0), Pt2(1.0, 1.0));
-        s -= Pt2(1.0, 2.0);
-        assert_eq!(s, Sg2(Pt2(-1.0, -2.0), Pt2(0.0, -1.0)));
+        let mut s = Sg2(Pt2(0, 0), Pt2(1, 1));
+        s -= Pt2(1, 2);
+        assert_eq!(s, Sg2(Pt2(-1, -2), Pt2(0, -1)));
     }
 
     #[test]

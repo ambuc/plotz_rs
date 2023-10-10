@@ -402,7 +402,7 @@ mod test {
     #[test_case(h_shape(), CropType::Exclusive; "h-shape, exclusive")]
     #[test_case(h_shape(), CropType::Inclusive; "h-shape, inclusive")]
     fn test_all_crops(shape: Pg2, crop_type: CropType) {
-        let boundary = Rect(Pt2(50, 50), (50.0, 50.0)).unwrap();
+        let boundary = Rect((50, 50), (50, 50)).unwrap();
         let margin = 10.0;
         for (_idx, offset) in iproduct!(0..=5, 0..=4).map(|(i, j)| {
             (

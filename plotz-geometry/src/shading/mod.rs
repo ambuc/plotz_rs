@@ -42,8 +42,8 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg2) -> Result<Vec<Sg2>, Sh
     let bounds = polygon.bounds();
     let mut segments: Vec<Sg2> = vec![];
 
-    let xnudge = Pt2(1.0, -1.0);
-    let ynudge = Pt2(-1.0, 1.0);
+    let xnudge = Pt2(1, -1);
+    let ynudge = Pt2(-1, 1);
     let mut line = if config.slope > 0.0 {
         Sg2(
             bounds.tl_bound() - xnudge,
@@ -67,7 +67,7 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg2) -> Result<Vec<Sg2>, Sh
         segments.extend(cropped_strokes.iter());
         // segments.push(line);
 
-        line -= Pt2(0.0, step);
+        line -= Pt2(0, step);
     }
 
     if config.switchback {

@@ -58,31 +58,31 @@ impl Tile {
 
     // scaled to a unit square.
     fn to_dois(&self) -> Vec<Obj2> {
-        let _a = Pt2(0.0, 0.0);
-        let _b = Pt2(0.25, 0.0);
-        let c = Pt2(0.5, 0.0);
-        let _d = Pt2(0.75, 0.0);
-        let _e = Pt2(1.0, 0.0);
-        let _f = Pt2(0.0, 0.25);
+        let _a = Pt2(0, 0);
+        let _b = Pt2(0.25, 0);
+        let c = Pt2(0.5, 0);
+        let _d = Pt2(0.75, 0);
+        let _e = Pt2(1, 0);
+        let _f = Pt2(0, 0.25);
         let g = Pt2(0.25, 0.25);
         let h = Pt2(0.5, 0.25);
         let i = Pt2(0.75, 0.25);
-        let _j = Pt2(1.0, 0.25);
-        let k = Pt2(0.0, 0.5);
+        let _j = Pt2(1, 0.25);
+        let k = Pt2(0, 0.5);
         let l = Pt2(0.25, 0.5);
         let _m = Pt2(0.5, 0.5);
         let n = Pt2(0.75, 0.5);
-        let o = Pt2(1.0, 0.5);
-        let _p = Pt2(0.0, 0.75);
+        let o = Pt2(1, 0.5);
+        let _p = Pt2(0, 0.75);
         let q = Pt2(0.25, 0.75);
         let r = Pt2(0.5, 0.75);
         let s = Pt2(0.75, 0.75);
-        let _t = Pt2(1.0, 0.75);
-        let _u = Pt2(0.0, 1.0);
-        let _v = Pt2(0.25, 1.0);
-        let w = Pt2(0.5, 1.0);
-        let _x = Pt2(0.75, 1.0);
-        let _y = Pt2(1.0, 1.0);
+        let _t = Pt2(1, 0.75);
+        let _u = Pt2(0, 1);
+        let _v = Pt2(0.25, 1);
+        let w = Pt2(0.5, 1);
+        let _x = Pt2(0.75, 1);
+        let _y = Pt2(1, 1);
         match self {
             Tile::Cross => {
                 vec![Sg2(k, o).into(), Sg2(c, w).into()]
