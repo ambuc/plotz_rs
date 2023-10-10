@@ -626,21 +626,19 @@ mod tests {
     #[test]
     fn test_multiline_to_segments() {
         assert_eq!(
-            Multiline([Pt2(0, 0)]).unwrap_err(),
+            Multiline([(0, 0)]).unwrap_err(),
             MultilineConstructorError::OneOrFewerPoints
         );
         assert_eq!(
-            Multiline([Pt2(0, 0), Pt2(0, 1)]).unwrap().to_segments(),
+            Multiline([(0, 0), (0, 1)]).unwrap().to_segments(),
             [Sg2((0, 0), (0, 1)),]
         );
         assert_eq!(
-            Multiline([Pt2(0, 0), Pt2(0, 1), Pt2(0, 2)])
-                .unwrap()
-                .to_segments(),
+            Multiline([(0, 0), (0, 1), (0, 2)]).unwrap().to_segments(),
             [Sg2((0, 0), (0, 1)), Sg2((0, 1), (0, 2)),]
         );
         assert_eq!(
-            Multiline([Pt2(0, 0), Pt2(0, 1), Pt2(0, 2), Pt2(0, 3)])
+            Multiline([(0, 0), (0, 1), (0, 2), (0, 3)])
                 .unwrap()
                 .to_segments(),
             [
@@ -868,7 +866,7 @@ mod tests {
     #[should_panic]
 
     fn test_crop_to_polygon_this_not_closed() {
-        let _ = Multiline([Pt2(1, 1), Pt2(3, 1), Pt2(3, 3), Pt2(1, 3)])
+        let _ = Multiline([(1, 1), (3, 1), (3, 3), (1, 3)])
             .unwrap()
             .crop_to(&Rect((0, 0), (4, 4)).unwrap());
     }
@@ -878,7 +876,7 @@ mod tests {
     fn test_crop_to_polygon_that_not_closed() {
         let _ = Rect((1, 1), (2, 2))
             .unwrap()
-            .crop_to(&Multiline([Pt2(0, 0), Pt2(4, 0), Pt2(4, 4), Pt2(0, 4)]).unwrap());
+            .crop_to(&Multiline([(0, 0), (4, 0), (4, 4), (0, 4)]).unwrap());
     }
 
     #[test]
