@@ -50,6 +50,21 @@ fn main() {
 
     let mut arrows_store: Vec<Sg> = vec![];
 
+    let arrow_style = Style {
+        thickness: 2.0,
+        ..Default::default()
+    };
+    let arrow_start_style = Style {
+        thickness: 1.0,
+        color: &GREEN,
+        ..Default::default()
+    };
+    let arrow_end_style = Style {
+        thickness: 1.0,
+        color: &RED,
+        ..Default::default()
+    };
+
     for i in (0..=(900 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
         for j in (0..=(700 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
             let dx = thread_rng().gen_range(ARROW_RANGE.clone());
@@ -60,28 +75,14 @@ fn main() {
             arrows_store.push(arrow);
             if PRINT_ARROWS {
                 dos.extend([
+                    (arrow.into(), arrow_style),
                     (
-                        Obj::Sg(arrow),
-                        Style {
-                            thickness: 2.0,
-                            ..Default::default()
-                        },
+                        CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0).into(),
+                        arrow_end_style,
                     ),
                     (
-                        Obj::CurveArc(CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0)),
-                        Style {
-                            thickness: 1.0,
-                            color: &RED,
-                            ..Default::default()
-                        },
-                    ),
-                    (
-                        Obj::CurveArc(CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0)),
-                        Style {
-                            thickness: 1.0,
-                            color: &GREEN,
-                            ..Default::default()
-                        },
+                        CurveArc(arrow_f, 0.0..=TAU, /*radius=*/ 2.0).into(),
+                        arrow_start_style,
                     ),
                 ]);
             }
@@ -143,7 +144,8 @@ fn main() {
                 .map(|o| (o, style))
                 .collect::<Vec<_>>()
         }),
-        /*autobucket=*/ true,
+        /*autobucket=*/
+        true,
     )
     .with_frame(frame);
 
