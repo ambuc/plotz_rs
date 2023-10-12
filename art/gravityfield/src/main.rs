@@ -107,9 +107,7 @@ fn main() {
         framework.add_particle(p);
     }
 
-    let bar = make_bar(NUM_STEPS, "running simulation...");
-
-    for _ in (0..=NUM_STEPS).progress_with(bar) {
+    for _ in (0..=NUM_STEPS).progress_with(make_bar(NUM_STEPS, "running simulation...")) {
         framework.advance();
     }
 
