@@ -197,20 +197,15 @@ impl Canvas {
             );
         }
 
-        // dos
-
+        let length = self.dos_by_bucket.len();
         self.dos_by_bucket
-            .iter()
+            .into_iter()
             .enumerate()
             .collect_vec()
             .par_iter()
-            .progress_with(make_bar(self.dos_by_bucket.len(), "writing svg..."))
+            .progress_with(make_bar(length, "writing svg..."))
             .for_each(|(i, (_bucket, os))| {
-                let os: Vec<(Obj, Style)> = os
-                    .iter()
-                    .map(|(inner, style)| (inner.clone(), *style))
-                    .collect::<Vec<_>>();
-                let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), &os)
+                let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), os)
                     .expect("failed to write");
             });
 
