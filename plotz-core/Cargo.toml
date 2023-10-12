@@ -7,10 +7,11 @@ edition = "2021"
 anyhow = "*"
 cairo-rs = { version = "0.14.9", features = ["png", "svg"] }
 float-ord = "*"
-indicatif = "*"
+indicatif = { version = "*", features = ["rayon"] }
 itertools = "*"
 lazy_static = "*"
 plotz-color = { path = "../plotz-color" }
+rayon = "*"
 plotz-geojson = { path = "../plotz-geojson" }
 plotz-geometry = { path = "../plotz-geometry" }
 rand = "0.8.5"

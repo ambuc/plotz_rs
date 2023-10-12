@@ -7,7 +7,7 @@ use crate::{
 };
 use anyhow::Error;
 use float_ord::FloatOrd;
-use indicatif::ProgressIterator;
+use indicatif::*;
 use itertools::Itertools;
 use plotz_geometry::{
     bounded::{streaming_bbox, Bounded, Bounds},
@@ -16,6 +16,7 @@ use plotz_geometry::{
     style::Style,
     *,
 };
+use rayon::iter::*;
 use std::collections::HashMap;
 use tracing::trace;
 
@@ -187,33 +188,31 @@ impl Canvas {
         }
 
         // frame
-        {
+        if let Some((inner, style)) = self.frame.clone() {
             trace!("Writing frame.");
-            if let Some((inner, style)) = self.frame.clone() {
-                let _ = write_layer_to_svg(
-                    size,
-                    format!("{}_{}.svg", prefix, "frame"),
-                    &[(inner, style)],
-                );
-            }
+            let _ = write_layer_to_svg(
+                size,
+                format!("{}_{}.svg", prefix, "frame"),
+                &[(inner, style)],
+            );
         }
 
         // dos
-        {
-            for (i, (_bucket, dos)) in self
-                .dos_by_bucket
-                .iter()
-                .enumerate()
-                .progress_with(make_bar(self.dos_by_bucket.len(), "writing svg..."))
-            {
-                let pgs2: Vec<_> = dos
+
+        self.dos_by_bucket
+            .iter()
+            .enumerate()
+            .collect_vec()
+            .par_iter()
+            .progress_with(make_bar(self.dos_by_bucket.len(), "writing svg..."))
+            .for_each(|(i, (_bucket, os))| {
+                let os: Vec<(Obj, Style)> = os
                     .iter()
                     .map(|(inner, style)| (inner.clone(), *style))
                     .collect::<Vec<_>>();
-                let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), &pgs2)
+                let _num = write_layer_to_svg(size, format!("{}_{}.svg", prefix, i), &os)
                     .expect("failed to write");
-            }
-        }
+            });
 
         Ok(())
     }
