@@ -5,24 +5,26 @@ use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
     shapes::{
+        curve::CurveArc,
         pg::{multiline::Multiline, Pg},
         pt::Pt,
     },
     style::Style,
 };
 use rand::{thread_rng, Rng};
-use std::{collections::HashMap, ops::Range};
+use std::{collections::HashMap, f64::consts::TAU, ops::Range};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
-const CHARGE_RANGE: Range<f64> = -1.0..1.0;
+const CHARGE_MAX: f64 = 5.0;
+const POW: f64 = 1.2;
+const CHARGE_RANGE: Range<f64> = -1.0 * CHARGE_MAX..CHARGE_MAX;
 const CLUSTER_DISTANCE: f64 = 100.0;
 const CLUSTER_RANGE: Range<f64> = (-1.0 * CLUSTER_DISTANCE)..CLUSTER_DISTANCE;
-const GRID_GRANULARITY: usize = 50;
-const MOMENTUM: f64 = 1.00;
-const NUM_CLUSTERS: usize = 20;
-const NUM_PARTICLES_PER_CLUSTER: usize = 20;
-const NUM_STEPS: usize = 200;
+const GRID_GRANULARITY: usize = 200;
+const NUM_CLUSTERS: usize = 40;
+const NUM_PARTICLES_PER_CLUSTER: usize = 40;
+const NUM_STEPS: usize = 100;
 
 #[derive(FromArgs)]
 #[argh(description = "...")]
@@ -51,8 +53,8 @@ struct Particle<T> {
     #[builder(default=Visibility::Visible)]
     visibility: Visibility,
 
-    #[builder(default = 1.0)]
-    charge: f64,
+    #[builder(default = None, setter(strip_option))]
+    charge: Option<f64>,
 
     #[builder(default=None, setter(strip_option))]
     metadata: Option<T>,
@@ -96,9 +98,15 @@ impl<T> Framework<T> {
         self.particles.iter().filter(|(_u, p)| !p.is_fixed())
     }
 
-    fn particles_which_are_not(&self, uuid: Uuid) -> impl Iterator<Item = (&Uuid, &Particle<T>)> {
-        self.particles
-            .iter()
+    fn charged_particles(&self) -> impl Iterator<Item = (&Uuid, &Particle<T>)> {
+        self.particles.iter().filter(|(_u, p)| p.charge.is_some())
+    }
+
+    fn charged_particles_which_are_not(
+        &self,
+        uuid: Uuid,
+    ) -> impl Iterator<Item = (&Uuid, &Particle<T>)> {
+        self.charged_particles()
             .filter_map(move |(k, v)| if *k == uuid { None } else { Some((k, v)) })
     }
 
@@ -108,13 +116,13 @@ impl<T> Framework<T> {
 
         for (uuid, particle) in self.particles_mobile() {
             let delta: Pt = self
-                .particles_which_are_not(*uuid)
+                .charged_particles_which_are_not(*uuid)
                 .map(|(_uuid, extant_particle)| -> Pt {
-                    let m1 = particle.charge;
-                    let m2 = extant_particle.charge;
+                    let m1 = particle.charge.unwrap_or(1.0);
+                    let m2 = extant_particle.charge.unwrap_or(1.0);
                     let r = particle.position.dist(&extant_particle.position);
                     let d = extant_particle.position - particle.position;
-                    d * m1 * m2 / r.powf(2.0) / MOMENTUM
+                    d * m1 * m2 / r.powf(POW)
                 })
                 .fold(Pt(0, 0), |acc, x| acc + x);
 
@@ -146,28 +154,31 @@ fn main() {
 
     let mut framework = Framework::default();
 
-    for i in (0..=(900 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
-        for j in (0..=(700 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
+    for i in (0..=(1000 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
+        for j in (0..=(800 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
             // Insert a fixed, invisible high charge particle.
+            let charge = thread_rng().gen_range(CHARGE_RANGE.clone());
             framework.add_particle(
                 Particle::builder()
                     .position((i as f64, j as f64))
                     .mobility(Mobility::Fixed)
-                    .charge(thread_rng().gen_range(CHARGE_RANGE.clone()))
+                    .charge(charge)
                     .visibility(Visibility::Invisible)
+                    .metadata(Metadata {
+                        color: if charge < 0.0 { &RED } else { &GREEN },
+                    })
                     .build(),
             )
         }
     }
 
-    for _ in 0..=NUM_CLUSTERS {
+    for _ in 0..NUM_CLUSTERS {
         let cluster_color = random_color();
         let cluster_center = Pt(
             thread_rng().gen_range(0..=900),
             thread_rng().gen_range(0..=700),
         );
-        for _ in 0..=NUM_PARTICLES_PER_CLUSTER {
-            // Insert a mobile, visible one-charge particle.
+        for _ in 0..NUM_PARTICLES_PER_CLUSTER {
             framework.add_particle(
                 Particle::builder()
                     .position(
@@ -187,13 +198,18 @@ fn main() {
         }
     }
 
-    for _ in 0..=NUM_STEPS {
+    for i in 0..=NUM_STEPS {
+        println!("step {:?}", i);
         framework.advance();
     }
 
     for (_uuid, p) in framework.into_particles_visible() {
+        let obj: Obj = match p.history.len() {
+            0 => CurveArc(p.position, 0.0..=TAU, 2.0).into(),
+            _ => Multiline(p.history).unwrap().into(),
+        };
         os.push((
-            Multiline(p.history).unwrap().into(),
+            obj,
             Style {
                 color: p.metadata.unwrap().color,
                 thickness: 1.0,
