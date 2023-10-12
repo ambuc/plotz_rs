@@ -45,17 +45,20 @@ enum Visibility {
 struct Particle<T> {
     #[builder(setter(into))]
     position: Pt,
+
     mobility: Mobility,
+
     #[builder(default=Visibility::Visible)]
     visibility: Visibility,
+
     #[builder(default = 1.0)]
     charge: f64,
+
     #[builder(default=None, setter(strip_option))]
     metadata: Option<T>,
+
     #[builder(default=vec![])]
     history: Vec<Pt>,
-    #[builder(default=uuid::Uuid::new_v4())]
-    uuid: uuid::Uuid,
 }
 
 impl<T> Particle<T> {
@@ -82,31 +85,31 @@ impl<T> Default for Framework<T> {
 
 impl<T> Framework<T> {
     fn add_particle(&mut self, p: Particle<T>) {
-        self.particles.insert(p.uuid, p);
+        self.particles.insert(uuid::Uuid::new_v4(), p);
     }
 
-    fn into_particles_visible(self) -> impl Iterator<Item = Particle<T>> {
-        self.particles.into_values().filter(|p| p.is_visible())
+    fn into_particles_visible(self) -> impl Iterator<Item = (Uuid, Particle<T>)> {
+        self.particles.into_iter().filter(|(_u, p)| p.is_visible())
     }
 
-    fn particles_mobile(&self) -> impl Iterator<Item = &Particle<T>> {
-        self.particles.values().filter(|p| !p.is_fixed())
+    fn particles_mobile(&self) -> impl Iterator<Item = (&Uuid, &Particle<T>)> {
+        self.particles.iter().filter(|(_u, p)| !p.is_fixed())
     }
 
-    fn particles_which_are_not(&self, uuid: Uuid) -> impl Iterator<Item = &Particle<T>> {
+    fn particles_which_are_not(&self, uuid: Uuid) -> impl Iterator<Item = (&Uuid, &Particle<T>)> {
         self.particles
             .iter()
-            .filter_map(move |(k, v)| if *k == uuid { None } else { Some(v) })
+            .filter_map(move |(k, v)| if *k == uuid { None } else { Some((k, v)) })
     }
 
     fn advance(&mut self) {
         // make array of next positions
         let mut deltas: Vec<(uuid::Uuid, Pt)> = vec![];
 
-        for particle in self.particles_mobile() {
+        for (uuid, particle) in self.particles_mobile() {
             let delta: Pt = self
-                .particles_which_are_not(particle.uuid)
-                .map(|extant_particle| -> Pt {
+                .particles_which_are_not(*uuid)
+                .map(|(_uuid, extant_particle)| -> Pt {
                     let m1 = particle.charge;
                     let m2 = extant_particle.charge;
                     let r = particle.position.dist(&extant_particle.position);
@@ -115,7 +118,7 @@ impl<T> Framework<T> {
                 })
                 .fold(Pt(0, 0), |acc, x| acc + x);
 
-            deltas.push((particle.uuid, delta));
+            deltas.push((*uuid, delta));
         }
 
         // update positions in-place
@@ -188,7 +191,7 @@ fn main() {
         framework.advance();
     }
 
-    for p in framework.into_particles_visible() {
+    for (_uuid, p) in framework.into_particles_visible() {
         os.push((
             Multiline(p.history).unwrap().into(),
             Style {
