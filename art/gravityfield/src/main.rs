@@ -11,13 +11,11 @@ use plotz_geometry::{
     },
     style::Style,
 };
+use plotz_physics::{framework::Framework, particle::*};
 use rand::{thread_rng, Rng};
-use std::{collections::HashMap, f64::consts::TAU, ops::Range};
-use typed_builder::TypedBuilder;
-use uuid::Uuid;
+use std::{f64::consts::TAU, ops::Range};
 
 const CHARGE_MAX: f64 = 5.0;
-const POW: f64 = 1.1;
 const CHARGE_RANGE: Range<f64> = -1.0 * CHARGE_MAX..CHARGE_MAX;
 const CLUSTER_RANGE: Range<f64> = (-1.0 * CLUSTER_DISTANCE)..CLUSTER_DISTANCE;
 const GRID_GRANULARITY: usize = 200;
@@ -33,111 +31,6 @@ const NUM_STEPS: usize = 100;
 struct Args {
     #[argh(option, description = "output path")]
     output_path_prefix: String,
-}
-
-enum Mobility {
-    Fixed,
-    Mobile,
-}
-
-enum Visibility {
-    Visible,
-    Invisible,
-}
-
-#[derive(TypedBuilder)]
-struct Particle<T> {
-    #[builder(setter(into))]
-    position: Pt,
-
-    mobility: Mobility,
-
-    #[builder(default=Visibility::Visible)]
-    visibility: Visibility,
-
-    #[builder(default = None, setter(strip_option))]
-    charge: Option<f64>,
-
-    #[builder(default=None, setter(strip_option))]
-    metadata: Option<T>,
-
-    #[builder(default=vec![])]
-    history: Vec<Pt>,
-}
-
-impl<T> Particle<T> {
-    fn is_fixed(&self) -> bool {
-        matches!(self.mobility, Mobility::Fixed)
-    }
-
-    fn is_visible(&self) -> bool {
-        matches!(self.visibility, Visibility::Visible)
-    }
-}
-
-struct Framework<T> {
-    particles: HashMap<Uuid, Particle<T>>,
-}
-
-impl<T> Default for Framework<T> {
-    fn default() -> Self {
-        Self {
-            particles: Default::default(),
-        }
-    }
-}
-
-impl<T> Framework<T> {
-    fn add_particle(&mut self, p: Particle<T>) {
-        self.particles.insert(uuid::Uuid::new_v4(), p);
-    }
-
-    fn into_particles_visible(self) -> impl Iterator<Item = (Uuid, Particle<T>)> {
-        self.particles.into_iter().filter(|(_u, p)| p.is_visible())
-    }
-
-    fn particles_mobile(&self) -> impl Iterator<Item = (&Uuid, &Particle<T>)> {
-        self.particles.iter().filter(|(_u, p)| !p.is_fixed())
-    }
-
-    fn charged_particles(&self) -> impl Iterator<Item = (&Uuid, &Particle<T>)> {
-        self.particles.iter().filter(|(_u, p)| p.charge.is_some())
-    }
-
-    fn charged_particles_which_are_not(
-        &self,
-        uuid: Uuid,
-    ) -> impl Iterator<Item = (&Uuid, &Particle<T>)> {
-        self.charged_particles()
-            .filter_map(move |(k, v)| if *k == uuid { None } else { Some((k, v)) })
-    }
-
-    fn advance(&mut self) {
-        // make array of next positions
-        let mut deltas: Vec<(uuid::Uuid, Pt)> = vec![];
-
-        for (uuid, particle) in self.particles_mobile() {
-            let delta: Pt = self
-                .charged_particles_which_are_not(*uuid)
-                .map(|(_uuid, extant_particle)| -> Pt {
-                    let m1 = particle.charge.unwrap_or(1.0);
-                    let m2 = extant_particle.charge.unwrap_or(1.0);
-                    let r = particle.position.dist(&extant_particle.position);
-                    let d = extant_particle.position - particle.position;
-                    d * m1 * m2 / r.powf(POW)
-                })
-                .fold(Pt(0, 0), |acc, x| acc + x);
-
-            deltas.push((*uuid, delta));
-        }
-
-        // update positions in-place
-        for (uuid, delta) in deltas.into_iter() {
-            let p: &mut Particle<_> = &mut self.particles.get_mut(&uuid).unwrap();
-            p.history.push(p.position);
-            p.position += delta;
-        }
-    }
 }
 
 struct Metadata {

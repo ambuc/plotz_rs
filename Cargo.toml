@@ -25,6 +25,7 @@ members = [
     "plotz-core",
     "plotz-geojson",
     "plotz-geometry",
+    "plotz-physics",
     "plotz-geometry3d",
     "svg-splitter",
 ]
