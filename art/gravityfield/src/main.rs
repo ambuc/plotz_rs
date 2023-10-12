@@ -11,7 +11,7 @@ use plotz_geometry::{
     },
     style::Style,
 };
-use plotz_physics::{framework::Framework, particle::*};
+use plotz_physics::{framework, particle::*};
 use rand::{thread_rng, Rng};
 use std::{f64::consts::TAU, ops::Range};
 
@@ -47,50 +47,63 @@ fn main() {
         /*offset=*/ (margin, margin),
     );
 
-    let mut framework = Framework::default();
+    let mut framework: framework::Framework<Metadata> = framework::Framework {
+        config: framework::Config { pow: 1.2 },
+        ..Default::default()
+    };
 
-    for i in (0..=(1000 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
-        for j in (0..=(800 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
-            // Insert a fixed, invisible high charge particle.
-            let charge = thread_rng().gen_range(CHARGE_RANGE.clone());
-            framework.add_particle(
-                Particle::builder()
-                    .position((i as f64, j as f64))
-                    .mobility(Mobility::Fixed)
-                    .charge(charge)
-                    .visibility(Visibility::Invisible)
-                    .metadata(Metadata {
-                        color: if charge < 0.0 { &RED } else { &GREEN },
-                    })
-                    .build(),
-            )
+    // init configuration
+    let particles = {
+        let mut ret = vec![];
+
+        for i in (0..=(1000 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
+            for j in (0..=(800 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
+                // Insert a fixed, invisible high charge particle.
+                let charge = thread_rng().gen_range(CHARGE_RANGE.clone());
+                ret.push(
+                    Particle::builder()
+                        .position((i as f64, j as f64))
+                        .mobility(Mobility::Fixed)
+                        .charge(charge)
+                        .visibility(Visibility::Invisible)
+                        .metadata(Metadata {
+                            color: if charge < 0.0 { &RED } else { &GREEN },
+                        })
+                        .build(),
+                );
+            }
         }
-    }
 
-    for _ in 0..NUM_CLUSTERS {
-        let cluster_color = random_color();
-        let cluster_center = Pt(
-            thread_rng().gen_range(0..=900),
-            thread_rng().gen_range(0..=700),
-        );
-        for _ in 0..NUM_PARTICLES_PER_CLUSTER {
-            framework.add_particle(
-                Particle::builder()
-                    .position(
-                        cluster_center
-                            + (
-                                thread_rng().gen_range(CLUSTER_RANGE.clone()),
-                                thread_rng().gen_range(CLUSTER_RANGE.clone()),
-                            ),
-                    )
-                    .mobility(Mobility::Mobile)
-                    .visibility(Visibility::Visible)
-                    .metadata(Metadata {
-                        color: cluster_color,
-                    })
-                    .build(),
+        for _ in 0..NUM_CLUSTERS {
+            let cluster_color = random_color();
+            let cluster_center = Pt(
+                thread_rng().gen_range(0..=900),
+                thread_rng().gen_range(0..=700),
             );
+            for _ in 0..NUM_PARTICLES_PER_CLUSTER {
+                ret.push(
+                    Particle::builder()
+                        .position(
+                            cluster_center
+                                + (
+                                    thread_rng().gen_range(CLUSTER_RANGE.clone()),
+                                    thread_rng().gen_range(CLUSTER_RANGE.clone()),
+                                ),
+                        )
+                        .mobility(Mobility::Mobile)
+                        .visibility(Visibility::Visible)
+                        .metadata(Metadata {
+                            color: cluster_color,
+                        })
+                        .build(),
+                );
+            }
         }
+        ret
+    };
+
+    for p in particles {
+        framework.add_particle(p);
     }
 
     for i in 0..=NUM_STEPS {

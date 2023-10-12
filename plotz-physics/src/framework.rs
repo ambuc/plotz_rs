@@ -2,18 +2,25 @@ use crate::particle::*;
 
 use plotz_geometry::shapes::pt::Pt;
 use std::collections::HashMap;
+use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
-const POW: f64 = 1.1;
+#[derive(Default, TypedBuilder)]
+pub struct Config {
+    #[builder(default = 2.0)]
+    pub pow: f64,
+}
 
 pub struct Framework<T> {
-    particles: HashMap<Uuid, Particle<T>>,
+    pub particles: HashMap<Uuid, Particle<T>>,
+    pub config: Config,
 }
 
 impl<T> Default for Framework<T> {
     fn default() -> Self {
         Self {
             particles: Default::default(),
+            config: Default::default(),
         }
     }
 }
@@ -39,7 +46,7 @@ impl<T> Framework<T> {
                     let m2 = extant_particle.charge.unwrap_or(1.0);
                     let r = particle.position.dist(&extant_particle.position);
                     let d = extant_particle.position - particle.position;
-                    d * m1 * m2 / r.powf(POW)
+                    d * m1 * m2 / r.powf(self.config.pow)
                 })
                 .fold(Pt(0, 0), |acc, x| acc + x);
 
@@ -48,7 +55,7 @@ impl<T> Framework<T> {
 
         // update positions in-place
         for (uuid, delta) in deltas.into_iter() {
-            let p: &mut Particle<_> = &mut self.particles.get_mut(&uuid).unwrap();
+            let p: &mut Particle<_> = self.particles.get_mut(&uuid).unwrap();
             p.history.push(p.position);
             p.position += delta;
         }
