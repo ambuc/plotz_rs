@@ -11,7 +11,9 @@ use plotz_geometry::{
     style::Style,
 };
 use rand::{thread_rng, Rng};
-use std::ops::Range;
+use std::{collections::HashMap, ops::Range};
+use typed_builder::TypedBuilder;
+use uuid::Uuid;
 
 const CHARGE_RANGE: Range<f64> = -1.0..1.0;
 const CLUSTER_DISTANCE: f64 = 100.0;
@@ -39,13 +41,21 @@ enum Visibility {
     Invisible,
 }
 
+#[derive(TypedBuilder)]
 struct Particle<T> {
+    #[builder(setter(into))]
     position: Pt,
     mobility: Mobility,
+    #[builder(default=Visibility::Visible)]
     visibility: Visibility,
+    #[builder(default = 1.0)]
     charge: f64,
+    #[builder(default=None, setter(strip_option))]
     metadata: Option<T>,
+    #[builder(default=vec![])]
     history: Vec<Pt>,
+    #[builder(default=uuid::Uuid::new_v4())]
+    uuid: uuid::Uuid,
 }
 
 impl<T> Particle<T> {
@@ -59,7 +69,7 @@ impl<T> Particle<T> {
 }
 
 struct Framework<T> {
-    particles: Vec<Particle<T>>,
+    particles: HashMap<Uuid, Particle<T>>,
 }
 
 impl<T> Default for Framework<T> {
@@ -71,22 +81,27 @@ impl<T> Default for Framework<T> {
 }
 
 impl<T> Framework<T> {
+    fn add_particle(&mut self, p: Particle<T>) {
+        self.particles.insert(p.uuid, p);
+    }
+    fn into_visible_particles(self) -> impl Iterator<Item = Particle<T>> {
+        self.particles.into_values().filter(|p| p.is_visible())
+    }
+
+    fn mobile_particles(&self) -> impl Iterator<Item = &Particle<T>> {
+        self.particles.values().filter(|p| !p.is_fixed())
+    }
+
     fn advance(&mut self) {
         // make array of next positions
-        let mut deltas: Vec<(usize, Pt)> = vec![];
+        let mut deltas: Vec<(uuid::Uuid, Pt)> = vec![];
 
-        for (p_idx, particle) in self
-            .particles
-            .iter()
-            .enumerate()
-            .filter(|(_, particle)| !particle.is_fixed())
-        {
+        for particle in self.mobile_particles() {
             let delta: Pt = self
                 .particles
-                .iter()
-                .enumerate()
-                .filter(|(j_idx, _)| p_idx != *j_idx)
-                .map(|(_, extant_particle)| -> Pt {
+                .values()
+                .filter(|extant_particle| particle.uuid != extant_particle.uuid)
+                .map(|extant_particle| -> Pt {
                     let m1 = particle.charge;
                     let m2 = extant_particle.charge;
                     let r = particle.position.dist(&extant_particle.position);
@@ -96,12 +111,12 @@ impl<T> Framework<T> {
                 })
                 .fold(Pt(0, 0), |acc, x| acc + x);
 
-            deltas.push((p_idx, delta));
+            deltas.push((particle.uuid, delta));
         }
 
         // update positions in-place
-        for (p_idx, delta) in deltas.into_iter() {
-            let p: &mut Particle<_> = &mut self.particles[p_idx];
+        for (uuid, delta) in deltas.into_iter() {
+            let p: &mut Particle<_> = &mut self.particles.get_mut(&uuid).unwrap();
             p.history.push(p.position);
             p.position += delta;
         }
@@ -127,14 +142,14 @@ fn main() {
     for i in (0..=(900 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
         for j in (0..=(700 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
             // Insert a fixed, invisible high charge particle.
-            framework.particles.push(Particle {
-                position: (i as f64, j as f64).into(),
-                charge: thread_rng().gen_range(CHARGE_RANGE.clone()),
-                mobility: Mobility::Fixed,
-                visibility: Visibility::Invisible,
-                metadata: None,
-                history: vec![],
-            })
+            framework.add_particle(
+                Particle::builder()
+                    .position((i as f64, j as f64))
+                    .mobility(Mobility::Fixed)
+                    .charge(thread_rng().gen_range(CHARGE_RANGE.clone()))
+                    .visibility(Visibility::Invisible)
+                    .build(),
+            )
         }
     }
 
@@ -146,21 +161,22 @@ fn main() {
         );
         for _ in 0..=NUM_PARTICLES_PER_CLUSTER {
             // Insert a mobile, visible one-charge particle.
-            let position = cluster_center
-                + (
-                    thread_rng().gen_range(CLUSTER_RANGE.clone()),
-                    thread_rng().gen_range(CLUSTER_RANGE.clone()),
-                );
-            framework.particles.push(Particle {
-                position,
-                mobility: Mobility::Mobile,
-                visibility: Visibility::Visible,
-                charge: 1.0, // default
-                metadata: Some(Metadata {
-                    color: cluster_color,
-                }),
-                history: vec![],
-            });
+            framework.add_particle(
+                Particle::builder()
+                    .position(
+                        cluster_center
+                            + (
+                                thread_rng().gen_range(CLUSTER_RANGE.clone()),
+                                thread_rng().gen_range(CLUSTER_RANGE.clone()),
+                            ),
+                    )
+                    .mobility(Mobility::Mobile)
+                    .visibility(Visibility::Visible)
+                    .metadata(Metadata {
+                        color: cluster_color,
+                    })
+                    .build(),
+            );
         }
     }
 
@@ -168,11 +184,12 @@ fn main() {
         framework.advance();
     }
 
-    for p in framework.particles.into_iter().filter(|p| p.is_visible()) {
+    for p in framework.into_visible_particles() {
         os.push((
             Multiline(p.history).unwrap().into(),
             Style {
                 color: p.metadata.unwrap().color,
+                thickness: 2.0,
                 ..Default::default()
             },
         ));

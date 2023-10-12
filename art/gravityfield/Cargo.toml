@@ -13,3 +13,5 @@ plotz-geometry = { path = "../../plotz-geometry" }
 rand = { version = "0.8.5", features = ["alloc"] }
 rayon = "*"
 indicatif = { version = "*", features = ["rayon"] }
+typed-builder = "*"
+uuid = { version = "1.4.1", features = ["v4", "fast-rng", "macro-diagnostics"] }
