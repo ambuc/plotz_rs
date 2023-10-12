@@ -1,17 +1,19 @@
 //! Many objects.
 
-use plotz_geometry::{obj::Obj, style::Style};
-
 use crate::{
+    bar::make_bar,
     bucket::Bucket,
     svg::{write_layer_to_svg, Size},
 };
 use anyhow::Error;
 use float_ord::FloatOrd;
+use indicatif::ProgressIterator;
 use itertools::Itertools;
 use plotz_geometry::{
     bounded::{streaming_bbox, Bounded, Bounds},
+    obj::Obj,
     shapes::pt::Pt,
+    style::Style,
     *,
 };
 use std::collections::HashMap;
@@ -198,8 +200,12 @@ impl Canvas {
 
         // dos
         {
-            use indicatif::ProgressIterator;
-            for (i, (_bucket, dos)) in self.dos_by_bucket.iter().enumerate().progress() {
+            for (i, (_bucket, dos)) in self
+                .dos_by_bucket
+                .iter()
+                .enumerate()
+                .progress_with(make_bar(self.dos_by_bucket.len(), "writing svg..."))
+            {
                 let pgs2: Vec<_> = dos
                     .iter()
                     .map(|(inner, style)| (inner.clone(), *style))

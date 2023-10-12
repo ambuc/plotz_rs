@@ -38,6 +38,7 @@ impl<T> Framework<T> {
         // make array of next positions
         let mut deltas: Vec<(uuid::Uuid, Pt)> = vec![];
 
+        // TODO(ambuc): parallelize this !
         for (uuid, particle) in self.particles_mobile() {
             let delta: Pt = self
                 .charged_particles_which_are_not(*uuid)

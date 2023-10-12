@@ -1,6 +1,7 @@
 use argh::FromArgs;
+use indicatif::ProgressIterator;
 use plotz_color::*;
-use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_core::{bar::make_bar, canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
@@ -18,10 +19,10 @@ use std::{f64::consts::TAU, ops::Range};
 const CHARGE_MAX: f64 = 5.0;
 const CHARGE_RANGE: Range<f64> = -1.0 * CHARGE_MAX..CHARGE_MAX;
 const CLUSTER_RANGE: Range<f64> = (-1.0 * CLUSTER_DISTANCE)..CLUSTER_DISTANCE;
-const GRID_GRANULARITY: usize = 200;
+const GRID_GRANULARITY: usize = 100;
 
-const NUM_CLUSTERS: usize = 10;
-const CLUSTER_DISTANCE: f64 = 300.0;
+const NUM_CLUSTERS: usize = 20;
+const CLUSTER_DISTANCE: f64 = 200.0;
 const NUM_PARTICLES_PER_CLUSTER: usize = 200;
 
 const NUM_STEPS: usize = 100;
@@ -106,8 +107,9 @@ fn main() {
         framework.add_particle(p);
     }
 
-    for i in 0..=NUM_STEPS {
-        println!("step {:?}", i);
+    let bar = make_bar(NUM_STEPS, "running simulation...");
+
+    for _ in (0..=NUM_STEPS).progress_with(bar) {
         framework.advance();
     }
 

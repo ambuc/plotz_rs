@@ -2,6 +2,7 @@
 
 #![deny(missing_docs)]
 
+pub mod bar;
 pub mod canvas;
 pub mod frame;
 pub mod map;
