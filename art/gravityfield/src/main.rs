@@ -19,10 +19,10 @@ const CHARGE_RANGE: Range<f64> = -1.0..1.0;
 const CLUSTER_DISTANCE: f64 = 100.0;
 const CLUSTER_RANGE: Range<f64> = (-1.0 * CLUSTER_DISTANCE)..CLUSTER_DISTANCE;
 const GRID_GRANULARITY: usize = 50;
-const MOMENTUM: f64 = 10.0;
-const NUM_CLUSTERS: usize = 10;
-const NUM_PARTICLES_PER_CLUSTER: usize = 10;
-const NUM_STEPS: usize = 100;
+const MOMENTUM: f64 = 1.00;
+const NUM_CLUSTERS: usize = 20;
+const NUM_PARTICLES_PER_CLUSTER: usize = 20;
+const NUM_STEPS: usize = 200;
 
 #[derive(FromArgs)]
 #[argh(description = "...")]
@@ -84,30 +84,34 @@ impl<T> Framework<T> {
     fn add_particle(&mut self, p: Particle<T>) {
         self.particles.insert(p.uuid, p);
     }
-    fn into_visible_particles(self) -> impl Iterator<Item = Particle<T>> {
+
+    fn into_particles_visible(self) -> impl Iterator<Item = Particle<T>> {
         self.particles.into_values().filter(|p| p.is_visible())
     }
 
-    fn mobile_particles(&self) -> impl Iterator<Item = &Particle<T>> {
+    fn particles_mobile(&self) -> impl Iterator<Item = &Particle<T>> {
         self.particles.values().filter(|p| !p.is_fixed())
+    }
+
+    fn particles_which_are_not(&self, uuid: Uuid) -> impl Iterator<Item = &Particle<T>> {
+        self.particles
+            .iter()
+            .filter_map(move |(k, v)| if *k == uuid { None } else { Some(v) })
     }
 
     fn advance(&mut self) {
         // make array of next positions
         let mut deltas: Vec<(uuid::Uuid, Pt)> = vec![];
 
-        for particle in self.mobile_particles() {
+        for particle in self.particles_mobile() {
             let delta: Pt = self
-                .particles
-                .values()
-                .filter(|extant_particle| particle.uuid != extant_particle.uuid)
+                .particles_which_are_not(particle.uuid)
                 .map(|extant_particle| -> Pt {
                     let m1 = particle.charge;
                     let m2 = extant_particle.charge;
                     let r = particle.position.dist(&extant_particle.position);
-                    let d = particle.position - extant_particle.position;
-                    let force = d * m1 * m2 / r.powf(2.0);
-                    force * MOMENTUM
+                    let d = extant_particle.position - particle.position;
+                    d * m1 * m2 / r.powf(2.0) / MOMENTUM
                 })
                 .fold(Pt(0, 0), |acc, x| acc + x);
 
@@ -184,12 +188,12 @@ fn main() {
         framework.advance();
     }
 
-    for p in framework.into_visible_particles() {
+    for p in framework.into_particles_visible() {
         os.push((
             Multiline(p.history).unwrap().into(),
             Style {
                 color: p.metadata.unwrap().color,
-                thickness: 2.0,
+                thickness: 1.0,
                 ..Default::default()
             },
         ));
