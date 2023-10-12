@@ -1,0 +1,15 @@
+[package]
+name = "gravityfield"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+
+argh = "*"
+plotz-color = { path = "../../plotz-color" }
+plotz-core = { path = "../../plotz-core" }
+plotz-geometry = { path = "../../plotz-geometry" }
+rand = { version = "0.8.5", features = ["alloc"] }
+rayon = "*"
+indicatif = { version = "*", features = ["rayon"] }

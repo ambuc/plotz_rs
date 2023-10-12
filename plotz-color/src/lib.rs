@@ -23,7 +23,7 @@ pub struct ColorRGB {
 impl Debug for ColorRGB {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // TODO(ambuc): Make this not always print 'red'.
-        write!(f, "&RED")
+        write!(f, "&TODO")
     }
 }
 

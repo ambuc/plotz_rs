@@ -14,6 +14,7 @@ members = [
     "art/croptest",
     "art/flowfield",
     "art/girih",
+    "art/gravityfield",
     "art/lewitt",
     "art/tilings",
     "art/voronoi",
