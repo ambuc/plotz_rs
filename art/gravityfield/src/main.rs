@@ -17,13 +17,15 @@ use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
 const CHARGE_MAX: f64 = 5.0;
-const POW: f64 = 1.2;
+const POW: f64 = 1.1;
 const CHARGE_RANGE: Range<f64> = -1.0 * CHARGE_MAX..CHARGE_MAX;
-const CLUSTER_DISTANCE: f64 = 100.0;
 const CLUSTER_RANGE: Range<f64> = (-1.0 * CLUSTER_DISTANCE)..CLUSTER_DISTANCE;
 const GRID_GRANULARITY: usize = 200;
-const NUM_CLUSTERS: usize = 40;
-const NUM_PARTICLES_PER_CLUSTER: usize = 40;
+
+const NUM_CLUSTERS: usize = 10;
+const CLUSTER_DISTANCE: f64 = 300.0;
+const NUM_PARTICLES_PER_CLUSTER: usize = 200;
+
 const NUM_STEPS: usize = 100;
 
 #[derive(FromArgs)]
@@ -204,12 +206,13 @@ fn main() {
     }
 
     for (_uuid, p) in framework.into_particles_visible() {
-        let obj: Obj = match p.history.len() {
-            0 => CurveArc(p.position, 0.0..=TAU, 2.0).into(),
-            _ => Multiline(p.history).unwrap().into(),
-        };
         os.push((
-            obj,
+            match p.history.len() {
+                // If the object has no history, it is a static particle -- a circle.
+                0 => CurveArc(p.position, 0.0..=TAU, 2.0).into(),
+                // Otherwise, chart its course.
+                _ => Multiline(p.history).unwrap().into(),
+            },
             Style {
                 color: p.metadata.unwrap().color,
                 thickness: 1.0,
