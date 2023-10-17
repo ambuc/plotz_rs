@@ -11,4 +11,5 @@ plotz-core = { path = "../plotz-core" }
 plotz-geometry = { path = "../plotz-geometry" }
 rand = { version = "0.8.5", features = ["alloc"] }
 typed-builder = "*"
+rayon = "*"
 uuid = { version = "1.4.1", features = ["v4", "fast-rng", "macro-diagnostics"] }

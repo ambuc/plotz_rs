@@ -16,14 +16,14 @@ use plotz_physics::{framework, particle::*};
 use rand::{thread_rng, Rng};
 use std::{f64::consts::TAU, ops::Range};
 
-const CHARGE_MAX: f64 = 5.0;
+const CHARGE_MAX: f64 = 2.0;
 const CHARGE_RANGE: Range<f64> = -1.0 * CHARGE_MAX..CHARGE_MAX;
 const CLUSTER_RANGE: Range<f64> = (-1.0 * CLUSTER_DISTANCE)..CLUSTER_DISTANCE;
-const GRID_GRANULARITY: usize = 100;
+const GRID_GRANULARITY: usize = 50;
 
-const NUM_CLUSTERS: usize = 20;
-const CLUSTER_DISTANCE: f64 = 200.0;
-const NUM_PARTICLES_PER_CLUSTER: usize = 200;
+const NUM_CLUSTERS: usize = 10;
+const CLUSTER_DISTANCE: f64 = 100.0;
+const NUM_PARTICLES_PER_CLUSTER: usize = 100;
 
 const NUM_STEPS: usize = 100;
 
@@ -34,6 +34,7 @@ struct Args {
     output_path_prefix: String,
 }
 
+#[derive(Copy, Clone, Debug)]
 struct Metadata {
     color: &'static ColorRGB,
 }
@@ -43,9 +44,18 @@ fn main() {
     let mut os: Vec<(Obj, Style)> = vec![];
     let margin = 25.0;
 
+    let size = Size {
+        width: 800,
+        height: 650,
+    };
     let frame = make_frame(
-        (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
-        /*offset=*/ (margin, margin),
+        (
+            size.height as f64 - 2.0 * margin,
+            size.width as f64 - 2.0 * margin,
+        ),
+        // (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
+        /*offset=*/
+        (margin, margin),
     );
 
     let mut framework: framework::Framework<Metadata> = framework::Framework {
@@ -121,7 +131,7 @@ fn main() {
             },
             Style {
                 color: p.metadata.unwrap().color,
-                thickness: 1.0,
+                thickness: 0.1,
                 ..Default::default()
             },
         ));
@@ -139,12 +149,5 @@ fn main() {
         true,
     )
     .with_frame(frame)
-    .write_to_svg_or_die(
-        // yeah, i know
-        Size {
-            width: 1000,
-            height: 800,
-        },
-        &args.output_path_prefix,
-    );
+    .write_to_svg_or_die(size, &args.output_path_prefix);
 }
