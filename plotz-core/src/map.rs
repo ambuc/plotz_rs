@@ -178,12 +178,11 @@ impl Map {
         map_config
             .input_files
             .iter()
-            .flat_map(|file| {
+            .map(|file| {
                 trace!("processing file: {:?}", file);
-                plotz_geojson::parse_geojson(
+                Ok(plotz_geojson::parse_geojson(
                     serde_json::from_reader(BufReader::new(file)).expect("read"),
-                )
-                .expect("parse")
+                )?
                 .iter()
                 .flat_map(|(obj_inner, tags)| {
                     bucketer.bucket(tags).into_iter().flat_map(|bucket| {
@@ -199,8 +198,11 @@ impl Map {
                         })
                     })
                 })
-                .collect::<Vec<AnnotatedObject2d>>()
+                .collect::<Vec<AnnotatedObject2d>>())
             })
+            .flatten_ok()
+            .collect::<Result<Vec<_>>>()?
+            .into_iter()
             .sorted_by(|ap_1, ap_2| Ord::cmp(&ap_1.bucket, &ap_2.bucket))
             .group_by(|ap| ap.bucket)
             .into_iter()
