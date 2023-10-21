@@ -9,6 +9,7 @@ use crate::{
     frame::make_frame,
     svg::{Size, SvgWriteError},
 };
+use anyhow::Result;
 use float_ord::FloatOrd;
 use itertools::Itertools;
 use lazy_static::lazy_static;
@@ -388,19 +389,16 @@ impl Map {
 
     /// Crop everything everywhere to the frame polygon. (Passed in here for
     /// Flexibility.)
-    pub fn crop_to_frame(&mut self, frame: &Pg) {
+    pub fn crop_to_frame(&mut self, frame: &Pg) -> Result<()> {
         trace!("Cropping all to frame.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             *dos = dos
                 .iter_mut()
-                .flat_map(|(obj, style)| {
-                    obj.crop_to(frame)
-                        .expect("todo")
-                        .into_iter()
-                        .map(|obj| (obj, *style))
-                })
-                .collect();
+                .map(|(obj, style)| Ok(obj.crop_to(frame)?.into_iter().map(|obj| (obj, *style))))
+                .flatten_ok()
+                .collect::<Result<Vec<_>>>()?;
         }
+        Ok(())
     }
 
     /// For every polygon in every layer, replace it with segments with the same
@@ -506,7 +504,7 @@ impl Map {
             );
             let frame_pg: Pg = frame.0.clone().try_into().unwrap();
             self.canvas.frame = Some(frame);
-            let () = self.crop_to_frame(&frame_pg);
+            let () = self.crop_to_frame(&frame_pg).expect("todo");
         }
 
         self.canvas
