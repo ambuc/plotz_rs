@@ -190,17 +190,6 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj>> {
 fn parse_to_circle(_coords: &Value) -> Result<Vec<Obj>> {
     // For now, don't print circles at all.
     Ok(vec![])
-    // let array = &coords.as_array().expect("not array");
-    // if let Some(x) = array.get(0).and_then(|o| o.as_f64()) {
-    //     if let Some(y) = array.get(1).and_then(|o| o.as_f64()) {
-    //         return Ok(vec![Object2d::from(CurveArc(
-    //             Pt(x, y),
-    //             0.0..=TAU,
-    //             0.0001,
-    //         ))]);
-    //     }
-    // }
-    // Err(GeoJsonConversionError::CoordinatesNotArray)
 }
 
 #[cfg(test)]
