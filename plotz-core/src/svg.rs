@@ -66,11 +66,11 @@ fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<()> {
             context.set_font_size(*font_size);
 
             context.move_to(pt.x, pt.y);
-            context.show_text(txt).expect("show text");
+            context.show_text(txt)?;
         }
         Obj::Group(group) => {
             for s in group.iter_objects() {
-                write_obj_to_context(s, context).expect("write");
+                write_obj_to_context(s, context)?;
             }
         }
         Obj::CurveArc(arc) => {

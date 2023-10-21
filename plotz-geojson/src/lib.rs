@@ -3,7 +3,7 @@
 //! A crate for reading GeoJSON files and parsing them to plotz_geometry
 //! structs.
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use plotz_geometry::{
     obj::Obj,
     shapes::{
@@ -52,7 +52,9 @@ fn add_tags(value: &Value, tagslist: &mut TagsList) {
 
 /// Parses aGeoJSON file and returns a list of tagged polygons.
 pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>> {
-    let features = geo_json["features"].as_array().expect("features not array");
+    let features = geo_json["features"]
+        .as_array()
+        .ok_or(anyhow!("expected array"))?;
 
     info!("Parsing geojson file with {:?} features.", features.len());
     let mut lines: Vec<(Obj, TagsList)> = vec![];
@@ -70,7 +72,7 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>> {
 
         let geom_type: &str = feature["geometry"]["type"]
             .as_str()
-            .expect("type not string");
+            .ok_or(anyhow!("expected string"))?;
 
         let coords = &feature["geometry"]["coordinates"];
 
@@ -131,12 +133,17 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>> {
 
 fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj>> {
     Ok(vec![Obj::from(Multiline(
-        coordinates.as_array().expect("not array").iter().map(|p| {
-            Pt(
-                p[0].as_f64().expect("value not f64"),
-                p[1].as_f64().expect("value not f64"),
-            )
-        }),
+        coordinates
+            .as_array()
+            .ok_or(anyhow!("not array"))?
+            .iter()
+            .map(|p| {
+                Ok(Pt(
+                    p[0].as_f64().ok_or(anyhow!("value not f64"))?,
+                    p[1].as_f64().ok_or(anyhow!("value not f64"))?,
+                ))
+            })
+            .collect::<Result<Vec<_>>>()?,
     )?)])
 }
 

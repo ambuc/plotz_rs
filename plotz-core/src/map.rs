@@ -491,7 +491,7 @@ impl Map {
 /// writing SVG(s) to output file(s).
 #[derive(Debug, TypedBuilder)]
 pub struct MapConfig {
-    #[builder(setter(transform = |x: impl IntoIterator<Item = impl AsRef<Path>> + std::fmt::Debug| paths_to_files(x)))]
+    #[builder(setter(transform = |x: impl IntoIterator<Item = impl AsRef<Path>> + std::fmt::Debug| paths_to_files(x).collect()))]
     input_files: Vec<File>,
     output_directory: PathBuf,
     size: Size,
@@ -502,11 +502,10 @@ pub struct MapConfig {
 /// Helper fn for transforming filepaths to files.
 fn paths_to_files(
     file_paths: impl IntoIterator<Item = impl AsRef<Path>> + std::fmt::Debug,
-) -> Vec<File> {
+) -> impl Iterator<Item = File> {
     file_paths
         .into_iter()
         .map(|fp| File::open(fp).expect("could not open file"))
-        .collect::<Vec<_>>()
 }
 
 #[cfg(test)]
