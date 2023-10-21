@@ -1,8 +1,7 @@
-use plotz_geometry::shapes::pg::Pg;
-
+use anyhow::Result;
 use argh::FromArgs;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
-use plotz_geometry::crop::PointLoc;
+use plotz_geometry::{crop::PointLoc, shapes::pg::Pg};
 
 mod ab_rhomb;
 mod cromwell;
@@ -18,7 +17,7 @@ struct Args {
     pattern: String,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args: Args = argh::from_env();
 
     let mut dos = match args.pattern.as_ref() {
@@ -41,11 +40,12 @@ fn main() {
 
     //objs.join_adjacent_segments();
 
-    objs.write_to_svg_or_die(
+    objs.write_to_svg(
         Size {
             width: (750.0 * 1.3) as usize,
             height: 750,
         },
         &args.output_path_prefix,
-    );
+    )?;
+    Ok(())
 }

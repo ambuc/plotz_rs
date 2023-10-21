@@ -1,3 +1,4 @@
+use anyhow::Result;
 use argh::FromArgs;
 use itertools::iproduct;
 use plotz_color::*;
@@ -51,7 +52,7 @@ fn cubes(cc: CubesConfig) -> Vec<(Obj3, Style)> {
     objects
 }
 
-fn main() {
+fn main() -> Result<()> {
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
         .compact()
         .with_max_level(Level::INFO)
@@ -88,8 +89,9 @@ fn main() {
         (800.0, 600.0),
         /*margin=*/ 25.0,
     ))
-    .scale_to_fit_frame_or_die()
-    .write_to_svg_or_die((600, 800), &args.output_path_prefix);
+    .scale_to_fit_frame()?
+    .write_to_svg((600, 800), &args.output_path_prefix)?;
+    Ok(())
 }
 
 #[cfg(test)]

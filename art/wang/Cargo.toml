@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 argh = "*"
+anyhow = "*"
 plotz-color = { path = "../../plotz-color" }
 plotz-core = { path = "../../plotz-core" }
 plotz-geometry = { path = "../../plotz-geometry" }

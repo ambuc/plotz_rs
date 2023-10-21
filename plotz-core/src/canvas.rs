@@ -5,7 +5,7 @@ use crate::{
     bucket::Bucket,
     svg::{write_layer_to_svg, Size},
 };
-use anyhow::Error;
+use anyhow::Result;
 use float_ord::FloatOrd;
 use indicatif::*;
 use itertools::Itertools;
@@ -118,8 +118,8 @@ impl Canvas {
         });
     }
 
-    // returns true on success
-    fn scale_to_fit_frame(mut self) -> Result<Self, Error> {
+    /// returns true on success
+    pub fn scale_to_fit_frame(mut self) -> Result<Self> {
         {
             let frame_bounds = self.frame.as_ref().unwrap().0.bounds();
             let inner_bounds = streaming_bbox(
@@ -163,14 +163,8 @@ impl Canvas {
         Ok(self)
     }
 
-    /// Scales the contents to fit the frame, or dies.
-    pub fn scale_to_fit_frame_or_die(self) -> Self {
-        self.scale_to_fit_frame()
-            .expect("failed to scale to fit frame")
-    }
-
-    // writes out to a set of SVGs at a prefix.
-    fn write_to_svg(self, size: impl Into<Size>, prefix: &str) -> Result<(), Error> {
+    /// writes out to a set of SVGs at a prefix.
+    pub fn write_to_svg(self, size: impl Into<Size>, prefix: &str) -> Result<()> {
         let size = size.into();
         // all
         {
@@ -210,11 +204,6 @@ impl Canvas {
             });
 
         Ok(())
-    }
-
-    /// writes out to a set of SVGs at a prefix, or dies.
-    pub fn write_to_svg_or_die(self, size: impl Into<Size>, prefix: &str) {
-        self.write_to_svg(size, prefix).expect("write")
     }
 }
 

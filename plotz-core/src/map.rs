@@ -479,7 +479,7 @@ impl Map {
         }
 
         self.canvas
-            .write_to_svg_or_die(config.size, config.output_directory.to_str().unwrap());
+            .write_to_svg(config.size, config.output_directory.to_str().unwrap())?;
 
         Ok(())
     }

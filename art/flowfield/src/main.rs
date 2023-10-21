@@ -1,3 +1,4 @@
+use anyhow::Result;
 use argh::FromArgs;
 use indicatif::ParallelProgressIterator;
 use plotz_color::*;
@@ -35,7 +36,7 @@ struct Args {
     output_path_prefix: String,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let uniform_shift = Pt(0, 0);
 
     let args: Args = argh::from_env();
@@ -150,12 +151,13 @@ fn main() {
     )
     .with_frame(frame);
 
-    objs.write_to_svg_or_die(
+    objs.write_to_svg(
         // yeah, i know
         Size {
             width: 1000,
             height: 800,
         },
         &args.output_path_prefix,
-    );
+    )?;
+    Ok(())
 }

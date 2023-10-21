@@ -7,6 +7,7 @@ edition = "2021"
 
 argh = "*"
 plotz-color = { path = "../../plotz-color" }
+anyhow = "*"
 plotz-core = { path = "../../plotz-core" }
 plotz-geometry = { path = "../../plotz-geometry" }
 rand = { version = "0.8.5", features = ["alloc"] }

@@ -1,12 +1,13 @@
-use plotz_geometry::{obj::Obj, style::Style};
-
+use anyhow::Result;
 use argh::FromArgs;
 use plotz_color::*;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
     crop::PointLoc,
     grid::grid_layout::{GridLayout, GridLayoutSettings},
+    obj::Obj,
     shapes::{curve::CurveArc, pt::Pt},
+    style::Style,
 };
 use rand::{seq::SliceRandom, thread_rng, Rng};
 use std::f64::consts::*;
@@ -20,7 +21,7 @@ struct Args {
     output_path_prefix: String,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let subscriber = FmtSubscriber::builder()
         .compact()
         .with_max_level(Level::TRACE)
@@ -87,11 +88,12 @@ fn main() {
 
     let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true).with_frame(frame);
 
-    objs.write_to_svg_or_die(
+    objs.write_to_svg(
         Size {
             width: 800,
             height: 1000,
         },
         &args.output_path_prefix,
-    );
+    )?;
+    Ok(())
 }

@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 
 argh = "*"
+anyhow = "*"
 float-ord = "*"
 indicatif = "0.17.7"
 itertools = "*"

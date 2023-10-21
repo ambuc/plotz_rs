@@ -1,3 +1,4 @@
+use anyhow::Result;
 use argh::FromArgs;
 use indicatif::ProgressIterator;
 use plotz_color::*;
@@ -39,7 +40,7 @@ struct Metadata {
     color: &'static ColorRGB,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args: Args = argh::from_env();
     let mut os: Vec<(Obj, Style)> = vec![];
     let margin = 25.0;
@@ -150,5 +151,6 @@ fn main() {
         true,
     )
     .with_frame(frame)
-    .write_to_svg_or_die(size, &args.output_path_prefix);
+    .write_to_svg(size, &args.output_path_prefix)?;
+    Ok(())
 }

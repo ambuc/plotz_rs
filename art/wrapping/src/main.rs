@@ -1,5 +1,6 @@
 use plotz_geometry::style::Style;
 
+use anyhow::Result;
 use argh::FromArgs;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
@@ -147,7 +148,7 @@ impl Tile {
     }
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args: Args = argh::from_env();
 
     let image_width: f64 = 500.0;
@@ -170,12 +171,13 @@ fn main() {
 
     Canvas::from_objs(obj_vec.into_iter(), /*autobucket=*/ false)
         .with_frame(make_frame((image_width, image_width), Pt(margin, margin)))
-        .scale_to_fit_frame_or_die()
-        .write_to_svg_or_die(
+        .scale_to_fit_frame()?
+        .write_to_svg(
             Size {
                 width: (image_width + 2.0 * margin) as usize,
                 height: (image_width + 2.0 * margin) as usize,
             },
             &args.output_path_prefix,
-        );
+        )?;
+    Ok(())
 }

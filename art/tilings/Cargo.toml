@@ -8,6 +8,7 @@ edition = "2021"
 argh = "*"
 float-cmp = "*"
 lazy_static = "*"
+anyhow = "*"
 plotz-color = { path = "../../plotz-color" }
 plotz-core = { path = "../../plotz-core" }
 plotz-geometry = { path = "../../plotz-geometry" }

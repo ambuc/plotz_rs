@@ -1,9 +1,15 @@
-use plotz_geometry::{obj::Obj, shapes::pg::Pg, style::Style};
-
+use anyhow::Result;
 use argh::FromArgs;
 use plotz_color::*;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
-use plotz_geometry::{bounded::Bounded, crop::Croppable, grid::Grid, shapes::curve::CurveArcs};
+use plotz_geometry::{
+    bounded::Bounded,
+    crop::Croppable,
+    grid::Grid,
+    obj::Obj,
+    shapes::{curve::CurveArcs, pg::Pg},
+    style::Style,
+};
 use rand::Rng;
 use std::f64::consts::*;
 
@@ -14,7 +20,7 @@ struct Args {
     output_path_prefix: String,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args: Args = argh::from_env();
 
     let mut dos = vec![];
@@ -72,11 +78,12 @@ fn main() {
 
     let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
 
-    objs.write_to_svg_or_die(
+    objs.write_to_svg(
         Size {
             width: 800,
             height: 1000,
         },
         &args.output_path_prefix,
-    )
+    )?;
+    Ok(())
 }

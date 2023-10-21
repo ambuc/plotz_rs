@@ -1,14 +1,15 @@
-use plotz_geometry::{obj::Obj, style::Style};
-
+use anyhow::Result;
 use argh::FromArgs;
 use plotz_color::*;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
+    obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
         pg::{multiline::Multiline, Pg},
         pt::Pt,
     },
+    style::Style,
 };
 use rand::prelude::SliceRandom;
 use std::f64::consts::*;
@@ -236,7 +237,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)
     .collect()
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args: Args = argh::from_env();
 
     let image_width: f64 = 600.0;
@@ -265,11 +266,12 @@ fn main() {
         });
     });
 
-    objs.write_to_svg_or_die(
+    objs.write_to_svg(
         Size {
             width: (image_width + 2.0 * margin) as usize,
             height: (image_width + 2.0 * margin) as usize,
         },
         &args.output_path_prefix,
-    );
+    )?;
+    Ok(())
 }

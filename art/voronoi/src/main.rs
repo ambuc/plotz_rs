@@ -1,11 +1,12 @@
-use plotz_geometry::{obj::Obj, style::Style};
-
+use anyhow::Result;
 use argh::FromArgs;
 use plotz_color::{ColorRGB, *};
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use plotz_geometry::{
+    obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{pg::Pg, pt::Pt},
+    style::Style,
 };
 use rand::{prelude::SliceRandom, Rng};
 use std::f64::consts::*;
@@ -40,7 +41,7 @@ impl Shade {
     }
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args: Args = argh::from_env();
 
     let mut rng = rand::thread_rng();
@@ -118,11 +119,12 @@ fn main() {
     let canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true)
         .with_frame(make_frame((DIM, DIM), Pt(20, 20)));
 
-    canvas.write_to_svg_or_die(
+    canvas.write_to_svg(
         Size {
             width: 800,
             height: 1000,
         },
         &args.output_path_prefix,
-    );
+    )?;
+    Ok(())
 }

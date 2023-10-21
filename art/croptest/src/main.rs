@@ -1,5 +1,4 @@
-use plotz_geometry::{obj::Obj, style::Style};
-
+use anyhow::Result;
 use argh::FromArgs;
 use itertools::iproduct;
 use plotz_color::*;
@@ -8,10 +7,12 @@ use plotz_geometry::{
     crop::Croppable,
     grid::grid_layout::{GridLayout, GridLayoutSettings},
     group::Group,
+    obj::Obj,
     shapes::{
         pg::{Pg, Rect},
         pt::Pt,
     },
+    style::Style,
 };
 
 #[derive(FromArgs)]
@@ -21,7 +22,7 @@ struct Args {
     output_path_prefix: String,
 }
 
-fn main() {
+fn main() -> Result<()> {
     tracing::subscriber::set_global_default(
         tracing_subscriber::FmtSubscriber::builder()
             .compact()
@@ -149,11 +150,12 @@ fn main() {
 
     let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
 
-    objs.write_to_svg_or_die(
+    objs.write_to_svg(
         Size {
             width: 800,
             height: 1000,
         },
         &args.output_path_prefix,
-    );
+    )?;
+    Ok(())
 }

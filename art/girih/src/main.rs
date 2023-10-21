@@ -4,6 +4,7 @@ mod strategy1;
 mod strategy2;
 mod strategy3;
 
+use anyhow::Result;
 use argh::FromArgs;
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
 use tracing::*;
@@ -16,7 +17,7 @@ struct Args {
     output_path_prefix: String,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let subscriber = FmtSubscriber::builder()
         .compact()
         .with_max_level(Level::TRACE)
@@ -45,11 +46,12 @@ fn main() {
         /*wh=*/ (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
         /*offset=*/ (margin, margin),
     ))
-    .write_to_svg_or_die(
+    .write_to_svg(
         Size {
             width: 1000,
             height: 800,
         },
         &args.output_path_prefix,
-    );
+    )?;
+    Ok(())
 }
