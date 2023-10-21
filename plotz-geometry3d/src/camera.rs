@@ -62,7 +62,7 @@ impl Oblique {
         }
     }
     pub fn project_styled_obj3(&self, (obj3, style): &(Obj3, Style)) -> (Obj, Style) {
-        (self.project_obj3(&obj3), *style)
+        (self.project_obj3(obj3), *style)
     }
 }
 

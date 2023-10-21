@@ -53,7 +53,7 @@ impl Occluder {
         for (existing_o, _) in &self.objects {
             incoming_os = incoming_os
                 .iter()
-                .map(|(incoming_obj, _)| Ok(Occluder::hide_a_behind_b(incoming_obj, existing_o)?))
+                .map(|(incoming_obj, _)| Occluder::hide_a_behind_b(incoming_obj, existing_o))
                 .flatten_ok()
                 .collect::<Result<Vec<_>>>()?
                 .into_iter()
