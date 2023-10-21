@@ -16,7 +16,6 @@ plotz-geojson = { path = "../plotz-geojson" }
 plotz-geometry = { path = "../plotz-geometry" }
 rand = "0.8.5"
 serde_json = "*"
-thiserror = "*"
 tracing = "*"
 typed-builder = "*"
 

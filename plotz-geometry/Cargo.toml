@@ -16,7 +16,6 @@ num = "*"
 anyhow = "*"
 petgraph = "0.6.3"
 plotz-color = { path = "../plotz-color" }
-thiserror = "*"
 typed-builder = "*"
 
 [dev-dependencies]

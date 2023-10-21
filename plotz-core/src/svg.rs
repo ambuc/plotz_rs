@@ -1,5 +1,6 @@
 //! SVG plotting utilities.
 //!
+use anyhow::Result;
 use plotz_color::BLACK;
 use plotz_geometry::{
     obj::Obj,
@@ -8,7 +9,6 @@ use plotz_geometry::{
     *,
 };
 use std::fmt::Debug;
-use thiserror::Error;
 
 /// The size of a canvas.
 #[derive(Debug, Copy, Clone)]
@@ -38,15 +38,7 @@ impl From<(i64, i64)> for Size {
     }
 }
 
-/// A general error which might be encountered while writing an SVG.
-#[derive(Debug, Error)]
-pub enum SvgWriteError {
-    /// cairo error
-    #[error("cairo error")]
-    CairoError(#[from] cairo::Error),
-}
-
-fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<(), SvgWriteError> {
+fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<()> {
     match &doi {
         Obj::Pt(p) => {
             context.line_to(p.x, p.y);
@@ -88,10 +80,7 @@ fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<(), S
     Ok(())
 }
 
-fn write_obj_to_context(
-    (obj, style): &(Obj, Style),
-    context: &mut cairo::Context,
-) -> Result<(), SvgWriteError> {
+fn write_obj_to_context((obj, style): &(Obj, Style), context: &mut cairo::Context) -> Result<()> {
     if obj.is_empty() {
         return Ok(());
     }
@@ -110,7 +99,7 @@ pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     path: P,
     polygons: impl IntoIterator<Item = &'a (Obj, Style)>,
-) -> Result<usize, SvgWriteError> {
+) -> Result<usize> {
     let svg_surface = cairo::SvgSurface::new(size.width as f64, size.height as f64, Some(path))?;
     let mut ctx = cairo::Context::new(&svg_surface)?;
     let mut c = 0_usize;
@@ -125,7 +114,7 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     paths: impl IntoIterator<Item = P>,
     polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a (Obj, Style)>>,
-) -> Result<(), SvgWriteError> {
+) -> Result<()> {
     for (path, polygons) in paths.into_iter().zip(polygon_layers.into_iter()) {
         write_layer_to_svg(size, path, polygons)?;
     }
