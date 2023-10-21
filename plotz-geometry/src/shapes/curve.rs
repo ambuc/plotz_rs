@@ -685,8 +685,12 @@ mod test {
         ];
         "four intersections, all passthrough"
     )]
-    fn test_curvearc_crop(rect: Pg, curvearc: CurveArc, expected_curvearcs: Vec<CurveArc>) {
-        let actual_curvearcs = curvearc.crop_to(&rect).expect("crop");
+    fn test_curvearc_crop(
+        rect: Pg,
+        curvearc: CurveArc,
+        expected_curvearcs: Vec<CurveArc>,
+    ) -> Result<()> {
+        let actual_curvearcs = curvearc.crop_to(&rect)?;
         assert_eq!(actual_curvearcs.len(), expected_curvearcs.len());
 
         for (actual, expected) in actual_curvearcs.iter().zip(expected_curvearcs.iter()) {
@@ -695,6 +699,7 @@ mod test {
             assert_approx_eq!(f64, actual.angle_f, expected.angle_f);
             assert_eq!(actual.radius, expected.radius);
         }
+        Ok(())
     }
 
     #[test_case(0.0..=1.0, 0.0..=1.0, vec![0.0..=1.0]; "no-op")]
