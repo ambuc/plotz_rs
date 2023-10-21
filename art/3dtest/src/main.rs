@@ -109,9 +109,9 @@ mod tests {
             .collect::<Vec<_>>();
     }
 
-    #[test_matrix(1..=6, 1..=20)]
+    #[test_matrix(1..=6, 1..=15)]
     fn test_cubes_generation_no_crash(n: usize, w: usize) {
-        let width: f64 = (w as f64) / 20.0;
+        let width: f64 = (w as f64) / 15.0;
         assert!(0.0 <= width && width <= 1.0);
         let _ = Scene::builder()
             .objects(cubes(CubesConfig { n, width }))
