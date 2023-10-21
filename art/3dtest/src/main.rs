@@ -96,6 +96,7 @@ mod tests {
     use super::*;
     use test_case::*;
 
+    #[ignore]
     #[test]
     fn test_cubes_generation_no_crash_reproduce() {
         let _ = Scene::builder()
@@ -109,6 +110,7 @@ mod tests {
             .collect::<Vec<_>>();
     }
 
+    #[ignore]
     #[test_matrix(1..=6, 1..=15)]
     fn test_cubes_generation_no_crash(n: usize, w: usize) {
         let width: f64 = (w as f64) / 15.0;

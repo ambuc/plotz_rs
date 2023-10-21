@@ -8,6 +8,7 @@ use crate::{
     shapes::{pg::Pg, pt::Pt, ry::Ry},
     *,
 };
+use anyhow::Result;
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::{
@@ -346,7 +347,7 @@ impl Bounded for Sg {
 impl Croppable for Sg {
     type Output = Sg;
 
-    fn crop(&self, frame: &Pg, crop_type: CropType) -> Vec<Self::Output>
+    fn crop(&self, frame: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
@@ -400,7 +401,7 @@ impl Croppable for Sg {
 
                     // Not sure why. But escape the loop.
                     if new_pt == curr_pt {
-                        return resultants;
+                        return Ok(resultants);
                     }
 
                     if !matches!(frame.contains_pt(&new_pt), PointLoc::Outside) && curr_pen_down {
@@ -410,15 +411,15 @@ impl Croppable for Sg {
                     curr_pen_down = !curr_pen_down;
                 }
                 None => {
-                    return resultants;
+                    return Ok(resultants);
                 }
             }
         }
 
-        resultants
+        Ok(resultants)
     }
 
-    fn crop_excluding(&self, _other: &Pg) -> Vec<Self::Output>
+    fn crop_excluding(&self, _other: &Pg) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {

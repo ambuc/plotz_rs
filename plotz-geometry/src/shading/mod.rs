@@ -63,7 +63,7 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Sg>, Shad
     while FloatOrd(line.i.y) > FloatOrd(bounds.bottom_bound())
         || FloatOrd(line.f.y) > FloatOrd(bounds.bottom_bound())
     {
-        let cropped_strokes = line.crop_to(polygon);
+        let cropped_strokes = line.crop_to(polygon).expect("todo");
         segments.extend(cropped_strokes.iter());
         // segments.push(line);
 

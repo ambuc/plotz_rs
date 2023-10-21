@@ -18,6 +18,7 @@ use crate::{
     style::Style,
     *,
 };
+use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use itertools::iproduct;
@@ -370,12 +371,12 @@ impl Croppable for Pg {
     ///
     /// Known bug: If multiple resultant polygons are present, this will return
     /// only one.
-    fn crop(&self, b: &Pg, crop_type: CropType) -> Vec<Self::Output> {
+    fn crop(&self, b: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>> {
         // tracing::info!("Cropping self \n\t{:?} \n\tto b \n\t{:?}", self, b);
         let a: &Pg = self;
 
         if a == b {
-            return vec![a.clone()];
+            return Ok(vec![a.clone()]);
         }
 
         Pg::crop_check_prerequisites(a, b).expect("failed prerequisites");
@@ -387,42 +388,43 @@ impl Croppable for Pg {
                     // if inclusive, then we want the bit of |a| in |b|.
                     if a.totally_contains(b) {
                         // if |a| totally contains |b|, just return |b|.
-                        return vec![b.clone()];
+                        return Ok(vec![b.clone()]);
                     }
                     if b.totally_contains(a) {
                         // if |b| totally contains |a|, just return |a|.
-                        return vec![a.clone()];
+                        return Ok(vec![a.clone()]);
                     }
                     if b.contains_not_at_all(a) {
                         // if |b| doesn't contain any part of |a| (and there are
                         // no intersections) then return nothing.
-                        return vec![];
+                        return Ok(vec![]);
                     }
-                    panic!("I thought there were no intersections.");
+                    return Err(anyhow!("I thought there were no intersections!"));
                 }
                 CropType::Exclusive => {
                     // if exclusive, then we want the bit of |a| _not_ in |b|.
                     if a.totally_contains(b) {
                         // TODO(ambuc): must begin to support polygons with cavities !!!
-                        // panic!("we want a polygon with a cavity here -- not yet supported.");
-                        return vec![]; // is this the right thing to do?
+                        return Err(anyhow!(
+                            "we want a polygon with a cavity here - not yet supported"
+                        ));
                     }
                     if b.totally_contains(a) {
                         // if |b| totally contains |a|, then there's no part of
                         // |a| we want.
-                        return vec![];
+                        return Ok(vec![]);
                     }
                     if b.contains_not_at_all(a) {
                         // if |b| doesn't contain any part of |a| (and there are
                         // no intersections) then return A unchanged.
-                        return vec![a.clone()];
+                        return Ok(vec![a.clone()]);
                     }
                 }
             }
         }
 
-        let (resultant, _crop_graph) = CropGraph::run(a, b, crop_type);
-        resultant
+        let (resultant, _crop_graph) = CropGraph::run(a, b, crop_type)?;
+        Ok(resultant)
     }
 }
 
@@ -920,7 +922,7 @@ mod tests {
     }
 
     #[test]
-    fn test_crop_to_polygon_inner_equals_frame() {
+    fn test_crop_to_polygon_inner_equals_frame() -> Result<()> {
         // ⬆️ y
         // ⬜⬜⬜⬜⬜
         // ⬜🟧🟧🟧⬜
@@ -930,12 +932,13 @@ mod tests {
         let inner = Pg([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟥
         let frame = Pg([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟨
         assert_eq!(inner, frame);
-        let crops = inner.crop_to(&frame); // 🟧
+        let crops = inner.crop_to(&frame)?; // 🟧
         assert_eq!(crops, vec![inner]);
+        Ok(())
     }
 
     #[test]
-    fn test_crop_to_polygon_inner_colinear_to_frame() {
+    fn test_crop_to_polygon_inner_colinear_to_frame() -> Result<()> {
         // ⬆️ y
         // ⬜⬜⬜⬜⬜
         // 🟨🟧🟧🟧⬜
@@ -944,7 +947,7 @@ mod tests {
         // 🟨🟨🟨🟨⬜ ➡️ x
         let inner = Pg([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟥
         let frame = Pg([(0, 0), (3, 0), (3, 3), (0, 3)]); // 🟨
-        assert_eq!(inner.crop_to(&frame)[0], inner);
+        assert_eq!(inner.crop_to(&frame)?[0], inner);
 
         // ⬆️ y
         // ⬜⬜⬜⬜⬜
@@ -952,7 +955,7 @@ mod tests {
         // ⬜🟧🟧🟧🟨
         // ⬜🟧🟧🟧🟨
         // ⬜🟨🟨🟨🟨 ➡️ x
-        assert_eq!(inner.crop_to(&(&frame + (1, 0)))[0], inner,);
+        assert_eq!(inner.crop_to(&(&frame + (1, 0)))?[0], inner,);
 
         // ⬆️ y
         // 🟨🟨🟨🟨⬜
@@ -960,7 +963,7 @@ mod tests {
         // 🟨🟧🟧🟧⬜
         // 🟨🟧🟧🟧⬜
         // ⬜⬜⬜⬜⬜ ➡ x
-        assert_eq!(inner.crop_to(&(&frame + (0, 1)))[0], inner);
+        assert_eq!(inner.crop_to(&(&frame + (0, 1)))?[0], inner);
 
         // ⬆️ y
         // ⬜🟨🟨🟨🟨
@@ -968,11 +971,12 @@ mod tests {
         // ⬜🟧🟧🟧🟨
         // ⬜🟧🟧🟧🟨
         // ⬜⬜⬜⬜⬜ ➡ x
-        assert_eq!(inner.crop_to(&(&frame + (1, 1)))[0], inner,);
+        assert_eq!(inner.crop_to(&(&frame + (1, 1)))?[0], inner,);
+        Ok(())
     }
 
     #[test]
-    fn test_crop_to_polygon_inner_totally_within_frame() {
+    fn test_crop_to_polygon_inner_totally_within_frame() -> Result<()> {
         // ⬆️ y
         // 🟨🟨🟨🟨🟨
         // 🟨🟧🟧🟧🟨
@@ -983,12 +987,13 @@ mod tests {
         let frame = Pg([(0, 0), (4, 0), (4, 4), (0, 4)]); // 🟨
 
         // inner /\ frame == inner
-        let crops = inner.crop_to(&frame); // 🟧
+        let crops = inner.crop_to(&frame)?; // 🟧
         assert_eq!(crops, vec![inner.clone()]);
+        Ok(())
     }
 
     #[test]
-    fn test_crop_to_polygon_two_pivots() {
+    fn test_crop_to_polygon_two_pivots() -> Result<()> {
         // ⬆️ y
         // ⬜⬜⬜⬜⬜
         // ⬜🟥🟥🟥⬜
@@ -999,12 +1004,13 @@ mod tests {
         let frame = Pg([(0, 0), (3, 0), (3, 3), (0, 3)]); // 🟨
         let expected = Pg([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟧
 
-        let crops = inner.crop_to(&frame);
+        let crops = inner.crop_to(&frame)?;
         assert_eq!(crops, vec![expected.clone()]);
+        Ok(())
     }
 
     #[test]
-    fn test_crop_to_polygon_two_pivots_02() {
+    fn test_crop_to_polygon_two_pivots_02() -> Result<()> {
         // ⬆️ y
         // ⬜⬜⬜⬜⬜
         // 🟨🟨🟨⬜⬜
@@ -1015,12 +1021,13 @@ mod tests {
         let frame = Pg([(0, 1), (3, 1), (3, 4), (0, 4)]); // 🟨
         let expected = Pg([(1, 1), (3, 1), (3, 3), (1, 3)]); // 🟧
 
-        let crops = inner.crop_to(&frame);
+        let crops = inner.crop_to(&frame)?;
         assert_eq!(crops, vec![expected.clone()]);
+        Ok(())
     }
 
     #[test]
-    fn test_crop_to_polygon_many_pivots_01() {
+    fn test_crop_to_polygon_many_pivots_01() -> Result<()> {
         // ⬆️ y
         // ⬜🟥⬜🟥⬜
         // 🟨🟧🟨🟧🟨
@@ -1057,12 +1064,13 @@ mod tests {
             (1, 4),
         ]); // 🟧
 
-        let crops = inner.crop_to(&frame);
+        let crops = inner.crop_to(&frame)?;
         assert_eq!(crops, vec![expected.clone()]);
+        Ok(())
     }
 
     #[test]
-    fn test_crop_to_polygon_many_pivots_02() {
+    fn test_crop_to_polygon_many_pivots_02() -> Result<()> {
         // ⬆️ y
         // ⬜⬜⬜⬜⬜
         // 🟨🟧🟨🟧🟨
@@ -1085,12 +1093,13 @@ mod tests {
         ]); // 🟥
         let frame = Pg([(0, 1), (5, 1), (5, 4), (0, 4)]); // 🟨
         let expected = inner.clone();
-        let crops = inner.crop_to(&frame);
+        let crops = inner.crop_to(&frame)?;
         assert_eq!(crops, vec![expected.clone()]);
+        Ok(())
     }
 
     #[test]
-    fn test_crop_to_polygon_many_pivots_03() {
+    fn test_crop_to_polygon_many_pivots_03() -> Result<()> {
         // ⬆️ y
         // ⬜⬜⬜⬜⬜
         // ⬜🟧🟨🟧⬜
@@ -1113,12 +1122,13 @@ mod tests {
         ]); // 🟥
         let frame = Pg([(1, 1), (4, 1), (4, 4), (1, 4)]); // 🟨
         let expected = inner.clone();
-        let crops = inner.crop_to(&frame);
+        let crops = inner.crop_to(&frame)?;
         assert_eq!(crops, vec![expected.clone()]);
+        Ok(())
     }
 
     #[test]
-    fn test_polygon_get_curve_orientation() {
+    fn test_polygon_get_curve_orientation() -> Result<()> {
         //   ^
         //   |
         //   A  B  C
@@ -1140,11 +1150,12 @@ mod tests {
             Pg([a, g, i, c]).get_curve_orientation(),
             Some(CurveOrientation::Positive)
         );
+        Ok(())
     }
 
     #[test]
     #[ignore]
-    fn test_polygon_orient_curve() {
+    fn test_polygon_orient_curve() -> Result<()> {
         //   ^
         //   |
         //   A  B  C
@@ -1161,6 +1172,7 @@ mod tests {
         assert_eq!(p.get_curve_orientation(), Some(CurveOrientation::Positive));
         p.orient_curve_positively();
         assert_eq!(p.get_curve_orientation(), Some(CurveOrientation::Negative));
+        Ok(())
     }
 
     #[test]
@@ -1205,7 +1217,7 @@ mod tests {
     }
 
     #[test]
-    fn test_frame_to_segment_many_outputs() {
+    fn test_frame_to_segment_many_outputs() -> Result<()> {
         // ^ y
         // |
         // 4 - - + - - + - - + - - + - - +
@@ -1238,36 +1250,44 @@ mod tests {
         ]);
         let segment = Sg((0, 2), (5, 2));
         assert_eq!(
-            segment.crop_to(&frame),
+            segment.crop_to(&frame)?,
             vec![Sg((0, 2), (1, 2)), Sg((2, 2), (3, 2)), Sg((4, 2), (5, 2)),]
         );
+        Ok(())
     }
 
     #[test]
-    fn test_frame_to_segment_crop() {
+    fn test_frame_to_segment_crop() -> Result<()> {
         let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)]);
         assert_eq!(
-            Sg((0, 2), (2, 0)).crop_to(&frame),
+            Sg((0, 2), (2, 0)).crop_to(&frame)?,
             vec![Sg((0.5, 1.5), (1.5, 0.5))]
         );
+        Ok(())
     }
     #[test]
-    fn test_frame_to_segment_crop_02() {
+    fn test_frame_to_segment_crop_02() -> Result<()> {
         let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)]);
         assert_eq!(
-            Sg((0, 0), (2, 2)).crop_to(&frame),
+            Sg((0, 0), (2, 2)).crop_to(&frame)?,
             vec![Sg((0.5, 0.5), (1.5, 1.5))]
         );
+        Ok(())
     }
     #[test]
-    fn test_frame_to_segment_crop_empty() {
+    fn test_frame_to_segment_crop_empty() -> Result<()> {
         let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)]);
-        assert_eq!(Sg((0, 2), (2, 2)).crop_to(&frame), vec![]);
+        assert_eq!(Sg((0, 2), (2, 2)).crop_to(&frame)?, vec![]);
+        Ok(())
     }
     #[test]
-    fn test_frame_to_segment_crop_unchanged() {
+    fn test_frame_to_segment_crop_unchanged() -> Result<()> {
         let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)]);
-        assert_eq!(Sg((0, 1), (2, 1)).crop_to(&frame), vec![Sg((0, 1), (2, 1))]);
+        assert_eq!(
+            Sg((0, 1), (2, 1)).crop_to(&frame)?,
+            vec![Sg((0, 1), (2, 1))]
+        );
+        Ok(())
     }
 
     #[test]

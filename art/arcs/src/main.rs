@@ -44,18 +44,20 @@ fn main() {
 
             let cas = CurveArcs(ctr, angle_1..=angle_2, radius);
 
-            dos.extend(cas.iter().flat_map(|ca| ca.crop_to(&frame_polygon)).map(
-                |ca| -> (Obj, Style) {
-                    (
-                        Obj::CurveArc(ca),
-                        Style {
-                            color: &GREEN,
-                            thickness: 0.30,
-                            ..Default::default()
-                        },
-                    )
-                },
-            ));
+            dos.extend(
+                cas.iter()
+                    .flat_map(|ca| ca.crop_to(&frame_polygon).expect("todo"))
+                    .map(|ca| -> (Obj, Style) {
+                        (
+                            Obj::CurveArc(ca),
+                            Style {
+                                color: &GREEN,
+                                thickness: 0.30,
+                                ..Default::default()
+                            },
+                        )
+                    }),
+            );
         }
 
         dos.extend(

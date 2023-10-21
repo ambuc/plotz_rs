@@ -9,6 +9,7 @@ use crate::{
         pt::{is_colinear_n, Pt},
     },
 };
+use anyhow::Result;
 use approx::*;
 use float_ord::FloatOrd;
 use itertools::Itertools;
@@ -44,7 +45,7 @@ pub struct CropGraph<'a> {
 }
 
 impl<'a> CropGraph<'a> {
-    pub fn run(a: &Pg, b: &Pg, crop_type: CropType) -> (Vec<Pg>, DiGraphMap<Pt, ()>) {
+    pub fn run(a: &Pg, b: &Pg, crop_type: CropType) -> Result<(Vec<Pg>, DiGraphMap<Pt, ()>)> {
         let mut crop_graph = CropGraph::builder().a(a).b(b).build();
         crop_graph.build_from_polygons(crop_type);
         crop_graph.remove_nodes_outside_polygon(Which::A);
@@ -62,7 +63,7 @@ impl<'a> CropGraph<'a> {
         crop_graph.remove_dual_edges();
         crop_graph.remove_nodes_with_no_neighbors_of_any_kind();
         let graph = crop_graph.graph.clone();
-        (crop_graph.trim_and_create_resultant_polygons(), graph)
+        Ok((crop_graph.trim_and_create_resultant_polygons()?, graph))
     }
 
     fn normalize_pt(&mut self, pt: &Pt) -> Pt {
@@ -271,14 +272,14 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    fn extract_polygon(&mut self) -> Option<Pg> {
+    // Returns a polygon, if possible. An error state here represents some vailed invariant.
+    fn extract_polygon(&mut self) -> Result<Option<Pg>> {
         let mut pts: Vec<Pt> = vec![];
 
         if self.graph.node_count() == 0 {
-            return None;
+            return Ok(None);
         }
         let mut curr_node: Pt = {
-            //
             if let Some(pt) = self
                 .graph
                 .nodes()
@@ -352,7 +353,7 @@ impl<'a> CropGraph<'a> {
         // and the nodes later.
         self.remove_nodes_with_no_neighbors_of_any_kind();
 
-        TryPolygon(pts).ok()
+        Ok(Some(TryPolygon(pts)?))
     }
 
     #[allow(unused)]
@@ -364,16 +365,16 @@ impl<'a> CropGraph<'a> {
     }
 
     // NB: Destructive, walks and destroys graph.
-    fn trim_and_create_resultant_polygons(mut self) -> Vec<Pg> {
+    fn trim_and_create_resultant_polygons(mut self) -> Result<Vec<Pg>> {
         let mut resultant = vec![];
 
-        while let Some(pg) = self.extract_polygon() {
+        while let Some(pg) = self.extract_polygon()? {
             if !is_colinear_n(&pg.pts) {
                 resultant.push(pg);
             }
         }
 
-        resultant
+        Ok(resultant)
     }
 }
 
@@ -429,7 +430,8 @@ mod test {
         {
             let inner = shape.clone() + offset;
 
-            let (_resultants, graph) = CropGraph::run(&inner, &boundary, crop_type);
+            let (_resultants, graph) =
+                CropGraph::run(&inner, &boundary, crop_type).expect("run should have succeeded.");
 
             // // Assert some stuff about the resultant polygon graphs.
             // for node in graph.nodes() {

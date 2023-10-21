@@ -11,6 +11,7 @@ use crate::{
     },
     *,
 };
+use anyhow::Result;
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::{
@@ -417,7 +418,7 @@ fn intersections_of_line_and_curvearc(segment: &Sg, curve_arc: &CurveArc) -> Int
 
 impl Croppable for CurveArc {
     type Output = CurveArc;
-    fn crop(&self, frame: &Pg, crop_type: CropType) -> Vec<Self::Output>
+    fn crop(&self, frame: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
@@ -444,7 +445,7 @@ impl Croppable for CurveArc {
                 PointLoc::Inside | PointLoc::OnSegment(_) | PointLoc::OnPoint(_),
             ) = (contains_i, contains_f)
             {
-                return vec![*self];
+                return Ok(vec![*self]);
             }
         }
 
@@ -481,9 +482,9 @@ impl Croppable for CurveArc {
             }
         }
 
-        r
+        Ok(r)
     }
-    fn crop_excluding(&self, _other: &Pg) -> Vec<Self::Output>
+    fn crop_excluding(&self, _other: &Pg) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
@@ -671,7 +672,7 @@ mod test {
         "four intersections, all passthrough"
     )]
     fn test_curvearc_crop(rect: Pg, curvearc: CurveArc, expected_curvearcs: Vec<CurveArc>) {
-        let actual_curvearcs = curvearc.crop_to(&rect);
+        let actual_curvearcs = curvearc.crop_to(&rect).expect("crop");
         assert_eq!(actual_curvearcs.len(), expected_curvearcs.len());
 
         for (actual, expected) in actual_curvearcs.iter().zip(expected_curvearcs.iter()) {

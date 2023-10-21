@@ -32,7 +32,12 @@ impl Occluder {
                 unimplemented!("no support for curvearcs yet")
             }
 
-            (Obj::Pg(a), Obj::Pg(b)) => a.crop_excluding(b).into_iter().map(Obj::from).collect(),
+            (Obj::Pg(a), Obj::Pg(b)) => a
+                .crop_excluding(b)
+                .expect("todo")
+                .into_iter()
+                .map(Obj::from)
+                .collect(),
             (Obj::Sg(_sg), Obj::Pg(_pg)) => {
                 unimplemented!("no support for pg x sg yet");
             }

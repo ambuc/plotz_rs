@@ -1,13 +1,14 @@
 //! A group of objects.
 
-use crate::{obj::Obj, style::Style};
-
 use crate::{
     bounded::{Bounded, Bounds, BoundsCollector},
     crop::{CropType, Croppable},
+    obj::Obj,
     shapes::{pg::Pg, pt::Pt},
+    style::Style,
     *,
 };
+use anyhow::Result;
 use std::ops::*;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -121,19 +122,20 @@ where
     T: Clone,
 {
     type Output = Group<T>;
-    fn crop(&self, frame: &Pg, crop_type: CropType) -> Vec<Self::Output> {
-        vec![Group::new(
+    fn crop(&self, frame: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>> {
+        Ok(vec![Group::new(
             self.0
                 .iter()
                 .flat_map(|(obj, s)| {
                     obj.crop(frame, crop_type)
+                        .expect("todo")
                         .into_iter()
                         .map(|o| (o, s.clone()))
                 })
                 .collect::<Vec<(Obj, T)>>(),
-        )]
+        )])
     }
-    fn crop_excluding(&self, _other: &Pg) -> Vec<Self::Output>
+    fn crop_excluding(&self, _other: &Pg) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {

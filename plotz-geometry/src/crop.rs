@@ -3,6 +3,7 @@ use crate::{
     bounded::Bounds,
     shapes::pg::{Pg, PolygonConstructorError},
 };
+use anyhow::Result;
 use thiserror::Error;
 
 /// A general error arising from trying to inspect whether a point lies in a
@@ -73,7 +74,7 @@ pub trait Croppable {
     type Output;
 
     /// Crop self to an outer frame
-    fn crop_to(&self, other: &Pg) -> Vec<Self::Output>
+    fn crop_to(&self, other: &Pg) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
@@ -81,7 +82,7 @@ pub trait Croppable {
     }
 
     /// Crop self so that the portion of self overlapping other is removed.
-    fn crop_excluding(&self, other: &Pg) -> Vec<Self::Output>
+    fn crop_excluding(&self, other: &Pg) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
@@ -89,7 +90,7 @@ pub trait Croppable {
     }
 
     /// Crop self to outer bounds.
-    fn crop_to_bounds(&self, bounds: Bounds) -> Vec<Self::Output>
+    fn crop_to_bounds(&self, bounds: Bounds) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
@@ -97,5 +98,5 @@ pub trait Croppable {
     }
 
     /// general crop -- could be either type.
-    fn crop(&self, other: &Pg, crop_type: CropType) -> Vec<Self::Output>;
+    fn crop(&self, other: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>>;
 }

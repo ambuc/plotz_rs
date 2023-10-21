@@ -140,6 +140,7 @@ fn main() {
     let objs = Canvas::from_objs(
         dos.into_iter().flat_map(|(obj, style)| {
             obj.crop_to(&frame_pg)
+                .expect("todo")
                 .into_iter()
                 .map(|o| (o, style))
                 .collect::<Vec<_>>()

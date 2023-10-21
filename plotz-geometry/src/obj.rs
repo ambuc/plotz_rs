@@ -14,6 +14,7 @@ use crate::{
     style::Style,
     *,
 };
+use anyhow::Result;
 use enum_dispatch::enum_dispatch;
 use std::{fmt::Debug, ops::*};
 
@@ -262,102 +263,102 @@ impl Scalable<f64> for Obj {}
 
 impl Croppable for Obj {
     type Output = Obj;
-    fn crop(&self, frame: &Pg, crop_type: CropType) -> Vec<Self::Output> {
+    fn crop(&self, frame: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>> {
         match &self {
             Obj::Pt(pt) => {
                 assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(pt), PointLoc::Outside) {
-                    vec![self.clone()]
+                    Ok(vec![self.clone()])
                 } else {
-                    vec![]
+                    Ok(vec![])
                 }
             }
             Obj::Pg(pg) => match pg.kind {
-                PolygonKind::Open => pg
+                PolygonKind::Open => Ok(pg
                     .to_segments()
                     .into_iter()
-                    .flat_map(|sg| sg.crop(frame, crop_type))
+                    .flat_map(|sg| sg.crop(frame, crop_type).expect("todo"))
                     .map(Obj::from)
-                    .collect::<Vec<_>>(),
-                PolygonKind::Closed => pg
-                    .crop(frame, crop_type)
+                    .collect::<Vec<_>>()),
+                PolygonKind::Closed => Ok(pg
+                    .crop(frame, crop_type)?
                     .into_iter()
                     .map(Obj::from)
-                    .collect::<Vec<_>>(),
+                    .collect::<Vec<_>>()),
             },
-            Obj::Sg(sg) => sg
-                .crop(frame, crop_type)
+            Obj::Sg(sg) => Ok(sg
+                .crop(frame, crop_type)?
                 .into_iter()
                 .map(Obj::from)
-                .collect::<Vec<_>>(),
-            Obj::CurveArc(ca) => ca
-                .crop(frame, crop_type)
+                .collect::<Vec<_>>()),
+            Obj::CurveArc(ca) => Ok(ca
+                .crop(frame, crop_type)?
                 .into_iter()
                 .map(Obj::from)
-                .collect::<Vec<_>>(),
+                .collect::<Vec<_>>()),
             Obj::Txt(ch) => {
                 assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(&ch.pt), PointLoc::Outside) {
-                    vec![self.clone()]
+                    Ok(vec![self.clone()])
                 } else {
-                    vec![]
+                    Ok(vec![])
                 }
             }
-            Obj::Group(g) => g
-                .crop(frame, crop_type)
+            Obj::Group(g) => Ok(g
+                .crop(frame, crop_type)?
                 .into_iter()
                 .map(Obj::from)
-                .collect::<Vec<_>>(),
+                .collect::<Vec<_>>()),
         }
     }
 
-    fn crop_excluding(&self, other: &Pg) -> Vec<Self::Output>
+    fn crop_excluding(&self, other: &Pg) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
         match &self {
             Obj::Pt(pt) => {
                 if matches!(other.contains_pt(pt), PointLoc::Outside) {
-                    vec![]
+                    Ok(vec![])
                 } else {
-                    vec![self.clone()]
+                    Ok(vec![self.clone()])
                 }
             }
             Obj::Pg(pg) => match pg.kind {
-                PolygonKind::Open => pg
+                PolygonKind::Open => Ok(pg
                     .to_segments()
                     .into_iter()
-                    .flat_map(|sg| sg.crop_excluding(other))
+                    .flat_map(|sg| sg.crop_excluding(other).expect("todo"))
                     .map(Obj::from)
-                    .collect::<Vec<_>>(),
-                PolygonKind::Closed => pg
-                    .crop_excluding(other)
+                    .collect::<Vec<_>>()),
+                PolygonKind::Closed => Ok(pg
+                    .crop_excluding(other)?
                     .into_iter()
                     .map(Obj::from)
-                    .collect::<Vec<_>>(),
+                    .collect::<Vec<_>>()),
             },
-            Obj::Sg(sg) => sg
-                .crop_excluding(other)
+            Obj::Sg(sg) => Ok(sg
+                .crop_excluding(other)?
                 .into_iter()
                 .map(Obj::from)
-                .collect::<Vec<_>>(),
-            Obj::CurveArc(ca) => ca
-                .crop_excluding(other)
+                .collect::<Vec<_>>()),
+            Obj::CurveArc(ca) => Ok(ca
+                .crop_excluding(other)?
                 .into_iter()
                 .map(Obj::from)
-                .collect::<Vec<_>>(),
+                .collect::<Vec<_>>()),
             Obj::Txt(ch) => {
                 if matches!(other.contains_pt(&ch.pt), PointLoc::Outside) {
-                    vec![]
+                    Ok(vec![])
                 } else {
-                    vec![self.clone()]
+                    Ok(vec![self.clone()])
                 }
             }
-            Obj::Group(g) => g
-                .crop_excluding(other)
+            Obj::Group(g) => Ok(g
+                .crop_excluding(other)?
                 .into_iter()
                 .map(Obj::from)
-                .collect::<Vec<_>>(),
+                .collect::<Vec<_>>()),
         }
     }
 }

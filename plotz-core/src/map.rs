@@ -393,7 +393,12 @@ impl Map {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             *dos = dos
                 .iter_mut()
-                .flat_map(|(obj, style)| obj.crop_to(frame).into_iter().map(|obj| (obj, *style)))
+                .flat_map(|(obj, style)| {
+                    obj.crop_to(frame)
+                        .expect("todo")
+                        .into_iter()
+                        .map(|obj| (obj, *style))
+                })
                 .collect();
         }
     }
