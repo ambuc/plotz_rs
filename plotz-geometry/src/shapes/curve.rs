@@ -11,7 +11,7 @@ use crate::{
     },
     *,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::{
@@ -271,7 +271,10 @@ enum IntersectionResult {
 }
 
 /// how to find intersection of segment and curve.
-fn intersections_of_line_and_curvearc(segment: &Sg, curve_arc: &CurveArc) -> IntersectionResult {
+fn intersections_of_line_and_curvearc(
+    segment: &Sg,
+    curve_arc: &CurveArc,
+) -> Result<IntersectionResult> {
     let (x_0, y_0) = (curve_arc.ctr.x, curve_arc.ctr.y);
     let (x_1, y_1) = (segment.i.x, segment.i.y);
     let (x_2, y_2) = (segment.f.x, segment.f.y);
@@ -283,7 +286,7 @@ fn intersections_of_line_and_curvearc(segment: &Sg, curve_arc: &CurveArc) -> Int
         / ((x_2 - x_1).powi(2) + (y_2 - y_1).powi(2)).sqrt();
 
     match FloatOrd(d).cmp(&FloatOrd(curve_arc.radius)) {
-        Ordering::Greater => IntersectionResult::None,
+        Ordering::Greater => Ok(IntersectionResult::None),
         Ordering::Equal => {
             let isxn =
                 curve_arc.ctr + PolarPt(curve_arc.radius, segment.slope().atan() + FRAC_PI_2);
@@ -294,11 +297,11 @@ fn intersections_of_line_and_curvearc(segment: &Sg, curve_arc: &CurveArc) -> Int
                         abp(&curve_arc.ctr, &isxn, &curve_arc.pt_i())
                             / abp(&curve_arc.ctr, &curve_arc.pt_f(), &curve_arc.pt_i()),
                     ) {
-                        return IntersectionResult::One(PtLoc(isxn, segment_loc, curve_loc));
+                        return Ok(IntersectionResult::One(PtLoc(isxn, segment_loc, curve_loc)));
                     }
                 }
             }
-            IntersectionResult::None
+            Ok(IntersectionResult::None)
         }
         Ordering::Less => {
             // also an option if d==0 is that the curve is centered _on_ the line.
@@ -400,17 +403,19 @@ fn intersections_of_line_and_curvearc(segment: &Sg, curve_arc: &CurveArc) -> Int
 
             match (sl1, cl1, sl2, cl2) {
                 (Some(sl1), Some(cl1), Some(sl2), Some(cl2)) if sl1 == sl2 && cl1 == cl2 => {
-                    IntersectionResult::One(PtLoc(isxn_1, sl1, cl1))
+                    Ok(IntersectionResult::One(PtLoc(isxn_1, sl1, cl1)))
                 }
-                (Some(sl1), Some(cl1), Some(sl2), Some(cl2)) => {
-                    IntersectionResult::Two(PtLoc(isxn_1, sl1, cl1), PtLoc(isxn_2, sl2, cl2))
+                (Some(sl1), Some(cl1), Some(sl2), Some(cl2)) => Ok(IntersectionResult::Two(
+                    PtLoc(isxn_1, sl1, cl1),
+                    PtLoc(isxn_2, sl2, cl2),
+                )),
+                (Some(sl1), Some(cl1), _, _) => {
+                    Ok(IntersectionResult::One(PtLoc(isxn_1, sl1, cl1)))
                 }
-                (Some(sl1), Some(cl1), _, _) => IntersectionResult::One(PtLoc(isxn_1, sl1, cl1)),
-                (_, _, Some(sl2), Some(cl2)) => IntersectionResult::One(PtLoc(isxn_2, sl2, cl2)),
-                _ => {
-                    // is this right?
-                    IntersectionResult::None
+                (_, _, Some(sl2), Some(cl2)) => {
+                    Ok(IntersectionResult::One(PtLoc(isxn_2, sl2, cl2)))
                 }
+                _ => Err(anyhow!("is this right?")),
             }
         }
     }
@@ -426,7 +431,7 @@ impl Croppable for CurveArc {
 
         let mut isxns: Vec<PtLoc> = vec![];
         for frame_segment in frame.to_segments() {
-            let discovered = match intersections_of_line_and_curvearc(&frame_segment, self) {
+            let discovered = match intersections_of_line_and_curvearc(&frame_segment, self)? {
                 IntersectionResult::None => vec![],
                 IntersectionResult::One(pl) => vec![pl],
                 IntersectionResult::Two(pl1, pl2) => vec![pl1, pl2],
@@ -513,14 +518,15 @@ mod test {
     use test_case::test_case;
 
     #[test]
-    fn test_curve_zero_intersections() {
+    fn test_curve_zero_intersections() -> Result<()> {
         assert_matches!(
             intersections_of_line_and_curvearc(
                 &Sg((0, 0), (3, 0)),
                 &CurveArc(Pt(1, 1), 0.0..=PI, 0.5)
-            ),
+            )?,
             IntersectionResult::None
         );
+        Ok(())
     }
 
     #[test_case(
@@ -563,15 +569,16 @@ mod test {
         curve_arc: CurveArc,
         expected_segment_loc: SegmentLoc,
         expected_curve_loc: CurveLoc,
-    ) {
+    ) -> Result<()> {
         let segment = Sg((0, 0), (2, 0));
 
         let (sl, cl) = assert_matches!(
-            intersections_of_line_and_curvearc(&segment, &curve_arc),
+            intersections_of_line_and_curvearc(&segment, &curve_arc)?,
             IntersectionResult::One(PtLoc(_, sl, cl)) => (sl, cl)
         );
         assert_eq!(sl, expected_segment_loc);
         assert_eq!(cl, expected_curve_loc);
+        Ok(())
     }
 
     #[test_case(
@@ -590,14 +597,15 @@ mod test {
         segment: Sg,
         curve_arc: CurveArc,
         (expected_point_loc, expected_segment_loc, expected_curve_loc): (Pt, SegmentLoc, CurveLoc),
-    ) {
+    ) -> Result<()> {
         let (pl, sl, cl) = assert_matches!(
-            intersections_of_line_and_curvearc(&segment, &curve_arc),
+            intersections_of_line_and_curvearc(&segment, &curve_arc)?,
             IntersectionResult::One(PtLoc(pl, sl, cl)) => (pl, sl, cl)
         );
         assert_eq!(pl, expected_point_loc);
         assert_eq!(sl, expected_segment_loc);
         assert_eq!(cl, expected_curve_loc);
+        Ok(())
     }
 
     #[test_case(
@@ -614,9 +622,14 @@ mod test {
         PtLoc(Pt(0, 1.4582575694955842), SegmentLoc::M(0.29766067610132735), CurveLoc::M(0.4316111740870635));
         "vertical")
     ]
-    fn test_curve_two_intersections(segment: Sg, curve_arc: CurveArc, e_pl1: PtLoc, e_pl2: PtLoc) {
+    fn test_curve_two_intersections(
+        segment: Sg,
+        curve_arc: CurveArc,
+        e_pl1: PtLoc,
+        e_pl2: PtLoc,
+    ) -> Result<()> {
         let (pl1, pl2) = assert_matches!(
-            intersections_of_line_and_curvearc(&segment, &curve_arc),
+            intersections_of_line_and_curvearc(&segment, &curve_arc)?,
             IntersectionResult::Two(pl1, pl2) => (pl1, pl2)
         );
 
@@ -634,6 +647,7 @@ mod test {
         assert_approx_eq!(f64, pt2.y, e_pt2.y);
         assert_approx_eq!(f64, sl2.as_f64(), e_sl2.as_f64());
         assert_approx_eq!(f64, cl2.as_f64(), e_cl2.as_f64());
+        Ok(())
     }
 
     #[test_case(
