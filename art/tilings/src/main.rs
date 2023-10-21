@@ -34,7 +34,7 @@ fn main() {
     // drain things not in frame
     dos.retain(|(obj, _style)| {
         obj.iter()
-            .all(|pt| matches!(frame_polygon.contains_pt(pt), PointLoc::Inside))
+            .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLoc::Inside)))
     });
 
     let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);

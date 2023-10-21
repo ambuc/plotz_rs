@@ -268,7 +268,7 @@ impl Croppable for Obj {
         match &self {
             Obj::Pt(pt) => {
                 assert_eq!(crop_type, CropType::Inclusive);
-                if !matches!(frame.contains_pt(pt), PointLoc::Outside) {
+                if !matches!(frame.contains_pt(pt), Ok(PointLoc::Outside)) {
                     Ok(vec![self.clone()])
                 } else {
                     Ok(vec![])
@@ -302,7 +302,7 @@ impl Croppable for Obj {
                 .collect::<Vec<_>>()),
             Obj::Txt(ch) => {
                 assert_eq!(crop_type, CropType::Inclusive);
-                if !matches!(frame.contains_pt(&ch.pt), PointLoc::Outside) {
+                if !matches!(frame.contains_pt(&ch.pt), Ok(PointLoc::Outside)) {
                     Ok(vec![self.clone()])
                 } else {
                     Ok(vec![])
@@ -322,7 +322,7 @@ impl Croppable for Obj {
     {
         match &self {
             Obj::Pt(pt) => {
-                if matches!(other.contains_pt(pt), PointLoc::Outside) {
+                if matches!(other.contains_pt(pt), Ok(PointLoc::Outside)) {
                     Ok(vec![])
                 } else {
                     Ok(vec![self.clone()])
@@ -355,7 +355,7 @@ impl Croppable for Obj {
                 .map(Obj::from)
                 .collect::<Vec<_>>()),
             Obj::Txt(ch) => {
-                if matches!(other.contains_pt(&ch.pt), PointLoc::Outside) {
+                if matches!(other.contains_pt(&ch.pt), Ok(PointLoc::Outside)) {
                     Ok(vec![])
                 } else {
                     Ok(vec![self.clone()])

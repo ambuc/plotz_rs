@@ -57,7 +57,7 @@ fn main() {
                     let curve_arc_ctr: Pt = || -> Pt {
                         loop {
                             let cand = Pt(rng.gen_range(0.0..800.0), rng.gen_range(0.0..1000.0));
-                            if !matches!(bounds.contains_pt(cand), PointLoc::Inside) {
+                            if !matches!(bounds.contains_pt(cand), Ok(PointLoc::Inside)) {
                                 return cand;
                             }
                         }

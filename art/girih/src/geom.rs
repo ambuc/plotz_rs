@@ -176,7 +176,10 @@ impl PlacedTile {
 
                 let sg_1_f = edge1.midpoint() + PolarPt(0.1, angle_1);
                 let sg_2_f = edge1.midpoint() + PolarPt(0.1, angle_2);
-                match (self.pg.contains_pt(&sg_1_f), self.pg.contains_pt(&sg_2_f)) {
+                match (
+                    self.pg.contains_pt(&sg_1_f).expect("ok"),
+                    self.pg.contains_pt(&sg_2_f).expect("ok"),
+                ) {
                     (PointLoc::Inside, _) => angle_1,
                     (_, PointLoc::Inside) => angle_2,
                     _ => panic!("oh"),

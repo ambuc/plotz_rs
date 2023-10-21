@@ -255,7 +255,7 @@ impl<'a> CropGraph<'a> {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
                 self.get(which).contains_pt(&edge.0.avg(&edge.1)),
-                PointLoc::Outside,
+                Ok(PointLoc::Outside),
             )
         }) {
             self.graph.remove_edge(i, j);
@@ -265,7 +265,7 @@ impl<'a> CropGraph<'a> {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
                 self.get(which).contains_pt(&edge.0.avg(&edge.1)),
-                PointLoc::Inside
+                Ok(PointLoc::Inside)
             )
         }) {
             self.graph.remove_edge(i, j);

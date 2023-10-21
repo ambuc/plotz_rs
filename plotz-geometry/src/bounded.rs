@@ -32,7 +32,7 @@ impl Bounds {
         ])
     }
     /// Whether or not bounds contain a point.
-    pub fn contains_pt(&self, pt: Pt) -> PointLoc {
+    pub fn contains_pt(&self, pt: Pt) -> Result<PointLoc> {
         self.to_polygon().contains_pt(&pt)
     }
 }
