@@ -89,7 +89,7 @@ impl Scene {
 
                     occ.add((obj, style))?;
                 }
-                resultant.extend(occ.export());
+                resultant.extend(occ.export()?);
                 Ok(resultant)
             }
         }

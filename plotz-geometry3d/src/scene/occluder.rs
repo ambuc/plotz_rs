@@ -1,6 +1,6 @@
 //! Occludes things. Cmon.
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use itertools::Itertools;
 use plotz_geometry::{crop::Croppable, obj::Obj, shading::shade_polygon, style::Style};
 
@@ -65,18 +65,23 @@ impl Occluder {
     }
 
     // Exports the occluded 2d objects.
-    pub fn export(mut self) -> Vec<(Obj, Style)> {
+    pub fn export(mut self) -> Result<Vec<(Obj, Style)>> {
         // we store them front-to-back, but we want to render them to svg back-to-front.
         self.objects.reverse();
-        self.objects.into_iter().flat_map(export_obj).collect()
+        Ok(self
+            .objects
+            .into_iter()
+            .map(export_obj)
+            .flatten_ok()
+            .collect::<Result<Vec<_>>>()?
+            .into_iter()
+            .collect())
     }
 }
 
-fn export_obj((sobj, style): (Obj, Style)) -> Vec<(Obj, Style)> {
+fn export_obj((sobj, style): (Obj, Style)) -> Result<Vec<(Obj, Style)>> {
     match style {
-        Style { shading: None, .. } => {
-            vec![(sobj, style)]
-        }
+        Style { shading: None, .. } => Ok(vec![(sobj, style)]),
         style @ Style {
             shading: Some(shade_config),
             ..
@@ -89,18 +94,16 @@ fn export_obj((sobj, style): (Obj, Style)) -> Vec<(Obj, Style)> {
                     // TODO(jbuckland): apply shade config here.
                     // TODO(jbuckland): apply shade config here.
                     // TODO(jbuckland): apply shade config here.
-                    vec![]
+                    Ok(vec![])
                 } else {
-                    shade_polygon(&shade_config, &pg)
+                    Ok(shade_polygon(&shade_config, &pg)
                         .unwrap()
                         .into_iter()
                         .map(|sg| (sg.into(), style))
-                        .collect::<Vec<_>>()
+                        .collect::<Vec<_>>())
                 }
             }
-            _ => {
-                panic!("can't shade not a polygon.")
-            }
+            _ => Err(anyhow!("can't shade not a polygon")),
         },
     }
 }
