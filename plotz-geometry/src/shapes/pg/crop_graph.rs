@@ -314,6 +314,21 @@ impl<'a> CropGraph<'a> {
                         _ => None,
                     },
                 },
+                [i, j, k] => match (pts.contains(&i), pts.contains(&j), pts.contains(&k)) {
+                    (true, false, false) => Some(i),
+                    (false, true, false) => Some(j),
+                    (false, false, true) => Some(k),
+                    _ => match (
+                        self.a.pts.contains(&i),
+                        self.a.pts.contains(&j),
+                        self.a.pts.contains(&k),
+                    ) {
+                        (true, _, _) => Some(i),
+                        (_, true, _) => Some(j),
+                        (_, _, true) => Some(k),
+                        _ => None,
+                    },
+                },
                 _ => {
                     let a = self
                         .graph

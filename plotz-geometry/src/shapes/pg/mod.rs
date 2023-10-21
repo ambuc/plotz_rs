@@ -403,7 +403,9 @@ impl Croppable for Pg {
                 CropType::Exclusive => {
                     // if exclusive, then we want the bit of |a| _not_ in |b|.
                     if a.totally_contains(b) {
-                        panic!("we want a polygon with a cavity here -- not yet supported.");
+                        // TODO(ambuc): must begin to support polygons with cavities !!!
+                        // panic!("we want a polygon with a cavity here -- not yet supported.");
+                        return vec![]; // is this the right thing to do?
                     }
                     if b.totally_contains(a) {
                         // if |b| totally contains |a|, then there's no part of

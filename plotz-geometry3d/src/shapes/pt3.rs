@@ -11,17 +11,6 @@ pub struct Pt3 {
     pub z: FloatOrd<f64>,
 }
 
-// impl PartialEq<Pt3> for Pt3 {
-//     // TOPO(ambuc): derive_hash_xor_eq ???
-//     fn eq(&self, other: &Pt3) -> bool {
-//         approx_eq!(f64, self.x.0, other.x.0, epsilon = 0.0000003)
-//             && approx_eq!(f64, self.y.0, other.y.0, epsilon = 0.0000003)
-//             && approx_eq!(f64, self.z.0, other.z.0, epsilon = 0.0000003)
-//     }
-// }
-//
-// impl Eq for Pt3 {}
-
 impl Debug for Pt3 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Pt3 { x, y, z } = self;
@@ -31,9 +20,11 @@ impl Debug for Pt3 {
 
 // An alternate constructor for points.
 #[allow(non_snake_case)]
-pub fn Pt3<T>(x: T, y: T, z: T) -> Pt3
+pub fn Pt3<T1, T2, T3>(x: T1, y: T2, z: T3) -> Pt3
 where
-    f64: From<T>,
+    f64: From<T1>,
+    f64: From<T2>,
+    f64: From<T3>,
 {
     Pt3 {
         x: FloatOrd(x.into()),
