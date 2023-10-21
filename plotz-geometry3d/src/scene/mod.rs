@@ -1,26 +1,24 @@
 //! A scene, i.e. a holder for 3d objects ready to be projected down onto a 2d
 //! plane.
 
-use plotz_geometry::obj::Obj;
-
 pub mod debug;
 mod occluder;
 
 use crate::{
     camera::{Occlusion, Projection},
+    obj3::Obj3,
     scene::{debug::SceneDebug, occluder::Occluder},
-    styled_obj3::StyledObj3,
 };
 use float_ord::FloatOrd;
 use itertools::Itertools;
-use plotz_geometry::{style::Style, *};
+use plotz_geometry::{obj::Obj, style::Style, *};
 use std::fmt::Debug;
 use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone, TypedBuilder)]
 pub struct Scene {
     #[builder(default)]
-    objects: Vec<StyledObj3>,
+    objects: Vec<(Obj3, Style)>,
 
     #[builder(default, setter(strip_option))]
     debug: Option<SceneDebug>,
@@ -53,10 +51,10 @@ impl Scene {
                 // remain unmodified) and work backwards.
                 let mut occ = Occluder::new();
 
-                for sobj3 in self.objects.iter().sorted_by(|o1, o2| {
+                for sobj3 in self.objects.iter().sorted_by(|(o1, _), (o2, _)| {
                     Ord::cmp(
-                        &FloatOrd(o1.inner.min_dist_along(&obl.view_vector())),
-                        &FloatOrd(o2.inner.min_dist_along(&obl.view_vector())),
+                        &FloatOrd(o1.min_dist_along(&obl.view_vector())),
+                        &FloatOrd(o2.min_dist_along(&obl.view_vector())),
                     )
                 }) {
                     let (obj, style) = obl.project_styled_obj3(sobj3);

@@ -1,11 +1,15 @@
 use argh::FromArgs;
+use itertools::iproduct;
 use plotz_color::*;
 use plotz_core::{canvas::Canvas, frame::*};
-use plotz_geometry::{style::Style, *};
+use plotz_geometry::{shading::shade_config::ShadeConfig, style::Style, *};
 use plotz_geometry3d::{
     camera::{Occlusion, Projection},
+    obj3::Obj3,
     scene::{debug::SceneDebug, Scene},
+    shapes::{cube3d::Cube, pt3::Pt3},
 };
+use std::iter::zip;
 use tracing::*;
 
 #[derive(FromArgs)]
@@ -15,8 +19,7 @@ struct Args {
     output_path_prefix: String,
 }
 
-/*
-fn cubes() -> Vec<StyledObj3> {
+fn cubes() -> Vec<(Obj3, Style)> {
     let mut objects = vec![];
     let e = 0.70;
     let n = 7;
@@ -32,21 +35,19 @@ fn cubes() -> Vec<StyledObj3> {
             .slope(0.05)
             .along_face((i + j + k) % 2 == 0)
             .build();
-        let style = Style::builder()
-            .color(color)
-            .thickness(1.0)
-            .shading(shading)
-            .build();
+        let style = Style {
+            color,
+            shading: Some(shading),
+            ..Default::default()
+        };
         objects.extend(
-            Cube(p3!(i, j, k), (e, e, e))
-                .iter_objects()
-                .cloned()
-                .map(|o| StyledObj3::new(o).with_style(style)),
+            Cube(Pt3(i, j, k), (e, e, e))
+                .into_iter_objects()
+                .map(|(o, _)| (o, style)),
         );
     }
     objects
 }
- */
 
 fn main() {
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
@@ -74,9 +75,7 @@ fn main() {
         /*objs=*/
         Scene::builder()
             // .debug(scenedebug)
-            .objects(
-                vec![], //cubes()
-            )
+            .objects(cubes())
             .build()
             .project_with(Projection::default(), Occlusion::True)
             .into_iter(),

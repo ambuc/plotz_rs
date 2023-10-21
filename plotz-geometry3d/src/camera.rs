@@ -6,7 +6,6 @@ use crate::{
     obj3::Obj3,
     p3,
     shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
-    styled_obj3::StyledObj3,
 };
 use plotz_geometry::{
     obj::Obj,
@@ -62,11 +61,8 @@ impl Oblique {
             Obj3::Sg3(sg3d) => Obj::Sg(self.project_sg3(sg3d)),
         }
     }
-    pub fn project_styled_obj3(&self, sobj3: &StyledObj3) -> (Obj, Style) {
-        (
-            self.project_obj3(&sobj3.inner),
-            sobj3.style.unwrap_or_default(),
-        )
+    pub fn project_styled_obj3(&self, (obj3, style): &(Obj3, Style)) -> (Obj, Style) {
+        (self.project_obj3(&obj3), *style)
     }
 }
 
