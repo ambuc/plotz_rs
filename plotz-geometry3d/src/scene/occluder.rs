@@ -1,5 +1,7 @@
 //! Occludes things. Cmon.
 
+use anyhow::Result;
+use itertools::Itertools;
 use plotz_geometry::{crop::Croppable, obj::Obj, shading::shade_polygon, style::Style};
 
 pub struct Occluder {
@@ -11,7 +13,7 @@ impl Occluder {
         Occluder { objects: vec![] }
     }
 
-    fn hide_a_behind_b(incoming: &Obj, existing: &Obj) -> Vec<Obj> {
+    fn hide_a_behind_b(incoming: &Obj, existing: &Obj) -> Result<Vec<Obj>> {
         // TODO(jbuckland): use quadtrees here to make this MUCH faster please!!!!
 
         match (&incoming, &existing) {
@@ -32,35 +34,34 @@ impl Occluder {
                 unimplemented!("no support for curvearcs yet")
             }
 
-            (Obj::Pg(a), Obj::Pg(b)) => a
-                .crop_excluding(b)
-                .expect("todo")
-                .into_iter()
-                .map(Obj::from)
-                .collect(),
+            (Obj::Pg(a), Obj::Pg(b)) => {
+                Ok(a.crop_excluding(b)?.into_iter().map(Obj::from).collect())
+            }
             (Obj::Sg(_sg), Obj::Pg(_pg)) => {
                 unimplemented!("no support for pg x sg yet");
             }
 
             //
             // you can't hide something behind a segment or a point or a char. don't be daft.
-            (incoming, Obj::Sg(_) | Obj::Pt(_) | Obj::Txt(_)) => {
-                vec![(**incoming).clone()]
-            }
+            (incoming, Obj::Sg(_) | Obj::Pt(_) | Obj::Txt(_)) => Ok(vec![(**incoming).clone()]),
         }
     }
 
     // Incorporates an object.
-    pub fn add(&mut self, incoming2: (Obj, Style)) {
+    pub fn add(&mut self, incoming2: (Obj, Style)) -> Result<()> {
         let mut incoming_os: Vec<(Obj, Style)> = vec![incoming2.clone()];
         for (existing_o, _) in &self.objects {
             incoming_os = incoming_os
                 .iter()
-                .flat_map(|(incoming_obj, _)| Occluder::hide_a_behind_b(incoming_obj, existing_o))
+                .map(|(incoming_obj, _)| Ok(Occluder::hide_a_behind_b(incoming_obj, existing_o)?))
+                .flatten_ok()
+                .collect::<Result<Vec<_>>>()?
+                .into_iter()
                 .map(|obj| (obj, incoming2.1))
                 .collect::<Vec<_>>();
         }
         self.objects.extend(incoming_os);
+        Ok(())
     }
 
     // Exports the occluded 2d objects.

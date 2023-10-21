@@ -16,6 +16,7 @@ use crate::{
 };
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
+use itertools::Itertools;
 use std::{fmt::Debug, ops::*};
 
 /// Either a polygon or a segment.
@@ -277,7 +278,10 @@ impl Croppable for Obj {
                 PolygonKind::Open => Ok(pg
                     .to_segments()
                     .into_iter()
-                    .flat_map(|sg| sg.crop(frame, crop_type).expect("todo"))
+                    .map(|sg| sg.crop(frame, crop_type))
+                    .flatten_ok()
+                    .collect::<Result<Vec<_>>>()?
+                    .into_iter()
                     .map(Obj::from)
                     .collect::<Vec<_>>()),
                 PolygonKind::Closed => Ok(pg
@@ -328,7 +332,10 @@ impl Croppable for Obj {
                 PolygonKind::Open => Ok(pg
                     .to_segments()
                     .into_iter()
-                    .flat_map(|sg| sg.crop_excluding(other).expect("todo"))
+                    .map(|sg| sg.crop_excluding(other))
+                    .flatten_ok()
+                    .collect::<Result<Vec<_>>>()?
+                    .into_iter()
                     .map(Obj::from)
                     .collect::<Vec<_>>()),
                 PolygonKind::Closed => Ok(pg

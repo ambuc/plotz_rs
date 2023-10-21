@@ -7,6 +7,7 @@ use crate::{
     shapes::pt::Pt,
     style::Style,
 };
+use anyhow::Result;
 use float_ord::FloatOrd;
 use typed_builder::TypedBuilder;
 
@@ -100,12 +101,15 @@ impl GridLayout {
 
     /// Given an Object2d, crops it to the cubby at objs[i][j] and inserts that
     /// into the grid.
-    pub fn insert_and_crop_to_cubby(&mut self, (i, j): (usize, usize), (obj, style): (Obj, Style)) {
-        let cropped = obj
-            .crop_to_bounds(self.get_cubby_bounds((i, j)))
-            .expect("todo");
+    pub fn insert_and_crop_to_cubby(
+        &mut self,
+        (i, j): (usize, usize),
+        (obj, style): (Obj, Style),
+    ) -> Result<()> {
+        let cropped = obj.crop_to_bounds(self.get_cubby_bounds((i, j)))?;
 
         self.objs[i][j].extend(cropped.into_iter().map(|o| (o, style)));
+        Ok(())
     }
 
     /// Given an Object2d, recales it to the cubby at objs[i][j] and inserts that into the grid.

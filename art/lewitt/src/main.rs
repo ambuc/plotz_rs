@@ -64,17 +64,19 @@ fn main() {
                     }();
                     let rstep = rng.gen_range(10..20);
                     for r in (0..2000).step_by(rstep) {
-                        grid_layout.insert_and_crop_to_cubby(
-                            cubby,
-                            (
-                                Obj::CurveArc(CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64)),
-                                Style {
-                                    thickness: 1.0,
-                                    color,
-                                    ..Default::default()
-                                },
-                            ),
-                        );
+                        grid_layout
+                            .insert_and_crop_to_cubby(
+                                cubby,
+                                (
+                                    Obj::CurveArc(CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64)),
+                                    Style {
+                                        thickness: 1.0,
+                                        color,
+                                        ..Default::default()
+                                    },
+                                ),
+                            )
+                            .expect("ok");
                     }
                 }
             }

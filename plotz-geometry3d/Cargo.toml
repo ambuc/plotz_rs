@@ -10,6 +10,7 @@ plotz-color = { path = "../plotz-color" }
 plotz-geometry = { path = "../plotz-geometry" }
 float-ord = "*"
 itertools = "*"
+anyhow = "*"
 derive_more = "*"
 typed-builder = "*"
 
@@ -18,4 +19,3 @@ float_eq = "*"
 matches = "*"
 assert_matches = "*"
 test-case = "*"
-

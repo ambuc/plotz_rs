@@ -9,6 +9,7 @@ use crate::{
     obj3::Obj3,
     scene::{debug::SceneDebug, occluder::Occluder},
 };
+use anyhow::Result;
 use float_ord::FloatOrd;
 use itertools::Itertools;
 use plotz_geometry::{obj::Obj, style::Style, *};
@@ -35,13 +36,17 @@ impl Scene {
         Scene::builder().build()
     }
 
-    pub fn project_with(&self, projection: Projection, occlusion: Occlusion) -> Vec<(Obj, Style)> {
+    pub fn project_with(
+        &self,
+        projection: Projection,
+        occlusion: Occlusion,
+    ) -> Result<Vec<(Obj, Style)>> {
         match (projection, occlusion) {
-            (Projection::Oblique(obl), Occlusion::False) => self
+            (Projection::Oblique(obl), Occlusion::False) => Ok(self
                 .objects
                 .iter()
                 .map(|sobj3| obl.project_styled_obj3(sobj3))
-                .collect(),
+                .collect()),
 
             (Projection::Oblique(obl), Occlusion::True) => {
                 let mut resultant: Vec<(Obj, Style)> = vec![];
@@ -82,10 +87,10 @@ impl Scene {
                         }
                     }
 
-                    occ.add((obj, style));
+                    occ.add((obj, style))?;
                 }
                 resultant.extend(occ.export());
-                resultant
+                Ok(resultant)
             }
         }
     }
