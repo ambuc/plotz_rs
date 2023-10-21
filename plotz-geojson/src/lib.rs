@@ -149,7 +149,7 @@ fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj>> {
 
 fn parse_to_multilinestring(coordinates: &Value) -> Result<Vec<Obj>> {
     let mut lines: Vec<Obj> = vec![];
-    for linestring in coordinates.as_array().expect("not array").iter() {
+    for linestring in coordinates.as_array().ok_or(anyhow!("not array"))?.iter() {
         lines.append(&mut parse_to_linestring(linestring)?);
     }
     Ok(lines)
@@ -157,7 +157,7 @@ fn parse_to_multilinestring(coordinates: &Value) -> Result<Vec<Obj>> {
 
 fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<Obj>> {
     let mut lines: Vec<_> = vec![];
-    for coordinates in coordinates.as_array().expect("not array") {
+    for coordinates in coordinates.as_array().ok_or(anyhow!("not array"))? {
         lines.extend(parse_to_polygon(coordinates)?);
     }
     Ok(lines)
@@ -166,15 +166,22 @@ fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<Obj>> {
 fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj>> {
     Ok(coordinates
         .as_array()
-        .expect("not array")
+        .ok_or(anyhow!("not array"))?
         .iter()
         .map(|points_list| {
-            TryPolygon(points_list.as_array().expect("not array").iter().map(|p| {
-                Pt(
-                    p[0].as_f64().expect("value not f64"),
-                    p[1].as_f64().expect("value not f64"),
-                )
-            }))
+            TryPolygon(
+                points_list
+                    .as_array()
+                    .ok_or(anyhow!("not array"))?
+                    .iter()
+                    .map(|p| {
+                        Ok(Pt(
+                            p[0].as_f64().ok_or(anyhow!("not f64"))?,
+                            p[1].as_f64().ok_or(anyhow!("not f64"))?,
+                        ))
+                    })
+                    .collect::<Result<Vec<_>>>()?,
+            )
         })
         .collect::<Result<_, _>>()?)
     .map(|v: Vec<Pg>| v.into_iter().map(Obj::from).collect::<Vec<_>>())
