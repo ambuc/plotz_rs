@@ -2,6 +2,7 @@
 
 #![deny(missing_docs)]
 
+use anyhow::Result;
 use argh::FromArgs;
 use glob::glob;
 use plotz_core::{
@@ -32,26 +33,22 @@ struct Args {
     center_lng: Option<f64>,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
         .compact()
         .with_max_level(tracing::Level::TRACE)
         .without_time()
         .finish();
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+    tracing::subscriber::set_global_default(subscriber)?;
 
     let args: Args = argh::from_env();
-    main_inner(args);
+    main_inner(args)?;
+    Ok(())
 }
 
-fn main_inner(args: Args) {
+fn main_inner(args: Args) -> Result<()> {
     let map_config = MapConfig::builder()
-        .input_files(
-            glob(&args.input_glob)
-                .expect("failed to read glob pattern")
-                .collect::<Result<Vec<_>, _>>()
-                .unwrap(),
-        )
+        .input_files(glob(&args.input_glob)?.collect::<Result<Vec<_>, _>>()?)
         .output_directory(args.output_directory)
         .size(Size {
             width: args.width,
@@ -67,8 +64,9 @@ fn main_inner(args: Args) {
             (Some(x), Some(y)) => Some(Pt(y, x)),
             _ => None,
         },
-    )
-    .expect("failed to create map");
+    )?;
 
-    let () = map.render(&map_config).expect("failed to render map");
+    map.render(&map_config)?;
+
+    Ok(())
 }

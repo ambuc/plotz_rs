@@ -38,6 +38,7 @@ plotz-core = { path = "plotz-core" }
 plotz-geometry = { path = "plotz-geometry" }
 tracing = "*"
 tracing-subscriber = "*"
+anyhow = "*"
 
 [dev-dependencies]
 tempdir = "*"
