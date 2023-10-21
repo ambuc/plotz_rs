@@ -2,26 +2,16 @@
 
 use super::{CurveOrientation, Pg, PolygonKind};
 use crate::shapes::pt::Pt;
-use thiserror::Error;
-
-/// A general error arising from trying to construct a Multiline.
-#[derive(Debug, Error, PartialEq, Eq)]
-pub enum MultilineConstructorError {
-    /// It is not possible to construct a multiline from one or fewer points.
-    #[error("It is not possible to construct a multiline from one or fewer points.")]
-    OneOrFewerPoints,
-}
+use anyhow::{anyhow, Result};
 
 /// Constructor for multilines. Multilines must have at least one line, so they
 /// must have two or more points. Constructing a multiline from one or fewer
 /// points will result in a MultilineConstructorError.
 #[allow(non_snake_case)]
-pub fn Multiline(
-    a: impl IntoIterator<Item = impl Into<Pt>>,
-) -> Result<Pg, MultilineConstructorError> {
+pub fn Multiline(a: impl IntoIterator<Item = impl Into<Pt>>) -> Result<Pg> {
     let pts: Vec<Pt> = a.into_iter().map(|x| x.into()).collect();
     if pts.len() <= 1 {
-        return Err(MultilineConstructorError::OneOrFewerPoints);
+        return Err(anyhow!("one or fewer points"));
     }
 
     let mut p = Pg {

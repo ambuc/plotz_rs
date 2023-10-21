@@ -7,7 +7,7 @@ pub mod multiline;
 use self::{annotated_isxn_result::*, crop_graph::*};
 use crate::{
     bounded::{Bounded, Bounds},
-    crop::{CropToPolygonError, CropType, Croppable, PointLoc},
+    crop::{CropType, Croppable, PointLoc},
     intersection::IntersectionResult,
     obj::Obj,
     shapes::{
@@ -28,7 +28,6 @@ use std::{
     iter::zip,
     ops::*,
 };
-use thiserror::Error;
 
 /// Whether a polygon is open (there should be no line drawn between its last
 /// and first points) or closed (a line should be drawn between its last and
@@ -98,24 +97,14 @@ impl PartialEq for Pg {
     }
 }
 
-/// A general error arising from trying to construct a Pg.
-#[derive(Debug, Error, PartialEq, Eq)]
-pub enum PolygonConstructorError {
-    /// It is not possible to construct a polygon from two or fewer points.
-    #[error("It is not possible to construct a polygon from two or fewer points.")]
-    TwoOrFewerPoints,
-}
-
 /// Constructor for polygons. Polygons must have inner area, so they must have
 /// three or more points. Constructing a polygon from two or fewer points will
 /// result in a PolygonConstructorErrorip
 #[allow(non_snake_case)]
-pub fn TryPolygon(
-    a: impl IntoIterator<Item = impl Into<Pt>>,
-) -> Result<Pg, PolygonConstructorError> {
+pub fn TryPolygon(a: impl IntoIterator<Item = impl Into<Pt>>) -> Result<Pg> {
     let mut pts: Vec<Pt> = a.into_iter().map(|x| x.into()).collect();
     if pts.len() <= 2 {
-        return Err(PolygonConstructorError::TwoOrFewerPoints);
+        return Err(anyhow!("two or fewer points"));
     }
 
     if pts[pts.len() - 1] == pts[0] {
@@ -139,7 +128,7 @@ pub fn Pg(a: impl IntoIterator<Item = impl Into<Pt>>) -> Pg {
 
 /// Convenience constructor for rectangles.
 #[allow(non_snake_case)]
-pub fn Rect<T1, T2>(tl: impl Into<Pt>, (w, h): (T1, T2)) -> Result<Pg, PolygonConstructorError>
+pub fn Rect<T1, T2>(tl: impl Into<Pt>, (w, h): (T1, T2)) -> Result<Pg>
 where
     f64: From<T1>,
     f64: From<T2>,
@@ -322,14 +311,14 @@ impl Pg {
     }
 
     // check that this and the other are both closed and positively oriented.
-    fn crop_check_prerequisites(&self, b: &Pg) -> Result<(), CropToPolygonError> {
+    fn crop_check_prerequisites(&self, b: &Pg) -> Result<()> {
         if self.kind != PolygonKind::Closed {
-            return Err(CropToPolygonError::ThisPolygonNotClosed);
+            return Err(anyhow!("this polygon not closed"));
         }
 
         // frame actually MUST be closed.
         if b.kind != PolygonKind::Closed {
-            return Err(CropToPolygonError::ThatPolygonNotClosed);
+            return Err(anyhow!("that polygon not closed"));
         }
 
         Ok(())
@@ -668,17 +657,14 @@ impl Annotatable for Pg {
 
 #[cfg(test)]
 mod tests {
-    use crate::shapes::pg::multiline::{Multiline, MultilineConstructorError};
+    use crate::shapes::pg::multiline::Multiline;
 
     use super::*;
     use float_eq::assert_float_eq;
 
     #[test]
     fn test_multiline_to_segments() {
-        assert_eq!(
-            Multiline([(0, 0)]).unwrap_err(),
-            MultilineConstructorError::OneOrFewerPoints
-        );
+        assert!(Multiline([(0, 0)]).is_err());
         assert_eq!(
             Multiline([(0, 0), (0, 1)]).unwrap().to_segments(),
             [Sg((0, 0), (0, 1)),]
@@ -697,10 +683,7 @@ mod tests {
 
     #[test]
     fn test_polygon_to_segments() {
-        assert_eq!(
-            TryPolygon([(0, 0), (0, 1)]).unwrap_err(),
-            PolygonConstructorError::TwoOrFewerPoints,
-        );
+        assert!(TryPolygon([(0, 0), (0, 1)]).is_err());
 
         assert_eq!(
             Pg([(0, 0), (0, 1), (0, 2)]).to_segments(),

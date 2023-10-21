@@ -3,38 +3,21 @@
 //! A crate for reading GeoJSON files and parsing them to plotz_geometry
 //! structs.
 
+use anyhow::Result;
 use plotz_geometry::{
     obj::Obj,
     shapes::{
-        pg::{
-            multiline::{Multiline, MultilineConstructorError},
-            Pg, PolygonConstructorError, TryPolygon,
-        },
+        pg::{multiline::Multiline, Pg, TryPolygon},
         pt::Pt,
     },
 };
 use serde_json::Value;
 use std::collections::HashMap;
-use thiserror::Error;
 use tracing::*;
 
 type KeySymbol = String;
 type ValueSymbol = String;
 type TagsList = Vec<(KeySymbol, ValueSymbol)>;
-
-/// A general error arising from converting GeoJSON to plotz-geometry Polygons.
-#[derive(Debug, Error, PartialEq, Eq)]
-pub enum GeoJsonConversionError {
-    /// Could not create a multiline.
-    #[error("Could not create a multiline.")]
-    MultilineConstructorError(#[from] MultilineConstructorError),
-    /// Could not create a polygon.
-    #[error("Could not create a polygon.")]
-    PolygonConstructorError(#[from] PolygonConstructorError),
-    /// Listed coordinates are not an array.
-    #[error("Listed coordinates are not an array.")]
-    CoordinatesNotArray,
-}
 
 #[derive(Debug, PartialEq, Eq, Hash)]
 enum GeomType {
@@ -68,7 +51,7 @@ fn add_tags(value: &Value, tagslist: &mut TagsList) {
 }
 
 /// Parses aGeoJSON file and returns a list of tagged polygons.
-pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>, GeoJsonConversionError> {
+pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>> {
     let features = geo_json["features"].as_array().expect("features not array");
 
     info!("Parsing geojson file with {:?} features.", features.len());
@@ -91,7 +74,7 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>, GeoJsonCon
 
         let coords = &feature["geometry"]["coordinates"];
 
-        let result: Result<Vec<Obj>, GeoJsonConversionError> = match geom_type {
+        let result: Result<Vec<Obj>> = match geom_type {
             "LineString" => parse_to_linestring(coords).map(|v| {
                 stats
                     .entry(GeomType::LineString)
@@ -146,7 +129,7 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>, GeoJsonCon
     Ok(lines)
 }
 
-fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj>, GeoJsonConversionError> {
+fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj>> {
     Ok(vec![Obj::from(Multiline(
         coordinates.as_array().expect("not array").iter().map(|p| {
             Pt(
@@ -157,7 +140,7 @@ fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj>, GeoJsonConversio
     )?)])
 }
 
-fn parse_to_multilinestring(coordinates: &Value) -> Result<Vec<Obj>, GeoJsonConversionError> {
+fn parse_to_multilinestring(coordinates: &Value) -> Result<Vec<Obj>> {
     let mut lines: Vec<Obj> = vec![];
     for linestring in coordinates.as_array().expect("not array").iter() {
         lines.append(&mut parse_to_linestring(linestring)?);
@@ -165,7 +148,7 @@ fn parse_to_multilinestring(coordinates: &Value) -> Result<Vec<Obj>, GeoJsonConv
     Ok(lines)
 }
 
-fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<Obj>, GeoJsonConversionError> {
+fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<Obj>> {
     let mut lines: Vec<_> = vec![];
     for coordinates in coordinates.as_array().expect("not array") {
         lines.extend(parse_to_polygon(coordinates)?);
@@ -173,7 +156,7 @@ fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<Obj>, GeoJsonConvers
     Ok(lines)
 }
 
-fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj>, GeoJsonConversionError> {
+fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj>> {
     Ok(coordinates
         .as_array()
         .expect("not array")
@@ -190,7 +173,7 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj>, GeoJsonConversionEr
     .map(|v: Vec<Pg>| v.into_iter().map(Obj::from).collect::<Vec<_>>())
 }
 
-fn parse_to_circle(_coords: &Value) -> Result<Vec<Obj>, GeoJsonConversionError> {
+fn parse_to_circle(_coords: &Value) -> Result<Vec<Obj>> {
     // For now, don't print circles at all.
     Ok(vec![])
     // let array = &coords.as_array().expect("not array");

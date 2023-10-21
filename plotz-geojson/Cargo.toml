@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 plotz-geometry = { path = "../plotz-geometry" }
 serde_json = "*"
-thiserror = "*"
+anyhow = "*"
 tracing = "*"
 
 

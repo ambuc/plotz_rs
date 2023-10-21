@@ -9,6 +9,7 @@ use crate::{
     *,
 };
 use anyhow::Result;
+use itertools::Itertools;
 use std::ops::*;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -126,13 +127,14 @@ where
         Ok(vec![Group::new(
             self.0
                 .iter()
-                .flat_map(|(obj, s)| {
-                    obj.crop(frame, crop_type)
-                        .expect("todo")
+                .map(|(obj, s)| {
+                    Ok(obj
+                        .crop(frame, crop_type)?
                         .into_iter()
-                        .map(|o| (o, s.clone()))
+                        .map(|o| (o, s.clone())))
                 })
-                .collect::<Vec<(Obj, T)>>(),
+                .flatten_ok()
+                .collect::<Result<Vec<(Obj, T)>>>()?,
         )])
     }
     fn crop_excluding(&self, _other: &Pg) -> Result<Vec<Self::Output>>

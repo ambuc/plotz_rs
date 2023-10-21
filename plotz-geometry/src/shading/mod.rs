@@ -3,8 +3,8 @@
 pub mod shade_config;
 
 use crate::{
-    bounded::{Bounded, BoundingBoxError},
-    crop::{CropToPolygonError, Croppable},
+    bounded::Bounded,
+    crop::Croppable,
     shading::shade_config::ShadeConfig,
     shapes::{
         pg::{Pg, PolygonKind},
@@ -12,21 +12,8 @@ use crate::{
         sg::Sg,
     },
 };
+use anyhow::{anyhow, Result};
 use float_ord::FloatOrd;
-
-/// A general error arising from shading a polygon.
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
-pub enum ShadePolygonError {
-    /// The frame polygon was open, so shading its internal area is underspecified.
-    #[error("The frame polygon was open, so shading its internal area is underspecified.")]
-    PolygonIsOpen,
-    /// An error arose trying to compute the bounding box of a polygon to shade.
-    #[error("An error arose trying to compute the bounding box of a polygon to shade.")]
-    BoundingBoxError(#[from] BoundingBoxError),
-    /// An error arose trying to crop some stroke to a bounding polygon.
-    #[error("An error arose trying to crop some stroke to a bounding polygon.")]
-    CropError(#[from] CropToPolygonError),
-}
 
 fn compute_vertical_step(gap: f64, slope: f64) -> f64 {
     gap * (slope.powi(2) + 1.0).sqrt()
@@ -34,9 +21,9 @@ fn compute_vertical_step(gap: f64, slope: f64) -> f64 {
 
 /// Gap controls how far to step between crosshatched lines
 /// Slope controls the angle of the lines.
-pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Sg>, ShadePolygonError> {
+pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Sg>> {
     if polygon.kind == PolygonKind::Open {
-        return Err(ShadePolygonError::PolygonIsOpen);
+        return Err(anyhow!("polygon was open."));
     }
 
     let bounds = polygon.bounds();
@@ -63,7 +50,7 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Sg>, Shad
     while FloatOrd(line.i.y) > FloatOrd(bounds.bottom_bound())
         || FloatOrd(line.f.y) > FloatOrd(bounds.bottom_bound())
     {
-        let cropped_strokes = line.crop_to(polygon).expect("todo");
+        let cropped_strokes = line.crop_to(polygon)?;
         segments.extend(cropped_strokes.iter());
         // segments.push(line);
 

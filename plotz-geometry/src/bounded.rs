@@ -1,25 +1,11 @@
 //! A trait representing the bounds and bounding box for an object.
 use crate::{
     crop::PointLoc,
-    shapes::{
-        pg::{Pg, PolygonConstructorError},
-        pt::Pt,
-    },
+    shapes::{pg::Pg, pt::Pt},
 };
+use anyhow::{anyhow, Result};
 use enum_dispatch::enum_dispatch;
 use float_ord::FloatOrd;
-
-/// A general error arising from trying to derive the bounding box for a thing.
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
-pub enum BoundingBoxError {
-    /// Could not construct the bounding box polygon.
-    #[error("Could not construct bounding box polygon.")]
-    PolygonConstructorError(#[from] PolygonConstructorError),
-
-    /// No items were seen, so no bounding box could be constructed.
-    #[error("No items were seen, so no bounding box can be constructed.")]
-    NoItemsSeen,
-}
 
 /// The bounds of a geometric object.
 #[derive(Debug, Copy, Clone)]
@@ -185,15 +171,13 @@ impl Bounded for BoundsCollector {
 
 /// Given an iterator of bounded items, computes the bounding box for that
 /// collection.
-pub fn streaming_bbox<'a>(
-    it: impl IntoIterator<Item = &'a (impl Bounded + 'a)>,
-) -> Result<Bounds, BoundingBoxError> {
+pub fn streaming_bbox<'a>(it: impl IntoIterator<Item = &'a (impl Bounded + 'a)>) -> Result<Bounds> {
     let mut bc = BoundsCollector::default();
     for i in it {
         bc.incorporate(i);
     }
     if bc.items_seen == 0 {
-        return Err(BoundingBoxError::NoItemsSeen);
+        return Err(anyhow!("no items seen"));
     }
     Ok(bc.bounds())
 }

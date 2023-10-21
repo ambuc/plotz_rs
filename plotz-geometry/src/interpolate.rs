@@ -1,56 +1,28 @@
 //! General 1D and 2D interpolation and extrapolation algorithms.
 use crate::shapes::pt::Pt;
+use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
-
-/// A general error arising from trying to interpolate a value some percentage
-/// between two other values.
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
-pub enum InterpolationError {
-    /// the resultant percentage was below zero. (Should have been between zero and one.)
-    #[error("the resultant percentage was below zero. (Should have been between zero and one.)")]
-    BelowZero,
-    /// the resultant percentage was above one. (Should have been between zero and one.)
-    #[error("the resultant percentage was above one. (Should have been between zero and one.)")]
-    AboveOne,
-}
 
 // Given bounding values |a| and |b|, and an intermediate value |i| which is
 // within |a..b|, return the percent along |ab| which |i| lays.
-fn interpolate_checked(a: f64, b: f64, i: f64) -> Result<f64, InterpolationError> {
+fn interpolate_checked(a: f64, b: f64, i: f64) -> Result<f64> {
     let v = (i - a) / (b - a);
     if v < 0_f64 {
-        return Err(InterpolationError::BelowZero);
+        return Err(anyhow!("below zero"));
     }
     if v > 1_f64 {
-        return Err(InterpolationError::AboveOne);
+        return Err(anyhow!("above one"));
     }
     Ok(v)
 }
 
-/// A general error arising from trying to interpolate a point some percentage
-/// between two other points.
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
-pub enum Interpolation2dError {
-    /// Point |i| lies on |ab| but is either too small (behind |a|) or too large (beyond |b|).
-    #[error(
-        "Point |i| lies on |ab| but is either too small (behind |a|) or too large (beyond |b|)."
-    )]
-    RangeError(#[from] InterpolationError),
-    /// Points |a| and |b| are the same, so interpolation cannot be performed.
-    #[error("Points |a| and |b| are the same, so interpolation cannot be performed.")]
-    PointsSame,
-    /// Point |i| does not lie on the line |ab|.
-    #[error("Point |i| does not lie on the line |ab|.")]
-    PointNotOnLine,
-}
-
 /// Given the line |ab| defined by points |a| and |b|, and another point |i|
 /// which lies along it, return the percent along |ab| which |i| lies.
-pub fn interpolate_2d_checked(a: Pt, b: Pt, i: Pt) -> Result<f64, Interpolation2dError> {
+pub fn interpolate_2d_checked(a: Pt, b: Pt, i: Pt) -> Result<f64> {
     let x_same = approx_eq!(f64, a.x, b.x);
     let y_same = approx_eq!(f64, a.y, b.y);
     match (x_same, y_same) {
-        (true, true) => Err(Interpolation2dError::PointsSame),
+        (true, true) => Err(anyhow!("points are the same")),
         (false, true) => {
             let v_x = interpolate_checked(a.x, b.x, i.x)?;
             Ok(v_x)
@@ -64,7 +36,7 @@ pub fn interpolate_2d_checked(a: Pt, b: Pt, i: Pt) -> Result<f64, Interpolation2
             let v_y = interpolate_checked(a.y, b.y, i.y)?;
             match approx_eq!(f64, v_x, v_y, epsilon = 0.0003) {
                 true => Ok(v_x),
-                false => Err(Interpolation2dError::PointNotOnLine),
+                false => Err(anyhow!("point not on line")),
             }
         }
     }
@@ -81,33 +53,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_interpolate_checked() {
+    fn test_interpolate_checked() -> Result<()> {
         assert!(interpolate_checked(0.0, 1.0, -0.1).is_err());
-        assert_eq!(interpolate_checked(0.0, 1.0, 0.0), Ok(0.0));
-        assert_eq!(interpolate_checked(0.0, 1.0, 0.5), Ok(0.5));
-        assert_eq!(interpolate_checked(0.0, 1.0, 1.0), Ok(1.0));
+        assert_eq!(interpolate_checked(0.0, 1.0, 0.0)?, 0.0);
+        assert_eq!(interpolate_checked(0.0, 1.0, 0.5)?, 0.5);
+        assert_eq!(interpolate_checked(0.0, 1.0, 1.0)?, 1.0);
         assert!(interpolate_checked(0.0, 1.0, 1.1).is_err());
+        Ok(())
     }
 
     #[test]
-    fn test_interpolate_2d_checked() {
+    fn test_interpolate_2d_checked() -> Result<()> {
         assert!(interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(-0.1, -0.1)).is_err());
+        assert_eq!(interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(0, 0))?, 0.0);
         assert_eq!(
-            interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(0, 0)),
-            Ok(0.0)
+            interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(0.5, 0.5))?,
+            0.5
         );
-        assert_eq!(
-            interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(0.5, 0.5)),
-            Ok(0.5)
-        );
-        assert_eq!(
-            interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(1, 1)),
-            Ok(1.0)
-        );
+        assert_eq!(interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(1, 1))?, 1.0);
         assert!(interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(1.1, 1.1)).is_err());
 
         // not on line
         assert!(interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(1, 0)).is_err());
         assert!(interpolate_2d_checked(Pt(0, 0), Pt(1, 1), Pt(0, 1)).is_err());
+        Ok(())
     }
 }

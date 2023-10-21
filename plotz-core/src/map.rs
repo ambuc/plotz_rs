@@ -7,16 +7,15 @@ use crate::{
     bucketer::{Bucketer2, DefaultBucketer2},
     canvas::Canvas,
     frame::make_frame,
-    svg::{Size, SvgWriteError},
+    svg::Size,
 };
 use anyhow::Result;
 use float_ord::FloatOrd;
 use itertools::Itertools;
 use lazy_static::lazy_static;
 use plotz_color::{subway::*, *};
-use plotz_geojson::GeoJsonConversionError;
 use plotz_geometry::{
-    bounded::{Bounded, BoundingBoxError},
+    bounded::Bounded,
     crop::Croppable,
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
@@ -32,32 +31,8 @@ use std::{
     io::BufReader,
     path::{Path, PathBuf},
 };
-use thiserror::Error;
 use tracing::*;
 use typed_builder::TypedBuilder;
-
-#[derive(Debug, Error)]
-/// A general error you might encounter when rendering a Map.
-pub enum MapError {
-    /// could not map
-    #[error("could not map")]
-    MapError,
-    /// geojson conversion error
-    #[error("geojson conversion error")]
-    GeoJsonConversionError(#[from] GeoJsonConversionError),
-    /// file read error
-    #[error("file read error")]
-    FileReadError(#[from] std::io::Error),
-    /// serde parse error
-    #[error("serde parse error")]
-    SerdeParseError(#[from] serde_json::Error),
-    /// bounding box error
-    #[error("bounding box error")]
-    BoundingBoxError(#[from] BoundingBoxError),
-    /// svg write error
-    #[error("svg write error")]
-    SvgWriteError(#[from] SvgWriteError),
-}
 
 #[derive(Debug)]
 /// A polygon with some annotations (bucket, color, tags, etc.).
@@ -195,7 +170,7 @@ pub struct Map {
 impl Map {
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
     /// unadjusted Map instance.
-    pub fn new(map_config: &MapConfig, center: Option<Pt>) -> Result<Map, MapError> {
+    pub fn new(map_config: &MapConfig, center: Option<Pt>) -> Result<Map> {
         let bucketer = DefaultBucketer2 {};
 
         let mut canvas = Canvas::new();
@@ -263,7 +238,7 @@ impl Map {
         }
     }
 
-    fn adjust_bl_shift(&mut self) -> Result<(), MapError> {
+    fn adjust_bl_shift(&mut self) -> Result<()> {
         let canvas_bounds = self.canvas.bounds();
         self.canvas.translate_all(|pt| {
             *pt -= canvas_bounds.bl_bound();
@@ -274,7 +249,7 @@ impl Map {
         Ok(())
     }
 
-    fn adjust_centering(&mut self, dest_size: &Size) -> Result<(), MapError> {
+    fn adjust_centering(&mut self, dest_size: &Size) -> Result<()> {
         let shift = match self.center {
             Some(desired_center) => Pt(
                 dest_size.width as f64 / 2.0 - desired_center.x,
@@ -292,7 +267,7 @@ impl Map {
         Ok(())
     }
 
-    fn adjust_scaling(&mut self, scale_factor: f64, dest_size: &Size) -> Result<(), MapError> {
+    fn adjust_scaling(&mut self, scale_factor: f64, dest_size: &Size) -> Result<()> {
         let canvas_bounds = self.canvas.bounds();
         let scaling_factor = std::cmp::max(
             FloatOrd(dest_size.height as f64 / canvas_bounds.height().abs()),
@@ -359,11 +334,7 @@ impl Map {
     }
 
     /// Adjusts the map for scale/transform issues.
-    pub fn do_all_adjustments(
-        &mut self,
-        scale_factor: f64,
-        dest_size: &Size,
-    ) -> Result<(), MapError> {
+    pub fn do_all_adjustments(&mut self, scale_factor: f64, dest_size: &Size) -> Result<()> {
         self.adjust_flip_y();
         self.adjust_latitude_transform();
         self.adjust_bl_shift()?;
@@ -481,7 +452,7 @@ impl Map {
 
     /// Consumes a Map, adjusts each polygon, and writes the results as SVG to
     /// file(s).
-    pub fn render(mut self, config: &MapConfig) -> Result<(), MapError> {
+    pub fn render(mut self, config: &MapConfig) -> Result<()> {
         trace!(config = ?config.input_files);
 
         let () = self.do_all_adjustments(config.scale_factor, &config.size)?;
@@ -504,7 +475,7 @@ impl Map {
             );
             let frame_pg: Pg = frame.0.clone().try_into().unwrap();
             self.canvas.frame = Some(frame);
-            let () = self.crop_to_frame(&frame_pg).expect("todo");
+            let () = self.crop_to_frame(&frame_pg)?;
         }
 
         self.canvas
