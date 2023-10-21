@@ -8,7 +8,7 @@ use crate::{
     shapes::{pg::Pg, pt::Pt, ry::Ry},
     *,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::{
@@ -55,17 +55,17 @@ pub fn Sg(i: impl Into<Pt>, f: impl Into<Pt>) -> Sg {
 
 impl Sg {
     // Internal helper function; see https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/.
-    fn _ccw(&self, other: &Pt) -> _Orientation {
+    fn _ccw(&self, other: &Pt) -> Result<_Orientation> {
         use std::cmp::Ordering;
         match PartialOrd::partial_cmp(
             &((other.y - self.i.y) * (self.f.x - self.i.x)
                 - (self.f.y - self.i.y) * (other.x - self.i.x)),
             &0_f64,
         ) {
-            Some(Ordering::Equal) => _Orientation::_Colinear,
-            Some(Ordering::Greater) => _Orientation::_Clockwise,
-            Some(Ordering::Less) => _Orientation::_CounterClockwise,
-            None => panic!("!"),
+            Some(Ordering::Equal) => Ok(_Orientation::_Colinear),
+            Some(Ordering::Greater) => Ok(_Orientation::_Clockwise),
+            Some(Ordering::Less) => Ok(_Orientation::_CounterClockwise),
+            None => Err(anyhow!("!")),
         }
     }
 

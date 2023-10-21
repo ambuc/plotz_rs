@@ -378,7 +378,7 @@ fn intersections_of_line_and_curvearc(
                     .collect::<Vec<_>>()[..]
                 {
                     [i, j] => (i, j),
-                    _ => panic!(""),
+                    _ => return Err(anyhow!("not sure what's going on here.")),
                 }
             };
 

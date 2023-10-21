@@ -9,7 +9,7 @@ use crate::{
         pt::{is_colinear_n, Pt},
     },
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use approx::*;
 use float_ord::FloatOrd;
 use itertools::Itertools;
@@ -335,7 +335,11 @@ impl<'a> CropGraph<'a> {
                         .graph
                         .neighbors_directed(curr_node, Outgoing)
                         .collect::<Vec<_>>();
-                    panic!("aborting search: from {:?}, found {:?}", curr_node, a);
+                    return Err(anyhow!(
+                        "aborting search: from {:?}, found {:?}",
+                        curr_node,
+                        a
+                    ));
                 }
             };
 

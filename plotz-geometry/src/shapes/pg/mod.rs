@@ -226,7 +226,7 @@ impl Pg {
     pub fn contains_pt(&self, other: &Pt) -> Result<PointLoc> {
         // If |self| is open, error out.
         if self.kind == PolygonKind::Open {
-            panic!("Pg is open.");
+            return Err(anyhow!("pg is open"));
         }
 
         for (idx, pt) in self.pts.iter().enumerate() {
@@ -240,7 +240,7 @@ impl Pg {
                     return Ok(PointLoc::OnSegment(idx));
                 }
                 Some(Contains::AtStart | Contains::AtEnd) => {
-                    panic!("?");
+                    return Err(anyhow!("not sure what is going on here"));
                 }
                 _ => {}
             }
