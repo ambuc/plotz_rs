@@ -362,6 +362,11 @@ impl<'a> CropGraph<'a> {
         // and the nodes later.
         self.remove_nodes_with_no_neighbors_of_any_kind();
 
+        // if the polygon is just pts=[x, x]; that's a dot.
+        if pts.len() == 2 && pts[0] == pts[1] {
+            return Ok(None);
+        }
+
         let dbg = format!("pts: {:?}", pts);
         Ok(Some(TryPolygon(pts).context(dbg)?))
     }
@@ -391,7 +396,7 @@ impl<'a> CropGraph<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{interpolate::extrapolate_2d, shapes::pg::Rect};
+    use crate::{crop::Croppable, interpolate::extrapolate_2d, shapes::pg::Rect};
     use itertools::iproduct;
     use test_case::test_case;
 
@@ -471,6 +476,38 @@ mod test {
                 }
             }
         }
+        Ok(())
+    }
+
+    #[test]
+    fn test_reproduce_error() -> Result<()> {
+        let a = Pg([
+            Pt(0.19999999999999995559, -0.11299423149111920139),
+            Pt(0.19999999999999995559, 0.16984848098349947243),
+            Pt(0.50710678118654750612, 0.38700576850888046554),
+            Pt(0.49999999999999988898, 0.38198051533946364433),
+            Pt(0.00000000000000000000, 0.02842712474619002450),
+            Pt(0.00000000000000000000, -0.25441558772842887137),
+            Pt(-0.09289321881345258269, -0.32010101267766694066),
+            Pt(0.00000000000000000000, -0.38578643762690512098),
+            Pt(0.29289321881345276033, -0.17867965644035743722),
+        ]);
+
+        let b = Pg([
+            Pt(0.80000000000000004441, -0.53725830020304798929),
+            Pt(0.19999999999999995559, -0.11299423149111920139),
+            Pt(0.19999999999999995559, 0.16984848098349947243),
+            Pt(0.36568542494923800268, 0.28700576850888048774),
+            Pt(0.00000000000000000000, 0.02842712474619002450),
+            Pt(0.00000000000000000000, -0.25441558772842887137),
+            Pt(0.80000000000000004441, -0.82010101267766688515),
+        ]);
+
+        let _ = a.crop(&b, CropType::Exclusive)?;
+        let _ = a.crop(&b, CropType::Inclusive)?;
+        let _ = b.crop(&a, CropType::Exclusive)?;
+        let _ = b.crop(&a, CropType::Inclusive)?;
+
         Ok(())
     }
 }

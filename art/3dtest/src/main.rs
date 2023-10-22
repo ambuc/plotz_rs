@@ -78,7 +78,7 @@ fn main() -> Result<()> {
         /*objs=*/
         Scene::builder()
             // .debug(_scenedebug)
-            .objects(cubes(CubesConfig { n: 3, width: 0.8 }))
+            .objects(cubes(CubesConfig { n: 2, width: 0.8 }))
             .build()
             .project_with(Projection::default(), Occlusion::True)
             .context("default projection with occlusion")?
@@ -97,28 +97,14 @@ fn main() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use plotz_geometry::obj::Obj;
     use test_case::*;
 
-    #[ignore]
-    #[test]
-    fn test_cubes_generation_no_crash_reproduce() {
-        let _ = Scene::builder()
-            .objects(cubes(CubesConfig {
-                n: 4,
-                width: 19.0 / 20.0,
-            }))
-            .build()
-            .project_with(Projection::default(), Occlusion::True)
-            .into_iter()
-            .collect::<Vec<_>>();
-    }
-
-    #[ignore]
-    #[test_matrix(1..=6, 1..=15)]
+    #[test_matrix(1..=6, 1..=10)]
     fn test_cubes_generation_no_crash(n: usize, w: usize) {
-        let width: f64 = (w as f64) / 15.0;
+        let width: f64 = (w as f64) / 10.0;
         assert!(0.0 <= width && width <= 1.0);
-        let _ = Scene::builder()
+        let _: Vec<Vec<(Obj, Style)>> = Scene::builder()
             .objects(cubes(CubesConfig { n, width }))
             .build()
             .project_with(Projection::default(), Occlusion::True)
