@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use argh::FromArgs;
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -20,18 +20,18 @@ struct Args {
 
 fn main_inner(args: Args) -> Result<()> {
     // read lines from input and copy to output
-    let file = File::open(args.input).expect("open input");
+    let file = File::open(args.input)?;
     let mut lines = io::BufReader::new(file).lines();
 
     // assert first line
-    let xml_header: String = lines.next().expect("first line").expect("first line");
+    let xml_header: String = lines.next().ok_or(anyhow!("?"))??;
     lazy_static! {
         static ref RE_1: Regex = Regex::new(r#"<\?xml.*>"#).unwrap();
     }
     assert!(RE_1.is_match(&xml_header));
 
     // assert second line
-    let svg_header: String = lines.next().expect("second line").expect("second line");
+    let svg_header: String = lines.next().ok_or(anyhow!("?"))??;
     lazy_static! {
         static ref RE_2: Regex = Regex::new(r#"<svg.*>"#).unwrap();
     }
@@ -51,9 +51,10 @@ fn main_inner(args: Args) -> Result<()> {
     }
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args: Args = argh::from_env();
-    main_inner(args).expect("ok");
+    main_inner(args)?;
+    Ok(())
 }
 
 struct ConsumeLinesArguments<'a> {
@@ -97,10 +98,10 @@ fn consume_lines(args: &mut ConsumeLinesArguments, index: Option<u64>) -> Result
     let mut num_written = 0;
 
     loop {
-        let line = args.lines.next().expect("a").expect("b");
+        let line = args.lines.next().ok_or(anyhow!("?"))??;
         if line == args.group_subclose {
             // skip group_close matching line too.
-            args.lines.next().expect("a").expect("b");
+            args.lines.next().ok_or(anyhow!("?"))??;
             break;
         }
         f.write_all(line.as_bytes())?;
@@ -140,26 +141,26 @@ fn consume_group(
             Regex::new(r#"(\s*)<g id="([A-Za-z_]*)\s([A-Za-z_]*)".*>"#).unwrap();
     }
 
-    let group_open: String = lines.next().expect("next line").expect("next line");
+    let group_open: String = lines.next().ok_or(anyhow!("?"))??;
     let caps = RE_GROUP_OPEN.captures_iter(&group_open).collect::<Vec<_>>();
     if caps.is_empty() {
         return Ok(false);
     }
-    let indent = &caps[0].get(1).expect("indent");
-    let name = &caps[0].get(3).expect("name");
+    let indent = &caps[0].get(1).ok_or(anyhow!("?"))?;
+    let name = &caps[0].get(3).ok_or(anyhow!("?"))?;
     let group_close: String = [indent.as_str(), "</g>"].concat();
 
     lazy_static! {
         static ref RE_GROUP_SUBOPEN: Regex = Regex::new(r#"(\s*)<g.*>"#).unwrap();
     }
-    let group_subopen: String = lines.next().expect("next line").expect("next line");
+    let group_subopen: String = lines.next().ok_or(anyhow!("?"))??;
     let subcaps = RE_GROUP_SUBOPEN
         .captures_iter(&group_subopen)
         .collect::<Vec<_>>();
     if subcaps.is_empty() {
         return Ok(false);
     }
-    let subindent = &subcaps[0].get(1).expect("indent");
+    let subindent = &subcaps[0].get(1).ok_or(anyhow!("?"))?;
     let group_subclose: String = [subindent.as_str(), "</g>"].concat();
 
     consume_lines(
@@ -189,7 +190,7 @@ mod tests {
 
     #[test]
     fn test_no_split() -> Result<()> {
-        let tmp_dir = TempDir::new("example").expect("tmpdir");
+        let tmp_dir = TempDir::new("example")?;
         let tmp_dir_str: String = tmp_dir.path().to_str().unwrap().to_string();
         main_inner(Args {
             input: "testdata/in.svg".to_string(),
