@@ -797,13 +797,13 @@ mod tests {
     #[test]
     fn test_bounded_segment() {
         let s = Sg((0, 1), (1, 2));
-        assert_eq!(s.bottom_bound(), 1.0);
-        assert_eq!(s.top_bound(), 2.0);
-        assert_eq!(s.left_bound(), 0.0);
-        assert_eq!(s.right_bound(), 1.0);
-        assert_eq!(s.bl_bound(), Pt(0, 1));
-        assert_eq!(s.tl_bound(), Pt(0, 2));
-        assert_eq!(s.br_bound(), Pt(1, 1));
-        assert_eq!(s.tr_bound(), Pt(1, 2));
+        assert_eq!(s.bounds().bottom_bound(), 1.0);
+        assert_eq!(s.bounds().top_bound(), 2.0);
+        assert_eq!(s.bounds().left_bound(), 0.0);
+        assert_eq!(s.bounds().right_bound(), 1.0);
+        assert_eq!(s.bounds().bl_bound(), Pt(0, 1));
+        assert_eq!(s.bounds().tl_bound(), Pt(0, 2));
+        assert_eq!(s.bounds().br_bound(), Pt(1, 1));
+        assert_eq!(s.bounds().tr_bound(), Pt(1, 2));
     }
 }

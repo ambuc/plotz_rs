@@ -545,10 +545,10 @@ mod tests {
             // 5---+
             // |   |
             // +---3>
-            assert_eq!(rolling_bbox.left_bound(), 0.0);
-            assert_eq!(rolling_bbox.bottom_bound(), 0.0);
-            assert_eq!(rolling_bbox.top_bound(), 5.0);
-            assert_eq!(rolling_bbox.right_bound(), 3.0);
+            assert_eq!(rolling_bbox.bounds().left_bound(), 0.0);
+            assert_eq!(rolling_bbox.bounds().bottom_bound(), 0.0);
+            assert_eq!(rolling_bbox.bounds().top_bound(), 5.0);
+            assert_eq!(rolling_bbox.bounds().right_bound(), 3.0);
         }
 
         let () = map.do_all_adjustments(0.9, &map_config.size).unwrap();
@@ -560,10 +560,18 @@ mod tests {
                     rolling_bbox.incorporate(obj);
                 })
             });
-            assert_float_eq!(rolling_bbox.left_bound(), 51.200, abs <= 0.000_01);
-            assert_float_eq!(rolling_bbox.bottom_bound(), -256.976635, abs <= 0.000_01);
-            assert_float_eq!(rolling_bbox.top_bound(), 1280.976635, abs <= 0.000_01);
-            assert_float_eq!(rolling_bbox.right_bound(), 972.8, abs <= 0.000_01);
+            assert_float_eq!(rolling_bbox.bounds().left_bound(), 51.200, abs <= 0.000_01);
+            assert_float_eq!(
+                rolling_bbox.bounds().bottom_bound(),
+                -256.976635,
+                abs <= 0.000_01
+            );
+            assert_float_eq!(
+                rolling_bbox.bounds().top_bound(),
+                1280.976635,
+                abs <= 0.000_01
+            );
+            assert_float_eq!(rolling_bbox.bounds().right_bound(), 972.8, abs <= 0.000_01);
         }
 
         let () = map.render(&map_config).unwrap();
