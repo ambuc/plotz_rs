@@ -1,8 +1,15 @@
 //! A 3D point.
 //!
 use crate::shapes::sg3::Sg3;
+use anyhow::{anyhow, Result};
 use float_ord::FloatOrd;
-use std::{convert::From, fmt::Debug, hash::Hash, ops::*};
+use std::{
+    convert::From,
+    f64::consts::{PI, TAU},
+    fmt::Debug,
+    hash::Hash,
+    ops::*,
+};
 
 #[derive(Hash, Copy, Clone, PartialOrd, PartialEq, Eq, Ord)]
 pub struct Pt3 {
@@ -145,4 +152,26 @@ impl Pt3 {
     pub fn dist(&self, other: &Pt3) -> f64 {
         Sg3(*self, *other).abs()
     }
+}
+
+#[allow(non_snake_case)]
+pub fn PolarPt3(r: f64, theta_rad: f64, phi_rad: f64) -> Result<Pt3> {
+    if !(0.0..=TAU).contains(&theta_rad) {
+        return Err(anyhow!(format!(
+            "theta_rad ({:?}) must be in range 0..=2PI",
+            theta_rad
+        )));
+    }
+    if !(0.0..=PI).contains(&phi_rad) {
+        return Err(anyhow!(format!(
+            "phi_rad ({:?}) must be in range 0..=PI",
+            phi_rad
+        )));
+    }
+
+    Ok(Pt3(
+        r * theta_rad.sin() * phi_rad.cos(),
+        r * theta_rad.sin() * phi_rad.sin(),
+        r * theta_rad.cos(),
+    ))
 }
