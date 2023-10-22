@@ -40,15 +40,14 @@ fn print_err(s: &str) {
     println!("{} {}", style("ERR").red(), s);
 }
 
-fn hits_yes(s: &str) -> bool {
-    Confirm::new()
+fn hits_yes(s: &str) -> Result<bool> {
+    Ok(Confirm::new()
         .with_prompt(format!("{} {}", style("ACTION").magenta(), s))
-        .interact()
-        .unwrap()
+        .interact()?)
 }
 
-fn is_command_ok(c: &mut Command) -> Option<std::process::Output> {
-    match c.spawn().unwrap().wait_with_output() {
+fn is_command_ok(c: &mut Command) -> Result<Option<std::process::Output>> {
+    match c.spawn()?.wait_with_output() {
         Ok(output) => {
             if output.status.success() {
                 if let Ok(stdout) = std::str::from_utf8(&output.stdout) {
@@ -61,15 +60,15 @@ fn is_command_ok(c: &mut Command) -> Option<std::process::Output> {
                         print_ok(&format!("{} {}", style("stderr").yellow(), stderr));
                     }
                 }
-                Some(output)
+                Ok(Some(output))
             } else {
-                print_err(std::str::from_utf8(&output.stderr).unwrap());
-                None
+                print_err(std::str::from_utf8(&output.stderr)?);
+                Ok(None)
             }
         }
         Err(e) => {
             print_err(&format!("{:?}", e));
-            None
+            Ok(None)
         }
     }
 }
@@ -93,19 +92,21 @@ fn make_default_axicli_args() -> Vec<&'static str> {
     ]
 }
 
-fn manual_cmd(s: &str) {
+fn manual_cmd(s: &str) -> Result<()> {
     Command::new("axicli")
         .args(vec!["--mode", "manual", "--manual_cmd", s])
-        .output()
-        .unwrap();
+        .output()?;
+    Ok(())
 }
 
-fn disable_motors() {
-    manual_cmd("disable_xy");
+fn disable_motors() -> Result<()> {
+    manual_cmd("disable_xy")?;
+    Ok(())
 }
 
-fn raise_pen() {
-    manual_cmd("raise_pen");
+fn raise_pen() -> Result<()> {
+    manual_cmd("raise_pen")?;
+    Ok(())
 }
 
 fn toggle() {
@@ -146,7 +147,7 @@ fn parse_prediction(s: &str) -> Option<Duration> {
     Some(duration)
 }
 
-fn do_layer(s: &str, special_name: Option<&str>) {
+fn do_layer(s: &str, special_name: Option<&str>) -> Result<()> {
     println!();
     let path: String = canonicalize(s).unwrap().to_str().unwrap().to_string();
 
@@ -156,7 +157,7 @@ fn do_layer(s: &str, special_name: Option<&str>) {
         special_name
             .map(|s| format!(" ({})", s))
             .unwrap_or_default()
-    )) {
+    ))? {
         match is_command_ok(
             Command::new("axicli")
                 .arg(&path)
@@ -164,7 +165,7 @@ fn do_layer(s: &str, special_name: Option<&str>) {
                 .arg("--report_time")
                 .args(make_default_axicli_args())
                 .stdout(Stdio::piped()),
-        ) {
+        )? {
             Some(output) => parse_prediction(std::str::from_utf8(&output.stderr).unwrap()),
             _ => None,
         }
@@ -182,13 +183,13 @@ fn do_layer(s: &str, special_name: Option<&str>) {
             0 => "".to_string(),
             _n => format!(" {}", style("(again)").red()),
         }
-    )) {
+    ))? {
         n_toggles += 1;
         toggle();
     }
 
     print_ok("Raising pen.");
-    raise_pen();
+    raise_pen()?;
 
     let mut n_runs = 0;
     while hits_yes(&format!(
@@ -205,7 +206,7 @@ fn do_layer(s: &str, special_name: Option<&str>) {
             0 => "".to_string(),
             _n => format!(" {}", style("(again)").red()),
         }
-    )) {
+    ))? {
         n_runs += 1;
 
         let (tx, rx) = std::sync::mpsc::channel::<()>();
@@ -244,7 +245,8 @@ fn do_layer(s: &str, special_name: Option<&str>) {
                     .arg(&p2)
                     .args(make_default_axicli_args())
                     .stdout(Stdio::piped()),
-            );
+            )
+            .expect("?");
         });
 
         command_task.join().unwrap();
@@ -253,18 +255,19 @@ fn do_layer(s: &str, special_name: Option<&str>) {
         let _ = tx.send(());
         progressbar_task.join().unwrap();
 
-        disable_motors();
+        disable_motors()?;
     }
 
-    disable_motors();
+    disable_motors()?;
+    Ok(())
 }
 
 fn main() -> Result<()> {
     let args: Args = argh::from_env();
 
-    let frame: PathBuf = glob(&args.frame)?.next().ok_or(anyhow!("?"))?.unwrap();
+    let frame: PathBuf = glob(&args.frame)?.next().ok_or(anyhow!("?"))??;
 
-    let all: PathBuf = glob(&args.all)?.next().ok_or(anyhow!("?"))?.unwrap();
+    let all: PathBuf = glob(&args.all)?.next().ok_or(anyhow!("?"))??;
 
     // other files
     let files: Vec<PathBuf> = glob(&args.glob)?
@@ -280,8 +283,8 @@ fn main() -> Result<()> {
         .iter()
         .map(|f| f.display().to_string())
         .collect::<std::collections::HashSet<String>>();
-    uniq.remove(frame.to_str().unwrap());
-    uniq.remove(all.to_str().unwrap());
+    uniq.remove(frame.to_str().ok_or(anyhow!("?"))?);
+    uniq.remove(all.to_str().ok_or(anyhow!("?"))?);
 
     println!();
     print_ok(&format!(
@@ -292,7 +295,7 @@ fn main() -> Result<()> {
     ));
     println!();
 
-    do_layer(&args.frame, Some("frame"));
+    do_layer(&args.frame, Some("frame"))?;
 
     let mut layers_to_print: Vec<_> = uniq.iter().collect();
     layers_to_print.sort();
@@ -300,13 +303,12 @@ fn main() -> Result<()> {
     let pb = ProgressBar::new(layers_to_print.len() as u64).with_message("All layers");
     pb.set_style(
         indicatif::ProgressStyle::default_bar()
-            .template("[{elapsed_precise}] {bar:40.green/blue} {pos:>7}/{len:7} {msg}")
-            .unwrap()
+            .template("[{elapsed_precise}] {bar:40.green/blue} {pos:>7}/{len:7} {msg}")?
             .progress_chars("##-"),
     );
 
     for layer in pb.wrap_iter(layers_to_print.iter()) {
-        do_layer(layer, None);
+        do_layer(layer, None)?;
     }
     Ok(())
 }

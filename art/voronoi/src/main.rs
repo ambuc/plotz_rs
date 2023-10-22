@@ -81,7 +81,7 @@ fn main() -> Result<()> {
         ))
         .set_lloyd_relaxation_iterations(10)
         .build()
-        .expect("build vornoi");
+        .ok_or(anyhow!("build voronoi"))?;
 
     let polygons: Vec<Pg> = vornoi
         .iter_cells()
