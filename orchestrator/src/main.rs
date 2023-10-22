@@ -6,6 +6,7 @@
 
 #![deny(missing_docs)]
 
+use anyhow::{anyhow, Result};
 use argh::FromArgs;
 use console::style;
 use dialoguer::Confirm;
@@ -258,24 +259,15 @@ fn do_layer(s: &str, special_name: Option<&str>) {
     disable_motors();
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args: Args = argh::from_env();
 
-    let frame: PathBuf = glob(&args.frame)
-        .expect("Failed to read frame pattern")
-        .next()
-        .expect("no matches for frame")
-        .unwrap();
+    let frame: PathBuf = glob(&args.frame)?.next().ok_or(anyhow!("?"))?.unwrap();
 
-    let all: PathBuf = glob(&args.all)
-        .expect("Failed to read all pattern")
-        .next()
-        .expect("no matches for all")
-        .unwrap();
+    let all: PathBuf = glob(&args.all)?.next().ok_or(anyhow!("?"))?.unwrap();
 
     // other files
-    let files: Vec<PathBuf> = glob(&args.glob)
-        .expect("Failed to read glob pattern")
+    let files: Vec<PathBuf> = glob(&args.glob)?
         .filter(std::result::Result::is_ok)
         .map(std::result::Result::unwrap)
         .collect::<Vec<_>>();
@@ -316,4 +308,5 @@ fn main() {
     for layer in pb.wrap_iter(layers_to_print.iter()) {
         do_layer(layer, None);
     }
+    Ok(())
 }
