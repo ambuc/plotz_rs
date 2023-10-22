@@ -86,7 +86,7 @@ impl GridLayout {
 
     /// Returns the center of the cubby.
     pub fn cubby_ctr(&self, (i, j): (usize, usize)) -> Pt {
-        self.get_cubby_bounds((i, j)).bbox_center()
+        self.get_cubby_bounds((i, j)).center()
     }
 
     /// Returns a list of all inner objects.
@@ -124,8 +124,8 @@ impl GridLayout {
             let frame_bounds = self.get_cubby_bounds((i, j));
             let inner_bounds = obj.bounds();
 
-            let w_scale = frame_bounds.width() / inner_bounds.width();
-            let s_scale = frame_bounds.height() / inner_bounds.height();
+            let w_scale = frame_bounds.w() / inner_bounds.w();
+            let s_scale = frame_bounds.h() / inner_bounds.h();
             let scale = std::cmp::min(FloatOrd(w_scale), FloatOrd(s_scale)).0 * buffer;
 
             obj *= scale;
@@ -135,7 +135,7 @@ impl GridLayout {
             let frame_bounds = self.get_cubby_bounds((i, j));
             let inner_bounds = obj.bounds();
 
-            let translate_diff = frame_bounds.bbox_center() - inner_bounds.bbox_center();
+            let translate_diff = frame_bounds.center() - inner_bounds.center();
 
             obj += translate_diff;
         }

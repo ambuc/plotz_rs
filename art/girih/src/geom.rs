@@ -282,7 +282,7 @@ impl PlacedTile {
     }
 
     pub fn test_pts(&self) -> Vec<Pt> {
-        let cand_ctr = self.pg.bounds().bbox_center();
+        let cand_ctr = self.pg.bounds().center();
         std::iter::once(cand_ctr)
             .chain(
                 self.pg

@@ -130,8 +130,8 @@ impl Canvas {
             )?;
 
             let buffer = 0.9;
-            let w_scale = frame_bounds.width() / inner_bounds.width();
-            let s_scale = frame_bounds.height() / inner_bounds.height();
+            let w_scale = frame_bounds.w() / inner_bounds.w();
+            let s_scale = frame_bounds.h() / inner_bounds.h();
             let scale = std::cmp::min(FloatOrd(w_scale), FloatOrd(s_scale)).0 * buffer;
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
@@ -150,7 +150,7 @@ impl Canvas {
                     .map(|(obj, _style)| obj),
             )?;
 
-            let translate_diff = frame_bounds.bbox_center() - inner_bounds.bbox_center();
+            let translate_diff = frame_bounds.center() - inner_bounds.center();
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
                 dos.iter_mut().for_each(|(obj, _style)| {

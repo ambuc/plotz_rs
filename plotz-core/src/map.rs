@@ -243,10 +243,10 @@ impl Map {
     fn adjust_bl_shift(&mut self) -> Result<()> {
         let canvas_bounds = self.canvas.bounds();
         self.canvas.translate_all(|pt| {
-            *pt -= canvas_bounds.bl_bound();
+            *pt -= canvas_bounds.bl();
         });
         if let Some(center) = &mut self.center {
-            *center -= canvas_bounds.bl_bound();
+            *center -= canvas_bounds.bl();
         }
         Ok(())
     }
@@ -260,8 +260,8 @@ impl Map {
             None => {
                 let canvas_bounds = self.canvas.bounds();
                 Pt(
-                    (dest_size.width as f64 - canvas_bounds.right_bound()) / 2.0,
-                    (dest_size.height as f64 - canvas_bounds.top_bound()) / 2.0,
+                    (dest_size.width as f64 - canvas_bounds.r()) / 2.0,
+                    (dest_size.height as f64 - canvas_bounds.t()) / 2.0,
                 )
             }
         };
@@ -272,8 +272,8 @@ impl Map {
     fn adjust_scaling(&mut self, scale_factor: f64, dest_size: &Size) -> Result<()> {
         let canvas_bounds = self.canvas.bounds();
         let scaling_factor = std::cmp::max(
-            FloatOrd(dest_size.height as f64 / canvas_bounds.height().abs()),
-            FloatOrd(dest_size.width as f64 / canvas_bounds.width().abs()),
+            FloatOrd(dest_size.height as f64 / canvas_bounds.h().abs()),
+            FloatOrd(dest_size.width as f64 / canvas_bounds.w().abs()),
         )
         .0 * scale_factor;
         self.canvas.scale_all(|obj| {
@@ -545,10 +545,10 @@ mod tests {
             // 5---+
             // |   |
             // +---3>
-            assert_eq!(rolling_bbox.bounds().left_bound(), 0.0);
-            assert_eq!(rolling_bbox.bounds().bottom_bound(), 0.0);
-            assert_eq!(rolling_bbox.bounds().top_bound(), 5.0);
-            assert_eq!(rolling_bbox.bounds().right_bound(), 3.0);
+            assert_eq!(rolling_bbox.bounds().l(), 0.0);
+            assert_eq!(rolling_bbox.bounds().b(), 0.0);
+            assert_eq!(rolling_bbox.bounds().t(), 5.0);
+            assert_eq!(rolling_bbox.bounds().r(), 3.0);
         }
 
         let () = map.do_all_adjustments(0.9, &map_config.size).unwrap();
@@ -560,18 +560,10 @@ mod tests {
                     rolling_bbox.incorporate(obj);
                 })
             });
-            assert_float_eq!(rolling_bbox.bounds().left_bound(), 51.200, abs <= 0.000_01);
-            assert_float_eq!(
-                rolling_bbox.bounds().bottom_bound(),
-                -256.976635,
-                abs <= 0.000_01
-            );
-            assert_float_eq!(
-                rolling_bbox.bounds().top_bound(),
-                1280.976635,
-                abs <= 0.000_01
-            );
-            assert_float_eq!(rolling_bbox.bounds().right_bound(), 972.8, abs <= 0.000_01);
+            assert_float_eq!(rolling_bbox.bounds().l(), 51.200, abs <= 0.000_01);
+            assert_float_eq!(rolling_bbox.bounds().b(), -256.976635, abs <= 0.000_01);
+            assert_float_eq!(rolling_bbox.bounds().t(), 1280.976635, abs <= 0.000_01);
+            assert_float_eq!(rolling_bbox.bounds().r(), 972.8, abs <= 0.000_01);
         }
 
         let () = map.render(&map_config).unwrap();

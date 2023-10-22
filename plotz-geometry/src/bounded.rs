@@ -23,65 +23,56 @@ pub struct Bounds {
 impl Bounds {
     /// Creates a frame, suitable for cropping.
     pub fn to_polygon(&self) -> Pg {
-        Pg([
-            self.tl_bound(),
-            self.tr_bound(),
-            self.br_bound(),
-            self.bl_bound(),
-            self.tl_bound(),
-        ])
+        Pg([self.tl(), self.tr(), self.br(), self.bl(), self.tl()])
     }
     /// Whether or not bounds contain a point.
     pub fn contains_pt(&self, pt: Pt) -> Result<PointLoc> {
         self.to_polygon().contains_pt(&pt)
     }
     /// The right bound of an object.
-    pub fn right_bound(&self) -> f64 {
+    pub fn r(&self) -> f64 {
         self.right_bound
     }
     /// The left bound of an object.
-    pub fn left_bound(&self) -> f64 {
+    pub fn l(&self) -> f64 {
         self.left_bound
     }
     /// The top bound of an object.
-    pub fn top_bound(&self) -> f64 {
+    pub fn t(&self) -> f64 {
         self.top_bound
     }
     /// The bottom bound of an object.
-    pub fn bottom_bound(&self) -> f64 {
+    pub fn b(&self) -> f64 {
         self.bottom_bound
     }
     /// The width of an object.
-    pub fn width(&self) -> f64 {
-        self.right_bound() - self.left_bound()
+    pub fn w(&self) -> f64 {
+        self.r() - self.l()
     }
     /// The height of an object.
-    pub fn height(&self) -> f64 {
-        self.bottom_bound() - self.top_bound()
+    pub fn h(&self) -> f64 {
+        self.b() - self.t()
     }
     /// The point at the top-left corner of an object's bounding box.
-    pub fn tl_bound(&self) -> Pt {
-        Pt(self.left_bound(), self.top_bound())
+    pub fn tl(&self) -> Pt {
+        Pt(self.l(), self.t())
     }
     /// The point at the top-right corner of an object's bounding box.
-    pub fn tr_bound(&self) -> Pt {
-        Pt(self.right_bound(), self.top_bound())
+    pub fn tr(&self) -> Pt {
+        Pt(self.r(), self.t())
     }
     /// The point at the bottom-left corner of an object's bounding box.
-    pub fn bl_bound(&self) -> Pt {
-        Pt(self.left_bound(), self.bottom_bound())
+    pub fn bl(&self) -> Pt {
+        Pt(self.l(), self.b())
     }
     /// The point at the bottom-right corner of an object's bounding box.
-    pub fn br_bound(&self) -> Pt {
-        Pt(self.right_bound(), self.bottom_bound())
+    pub fn br(&self) -> Pt {
+        Pt(self.r(), self.b())
     }
 
     /// The center of the bounding box of an object.
-    pub fn bbox_center(&self) -> Pt {
-        Pt(
-            self.left_bound() + (self.width() / 2.0),
-            self.top_bound() + (self.height() / 2.0),
-        )
+    pub fn center(&self) -> Pt {
+        Pt(self.l() + (self.w() / 2.0), self.t() + (self.h() / 2.0))
     }
 }
 
@@ -135,23 +126,23 @@ impl BoundsCollector {
     pub fn incorporate(&mut self, b: &impl Bounded) {
         // top
         self.bound_t = Some(match self.bound_t {
-            None => FloatOrd(b.bounds().top_bound()),
-            Some(existing) => std::cmp::max(existing, FloatOrd(b.bounds().top_bound())),
+            None => FloatOrd(b.bounds().t()),
+            Some(existing) => std::cmp::max(existing, FloatOrd(b.bounds().t())),
         });
         // bottom
         self.bound_b = Some(match self.bound_b {
-            None => FloatOrd(b.bounds().bottom_bound()),
-            Some(existing) => std::cmp::min(existing, FloatOrd(b.bounds().bottom_bound())),
+            None => FloatOrd(b.bounds().b()),
+            Some(existing) => std::cmp::min(existing, FloatOrd(b.bounds().b())),
         });
         // right
         self.bound_r = Some(match self.bound_r {
-            None => FloatOrd(b.bounds().right_bound()),
-            Some(existing) => std::cmp::max(existing, FloatOrd(b.bounds().right_bound())),
+            None => FloatOrd(b.bounds().r()),
+            Some(existing) => std::cmp::max(existing, FloatOrd(b.bounds().r())),
         });
         // left
         self.bound_l = Some(match self.bound_l {
-            None => FloatOrd(b.bounds().left_bound()),
-            Some(existing) => std::cmp::min(existing, FloatOrd(b.bounds().left_bound())),
+            None => FloatOrd(b.bounds().l()),
+            Some(existing) => std::cmp::min(existing, FloatOrd(b.bounds().l())),
         });
         self.items_seen += 1;
     }
@@ -194,9 +185,9 @@ mod test_super {
             Pg([(0, 2), (1, 2), (1, 3)]),
         ];
         let bounds = streaming_bbox(&polygons).unwrap();
-        assert_eq!(bounds.bl_bound(), Pt(0, 0));
-        assert_eq!(bounds.tl_bound(), Pt(0, 3));
-        assert_eq!(bounds.tr_bound(), Pt(3, 3));
-        assert_eq!(bounds.br_bound(), Pt(3, 0));
+        assert_eq!(bounds.bl(), Pt(0, 0));
+        assert_eq!(bounds.tl(), Pt(0, 3));
+        assert_eq!(bounds.tr(), Pt(3, 3));
+        assert_eq!(bounds.br(), Pt(3, 0));
     }
 }

@@ -1191,14 +1191,14 @@ mod tests {
         let b = Pt(1, 2);
         let d = Pt(0, 1);
         let p = Pg([h, f, b, d]);
-        assert_eq!(p.bounds().top_bound(), 2.0);
-        assert_eq!(p.bounds().bottom_bound(), 0.0);
-        assert_eq!(p.bounds().left_bound(), 0.0);
-        assert_eq!(p.bounds().right_bound(), 2.0);
-        assert_eq!(p.bounds().tl_bound(), Pt(0, 2));
-        assert_eq!(p.bounds().bl_bound(), Pt(0, 0));
-        assert_eq!(p.bounds().tr_bound(), Pt(2, 2));
-        assert_eq!(p.bounds().br_bound(), Pt(2, 0));
+        assert_eq!(p.bounds().t(), 2.0);
+        assert_eq!(p.bounds().b(), 0.0);
+        assert_eq!(p.bounds().l(), 0.0);
+        assert_eq!(p.bounds().r(), 2.0);
+        assert_eq!(p.bounds().tl(), Pt(0, 2));
+        assert_eq!(p.bounds().bl(), Pt(0, 0));
+        assert_eq!(p.bounds().tr(), Pt(2, 2));
+        assert_eq!(p.bounds().br(), Pt(2, 0));
     }
 
     #[test]
