@@ -23,14 +23,16 @@ struct Args {
 #[derive(Debug)]
 struct CubesConfig {
     width: f64,
-    n: usize,
+    i: usize,
+    j: usize,
+    k: usize,
 }
 
 fn cubes(cc: CubesConfig) -> Vec<(Obj3, Style)> {
     let mut objects = vec![];
 
     for ((i, j, k), color) in zip(
-        iproduct!(0..cc.n, 0..cc.n, 0..cc.n),
+        iproduct!(0..cc.i, 0..cc.j, 0..cc.k),
         (vec![&RED, &YELLOW, &GREEN, &BLUE, &PLUM, &ORANGE])
             .iter()
             .cycle(),
@@ -78,7 +80,12 @@ fn main() -> Result<()> {
         /*objs=*/
         Scene::builder()
             // .debug(_scenedebug)
-            .objects(cubes(CubesConfig { n: 2, width: 0.8 }))
+            .objects(cubes(CubesConfig {
+                i: 3,
+                j: 3,
+                k: 3,
+                width: 0.70,
+            }))
             .build()
             .project_with(Projection::default(), Occlusion::True)
             .context("default projection with occlusion")?
@@ -100,12 +107,15 @@ mod tests {
     use plotz_geometry::obj::Obj;
     use test_case::*;
 
-    #[test_matrix(1..=6, 1..=10)]
-    fn test_cubes_generation_no_crash(n: usize, w: usize) {
+    #[test_matrix(1..=3, 1..=3, 1..=3, 1..=10)]
+    fn test_cubes_generation_no_crash(i: usize, j: usize, k: usize, w: usize) {
+        if !(i <= j && j <= k) {
+            return;
+        }
         let width: f64 = (w as f64) / 10.0;
         assert!(0.0 <= width && width <= 1.0);
         let _: Vec<Vec<(Obj, Style)>> = Scene::builder()
-            .objects(cubes(CubesConfig { n, width }))
+            .objects(cubes(CubesConfig { i, j, k, width }))
             .build()
             .project_with(Projection::default(), Occlusion::True)
             .into_iter()
