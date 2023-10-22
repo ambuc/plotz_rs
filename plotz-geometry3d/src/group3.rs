@@ -1,7 +1,8 @@
 //! A group of objects.
 //!
 
-use crate::obj3::Obj3;
+use crate::{obj3::Obj3, shapes::pt3::Pt3};
+use std::ops::*;
 
 #[derive(Debug, Clone)]
 pub struct Group3<T>(Vec<(Obj3, T)>);
@@ -18,5 +19,19 @@ impl<T: 'static> Group3<T> {
     }
     pub fn into_iter_objects(self) -> Box<dyn Iterator<Item = (Obj3, T)>> {
         Box::new(self.0.into_iter())
+    }
+}
+
+impl<T: 'static> Add<Pt3> for Group3<T> {
+    type Output = Self;
+    fn add(self, rhs: Pt3) -> Self::Output {
+        Self::new(self.0.into_iter().map(|(o, s)| (o + rhs, s)))
+    }
+}
+impl<T> AddAssign<Pt3> for Group3<T> {
+    fn add_assign(&mut self, rhs: Pt3) {
+        self.0.iter_mut().for_each(|(o, _)| {
+            *o += rhs;
+        });
     }
 }

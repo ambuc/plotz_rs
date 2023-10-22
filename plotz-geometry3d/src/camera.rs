@@ -4,7 +4,6 @@ use plotz_geometry::style::Style;
 
 use crate::{
     obj3::Obj3,
-    p3,
     shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
 };
 use plotz_geometry::{
@@ -29,9 +28,9 @@ impl Default for Oblique {
     fn default() -> Self {
         let spread = 1.0 / 2.0_f64.sqrt(); // 0.7071...
         Oblique {
-            u_src: p3!(1, 0, 0),
-            v_src: p3!(0, 1, 0),
-            w_src: p3!(0, 0, 1),
+            u_src: Pt3(1, 0, 0),
+            v_src: Pt3(0, 1, 0),
+            w_src: Pt3(0, 0, 1),
             u_dst: Pt(-1, spread),
             v_dst: Pt(1, spread),
             w_dst: Pt(0, -1),
@@ -41,7 +40,7 @@ impl Default for Oblique {
 
 impl Oblique {
     pub fn view_vector(&self) -> Pt3 {
-        p3!(0, 0, 0) - self.u_src - self.v_src - self.w_src
+        Pt3(0, 0, 0) - self.u_src - self.v_src - self.w_src
     }
 
     pub fn project_pt3(&self, pt3d: &Pt3) -> Pt {

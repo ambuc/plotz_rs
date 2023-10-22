@@ -1,11 +1,8 @@
 //! A polygon in 3d.
 
-use std::fmt::Debug;
-
+use crate::shapes::pt3::Pt3;
 use float_ord::FloatOrd;
-
-use crate::{p3, shapes::pt3::Pt3};
-use std::ops::*;
+use std::{fmt::Debug, ops::*};
 
 // A multiline is a list of points rendered with connecting line segments.
 #[derive(Clone)]
@@ -27,7 +24,7 @@ impl Pg3 {
         let sum_x: f64 = self.pts.iter().map(|pt| pt.x.0).sum();
         let sum_y: f64 = self.pts.iter().map(|pt| pt.y.0).sum();
         let sum_z: f64 = self.pts.iter().map(|pt| pt.z.0).sum();
-        p3!(sum_x, sum_y, sum_z) / num
+        Pt3(sum_x, sum_y, sum_z) / num
     }
 
     // The center of the object, projected along the view vector.

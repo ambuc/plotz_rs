@@ -6,9 +6,10 @@ use plotz_core::{canvas::Canvas, frame::*};
 use plotz_geometry::{style::Style, *};
 use plotz_geometry3d::{
     camera::{Occlusion, Projection},
+    group3::Group3,
     obj3::Obj3,
     scene::{debug::SceneDebug, Scene},
-    shapes::{cube3d::Cube, pt3::Pt3},
+    shapes::{cube3d::Cube, cuboid3d::Cuboid, pt3::Pt3},
 };
 use std::iter::zip;
 use tracing::*;
@@ -43,15 +44,35 @@ fn cubes(cc: CubesConfig) -> Vec<(Obj3, Style)> {
             ..Default::default()
         };
         objects.extend(
-            Cube(
-                Pt3(i as f64, j as f64, k as f64),
-                (cc.width, cc.width, cc.width),
-            )
-            .into_iter_objects()
-            .map(|(o, _)| (o, style)),
+            Cube(Pt3(i as f64, j as f64, k as f64), cc.width)
+                .into_iter_objects()
+                .map(|(o, _)| (o, style)),
         );
     }
     objects
+}
+
+fn scene1() -> Result<Vec<(Obj3, Style)>> {
+    Ok(cubes(CubesConfig {
+        i: 3,
+        j: 3,
+        k: 3,
+        width: 0.70,
+    }))
+}
+
+fn scene2() -> Result<Vec<(Obj3, Style)>> {
+    // jengas
+    let mut g: Vec<Group3<()>> = vec![];
+    let jenga: Group3<()> = Cuboid((0, 0, 0), (15, 5, 3));
+    g.push(jenga.clone());
+    g.push(jenga.clone() + Pt3(0, 6, 0));
+    g.push(jenga.clone() + Pt3(0, 12, 0));
+
+    Ok(g.into_iter()
+        .map(|x| x.into_iter_objects().map(|(o, _)| (o, Style::default())))
+        .flatten()
+        .collect())
 }
 
 fn main() -> Result<()> {
@@ -80,12 +101,8 @@ fn main() -> Result<()> {
         /*objs=*/
         Scene::builder()
             // .debug(_scenedebug)
-            .objects(cubes(CubesConfig {
-                i: 3,
-                j: 3,
-                k: 3,
-                width: 0.70,
-            }))
+            // .objects(scene1()?)
+            .objects(scene2()?)
             .build()
             .project_with(Projection::default(), Occlusion::True)
             .context("default projection with occlusion")?
