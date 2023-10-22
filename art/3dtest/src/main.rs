@@ -10,8 +10,9 @@ use plotz_geometry3d::{
     obj3::Obj3,
     scene::{debug::SceneDebug, Scene},
     shapes::{cube3d::Cube, cuboid3d::Cuboid, pt3::Pt3},
+    Rotatable,
 };
-use std::iter::zip;
+use std::{f64::consts::FRAC_PI_2, iter::zip};
 use tracing::*;
 
 #[derive(FromArgs)]
@@ -63,11 +64,17 @@ fn scene1() -> Result<Vec<(Obj3, Style)>> {
 
 fn scene2() -> Result<Vec<(Obj3, Style)>> {
     // jengas
-    let mut g: Vec<Group3<()>> = vec![];
     let jenga: Group3<()> = Cuboid((0, 0, 0), (15, 5, 3));
-    g.push(jenga.clone());
-    g.push(jenga.clone() + Pt3(0, 6, 0));
-    g.push(jenga.clone() + Pt3(0, 12, 0));
+
+    let mut i: Vec<_> = vec![];
+    i.extend((jenga.clone() + Pt3(0, 0, 0)).into_iter_objects());
+    i.extend((jenga.clone() + Pt3(0, 6, 0)).into_iter_objects());
+    i.extend((jenga.clone() + Pt3(0, 12, 0)).into_iter_objects());
+    let layer: Group3<()> = Group3::<()>::new(i);
+
+    let mut g: Vec<Group3<()>> = vec![];
+    g.push(layer.clone());
+    // g.push((layer.clone() + Pt3(0, 0, 4)).rotate(FRAC_PI_2, )?);
 
     Ok(g.into_iter()
         .map(|x| x.into_iter_objects().map(|(o, _)| (o, Style::default())))

@@ -1,7 +1,13 @@
 //! A group of objects.
 //!
 
-use crate::{obj3::Obj3, shapes::pt3::Pt3};
+use anyhow::Result;
+
+use crate::{
+    obj3::Obj3,
+    shapes::{pt3::Pt3, ry3::Ry3},
+    Rotatable,
+};
 use std::ops::*;
 
 #[derive(Debug, Clone)]
@@ -33,5 +39,11 @@ impl<T> AddAssign<Pt3> for Group3<T> {
         self.0.iter_mut().for_each(|(o, _)| {
             *o += rhs;
         });
+    }
+}
+
+impl<T> Rotatable for Group3<T> {
+    fn rotate(&mut self, by: f64, about: Ry3) -> Result<()> {
+        todo!("?")
     }
 }

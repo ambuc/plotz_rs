@@ -1,6 +1,9 @@
 //! An inner object.
 
-use crate::shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3};
+use crate::{
+    group3::Group3,
+    shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
+};
 use derive_more::From;
 use std::ops::*;
 
@@ -8,6 +11,7 @@ use std::ops::*;
 pub enum Obj3 {
     Pg3(Pg3),
     Sg3(Sg3),
+    Group3(Group3<()>),
     // others?
 }
 
@@ -17,6 +21,7 @@ impl Obj3 {
         match self {
             Obj3::Pg3(pg3d) => pg3d.dist_along(view_vector),
             Obj3::Sg3(sg3d) => sg3d.dist_along(view_vector),
+            Obj3::Group3(_g3d) => unimplemented!("?"),
         }
     }
     // The maximum distance of the object, projected along the view vector.
@@ -24,6 +29,7 @@ impl Obj3 {
         match self {
             Obj3::Pg3(pg3d) => pg3d.max_dist_along(view_vector),
             Obj3::Sg3(sg3d) => sg3d.max_dist_along(view_vector),
+            Obj3::Group3(_g3d) => unimplemented!("?"),
         }
     }
     // The minimum distance of the object, projected along the view vector.
@@ -31,6 +37,7 @@ impl Obj3 {
         match self {
             Obj3::Pg3(pg3d) => pg3d.min_dist_along(view_vector),
             Obj3::Sg3(sg3d) => sg3d.min_dist_along(view_vector),
+            Obj3::Group3(_g3d) => unimplemented!("?"),
         }
     }
 }
@@ -45,6 +52,7 @@ where
         match self {
             Obj3::Pg3(pg) => Obj3::from(pg + rhs),
             Obj3::Sg3(sg) => Obj3::from(sg + rhs),
+            Obj3::Group3(g) => Obj3::from(g + rhs),
         }
     }
 }
@@ -61,6 +69,9 @@ where
             }
             Obj3::Sg3(sg) => {
                 *sg += rhs;
+            }
+            Obj3::Group3(g) => {
+                *g += rhs;
             }
         }
     }

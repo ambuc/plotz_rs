@@ -1,8 +1,11 @@
 //! A polygon in 3d.
 
-use crate::shapes::pt3::Pt3;
+use crate::{shapes::pt3::Pt3, Rotatable};
+use anyhow::Result;
 use float_ord::FloatOrd;
 use std::{fmt::Debug, ops::*};
+
+use super::ry3::Ry3;
 
 // A multiline is a list of points rendered with connecting line segments.
 #[derive(Clone)]
@@ -157,5 +160,11 @@ impl Sub<Pt3> for Pg3 {
 impl SubAssign<Pt3> for Pg3 {
     fn sub_assign(&mut self, rhs: Pt3) {
         self.pts.iter_mut().for_each(|p| *p -= rhs);
+    }
+}
+
+impl Rotatable for Pg3 {
+    fn rotate(&mut self, _by: f64, _about: Ry3) -> Result<()> {
+        unimplemented!("oh")
     }
 }

@@ -1,8 +1,9 @@
 //! A camera.
 
-use plotz_geometry::style::Style;
+use plotz_geometry::{group::Group, style::Style};
 
 use crate::{
+    group3::Group3,
     obj3::Obj3,
     shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
 };
@@ -54,10 +55,18 @@ impl Oblique {
     pub fn project_pg3(&self, pg3: &Pg3) -> Pg {
         Pg(pg3.pts.iter().map(|pt3d| self.project_pt3(pt3d)))
     }
+    pub fn project_group3(&self, g3: &Group3<()>) -> Group<Style> {
+        Group::new(g3.clone().into_iter_objects().map(|(o, _)| match o {
+            Obj3::Pg3(_) => todo!(),
+            Obj3::Sg3(_) => todo!(),
+            Obj3::Group3(_) => todo!(),
+        }))
+    }
     pub fn project_obj3(&self, obj3: &Obj3) -> Obj {
         match obj3 {
             Obj3::Pg3(pg3d) => Obj::Pg(self.project_pg3(pg3d)),
             Obj3::Sg3(sg3d) => Obj::Sg(self.project_sg3(sg3d)),
+            Obj3::Group3(g3d) => Obj::Group(self.project_group3(g3d)),
         }
     }
     pub fn project_styled_obj3(&self, (obj3, style): &(Obj3, Style)) -> (Obj, Style) {
