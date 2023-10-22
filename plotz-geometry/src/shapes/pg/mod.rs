@@ -18,7 +18,7 @@ use crate::{
     style::Style,
     *,
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use itertools::iproduct;
@@ -412,7 +412,8 @@ impl Croppable for Pg {
             }
         }
 
-        let (resultant, _crop_graph) = CropGraph::run(a, b, crop_type)?;
+        let (resultant, _crop_graph) =
+            CropGraph::run(a, b, crop_type).context("crop graph failed")?;
         Ok(resultant)
     }
 }

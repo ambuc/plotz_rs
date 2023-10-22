@@ -9,7 +9,7 @@ use crate::{
     obj3::Obj3,
     scene::{debug::SceneDebug, occluder::Occluder},
 };
-use anyhow::Result;
+use anyhow::*;
 use float_ord::FloatOrd;
 use itertools::Itertools;
 use plotz_geometry::{obj::Obj, style::Style, *};
@@ -87,7 +87,8 @@ impl Scene {
                         }
                     }
 
-                    occ.add((obj, style))?;
+                    let dbg = format!("adding object:\n\t{:?}", &obj);
+                    occ.add((obj, style)).context(dbg)?;
                 }
                 resultant.extend(occ.export()?);
                 Ok(resultant)

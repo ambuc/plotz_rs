@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use argh::FromArgs;
 use itertools::iproduct;
 use plotz_color::*;
@@ -80,7 +80,8 @@ fn main() -> Result<()> {
             // .debug(_scenedebug)
             .objects(cubes(CubesConfig { n: 3, width: 0.8 }))
             .build()
-            .project_with(Projection::default(), Occlusion::True)?
+            .project_with(Projection::default(), Occlusion::True)
+            .context("default projection with occlusion")?
             .into_iter(),
         /*autobucket=*/ false,
     )

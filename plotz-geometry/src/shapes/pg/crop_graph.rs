@@ -9,7 +9,7 @@ use crate::{
         pt::{is_colinear_n, Pt},
     },
 };
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use approx::*;
 use float_ord::FloatOrd;
 use itertools::Itertools;
@@ -63,7 +63,12 @@ impl<'a> CropGraph<'a> {
         crop_graph.remove_dual_edges();
         crop_graph.remove_nodes_with_no_neighbors_of_any_kind();
         let graph = crop_graph.graph.clone();
-        Ok((crop_graph.trim_and_create_resultant_polygons()?, graph))
+        Ok((
+            crop_graph
+                .trim_and_create_resultant_polygons()
+                .context("trim and create resultant polygons")?,
+            graph,
+        ))
     }
 
     fn normalize_pt(&mut self, pt: &Pt) -> Pt {
@@ -357,7 +362,8 @@ impl<'a> CropGraph<'a> {
         // and the nodes later.
         self.remove_nodes_with_no_neighbors_of_any_kind();
 
-        Ok(Some(TryPolygon(pts)?))
+        let dbg = format!("pts: {:?}", pts);
+        Ok(Some(TryPolygon(pts).context(dbg)?))
     }
 
     #[allow(unused)]
@@ -372,7 +378,7 @@ impl<'a> CropGraph<'a> {
     fn trim_and_create_resultant_polygons(mut self) -> Result<Vec<Pg>> {
         let mut resultant = vec![];
 
-        while let Some(pg) = self.extract_polygon()? {
+        while let Some(pg) = self.extract_polygon().context("extract polygon")? {
             if !is_colinear_n(&pg.pts) {
                 resultant.push(pg);
             }

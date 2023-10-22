@@ -1,6 +1,6 @@
 //! Occludes things. Cmon.
 
-use anyhow::{anyhow, Result};
+use anyhow::*;
 use itertools::Itertools;
 use plotz_geometry::{crop::Croppable, obj::Obj, shading::shade_polygon, style::Style};
 
@@ -34,9 +34,12 @@ impl Occluder {
                 unimplemented!("no support for curvearcs yet")
             }
 
-            (Obj::Pg(a), Obj::Pg(b)) => {
-                Ok(a.crop_excluding(b)?.into_iter().map(Obj::from).collect())
-            }
+            (Obj::Pg(a), Obj::Pg(b)) => Ok(a
+                .crop_excluding(b)
+                .context(format!("crop excluding: \na\n\t{:?}\n\nb\n\t{:?}", a, b))?
+                .into_iter()
+                .map(Obj::from)
+                .collect()),
             (Obj::Sg(_sg), Obj::Pg(_pg)) => {
                 unimplemented!("no support for pg x sg yet");
             }
@@ -53,9 +56,13 @@ impl Occluder {
         for (existing_o, _) in &self.objects {
             incoming_os = incoming_os
                 .iter()
-                .map(|(incoming_obj, _)| Occluder::hide_a_behind_b(incoming_obj, existing_o))
+                .map(|(incoming_obj, _)| {
+                    Occluder::hide_a_behind_b(incoming_obj, existing_o)
+                        .context("occluding a behind b")
+                })
                 .flatten_ok()
-                .collect::<Result<Vec<_>>>()?
+                .collect::<Result<Vec<_>>>()
+                .context("collecting objects")?
                 .into_iter()
                 .map(|obj| (obj, incoming2.1))
                 .collect::<Vec<_>>();
