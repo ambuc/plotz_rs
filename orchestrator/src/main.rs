@@ -109,11 +109,11 @@ fn raise_pen() -> Result<()> {
     Ok(())
 }
 
-fn toggle() {
+fn toggle() -> Result<()> {
     Command::new("axicli")
         .args(vec!["--mode", "toggle"])
-        .output()
-        .unwrap();
+        .output()?;
+    Ok(())
 }
 
 fn parse_prediction(s: &str) -> Option<Duration> {
@@ -149,7 +149,7 @@ fn parse_prediction(s: &str) -> Option<Duration> {
 
 fn do_layer(s: &str, special_name: Option<&str>) -> Result<()> {
     println!();
-    let path: String = canonicalize(s).unwrap().to_str().unwrap().to_string();
+    let path: String = canonicalize(s)?.to_str().ok_or(anyhow!("?"))?.to_string();
 
     let predicted_duration: Option<Duration> = if hits_yes(&format!(
         "Preview {}{}",
@@ -166,7 +166,7 @@ fn do_layer(s: &str, special_name: Option<&str>) -> Result<()> {
                 .args(make_default_axicli_args())
                 .stdout(Stdio::piped()),
         )? {
-            Some(output) => parse_prediction(std::str::from_utf8(&output.stderr).unwrap()),
+            Some(output) => parse_prediction(std::str::from_utf8(&output.stderr)?),
             _ => None,
         }
     } else {
@@ -185,7 +185,7 @@ fn do_layer(s: &str, special_name: Option<&str>) -> Result<()> {
         }
     ))? {
         n_toggles += 1;
-        toggle();
+        toggle()?;
     }
 
     print_ok("Raising pen.");
