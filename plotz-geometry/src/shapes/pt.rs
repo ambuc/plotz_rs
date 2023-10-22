@@ -5,6 +5,7 @@ use crate::{
     shapes::{pg::abp, sg::Sg},
     *,
 };
+use anyhow::Result;
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::{convert::From, fmt::Debug, hash::Hash, ops::*};
@@ -286,13 +287,13 @@ impl Pt {
 }
 
 impl Bounded for Pt {
-    fn bounds(&self) -> crate::bounded::Bounds {
-        Bounds {
+    fn bounds(&self) -> Result<Bounds> {
+        Ok(Bounds {
             top_bound: self.y,
             bottom_bound: self.y,
             left_bound: self.x,
             right_bound: self.x,
-        }
+        })
     }
 }
 

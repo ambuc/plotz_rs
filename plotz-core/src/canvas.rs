@@ -121,7 +121,7 @@ impl Canvas {
     /// returns true on success
     pub fn scale_to_fit_frame(mut self) -> Result<Self> {
         {
-            let frame_bounds = self.frame.as_ref().unwrap().0.bounds();
+            let frame_bounds = self.frame.as_ref().unwrap().0.bounds()?;
             let inner_bounds = streaming_bbox(
                 self.dos_by_bucket
                     .iter()
@@ -142,7 +142,7 @@ impl Canvas {
         }
 
         {
-            let frame_bounds = self.frame.as_ref().unwrap().0.bounds();
+            let frame_bounds = self.frame.as_ref().unwrap().0.bounds()?;
             let inner_bounds = streaming_bbox(
                 self.dos_by_bucket
                     .values()
@@ -208,7 +208,7 @@ impl Canvas {
 }
 
 impl Bounded for Canvas {
-    fn bounds(&self) -> Bounds {
-        streaming_bbox(self.objs_iter()).expect("bbox not found")
+    fn bounds(&self) -> Result<Bounds> {
+        streaming_bbox(self.objs_iter())
     }
 }

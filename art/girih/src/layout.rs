@@ -88,7 +88,7 @@ impl Layout {
     }
 
     fn evaluate_cand(&self, cand: &PlacedTile) -> bool {
-        let test_pts = cand.test_pts();
+        let test_pts = cand.test_pts().expect("?");
 
         if (self.placed_tiles.iter())
             .cartesian_product(test_pts.iter())

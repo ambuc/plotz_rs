@@ -118,11 +118,11 @@ impl GridLayout {
         (i, j): (usize, usize),
         (obj, style): (Obj, Style),
         buffer: f64,
-    ) {
+    ) -> Result<()> {
         let mut obj = obj;
         {
             let frame_bounds = self.get_cubby_bounds((i, j));
-            let inner_bounds = obj.bounds();
+            let inner_bounds = obj.bounds()?;
 
             let w_scale = frame_bounds.w() / inner_bounds.w();
             let s_scale = frame_bounds.h() / inner_bounds.h();
@@ -133,7 +133,7 @@ impl GridLayout {
 
         {
             let frame_bounds = self.get_cubby_bounds((i, j));
-            let inner_bounds = obj.bounds();
+            let inner_bounds = obj.bounds()?;
 
             let translate_diff = frame_bounds.center() - inner_bounds.center();
 
@@ -141,5 +141,6 @@ impl GridLayout {
         }
 
         self.objs[i][j].push((obj, style));
+        Ok(())
     }
 }

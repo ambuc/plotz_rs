@@ -26,7 +26,7 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Sg>> {
         return Err(anyhow!("polygon was open."));
     }
 
-    let bounds = polygon.bounds();
+    let bounds = polygon.bounds()?;
     let mut segments: Vec<Sg> = vec![];
 
     let xnudge = Pt(1, -1);

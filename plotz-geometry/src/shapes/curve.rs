@@ -54,8 +54,8 @@ impl CurveArc {
 }
 
 impl Bounded for CurveArc {
-    fn bounds(&self) -> crate::bounded::Bounds {
-        Bounds {
+    fn bounds(&self) -> Result<Bounds> {
+        Ok(Bounds {
             top_bound: self.ctr.y
                 + self.radius
                     * if self.angle_range().contains(&FRAC_PI_2) {
@@ -84,7 +84,7 @@ impl Bounded for CurveArc {
                     } else {
                         max(FloatOrd(self.angle_i.cos()), FloatOrd(self.angle_f.cos())).0
                     },
-        }
+        })
     }
 }
 

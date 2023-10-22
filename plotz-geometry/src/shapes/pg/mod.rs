@@ -572,8 +572,8 @@ where
 }
 
 impl Bounded for Pg {
-    fn bounds(&self) -> crate::bounded::Bounds {
-        Bounds {
+    fn bounds(&self) -> Result<Bounds> {
+        Ok(Bounds {
             top_bound: self
                 .pts
                 .iter()
@@ -602,7 +602,7 @@ impl Bounded for Pg {
                 .max()
                 .expect("not empty")
                 .0,
-        }
+        })
     }
 }
 
@@ -1177,7 +1177,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bounded() {
+    fn test_bounded() -> Result<()> {
         //   ^
         //   |
         //   A  B  C
@@ -1191,14 +1191,16 @@ mod tests {
         let b = Pt(1, 2);
         let d = Pt(0, 1);
         let p = Pg([h, f, b, d]);
-        assert_eq!(p.bounds().t(), 2.0);
-        assert_eq!(p.bounds().b(), 0.0);
-        assert_eq!(p.bounds().l(), 0.0);
-        assert_eq!(p.bounds().r(), 2.0);
-        assert_eq!(p.bounds().tl(), Pt(0, 2));
-        assert_eq!(p.bounds().bl(), Pt(0, 0));
-        assert_eq!(p.bounds().tr(), Pt(2, 2));
-        assert_eq!(p.bounds().br(), Pt(2, 0));
+        let bounds = p.bounds()?;
+        assert_eq!(bounds.t(), 2.0);
+        assert_eq!(bounds.b(), 0.0);
+        assert_eq!(bounds.l(), 0.0);
+        assert_eq!(bounds.r(), 2.0);
+        assert_eq!(bounds.tl(), Pt(0, 2));
+        assert_eq!(bounds.bl(), Pt(0, 0));
+        assert_eq!(bounds.tr(), Pt(2, 2));
+        assert_eq!(bounds.br(), Pt(2, 0));
+        Ok(())
     }
 
     #[test]

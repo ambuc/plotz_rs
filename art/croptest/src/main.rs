@@ -142,7 +142,7 @@ fn main() -> Result<()> {
             idx,
             (Obj::Group(Group::new(v.into_iter())), Style::default()),
             1.00,
-        );
+        )?;
     }
 
     dos.extend(gl.to_object2ds());

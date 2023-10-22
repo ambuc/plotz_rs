@@ -281,9 +281,9 @@ impl PlacedTile {
         })
     }
 
-    pub fn test_pts(&self) -> Vec<Pt> {
-        let cand_ctr = self.pg.bounds().center();
-        std::iter::once(cand_ctr)
+    pub fn test_pts(&self) -> Result<Vec<Pt>> {
+        let cand_ctr = self.pg.bounds()?.center();
+        Ok(std::iter::once(cand_ctr)
             .chain(
                 self.pg
                     .to_segments()
@@ -291,7 +291,7 @@ impl PlacedTile {
                     .map(|sg| -> Pt { sg.midpoint() }),
             )
             .chain(self.pg.pts.iter().map(|pt| pt.avg(&cand_ctr)))
-            .collect::<Vec<_>>()
+            .collect::<Vec<_>>())
     }
 }
 

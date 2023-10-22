@@ -1,6 +1,11 @@
 //! A character at a point.
 
-use crate::{bounded::Bounded, shapes::pt::Pt, *};
+use crate::{
+    bounded::{Bounded, Bounds},
+    shapes::pt::Pt,
+    *,
+};
+use anyhow::Result;
 use std::ops::*;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -27,7 +32,7 @@ impl Txt {
 }
 
 impl Bounded for Txt {
-    fn bounds(&self) -> crate::bounded::Bounds {
+    fn bounds(&self) -> Result<Bounds> {
         self.pt.bounds()
     }
 }

@@ -77,8 +77,8 @@ impl Bounds {
 }
 
 impl Bounded for Bounds {
-    fn bounds(&self) -> Bounds {
-        *self
+    fn bounds(&self) -> Result<Bounds> {
+        Ok(*self)
     }
 }
 
@@ -90,7 +90,7 @@ impl Bounded for Bounds {
 #[enum_dispatch(Obj)]
 pub trait Bounded {
     /// Internal use only.
-    fn bounds(&self) -> Bounds;
+    fn bounds(&self) -> Result<Bounds>;
 }
 
 /// A handy struct for collecting the outer bounds of a streaming iterator of
@@ -123,39 +123,41 @@ impl BoundsCollector {
     }
 
     /// Incorporate a new polygon to this bounds collector.
-    pub fn incorporate(&mut self, b: &impl Bounded) {
+    pub fn incorporate(&mut self, b: &impl Bounded) -> Result<()> {
+        let bounds = b.bounds()?;
         // top
         self.bound_t = Some(match self.bound_t {
-            None => FloatOrd(b.bounds().t()),
-            Some(existing) => std::cmp::max(existing, FloatOrd(b.bounds().t())),
+            None => FloatOrd(bounds.t()),
+            Some(existing) => std::cmp::max(existing, FloatOrd(bounds.t())),
         });
         // bottom
         self.bound_b = Some(match self.bound_b {
-            None => FloatOrd(b.bounds().b()),
-            Some(existing) => std::cmp::min(existing, FloatOrd(b.bounds().b())),
+            None => FloatOrd(bounds.b()),
+            Some(existing) => std::cmp::min(existing, FloatOrd(bounds.b())),
         });
         // right
         self.bound_r = Some(match self.bound_r {
-            None => FloatOrd(b.bounds().r()),
-            Some(existing) => std::cmp::max(existing, FloatOrd(b.bounds().r())),
+            None => FloatOrd(bounds.r()),
+            Some(existing) => std::cmp::max(existing, FloatOrd(bounds.r())),
         });
         // left
         self.bound_l = Some(match self.bound_l {
-            None => FloatOrd(b.bounds().l()),
-            Some(existing) => std::cmp::min(existing, FloatOrd(b.bounds().l())),
+            None => FloatOrd(bounds.l()),
+            Some(existing) => std::cmp::min(existing, FloatOrd(bounds.l())),
         });
         self.items_seen += 1;
+        Ok(())
     }
 }
 
 impl Bounded for BoundsCollector {
-    fn bounds(&self) -> Bounds {
-        Bounds {
-            top_bound: self.bound_t.expect("").0,
-            bottom_bound: self.bound_b.expect("").0,
-            left_bound: self.bound_l.expect("").0,
-            right_bound: self.bound_r.expect("").0,
-        }
+    fn bounds(&self) -> Result<Bounds> {
+        Ok(Bounds {
+            top_bound: self.bound_t.ok_or(anyhow!("absent"))?.0,
+            bottom_bound: self.bound_b.ok_or(anyhow!("absent"))?.0,
+            left_bound: self.bound_l.ok_or(anyhow!("absent"))?.0,
+            right_bound: self.bound_r.ok_or(anyhow!("absent"))?.0,
+        })
     }
 }
 
@@ -164,12 +166,12 @@ impl Bounded for BoundsCollector {
 pub fn streaming_bbox<'a>(it: impl IntoIterator<Item = &'a (impl Bounded + 'a)>) -> Result<Bounds> {
     let mut bc = BoundsCollector::default();
     for i in it {
-        bc.incorporate(i);
+        bc.incorporate(i)?;
     }
     if bc.items_seen == 0 {
         return Err(anyhow!("no items seen"));
     }
-    Ok(bc.bounds())
+    bc.bounds()
 }
 
 #[cfg(test)]

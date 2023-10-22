@@ -1,4 +1,5 @@
 //! A 2D segment.
+
 use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLoc},
@@ -334,13 +335,13 @@ where
 }
 
 impl Bounded for Sg {
-    fn bounds(&self) -> Bounds {
-        Bounds {
+    fn bounds(&self) -> Result<Bounds> {
+        Ok(Bounds {
             top_bound: std::cmp::max(FloatOrd(self.i.y), FloatOrd(self.f.y)).0,
             bottom_bound: std::cmp::min(FloatOrd(self.i.y), FloatOrd(self.f.y)).0,
             left_bound: std::cmp::min(FloatOrd(self.i.x), FloatOrd(self.f.x)).0,
             right_bound: std::cmp::max(FloatOrd(self.i.x), FloatOrd(self.f.x)).0,
-        }
+        })
     }
 }
 
@@ -795,15 +796,17 @@ mod tests {
     }
 
     #[test]
-    fn test_bounded_segment() {
+    fn test_bounded_segment() -> Result<()> {
         let s = Sg((0, 1), (1, 2));
-        assert_eq!(s.bounds().b(), 1.0);
-        assert_eq!(s.bounds().t(), 2.0);
-        assert_eq!(s.bounds().l(), 0.0);
-        assert_eq!(s.bounds().r(), 1.0);
-        assert_eq!(s.bounds().bl(), Pt(0, 1));
-        assert_eq!(s.bounds().tl(), Pt(0, 2));
-        assert_eq!(s.bounds().br(), Pt(1, 1));
-        assert_eq!(s.bounds().tr(), Pt(1, 2));
+        let b = s.bounds()?;
+        assert_eq!(b.b(), 1.0);
+        assert_eq!(b.t(), 2.0);
+        assert_eq!(b.l(), 0.0);
+        assert_eq!(b.r(), 1.0);
+        assert_eq!(b.bl(), Pt(0, 1));
+        assert_eq!(b.tl(), Pt(0, 2));
+        assert_eq!(b.br(), Pt(1, 1));
+        assert_eq!(b.tr(), Pt(1, 2));
+        Ok(())
     }
 }

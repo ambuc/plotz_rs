@@ -35,7 +35,7 @@ fn main() -> Result<()> {
     {
         let frame_polygon: Pg = frame.0.clone().try_into().unwrap();
 
-        let frame_ctr = frame.0.bounds().center();
+        let frame_ctr = frame.0.bounds()?.center();
 
         for i in 1..200 {
             let i: f64 = i as f64;

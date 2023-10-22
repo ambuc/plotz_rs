@@ -241,7 +241,7 @@ impl Map {
     }
 
     fn adjust_bl_shift(&mut self) -> Result<()> {
-        let canvas_bounds = self.canvas.bounds();
+        let canvas_bounds = self.canvas.bounds()?;
         self.canvas.translate_all(|pt| {
             *pt -= canvas_bounds.bl();
         });
@@ -258,7 +258,7 @@ impl Map {
                 dest_size.height as f64 / 2.0 - desired_center.y,
             ),
             None => {
-                let canvas_bounds = self.canvas.bounds();
+                let canvas_bounds = self.canvas.bounds()?;
                 Pt(
                     (dest_size.width as f64 - canvas_bounds.r()) / 2.0,
                     (dest_size.height as f64 - canvas_bounds.t()) / 2.0,
@@ -270,7 +270,7 @@ impl Map {
     }
 
     fn adjust_scaling(&mut self, scale_factor: f64, dest_size: &Size) -> Result<()> {
-        let canvas_bounds = self.canvas.bounds();
+        let canvas_bounds = self.canvas.bounds()?;
         let scaling_factor = std::cmp::max(
             FloatOrd(dest_size.height as f64 / canvas_bounds.h().abs()),
             FloatOrd(dest_size.width as f64 / canvas_bounds.w().abs()),
@@ -516,7 +516,7 @@ mod tests {
     use tempdir::TempDir;
 
     #[test]
-    fn test_render() {
+    fn test_render() -> Result<()> {
         let tmp_dir = TempDir::new("example").unwrap();
 
         let map_config = MapConfig::builder()
@@ -536,7 +536,7 @@ mod tests {
             let mut rolling_bbox = BoundsCollector::default();
             map.canvas.dos_by_bucket.iter().for_each(|(_bucket, dos)| {
                 dos.iter().for_each(|(obj, _)| {
-                    rolling_bbox.incorporate(obj);
+                    rolling_bbox.incorporate(obj).expect("?");
                 });
             });
             assert_eq!(rolling_bbox.items_seen(), 4);
@@ -545,10 +545,11 @@ mod tests {
             // 5---+
             // |   |
             // +---3>
-            assert_eq!(rolling_bbox.bounds().l(), 0.0);
-            assert_eq!(rolling_bbox.bounds().b(), 0.0);
-            assert_eq!(rolling_bbox.bounds().t(), 5.0);
-            assert_eq!(rolling_bbox.bounds().r(), 3.0);
+            let b = rolling_bbox.bounds()?;
+            assert_eq!(b.l(), 0.0);
+            assert_eq!(b.b(), 0.0);
+            assert_eq!(b.t(), 5.0);
+            assert_eq!(b.r(), 3.0);
         }
 
         let () = map.do_all_adjustments(0.9, &map_config.size).unwrap();
@@ -557,16 +558,18 @@ mod tests {
             let mut rolling_bbox = BoundsCollector::default();
             map.canvas.dos_by_bucket.iter().for_each(|(_bucket, dos)| {
                 dos.iter().for_each(|(obj, _)| {
-                    rolling_bbox.incorporate(obj);
+                    rolling_bbox.incorporate(obj).expect("?");
                 })
             });
-            assert_float_eq!(rolling_bbox.bounds().l(), 51.200, abs <= 0.000_01);
-            assert_float_eq!(rolling_bbox.bounds().b(), -256.976635, abs <= 0.000_01);
-            assert_float_eq!(rolling_bbox.bounds().t(), 1280.976635, abs <= 0.000_01);
-            assert_float_eq!(rolling_bbox.bounds().r(), 972.8, abs <= 0.000_01);
+            let b = rolling_bbox.bounds()?;
+            assert_float_eq!(b.l(), 51.200, abs <= 0.000_01);
+            assert_float_eq!(b.b(), -256.976635, abs <= 0.000_01);
+            assert_float_eq!(b.t(), 1280.976635, abs <= 0.000_01);
+            assert_float_eq!(b.r(), 972.8, abs <= 0.000_01);
         }
 
         let () = map.render(&map_config).unwrap();
+        Ok(())
     }
 
     #[test]

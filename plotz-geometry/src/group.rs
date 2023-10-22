@@ -40,10 +40,10 @@ impl<T> Group<T> {
 }
 
 impl<T> Bounded for Group<T> {
-    fn bounds(&self) -> Bounds {
+    fn bounds(&self) -> Result<Bounds> {
         let mut bc = BoundsCollector::default();
         for pt in self.iter() {
-            bc.incorporate(pt);
+            bc.incorporate(pt)?;
         }
         bc.bounds()
     }
