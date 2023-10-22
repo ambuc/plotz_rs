@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use argh::FromArgs;
 use plotz_color::{ColorRGB, *};
 use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
@@ -27,17 +27,17 @@ struct Shade {
 }
 
 impl Shade {
-    fn rand(palette: &Vec<&'static ColorRGB>) -> Shade {
+    fn rand(palette: &Vec<&'static ColorRGB>) -> Result<Shade> {
         let mut rng = rand::thread_rng();
 
-        Shade {
+        Ok(Shade {
             config: ShadeConfig::builder()
                 .gap(3.0)
                 .switchback(true)
                 .slope((rng.gen_range(0.0_f64..360.0_f64)).tan())
                 .build(),
-            color: palette.choose(&mut rng).expect("color"),
-        }
+            color: palette.choose(&mut rng).ok_or(anyhow!("?"))?,
+        })
     }
 }
 
@@ -92,7 +92,7 @@ fn main() -> Result<()> {
 
     dos.extend(polygons.iter().flat_map(|p| {
         (0..=1).flat_map(|_| {
-            let shade = Shade::rand(&palette);
+            let shade = Shade::rand(&palette).expect("?");
             shade_polygon(&shade.config, p)
                 .expect("failed to shade")
                 .iter()

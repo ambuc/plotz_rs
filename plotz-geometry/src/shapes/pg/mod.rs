@@ -579,28 +579,28 @@ impl Bounded for Pg {
                 .iter()
                 .map(|p| FloatOrd(p.y))
                 .max()
-                .expect("not empty")
+                .ok_or(anyhow!("not empty"))?
                 .0,
             bottom_bound: self
                 .pts
                 .iter()
                 .map(|p| FloatOrd(p.y))
                 .min()
-                .expect("not empty")
+                .ok_or(anyhow!("not empty"))?
                 .0,
             left_bound: self
                 .pts
                 .iter()
                 .map(|p| FloatOrd(p.x))
                 .min()
-                .expect("not empty")
+                .ok_or(anyhow!("not empty"))?
                 .0,
             right_bound: self
                 .pts
                 .iter()
                 .map(|p| FloatOrd(p.x))
                 .max()
-                .expect("not empty")
+                .ok_or(anyhow!("not empty"))?
                 .0,
         })
     }

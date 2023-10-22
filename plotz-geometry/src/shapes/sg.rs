@@ -138,14 +138,11 @@ impl Sg {
             (other.i.x, other.i.y),
             (other.f.x, other.f.y),
         ) {
-            Some(IntersectionResult::OneIntersection(
-                Intersection::new(
-                    pt,
-                    interpolate_2d_checked(self.i, self.f, pt).ok()?,
-                    interpolate_2d_checked(other.i, other.f, pt).ok()?,
-                )
-                .expect("valid intersection"),
-            ))
+            Some(IntersectionResult::OneIntersection(Intersection::new(
+                pt,
+                interpolate_2d_checked(self.i, self.f, pt).ok()?,
+                interpolate_2d_checked(other.i, other.f, pt).ok()?,
+            )?))
         } else {
             None
         }

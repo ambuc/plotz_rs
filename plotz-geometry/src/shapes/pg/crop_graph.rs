@@ -421,7 +421,7 @@ mod test {
     #[test_case(u_shape(), CropType::Inclusive; "u-shape, inclusive")]
     #[test_case(h_shape(), CropType::Exclusive; "h-shape, exclusive")]
     #[test_case(h_shape(), CropType::Inclusive; "h-shape, inclusive")]
-    fn test_all_crops(shape: Pg, crop_type: CropType) {
+    fn test_all_crops(shape: Pg, crop_type: CropType) -> Result<()> {
         let boundary = Rect((50, 50), (50, 50)).unwrap();
         let margin = 10.0;
         for (_idx, offset) in iproduct!(0..=5, 0..=4).map(|(i, j)| {
@@ -434,8 +434,7 @@ mod test {
         {
             let inner = shape.clone() + offset;
 
-            let (_resultants, graph) =
-                CropGraph::run(&inner, &boundary, crop_type).expect("run should have succeeded.");
+            let (_resultants, graph) = CropGraph::run(&inner, &boundary, crop_type)?;
 
             // // Assert some stuff about the resultant polygon graphs.
             // for node in graph.nodes() {
@@ -466,5 +465,6 @@ mod test {
                 }
             }
         }
+        Ok(())
     }
 }
