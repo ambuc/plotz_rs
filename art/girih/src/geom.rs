@@ -1,3 +1,4 @@
+use anyhow::Result;
 use plotz_color::{subway::PURPLE_7, ColorRGB, LIGHTBLUE, LIMEGREEN, ORANGERED, YELLOW};
 use plotz_geometry::{
     bounded::Bounded,
@@ -158,7 +159,7 @@ pub struct PlacedTile {
 }
 
 impl PlacedTile {
-    pub fn to_strapwork(&self) -> Vec<Sg> {
+    pub fn to_strapwork(&self) -> Result<Vec<Sg>> {
         let g = self.tile.enum_type;
         let mut strapwork = vec![];
 
@@ -176,10 +177,7 @@ impl PlacedTile {
 
                 let sg_1_f = edge1.midpoint() + PolarPt(0.1, angle_1);
                 let sg_2_f = edge1.midpoint() + PolarPt(0.1, angle_2);
-                match (
-                    self.pg.contains_pt(&sg_1_f).expect("ok"),
-                    self.pg.contains_pt(&sg_2_f).expect("ok"),
-                ) {
+                match (self.pg.contains_pt(&sg_1_f)?, self.pg.contains_pt(&sg_2_f)?) {
                     (PointLoc::Inside, _) => angle_1,
                     (_, PointLoc::Inside) => angle_2,
                     _ => panic!("oh"),
@@ -255,14 +253,14 @@ impl PlacedTile {
                 }
             }
         }
-        s_ver
+        Ok(s_ver)
     }
 
-    pub fn to_annotated_placed_tiles(&self) -> AnnotatedPlacedTile {
+    pub fn to_annotated_placed_tiles(&self) -> Result<AnnotatedPlacedTile> {
         let axis = Pt(0, 0);
         let offset = 0.01;
 
-        AnnotatedPlacedTile {
+        Ok(AnnotatedPlacedTile {
             girih: self.tile.enum_type,
             outline: self.pg.clone(),
             straps: (PlacedTile {
@@ -273,14 +271,14 @@ impl PlacedTile {
                 },
                 tile: self.tile.clone(),
             })
-            .to_strapwork()
+            .to_strapwork()?
             .into_iter()
             .map(|mut s| {
                 s.rotate(&axis, -offset);
                 s
             })
             .collect(),
-        }
+        })
     }
 
     pub fn test_pts(&self) -> Vec<Pt> {

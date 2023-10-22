@@ -30,7 +30,7 @@ fn main() -> Result<()> {
     let margin = 25.0;
 
     Canvas::from_objs(
-        strategy3::run()
+        strategy3::run()?
             // strategy2::run()
             .into_iter()
             .map(|(mut obj, style)| {

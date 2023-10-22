@@ -1,4 +1,5 @@
 use crate::geom::*;
+use anyhow::{anyhow, Result};
 use indicatif::ProgressBar;
 use itertools::Itertools;
 use plotz_geometry::shapes::{pg::Pg, pt::Pt, sg::Sg};
@@ -40,21 +41,21 @@ impl Layout {
         }
     }
 
-    pub fn to_annotated_placed_tiles(&self) -> AnnotatedPlacedTiles {
+    pub fn to_annotated_placed_tiles(&self) -> Result<AnnotatedPlacedTiles> {
         let mut spts = AnnotatedPlacedTiles {
             outlines: vec![],
             straps: vec![],
         };
         for placed_tile in &self.placed_tiles {
-            let spt = placed_tile.to_annotated_placed_tiles();
+            let spt = placed_tile.to_annotated_placed_tiles()?;
             spts.outlines.push((spt.girih, spt.outline));
             spts.straps
                 .extend(spt.straps.into_iter().map(|strap| (spt.girih, strap)));
         }
-        spts
+        Ok(spts)
     }
 
-    fn next_bare_edge(&self) -> Sg {
+    fn next_bare_edge(&self) -> Result<Sg> {
         let mut bare_edges = vec![];
         for placed_tile in &self.placed_tiles {
             for segment in placed_tile.pg.to_segments() {
@@ -72,10 +73,10 @@ impl Layout {
         }
 
         let ctr: Pt = Pt(0, 0);
-        bare_edges
+        Ok(bare_edges
             .into_iter()
             .min_by_key(|sg| float_ord::FloatOrd(sg.midpoint().dist(&ctr)))
-            .expect("bare_edges should never be empty")
+            .ok_or(anyhow!("?"))?)
     }
 
     fn place_tile_on_edge_src(&self, g: Girih, c: Constraint) -> Option<PlacedTile> {
@@ -144,12 +145,12 @@ impl Layout {
     }
 
     // returns true if successfully placed tile (or if no tile needed to be placed.)
-    fn place_next_tile(&mut self, num_remaining: usize, bar: &mut ProgressBar) -> bool {
+    fn place_next_tile(&mut self, num_remaining: usize, bar: &mut ProgressBar) -> Result<bool> {
         if num_remaining == 0 {
-            return true;
+            return Ok(true);
         }
 
-        let next_bare_edge: Sg = self.next_bare_edge();
+        let next_bare_edge: Sg = self.next_bare_edge()?;
 
         for g in self.settings.choices() {
             let next_tiles: Vec<_> = [next_bare_edge, next_bare_edge.flip()]
@@ -171,20 +172,21 @@ impl Layout {
             for placed_tile in next_tiles {
                 self.placed_tiles.push(placed_tile);
                 bar.inc(1);
-                if self.place_next_tile(num_remaining - 1, bar) {
-                    return true;
+                if self.place_next_tile(num_remaining - 1, bar)? {
+                    return Ok(true);
                 }
                 self.placed_tiles.pop();
                 bar.set_position(bar.position() - 1);
             }
         }
         // if we made it this far without a placement, something is wrong.
-        false
+        Ok(false)
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> Result<()> {
         let mut bar = ProgressBar::new(self.settings.num_iterations.try_into().unwrap());
-        assert!(self.place_next_tile(self.settings.num_iterations, &mut bar));
+        assert!(self.place_next_tile(self.settings.num_iterations, &mut bar)?);
         bar.finish();
+        Ok(())
     }
 }

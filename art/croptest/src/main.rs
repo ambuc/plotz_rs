@@ -29,8 +29,7 @@ fn main() -> Result<()> {
             .with_max_level(tracing::Level::INFO)
             .without_time()
             .finish(),
-    )
-    .expect("setting default subscriber failed");
+    )?;
 
     let args: Args = argh::from_env();
 

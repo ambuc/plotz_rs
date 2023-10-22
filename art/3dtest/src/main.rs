@@ -80,8 +80,7 @@ fn main() -> Result<()> {
             // .debug(_scenedebug)
             .objects(cubes(CubesConfig { n: 3, width: 0.8 }))
             .build()
-            .project_with(Projection::default(), Occlusion::True)
-            .expect("ok")
+            .project_with(Projection::default(), Occlusion::True)?
             .into_iter(),
         /*autobucket=*/ false,
     )

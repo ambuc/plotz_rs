@@ -4,6 +4,7 @@ use crate::{
     geom::*,
     layout::{AnnotatedPlacedTiles, Layout, Settings},
 };
+use anyhow::Result;
 use indicatif::ProgressBar;
 use itertools::Itertools;
 use plotz_color::BLACK;
@@ -150,7 +151,7 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj, Style
     v
 }
 
-pub fn run() -> Vec<(Obj, Style)> {
+pub fn run() -> Result<Vec<(Obj, Style)>> {
     let d = Display(vec![
         // Instr::StrapsOriginal(2.0),
         Instr::TilesOutline { thickness: 1.0 },
@@ -176,7 +177,7 @@ pub fn run() -> Vec<(Obj, Style)> {
         },
     );
 
-    layout.run();
+    layout.run()?;
 
-    postprocess(&d, layout.to_annotated_placed_tiles())
+    Ok(postprocess(&d, layout.to_annotated_placed_tiles()?))
 }
