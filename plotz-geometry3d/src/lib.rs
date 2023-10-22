@@ -5,6 +5,7 @@
 use anyhow::Result;
 use shapes::ry3::Ry3;
 
+pub mod bounded3;
 pub mod camera;
 pub mod group3;
 pub mod obj3;
