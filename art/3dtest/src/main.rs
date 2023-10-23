@@ -69,14 +69,14 @@ fn scene2() -> Result<Vec<(Obj3, Style)>> {
     let jenga: Group3<()> = Cuboid((0, 0, 0), (15, 5, 3));
 
     let mut i: Vec<_> = vec![];
-    i.extend((jenga.clone() + Pt3(0, 0, 0)).into_iter_objects());
-    i.extend((jenga.clone() + Pt3(0, 6, 0)).into_iter_objects());
-    i.extend((jenga.clone() + Pt3(0, 12, 0)).into_iter_objects());
+    i.extend((jenga.clone() + (0, 0, 0)).into_iter_objects());
+    i.extend((jenga.clone() + (0, 6, 0)).into_iter_objects());
+    i.extend((jenga.clone() + (0, 12, 0)).into_iter_objects());
     let layer: Group3<()> = Group3::<()>::new(i);
 
     let mut g: Vec<Group3<()>> = vec![];
     g.push(layer.clone());
-    g.push((layer.clone() + Pt3(0, 0, 8)).rotate_about_center_z_axis(FRAC_PI_2)?);
+    g.push((layer.clone() + (0, 0, 8)).rotate_about_center_z_axis(FRAC_PI_2)?);
 
     Ok(g.into_iter()
         .flat_map(|x| x.into_iter_objects().map(|(o, _)| (o, Style::default())))
