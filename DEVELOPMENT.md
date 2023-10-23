@@ -23,6 +23,6 @@ cargo nextest run --workspace --color=always --release
 # Running the main mapper in src/main.rs
 RUST_LOG=info cargo run --release -- --input-glob testdata/wuppertal.geojson --output-directory "/tmp/" --width 1024 --height 1024
 
-# Running an example image; in art/flowfield, for example
-cargo run --release -p art/flowifeld -- --output-path-prefix /tmp/foo
+# Running an example image; in flowfield, for example
+cargo run --release -p flowfield -- --output-path-prefix /tmp/foo
 ```

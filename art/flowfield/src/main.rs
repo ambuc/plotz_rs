@@ -123,9 +123,9 @@ fn main() -> Result<()> {
                             history.push(next);
                         }
 
-                        let sg = Multiline(history).expect("multiline");
+                        let pg = Multiline(history).expect("multiline");
                         (
-                            Obj::Pg(sg),
+                            Obj::Pg(pg),
                             Style {
                                 color: cluster_color,
                                 ..Default::default()
