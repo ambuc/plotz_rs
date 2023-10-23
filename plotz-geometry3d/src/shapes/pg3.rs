@@ -1,6 +1,10 @@
 //! A polygon in 3d.
 
-use crate::{shapes::pt3::Pt3, Rotatable};
+use crate::{
+    bounded3::{streaming_bbox, Bounded3, Bounds3},
+    shapes::pt3::Pt3,
+    Rotatable,
+};
 use anyhow::Result;
 use float_ord::FloatOrd;
 use std::{fmt::Debug, ops::*};
@@ -164,7 +168,17 @@ impl SubAssign<Pt3> for Pg3 {
 }
 
 impl Rotatable for Pg3 {
-    fn rotate(&mut self, _by: f64, _about: Ry3) -> Result<()> {
-        unimplemented!("oh")
+    fn rotate(&self, by: f64, about: Ry3) -> Result<Self> {
+        let mut v = vec![];
+        for p in self.pts.iter() {
+            v.push(p.rotate(by, about)?);
+        }
+        Ok(Pg3(v))
+    }
+}
+
+impl Bounded3 for Pg3 {
+    fn bounds3(&self) -> Result<Bounds3> {
+        streaming_bbox(self.pts.iter())
     }
 }

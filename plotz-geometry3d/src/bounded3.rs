@@ -4,6 +4,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use float_ord::FloatOrd;
+use std::cmp::{max, min};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Bounds3 {
@@ -62,12 +63,8 @@ impl Bounds3 {
 pub trait Bounded3 {
     fn bounds3(&self) -> Result<Bounds3>;
 }
-impl Bounded3 for Bounds3 {
-    fn bounds3(&self) -> Result<Bounds3> {
-        Ok(*self)
-    }
-}
 
+#[derive(Default)]
 pub struct Bounds3Collector {
     min_x: Option<FloatOrd<f64>>,
     min_y: Option<FloatOrd<f64>>,
@@ -78,26 +75,11 @@ pub struct Bounds3Collector {
     items_seen: usize,
 }
 
-impl Default for Bounds3Collector {
-    fn default() -> Self {
-        Self {
-            min_x: None,
-            min_y: None,
-            min_z: None,
-            max_x: None,
-            max_y: None,
-            max_z: None,
-            items_seen: 0_usize,
-        }
-    }
-}
-
 impl Bounds3Collector {
     pub fn items_seen(&self) -> usize {
         self.items_seen
     }
-    pub fn incorporate(&mut self, b: &impl Bounded3) -> Result<()> {
-        //
+    pub fn incorporate(&mut self, b: &Bounds3) -> Result<()> {
         let Bounds3 {
             x_min,
             x_max,
@@ -105,31 +87,31 @@ impl Bounds3Collector {
             y_max,
             z_min,
             z_max,
-        } = b.bounds3()?;
+        } = b;
 
         self.min_x = Some(match self.min_x {
-            None => FloatOrd(x_min),
-            Some(extant) => std::cmp::min(extant, FloatOrd(x_min)),
+            None => FloatOrd(*x_min),
+            Some(e) => min(e, FloatOrd(*x_min)),
         });
         self.min_y = Some(match self.min_y {
-            None => FloatOrd(y_min),
-            Some(extant) => std::cmp::min(extant, FloatOrd(y_min)),
+            None => FloatOrd(*y_min),
+            Some(e) => min(e, FloatOrd(*y_min)),
         });
         self.min_z = Some(match self.min_z {
-            None => FloatOrd(z_min),
-            Some(extant) => std::cmp::min(extant, FloatOrd(z_min)),
+            None => FloatOrd(*z_min),
+            Some(e) => min(e, FloatOrd(*z_min)),
         });
         self.max_x = Some(match self.max_x {
-            None => FloatOrd(x_max),
-            Some(extant) => std::cmp::max(extant, FloatOrd(x_max)),
+            None => FloatOrd(*x_max),
+            Some(e) => max(e, FloatOrd(*x_max)),
         });
         self.max_y = Some(match self.max_y {
-            None => FloatOrd(y_max),
-            Some(extant) => std::cmp::max(extant, FloatOrd(y_max)),
+            None => FloatOrd(*y_max),
+            Some(e) => max(e, FloatOrd(*y_max)),
         });
         self.max_z = Some(match self.max_z {
-            None => FloatOrd(z_max),
-            Some(extant) => std::cmp::max(extant, FloatOrd(z_max)),
+            None => FloatOrd(*z_max),
+            Some(e) => max(e, FloatOrd(*z_max)),
         });
         self.items_seen += 1;
 
@@ -140,12 +122,12 @@ impl Bounds3Collector {
 impl Bounded3 for Bounds3Collector {
     fn bounds3(&self) -> Result<Bounds3> {
         Ok(Bounds3 {
-            x_min: self.min_x.ok_or(anyhow!("absent"))?.0,
-            x_max: self.max_x.ok_or(anyhow!("absent"))?.0,
-            y_min: self.min_y.ok_or(anyhow!("absent"))?.0,
-            y_max: self.max_y.ok_or(anyhow!("absent"))?.0,
-            z_min: self.min_z.ok_or(anyhow!("absent"))?.0,
-            z_max: self.max_z.ok_or(anyhow!("absent"))?.0,
+            x_min: self.min_x.ok_or(anyhow!("x_min is absent"))?.0,
+            x_max: self.max_x.ok_or(anyhow!("x_max is absent"))?.0,
+            y_min: self.min_y.ok_or(anyhow!("y_min is absent"))?.0,
+            y_max: self.max_y.ok_or(anyhow!("y_max is absent"))?.0,
+            z_min: self.min_z.ok_or(anyhow!("z_min is absent"))?.0,
+            z_max: self.max_z.ok_or(anyhow!("z_max is absent"))?.0,
         })
     }
 }
@@ -155,7 +137,7 @@ pub fn streaming_bbox<'a>(
 ) -> Result<Bounds3> {
     let mut bc = Bounds3Collector::default();
     for i in it {
-        bc.incorporate(i)?;
+        bc.incorporate(&i.bounds3()?)?;
     }
     if bc.items_seen == 0 {
         return Err(anyhow!("no items seen"));

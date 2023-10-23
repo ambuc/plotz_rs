@@ -4,9 +4,10 @@
 use anyhow::Result;
 
 use crate::{
+    bounded3::{Bounded3, Bounds3, Bounds3Collector},
     obj3::Obj3,
     shapes::{pt3::Pt3, ry3::Ry3},
-    Rotatable,
+    Rotatable, RotatableBounds,
 };
 use std::ops::*;
 
@@ -42,8 +43,33 @@ impl<T> AddAssign<Pt3> for Group3<T> {
     }
 }
 
-impl<T> Rotatable for Group3<T> {
-    fn rotate(&mut self, by: f64, about: Ry3) -> Result<()> {
-        todo!("?")
+impl<T: 'static> Rotatable for Group3<T>
+where
+    T: Clone,
+{
+    fn rotate(&self, by: f64, about: Ry3) -> Result<Self> {
+        let mut v: Vec<(Obj3, T)> = vec![];
+        for (obj3, style) in self.iter_objects() {
+            //
+            v.push((obj3.rotate(by, about)?, (*style).clone()));
+        }
+        Ok(Group3::<T>(v))
+    }
+}
+
+impl<T> RotatableBounds for Group3<T>
+where
+    T: Clone + 'static,
+{
+    //
+}
+
+impl<T: 'static> Bounded3 for Group3<T> {
+    fn bounds3(&self) -> Result<Bounds3> {
+        let mut bc = Bounds3Collector::default();
+        for (i, _) in self.0.iter() {
+            bc.incorporate(&i.bounds3()?)?;
+        }
+        bc.bounds3()
     }
 }

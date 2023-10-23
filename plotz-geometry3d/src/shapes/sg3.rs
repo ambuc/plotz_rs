@@ -1,6 +1,10 @@
 //! A segment in 3d.
 
-use crate::shapes::pt3::Pt3;
+use crate::{
+    bounded3::{Bounded3, Bounds3},
+    shapes::pt3::Pt3,
+};
+use anyhow::Result;
 use float_ord::FloatOrd;
 use std::{fmt::Debug, ops::*};
 
@@ -123,5 +127,11 @@ impl Sub<Pt3> for Sg3 {
 impl SubAssign<Pt3> for Sg3 {
     fn sub_assign(&mut self, rhs: Pt3) {
         *self = Sg3(self.i - rhs, self.f - rhs);
+    }
+}
+
+impl Bounded3 for Sg3 {
+    fn bounds3(&self) -> Result<Bounds3> {
+        todo!("?")
     }
 }

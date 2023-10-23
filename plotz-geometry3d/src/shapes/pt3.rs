@@ -1,6 +1,10 @@
 //! A 3D point.
 //!
-use crate::shapes::sg3::Sg3;
+use crate::{
+    bounded3::{Bounded3, Bounds3},
+    shapes::sg3::Sg3,
+    Rotatable,
+};
 use anyhow::{anyhow, Result};
 use float_ord::FloatOrd;
 use std::{
@@ -10,6 +14,8 @@ use std::{
     hash::Hash,
     ops::*,
 };
+
+use super::ry3::Ry3;
 
 #[derive(Hash, Copy, Clone, PartialOrd, PartialEq, Eq, Ord)]
 pub struct Pt3 {
@@ -174,4 +180,66 @@ pub fn PolarPt3(r: f64, theta_rad: f64, phi_rad: f64) -> Result<Pt3> {
         r * theta_rad.sin() * phi_rad.sin(),
         r * theta_rad.cos(),
     ))
+}
+
+impl Rotatable for Pt3 {
+    fn rotate(&self, by_rad: f64, about: Ry3) -> Result<Pt3> {
+        // https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
+        // R = [ ux ux (1 - cos t) +    cos t  ,  ux uy (1 - cos t) - uz sin t   ,  ux uz (1 - cos t) + uy sin t  ]
+        // .   [ uy ux (1 - cos t) + uz sin t  ,  uy uy (1 - cos t) +    cos t   ,  uy uz (1 - cos t) + ux sin t  ]
+        // .   [ uz ux (1 - cos t) + uy sin t  ,  uz uy (1 - cos t) + ux sin t   ,  uz uz (1 - cos t) +    cos t  ]
+        // how to use? R * input = output;
+        // in 3d, R = [ R00 R10 R20 ] [ I0 ] = [ O0 ]
+
+        // .          [ R01 R11 R21 ] [ I1 ] = [ O1 ]
+        // .          [ R02 R12 R22 ] [ I2 ] = [ O2 ]
+        // so, R00*I0 + R10*I1 + R20*I2 ==> O0
+        //   , R01*I0 + R11*I1 + R21*I2 ==> O1
+        //   , R02*I0 + R12*I1 + R22*I2 ==> O2
+        // O = [ O0, O1, O2 ]
+
+        let sg3 = about.to_sg3(1.0)?;
+        let (ux, uy, uz) = (sg3.f.x.0, sg3.f.y.0, sg3.f.z.0);
+        let cost: f64 = by_rad.cos();
+        let sint: f64 = by_rad.sin();
+        let omct: f64 = 1.0 - cost;
+
+        let (r00, r10, r20): (f64, f64, f64) = (
+            ux * ux * omct + cost,
+            ux * uy * omct - uz * sint,
+            ux * uz * omct + uy * sint,
+        );
+        let (r01, r11, r21): (f64, f64, f64) = (
+            uy * ux * omct + uz * sint,
+            uy * uy * omct + cost,
+            uy * uz * omct + ux * sint,
+        );
+        let (r02, r12, r22): (f64, f64, f64) = (
+            uz * ux * omct + uy * sint,
+            uz * uy * omct + ux * sint,
+            uz * uz * omct + cost,
+        );
+        let (i0, i1, i2): (f64, f64, f64) = (self.x.0, self.y.0, self.z.0);
+
+        let (o0, o1, o2): (f64, f64, f64) = (
+            r00 * i0 + r10 * i1 + r20 * i2,
+            r01 * i0 + r11 * i1 + r21 * i2,
+            r02 * i0 + r12 * i1 + r22 * i2,
+        );
+
+        Ok(Pt3(o0, o1, o2))
+    }
+}
+
+impl Bounded3 for Pt3 {
+    fn bounds3(&self) -> Result<Bounds3> {
+        Ok(Bounds3 {
+            x_min: self.x.0,
+            x_max: self.x.0,
+            y_min: self.y.0,
+            y_max: self.y.0,
+            z_min: self.z.0,
+            z_max: self.z.0,
+        })
+    }
 }

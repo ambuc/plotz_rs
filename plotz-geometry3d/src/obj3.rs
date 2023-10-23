@@ -1,9 +1,12 @@
 //! An inner object.
 
 use crate::{
+    bounded3::{Bounded3, Bounds3},
     group3::Group3,
-    shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
+    shapes::{pg3::Pg3, pt3::Pt3, ry3::Ry3, sg3::Sg3},
+    Rotatable,
 };
+use anyhow::Result;
 use derive_more::From;
 use std::ops::*;
 
@@ -73,6 +76,26 @@ where
             Obj3::Group3(g) => {
                 *g += rhs;
             }
+        }
+    }
+}
+
+impl Rotatable for Obj3 {
+    fn rotate(&self, by: f64, about: Ry3) -> Result<Self> {
+        match self {
+            Obj3::Pg3(pg3) => Ok(pg3.rotate(by, about)?.into()),
+            Obj3::Sg3(_) => todo!("sg rotate?"),
+            Obj3::Group3(g3) => Ok(g3.rotate(by, about)?.into()),
+        }
+    }
+}
+
+impl Bounded3 for Obj3 {
+    fn bounds3(&self) -> Result<Bounds3> {
+        match self {
+            Obj3::Pg3(pg3) => pg3.bounds3(),
+            Obj3::Sg3(sg3) => sg3.bounds3(),
+            Obj3::Group3(g3) => g3.bounds3(),
         }
     }
 }

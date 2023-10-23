@@ -10,7 +10,7 @@ use plotz_geometry3d::{
     obj3::Obj3,
     scene::{debug::SceneDebug, Scene},
     shapes::{cube3d::Cube, cuboid3d::Cuboid, pt3::Pt3},
-    Rotatable,
+    RotatableBounds,
 };
 use std::{f64::consts::FRAC_PI_2, iter::zip};
 use tracing::*;
@@ -30,6 +30,7 @@ struct CubesConfig {
     k: usize,
 }
 
+#[allow(unused)]
 fn cubes(cc: CubesConfig) -> Vec<(Obj3, Style)> {
     let mut objects = vec![];
 
@@ -53,6 +54,7 @@ fn cubes(cc: CubesConfig) -> Vec<(Obj3, Style)> {
     objects
 }
 
+#[allow(unused)]
 fn scene1() -> Result<Vec<(Obj3, Style)>> {
     Ok(cubes(CubesConfig {
         i: 3,
@@ -74,7 +76,7 @@ fn scene2() -> Result<Vec<(Obj3, Style)>> {
 
     let mut g: Vec<Group3<()>> = vec![];
     g.push(layer.clone());
-    // g.push((layer.clone() + Pt3(0, 0, 4)).rotate(FRAC_PI_2, )?);
+    g.push((layer.clone() + Pt3(0, 0, 4)).rotate_about_center_z_axis(FRAC_PI_2)?);
 
     Ok(g.into_iter()
         .map(|x| x.into_iter_objects().map(|(o, _)| (o, Style::default())))
