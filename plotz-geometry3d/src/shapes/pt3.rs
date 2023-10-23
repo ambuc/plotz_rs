@@ -73,6 +73,15 @@ where
     }
 }
 
+impl<T> Into<(T, T, T)> for Pt3
+where
+    T: From<f64>,
+{
+    fn into(self) -> (T, T, T) {
+        (self.x.0.into(), self.y.0.into(), self.z.0.into())
+    }
+}
+
 impl Add<Pt3> for Pt3 {
     type Output = Self;
     fn add(self, rhs: Pt3) -> Self::Output {
@@ -216,12 +225,8 @@ impl Rotatable for Pt3 {
         // just say no to rounding error accumulation
         let t = by_rad % TAU;
 
-        let sg3 = about.to_sg3(1.0)?;
-        let (ux, uy, uz) = (
-            sg3.f.x.0 - sg3.i.x.0,
-            sg3.f.y.0 - sg3.i.y.0,
-            sg3.f.z.0 - sg3.i.z.0,
-        );
+        let sg3 = about.to_sg3_with_len(1.0)?;
+        let (ux, uy, uz): (f64, f64, f64) = (sg3.f - sg3.i).into();
         let cost: f64 = t.cos();
         let sint: f64 = t.sin();
 
@@ -237,13 +242,13 @@ impl Rotatable for Pt3 {
             uz * uz * (1.0 - cost) + cost,
         );
 
-        let (a0, a1, a2) = (self.x.0, self.y.0, self.z.0);
+        let (a0, a1, a2): (f64, f64, f64) = (*self - sg3.f).into();
 
         Ok(Pt3(
             /*b0=*/ r00 * a0 + r10 * a1 + r20 * a2,
             /*b1=*/ r01 * a0 + r11 * a1 + r21 * a2,
             /*b2=*/ r02 * a0 + r12 * a1 + r22 * a2,
-        ))
+        ) + sg3.f)
     }
     // foo
 }

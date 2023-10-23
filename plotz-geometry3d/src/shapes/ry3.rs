@@ -44,7 +44,7 @@ pub fn Ry3(pt3: Pt3, theta_rad: f64, phi_rad: f64) -> Result<Ry3> {
 }
 
 impl Ry3 {
-    pub fn to_sg3(&self, len: f64) -> Result<Sg3> {
+    pub fn to_sg3_with_len(&self, len: f64) -> Result<Sg3> {
         Ok(Sg3 {
             i: self.pt3,
             f: self.pt3 + PolarPt3(len, self.theta_rad, self.phi_rad)?,

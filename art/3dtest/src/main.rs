@@ -12,7 +12,7 @@ use plotz_geometry3d::{
     shapes::{cube3d::Cube, cuboid3d::Cuboid, pt3::Pt3},
     RotatableBounds,
 };
-use std::{f64::consts::FRAC_PI_2, iter::zip};
+use std::{f64::consts::*, iter::zip};
 use tracing::*;
 
 #[derive(FromArgs)]
@@ -76,7 +76,7 @@ fn scene2() -> Result<Vec<(Obj3, Style)>> {
 
     let mut g: Vec<Group3<()>> = vec![];
     g.push(layer.clone());
-    g.push((layer.clone() + Pt3(0, 0, 4)).rotate_about_center_z_axis(FRAC_PI_2)?);
+    g.push((layer.clone() + Pt3(0, 0, 8)).rotate_about_center_z_axis(FRAC_PI_2)?);
 
     Ok(g.into_iter()
         .flat_map(|x| x.into_iter_objects().map(|(o, _)| (o, Style::default())))
