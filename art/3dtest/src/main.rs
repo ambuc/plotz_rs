@@ -79,8 +79,7 @@ fn scene2() -> Result<Vec<(Obj3, Style)>> {
     g.push((layer.clone() + Pt3(0, 0, 4)).rotate_about_center_z_axis(FRAC_PI_2)?);
 
     Ok(g.into_iter()
-        .map(|x| x.into_iter_objects().map(|(o, _)| (o, Style::default())))
-        .flatten()
+        .flat_map(|x| x.into_iter_objects().map(|(o, _)| (o, Style::default())))
         .collect())
 }
 

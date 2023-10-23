@@ -73,10 +73,10 @@ impl Layout {
         }
 
         let ctr: Pt = Pt(0, 0);
-        Ok(bare_edges
+        bare_edges
             .into_iter()
             .min_by_key(|sg| float_ord::FloatOrd(sg.midpoint().dist(&ctr)))
-            .ok_or(anyhow!("?"))?)
+            .ok_or(anyhow!("?"))
     }
 
     fn place_tile_on_edge_src(&self, g: Girih, c: Constraint) -> Option<PlacedTile> {

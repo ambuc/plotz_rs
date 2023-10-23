@@ -22,9 +22,7 @@ where
 
 pub trait RotatableBounds: Bounded3 + Rotatable {
     fn rotate_about_center_z_axis(&self, by: f64) -> Result<Self> {
-        let b = self.bounds3()?;
-        let c = b.center();
-        let ry3 = Ry3(c, 0.0, 0.0)?; // theta_rad 0, phi_rad 0, straight up about z-axis;
-        self.rotate(by, ry3)
+        // theta_rad 0, phi_rad 0, straight up about z-axis;
+        self.rotate(by, Ry3(self.bounds3()?.center(), 0.0, 0.0)?)
     }
 }
