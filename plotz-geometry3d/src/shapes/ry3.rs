@@ -7,7 +7,7 @@ use std::f64::consts::{PI, TAU};
 use super::pt3::PolarPt3;
 
 /// A ray (3d) which emits from a Pt3 and goes in a direction (3d).
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Ry3 {
     pt3: Pt3,
 

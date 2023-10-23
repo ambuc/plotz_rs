@@ -9,6 +9,7 @@ edition = "2021"
 plotz-color = { path = "../plotz-color" }
 plotz-geometry = { path = "../plotz-geometry" }
 float-ord = "*"
+float-cmp = "*"
 itertools = "*"
 anyhow = "*"
 derive_more = "*"

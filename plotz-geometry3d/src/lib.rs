@@ -2,6 +2,8 @@
 
 #![allow(missing_docs)]
 
+use std::f64::consts::FRAC_PI_2;
+
 use anyhow::Result;
 use bounded3::Bounded3;
 use shapes::ry3::Ry3;
@@ -21,6 +23,14 @@ where
 }
 
 pub trait RotatableBounds: Bounded3 + Rotatable {
+    fn rotate_about_center_x_axis(&self, by: f64) -> Result<Self> {
+        // theta_rad 0, phi_rad PI/2, along x axis
+        self.rotate(by, Ry3(self.bounds3()?.center(), 0.0, FRAC_PI_2)?)
+    }
+    fn rotate_about_center_y_axis(&self, by: f64) -> Result<Self> {
+        // theta_rad PI/2, phi_rad PI/2, along y axis
+        self.rotate(by, Ry3(self.bounds3()?.center(), FRAC_PI_2, FRAC_PI_2)?)
+    }
     fn rotate_about_center_z_axis(&self, by: f64) -> Result<Self> {
         // theta_rad 0, phi_rad 0, straight up about z-axis;
         self.rotate(by, Ry3(self.bounds3()?.center(), 0.0, 0.0)?)
