@@ -3,16 +3,20 @@
 use anyhow::*;
 use itertools::Itertools;
 use plotz_geometry::{crop::Croppable, obj::Obj, shading::shade_polygon, style::Style};
+use typed_builder::TypedBuilder;
 
+#[derive(Debug, Copy, Clone, Default, TypedBuilder)]
+pub struct OccluderConfig {
+    pub color_according_to_depth: bool,
+}
+
+#[derive(Default, TypedBuilder)]
 pub struct Occluder {
-    objects: Vec<(Obj, Style)>,
+    pub config: OccluderConfig,
+    pub objects: Vec<(Obj, Style)>,
 }
 
 impl Occluder {
-    pub fn new() -> Occluder {
-        Occluder { objects: vec![] }
-    }
-
     fn hide_a_behind_b(incoming: &Obj, existing: &Obj) -> Result<Vec<Obj>> {
         // TODO(jbuckland): use quadtrees here to make this MUCH faster please!!!!
 

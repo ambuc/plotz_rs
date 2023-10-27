@@ -2,7 +2,7 @@
 //! plane.
 
 pub mod debug;
-mod occluder;
+pub mod occluder;
 
 use crate::{
     camera::{Occlusion, Projection},
@@ -16,26 +16,19 @@ use plotz_geometry::{obj::Obj, style::Style, *};
 use std::fmt::Debug;
 use typed_builder::TypedBuilder;
 
-#[derive(Debug, Clone, TypedBuilder)]
+#[derive(Debug, Clone, Default, TypedBuilder)]
 pub struct Scene {
     #[builder(default)]
     objects: Vec<(Obj3, Style)>,
 
     #[builder(default, setter(strip_option))]
     debug: Option<SceneDebug>,
-}
 
-impl Default for Scene {
-    fn default() -> Self {
-        Self::new()
-    }
+    #[builder(default)]
+    occluder_config: occluder::OccluderConfig,
 }
 
 impl Scene {
-    pub fn new() -> Scene {
-        Scene::builder().build()
-    }
-
     pub fn project_with(
         &self,
         projection: Projection,
@@ -54,7 +47,10 @@ impl Scene {
                 // add objects to the occluder in distance order.
                 // start at the front (so that the objects in the front can
                 // remain unmodified) and work backwards.
-                let mut occ = Occluder::new();
+                let mut occ = Occluder {
+                    config: self.occluder_config,
+                    ..Default::default()
+                };
 
                 for sobj3 in self.objects.iter().sorted_by(|(o1, _), (o2, _)| {
                     Ord::cmp(
@@ -67,6 +63,7 @@ impl Scene {
                     if let Some(SceneDebug {
                         draw_wireframes,
                         annotate: should_annotate,
+                        ..
                     }) = &self.debug
                     {
                         if let Some(Style {

@@ -8,7 +8,7 @@ use plotz_geometry3d::{
     camera::{Occlusion, Projection},
     group3::Group3,
     obj3::Obj3,
-    scene::{debug::SceneDebug, Scene},
+    scene::{debug::SceneDebug, occluder, Scene},
     shapes::{cube3d::Cube, cuboid3d::Cuboid, pt3::Pt3},
     RotatableBounds,
 };
@@ -115,6 +115,10 @@ fn main() -> Result<()> {
             // .debug(_scenedebug)
             // .objects(scene1()?)
             .objects(scene2()?.collect())
+            .occluder_config(occluder::OccluderConfig {
+                color_according_to_depth: true,
+                ..Default::default()
+            })
             .build()
             .project_with(Projection::default(), Occlusion::True)
             .context("default projection with occlusion")?
