@@ -80,17 +80,16 @@ fn main() -> Result<()> {
         );
     }
 
-    let canvas = Canvas {
-        dos_by_bucket: canvas::to_canvas_map(dos, /*autobucket=*/ false),
-        frame: Some(frame),
-    };
-
-    canvas.write_to_svg(
-        Size {
-            width: 800,
-            height: 1000,
-        },
-        &args.output_path_prefix,
-    )?;
+    Canvas::builder()
+        .dos_by_bucket(canvas::to_canvas_map(dos, /*autobucket=*/ false))
+        .frame(frame)
+        .build()
+        .write_to_svg(
+            Size {
+                width: 800,
+                height: 1000,
+            },
+            &args.output_path_prefix,
+        )?;
     Ok(())
 }

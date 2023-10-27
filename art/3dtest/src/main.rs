@@ -111,42 +111,42 @@ fn main() -> Result<()> {
         .finish();
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
-    let _annotation = AnnotationSettings::builder()
-        .font_size(12.0)
-        .precision(3)
-        .build();
     let _scenedebug = SceneDebug::builder()
         .draw_wireframes(Style {
             color: GRAY,
             thickness: 0.5,
             ..Default::default()
         })
-        .annotate(_annotation)
+        .annotate(
+            AnnotationSettings::builder()
+                .font_size(12.0)
+                .precision(3)
+                .build(),
+        )
         .build();
 
     let args: Args = argh::from_env();
-    Canvas {
-        dos_by_bucket: canvas::to_canvas_map(
+    Canvas::builder()
+        .dos_by_bucket(canvas::to_canvas_map(
             Scene::builder()
                 // .debug(_scenedebug)
                 // .objects(scene1()?)
                 .objects(scene2()?.collect())
                 .occluder_config(occluder::OccluderConfig {
                     color_according_to_depth: Some(&GRADIENT),
-                    ..Default::default()
                 })
                 .build()
                 .project()
                 .context("default projection with occlusion")?,
             /*autobucket=*/ false,
-        ),
-        frame: Some(make_frame_with_margin(
+        ))
+        .frame(make_frame_with_margin(
             (800.0, 600.0),
             /*margin=*/ 25.0,
-        )),
-    }
-    .scale_to_fit_frame()?
-    .write_to_svg((600, 800), &args.output_path_prefix)?;
+        ))
+        .build()
+        .scale_to_fit_frame()?
+        .write_to_svg((600, 800), &args.output_path_prefix)?;
     Ok(())
 }
 

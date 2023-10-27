@@ -33,8 +33,8 @@ fn main() -> Result<()> {
 
     let margin = 25.0;
 
-    Canvas {
-        dos_by_bucket: canvas::to_canvas_map(
+    Canvas::builder()
+        .dos_by_bucket(canvas::to_canvas_map(
             strategy3::run()?
                 // strategy2::run()
                 .into_iter()
@@ -46,18 +46,18 @@ fn main() -> Result<()> {
                 .map(|so2| (so2.0, so2.1)),
             /*autobucket=*/
             true,
-        ),
-        frame: Some(make_frame(
+        ))
+        .frame(make_frame(
             /*wh=*/ (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
             /*offset=*/ (margin, margin),
-        )),
-    }
-    .write_to_svg(
-        Size {
-            width: 1000,
-            height: 800,
-        },
-        &args.output_path_prefix,
-    )?;
+        ))
+        .build()
+        .write_to_svg(
+            Size {
+                width: 1000,
+                height: 800,
+            },
+            &args.output_path_prefix,
+        )?;
     Ok(())
 }

@@ -120,17 +120,16 @@ fn main() -> Result<()> {
     // TODO(ambuc): split by group color before printing
     // TODO(ambuc): split by group color before printing
 
-    let canvas = Canvas {
-        dos_by_bucket: canvas::to_canvas_map(dos, /*autobucket=*/ true),
-        frame: Some(make_frame((DIM, DIM), Pt(20, 20))),
-    };
-
-    canvas.write_to_svg(
-        Size {
-            width: 800,
-            height: 1000,
-        },
-        &args.output_path_prefix,
-    )?;
+    Canvas::builder()
+        .dos_by_bucket(canvas::to_canvas_map(dos, /*autobucket=*/ true))
+        .frame(make_frame((DIM, DIM), Pt(20, 20)))
+        .build()
+        .write_to_svg(
+            Size {
+                width: 800,
+                height: 1000,
+            },
+            &args.output_path_prefix,
+        )?;
     Ok(())
 }

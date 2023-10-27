@@ -40,17 +40,16 @@ fn main() -> Result<()> {
             .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLoc::Inside)))
     });
 
-    let canvas = Canvas {
-        dos_by_bucket: canvas::to_canvas_map(dos, /*autobucket=*/ false),
-        frame: Some(frame),
-    };
-
-    canvas.write_to_svg(
-        Size {
-            width: (750.0 * 1.3) as usize,
-            height: 750,
-        },
-        &args.output_path_prefix,
-    )?;
+    Canvas::builder()
+        .dos_by_bucket(canvas::to_canvas_map(dos, /*autobucket=*/ false))
+        .frame(frame)
+        .build()
+        .write_to_svg(
+            Size {
+                width: (750.0 * 1.3) as usize,
+                height: 750,
+            },
+            &args.output_path_prefix,
+        )?;
     Ok(())
 }

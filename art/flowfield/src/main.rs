@@ -142,8 +142,8 @@ fn main() -> Result<()> {
     );
 
     let frame_pg: Pg = frame.0.clone().try_into().unwrap();
-    let canvas = Canvas {
-        dos_by_bucket: canvas::to_canvas_map(
+    Canvas::builder()
+        .dos_by_bucket(canvas::to_canvas_map(
             dos.into_iter().flat_map(|(obj, style)| {
                 obj.crop_to(&frame_pg)
                     .expect("todo")
@@ -153,17 +153,16 @@ fn main() -> Result<()> {
             }),
             /*autobucket=*/
             true,
-        ),
-        frame: Some(frame),
-    };
-
-    canvas.write_to_svg(
-        // yeah, i know
-        Size {
-            width: 1000,
-            height: 800,
-        },
-        &args.output_path_prefix,
-    )?;
+        ))
+        .frame(frame)
+        .build()
+        .write_to_svg(
+            // yeah, i know
+            Size {
+                width: 1000,
+                height: 800,
+            },
+            &args.output_path_prefix,
+        )?;
     Ok(())
 }
