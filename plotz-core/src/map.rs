@@ -173,7 +173,7 @@ impl Map {
     pub fn new(map_config: &MapConfig, center: Option<Pt>) -> Result<Map> {
         let bucketer = DefaultBucketer2 {};
 
-        let mut canvas = Canvas::new();
+        let mut canvas = Canvas::default();
 
         map_config
             .input_files
@@ -587,7 +587,7 @@ mod tests {
             let obj = Obj::Pg(Pg(initial));
             let mut map = Map {
                 canvas: {
-                    let mut canvas = Canvas::new();
+                    let mut canvas = Canvas::default();
                     canvas.dos_by_bucket.insert(
                         Some(Bucket::Area(Area::Beach)),
                         vec![(
@@ -640,7 +640,7 @@ mod tests {
             let mut map = Map {
                 center: None,
                 canvas: {
-                    let mut canvas = Canvas::new();
+                    let mut canvas = Canvas::default();
                     canvas.dos_by_bucket.insert(
                         Some(Bucket::Area(Area::Beach)),
                         vec![(

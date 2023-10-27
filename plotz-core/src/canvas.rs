@@ -23,7 +23,7 @@ use tracing::*;
 type CanvasMap = HashMap<Option<Bucket>, Vec<(Obj, Style)>>;
 
 /// Many objects.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Canvas {
     /// the objs.
     pub dos_by_bucket: CanvasMap,
@@ -32,21 +32,7 @@ pub struct Canvas {
     pub frame: Option<(Obj, Style)>,
 }
 
-impl Default for Canvas {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Canvas {
-    /// Create a new Canvas.
-    pub fn new() -> Canvas {
-        Canvas {
-            dos_by_bucket: CanvasMap::new(),
-            frame: None,
-        }
-    }
-
     /// ctor from objs
     pub fn from_objs<O: IntoIterator<Item = (Obj, Style)>>(objs: O, autobucket: bool) -> Canvas {
         let objs_vec: Vec<(Obj, Style)> = objs.into_iter().collect();
@@ -55,7 +41,7 @@ impl Canvas {
                 "Creating Canvas(autobucket=true) from {:?} objects",
                 objs_vec.len()
             );
-            let mut c = Canvas::new();
+            let mut c = Canvas::default();
             for (b, objs) in &objs_vec.into_iter().group_by(|(_obj, style)| style.color) {
                 c.dos_by_bucket
                     .entry(Some(Bucket::Color(b)))
