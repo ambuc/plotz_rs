@@ -259,7 +259,7 @@ fn main() -> Result<()> {
     }
 
     let mut canvas = Canvas {
-        dos_by_bucket: canvas::to_canvas_map(obj_vec.into_iter(), /*autobucket=*/ false),
+        dos_by_bucket: canvas::to_canvas_map(obj_vec, /*autobucket=*/ false),
         frame: Some(make_frame((image_width, image_width), Pt(margin, margin))),
     };
 

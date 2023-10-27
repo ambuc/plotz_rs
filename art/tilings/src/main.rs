@@ -41,7 +41,7 @@ fn main() -> Result<()> {
     });
 
     let canvas = Canvas {
-        dos_by_bucket: canvas::to_canvas_map(dos.into_iter(), /*autobucket=*/ false),
+        dos_by_bucket: canvas::to_canvas_map(dos, /*autobucket=*/ false),
         frame: Some(frame),
     };
 

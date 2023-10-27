@@ -174,7 +174,7 @@ fn main() -> Result<()> {
     }
 
     let c = Canvas {
-        dos_by_bucket: canvas::to_canvas_map(obj_vec.into_iter(), /*autobucket=*/ false),
+        dos_by_bucket: canvas::to_canvas_map(obj_vec, /*autobucket=*/ false),
         frame: Some(make_frame((image_width, image_width), Pt(margin, margin))),
     };
     c.scale_to_fit_frame()?.write_to_svg(

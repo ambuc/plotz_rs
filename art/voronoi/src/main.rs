@@ -121,7 +121,7 @@ fn main() -> Result<()> {
     // TODO(ambuc): split by group color before printing
 
     let canvas = Canvas {
-        dos_by_bucket: canvas::to_canvas_map(dos.into_iter(), /*autobucket=*/ true),
+        dos_by_bucket: canvas::to_canvas_map(dos, /*autobucket=*/ true),
         frame: Some(make_frame((DIM, DIM), Pt(20, 20))),
     };
 

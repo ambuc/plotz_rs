@@ -91,7 +91,7 @@ fn main() -> Result<()> {
     }
 
     let canvas = Canvas {
-        dos_by_bucket: canvas::to_canvas_map(dos.into_iter(), /*autobucket=*/ true),
+        dos_by_bucket: canvas::to_canvas_map(dos, /*autobucket=*/ true),
         frame: Some(frame),
     };
 

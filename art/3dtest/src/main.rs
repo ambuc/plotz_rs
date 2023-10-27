@@ -9,7 +9,6 @@ use plotz_core::{
 };
 use plotz_geometry::{style::Style, *};
 use plotz_geometry3d::{
-    camera::{Occlusion, Projection},
     group3::Group3,
     obj3::Obj3,
     scene::{debug::SceneDebug, occluder, Scene},
@@ -136,8 +135,6 @@ fn main() -> Result<()> {
                     color_according_to_depth: Some(&GRADIENT),
                     ..Default::default()
                 })
-                .projection(Projection::default())
-                .occlusion(Occlusion::True)
                 .build()
                 .project()
                 .context("default projection with occlusion")?,
