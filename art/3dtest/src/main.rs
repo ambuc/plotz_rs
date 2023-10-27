@@ -140,8 +140,7 @@ fn main() -> Result<()> {
                 .occlusion(Occlusion::True)
                 .build()
                 .project()
-                .context("default projection with occlusion")?
-                .into_iter(),
+                .context("default projection with occlusion")?,
             /*autobucket=*/ false,
         ),
         frame: Some(make_frame_with_margin(

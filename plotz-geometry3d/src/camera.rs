@@ -87,14 +87,9 @@ impl Default for Projection {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum Occlusion {
     False,
+    #[default]
     True,
-}
-
-impl Default for Occlusion {
-    fn default() -> Self {
-        Occlusion::True
-    }
 }

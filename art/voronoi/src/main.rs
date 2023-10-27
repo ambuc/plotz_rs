@@ -123,7 +123,6 @@ fn main() -> Result<()> {
     let canvas = Canvas {
         dos_by_bucket: canvas::to_canvas_map(dos.into_iter(), /*autobucket=*/ true),
         frame: Some(make_frame((DIM, DIM), Pt(20, 20))),
-        ..Default::default()
     };
 
     canvas.write_to_svg(

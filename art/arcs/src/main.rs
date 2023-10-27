@@ -83,7 +83,6 @@ fn main() -> Result<()> {
     let canvas = Canvas {
         dos_by_bucket: canvas::to_canvas_map(dos.into_iter(), /*autobucket=*/ false),
         frame: Some(frame),
-        ..Default::default()
     };
 
     canvas.write_to_svg(

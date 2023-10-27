@@ -51,7 +51,6 @@ fn main() -> Result<()> {
             /*wh=*/ (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
             /*offset=*/ (margin, margin),
         )),
-        ..Default::default()
     }
     .write_to_svg(
         Size {

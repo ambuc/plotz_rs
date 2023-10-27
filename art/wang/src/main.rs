@@ -261,7 +261,6 @@ fn main() -> Result<()> {
     let mut canvas = Canvas {
         dos_by_bucket: canvas::to_canvas_map(obj_vec.into_iter(), /*autobucket=*/ false),
         frame: Some(make_frame((image_width, image_width), Pt(margin, margin))),
-        ..Default::default()
     };
 
     let scale = image_width / 2.0 / (grid_cardinality as f64);

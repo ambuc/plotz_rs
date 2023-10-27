@@ -157,7 +157,6 @@ fn main() -> Result<()> {
             true,
         ),
         frame: Some(frame),
-        ..Default::default()
     };
 
     canvas.write_to_svg(size, &args.output_path_prefix)?;

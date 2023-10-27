@@ -73,12 +73,12 @@ where
     }
 }
 
-impl<T> Into<(T, T, T)> for Pt3
+impl<T> From<Pt3> for (T, T, T)
 where
     T: From<f64>,
 {
-    fn into(self) -> (T, T, T) {
-        (self.x.0.into(), self.y.0.into(), self.z.0.into())
+    fn from(val: Pt3) -> Self {
+        (val.x.0.into(), val.y.0.into(), val.z.0.into())
     }
 }
 
