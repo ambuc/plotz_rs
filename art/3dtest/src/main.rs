@@ -67,8 +67,8 @@ fn scene1() -> Result<Vec<(Obj3, Style)>> {
 fn scene2() -> Result<impl Iterator<Item = (Obj3, Style)>> {
     // jengas
     let (x_len, y_len, z_len) = (17.0, 5.0, 3.0);
-    let (_, y_space, z_space) = ((), 1.0, 2.0);
-    let (_, y_num, z_num) = ((), 2, 1);
+    let (_, y_space, z_space) = ((), 1.0, 0.0);
+    let (_, y_num, z_num) = ((), 1, 1);
     let jenga: Group3<()> = Cuboid((0, 0, 0), (x_len, y_len, z_len));
 
     let layer: Group3<_> = Group3::new(
