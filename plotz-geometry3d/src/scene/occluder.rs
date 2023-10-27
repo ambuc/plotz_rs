@@ -8,12 +8,16 @@ use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone, Copy, Default, TypedBuilder)]
 pub struct OccluderConfig {
+    #[builder(default)]
     pub color_according_to_depth: Option<&'static colorgrad::Gradient>,
 }
 
-#[derive(Debug, Default, TypedBuilder)]
+#[derive(Debug, Default, Clone, TypedBuilder)]
 pub struct Occluder {
+    #[builder(default)]
     pub config: OccluderConfig,
+
+    #[builder(default)]
     pub objects: Vec<(Obj, Style)>,
 }
 

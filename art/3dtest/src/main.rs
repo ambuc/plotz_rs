@@ -11,7 +11,11 @@ use plotz_geometry::{style::Style, *};
 use plotz_geometry3d::{
     group3::Group3,
     obj3::Obj3,
-    scene::{debug::SceneDebug, occluder, Scene},
+    scene::{
+        debug::SceneDebug,
+        occluder::{Occluder, OccluderConfig},
+        Scene,
+    },
     shapes::{cube3d::Cube, cuboid3d::Cuboid, pt3::Pt3},
     RotatableBounds,
 };
@@ -132,9 +136,15 @@ fn main() -> Result<()> {
                 // .debug(_scenedebug)
                 // .objects(scene1()?)
                 .objects(scene2()?.collect())
-                .occluder_config(occluder::OccluderConfig {
-                    color_according_to_depth: Some(&GRADIENT),
-                })
+                .occluder(
+                    Occluder::builder()
+                        .config(
+                            OccluderConfig::builder()
+                                .color_according_to_depth(Some(&GRADIENT))
+                                .build(),
+                        )
+                        .build(),
+                )
                 .build()
                 .project()
                 .context("default projection with occlusion")?,

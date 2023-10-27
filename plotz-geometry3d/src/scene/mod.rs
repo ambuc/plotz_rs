@@ -5,7 +5,7 @@ pub mod debug;
 pub mod occluder;
 
 use crate::{
-    camera::{Occlusion, Projection},
+    camera::Projection,
     obj3::Obj3,
     scene::{debug::SceneDebug, occluder::Occluder},
 };
@@ -26,36 +26,29 @@ pub struct Scene {
     #[builder(default, setter(strip_option))]
     debug: Option<SceneDebug>,
 
-    #[builder(default)]
-    occluder_config: occluder::OccluderConfig,
+    #[builder(default, setter(strip_option))]
+    occluder: Option<Occluder>,
 
     #[builder(default)]
     projection: Projection,
-
-    #[builder(default)]
-    occlusion: Occlusion,
 }
 
 impl Scene {
     #[instrument(skip(self))]
     pub fn project(self) -> Result<Vec<(Obj, Style)>> {
-        match (self.projection, self.occlusion) {
-            (Projection::Oblique(obl), Occlusion::False) => Ok(self
+        match (self.projection, self.occluder) {
+            (Projection::Oblique(obl), None) => Ok(self
                 .objects
                 .iter()
                 .map(|sobj3| obl.project_styled_obj3(sobj3))
                 .collect()),
 
-            (Projection::Oblique(obl), Occlusion::True) => {
+            (Projection::Oblique(obl), Some(mut occluder)) => {
                 let mut resultant: Vec<(Obj, Style)> = vec![];
 
                 // add objects to the occluder in distance order.
                 // start at the front (so that the objects in the front can
                 // remain unmodified) and work backwards.
-                let mut occ = Occluder {
-                    config: self.occluder_config,
-                    ..Default::default()
-                };
 
                 let mut sorted_objs: Vec<(Obj3, Style)> = self
                     .objects
@@ -69,7 +62,7 @@ impl Scene {
                     .collect();
 
                 // optionally color according to depth.
-                if let Some(x) = self.occluder_config.color_according_to_depth {
+                if let Some(x) = occluder.config.color_according_to_depth {
                     let length = sorted_objs.len();
 
                     for (i, (_, s)) in sorted_objs.iter_mut().enumerate() {
@@ -112,9 +105,9 @@ impl Scene {
                     }
 
                     let dbg = format!("adding object:\n\t{:?}", &obj);
-                    occ.add((obj, style)).context(dbg)?;
+                    occluder.add((obj, style)).context(dbg)?;
                 }
-                resultant.extend(occ.export()?);
+                resultant.extend(occluder.export()?);
                 Ok(resultant)
             }
         }
