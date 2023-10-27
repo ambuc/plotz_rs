@@ -123,7 +123,7 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj, Style
                 (
                     Obj::Pg(pg),
                     Style {
-                        color: &BLACK,
+                        color: BLACK,
                         thickness: *thickness,
                         ..Default::default()
                     },

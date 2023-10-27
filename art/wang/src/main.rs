@@ -194,7 +194,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)
             (
                 Obj::Pg(pg),
                 Style {
-                    color: [&BLUE, &GREEN, &RED, &YELLOW][cell.as_usize()],
+                    color: [BLUE, GREEN, RED, YELLOW][cell.as_usize()],
                     ..Default::default()
                 },
             )
@@ -214,17 +214,17 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)
                         Obj::Sg(*sg),
                         Style {
                             color: [
-                                &ALICEBLUE,      // 1
-                                &BLUEVIOLET,     // 2
-                                &CORNFLOWERBLUE, // 3
-                                &DODGERBLUE,     // 4
-                                &FIREBRICK,      // 5
-                                &GOLD,           // 6
-                                &HOTPINK,        // 7
-                                &KHAKI,          // 8
-                                &LAVENDER,       // 9
-                                &MAGENTA,        // 10
-                                &NAVY,           // 11
+                                ALICEBLUE,      // 1
+                                BLUEVIOLET,     // 2
+                                CORNFLOWERBLUE, // 3
+                                DODGERBLUE,     // 4
+                                FIREBRICK,      // 5
+                                GOLD,           // 6
+                                HOTPINK,        // 7
+                                KHAKI,          // 8
+                                LAVENDER,       // 9
+                                MAGENTA,        // 10
+                                NAVY,           // 11
                             ][cell_id],
                             ..Default::default()
                         },

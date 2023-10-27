@@ -72,7 +72,7 @@ fn main() -> Result<()> {
                                     Obj::CurveArc(CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64)),
                                     Style {
                                         thickness: 1.0,
-                                        color,
+                                        color: *color,
                                         ..Default::default()
                                     },
                                 ),

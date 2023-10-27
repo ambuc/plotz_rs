@@ -303,7 +303,7 @@ pub fn make() -> Vec<(Obj, Style)> {
             std::iter::once((
                 Obj::Pg(p),
                 Style {
-                    color,
+                    color: *color,
                     ..Default::default()
                 },
             ))
@@ -312,13 +312,13 @@ pub fn make() -> Vec<(Obj, Style)> {
                     (
                         Obj::Sg(s),
                         Style {
-                            color,
+                            color: *color,
                             ..Default::default()
                         },
                     )
                 }))),
                 Style {
-                    color,
+                    color: *color,
                     ..Default::default()
                 },
             )])

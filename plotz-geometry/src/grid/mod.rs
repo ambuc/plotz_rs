@@ -35,10 +35,10 @@ pub struct Grid {
     /// major thickness.
     #[builder(default = 1.50)]
     major_thickness: f64,
-    #[builder(default = &GRAY)]
-    minor_color: &'static ColorRGB,
-    #[builder(default = &BLACK)]
-    major_color: &'static ColorRGB,
+    #[builder(default = GRAY)]
+    minor_color: ColorRGB,
+    #[builder(default = BLACK)]
+    major_color: ColorRGB,
 }
 
 impl Grid {

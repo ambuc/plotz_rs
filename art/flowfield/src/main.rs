@@ -57,12 +57,12 @@ fn main() -> Result<()> {
     };
     let arrow_start_style = Style {
         thickness: 1.0,
-        color: &GREEN,
+        color: GREEN,
         ..Default::default()
     };
     let arrow_end_style = Style {
         thickness: 1.0,
-        color: &RED,
+        color: RED,
         ..Default::default()
     };
 

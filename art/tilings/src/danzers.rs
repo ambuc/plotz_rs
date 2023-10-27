@@ -266,7 +266,7 @@ pub fn make() -> Vec<(Obj, Style)> {
                 (
                     Obj::Sg(s),
                     Style {
-                        color,
+                        color: *color,
                         ..Default::default()
                     },
                 )

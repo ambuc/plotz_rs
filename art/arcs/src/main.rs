@@ -57,7 +57,7 @@ fn main() -> Result<()> {
                         (
                             Obj::CurveArc(ca),
                             Style {
-                                color: &GREEN,
+                                color: GREEN,
                                 thickness: 0.30,
                                 ..Default::default()
                             },

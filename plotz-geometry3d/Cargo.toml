@@ -14,6 +14,7 @@ itertools = "*"
 anyhow = "*"
 derive_more = "*"
 typed-builder = "*"
+colorgrad = "*"
 
 [dev-dependencies]
 float_eq = "*"

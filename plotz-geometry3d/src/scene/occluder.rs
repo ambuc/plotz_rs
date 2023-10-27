@@ -5,9 +5,9 @@ use itertools::Itertools;
 use plotz_geometry::{crop::Croppable, obj::Obj, shading::shade_polygon, style::Style};
 use typed_builder::TypedBuilder;
 
-#[derive(Debug, Copy, Clone, Default, TypedBuilder)]
+#[derive(Debug, Clone, Copy, Default, TypedBuilder)]
 pub struct OccluderConfig {
-    pub color_according_to_depth: bool,
+    pub color_according_to_depth: Option<&'static colorgrad::Gradient>,
 }
 
 #[derive(Default, TypedBuilder)]

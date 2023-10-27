@@ -37,7 +37,7 @@ struct Args {
 
 #[derive(Copy, Clone, Debug)]
 struct Metadata {
-    color: &'static ColorRGB,
+    color: ColorRGB,
 }
 
 fn main() -> Result<()> {
@@ -79,7 +79,7 @@ fn main() -> Result<()> {
                         .charge(charge)
                         .visibility(Visibility::Invisible)
                         .metadata(Metadata {
-                            color: if charge < 0.0 { &RED } else { &GREEN },
+                            color: if charge < 0.0 { RED } else { GREEN },
                         })
                         .build(),
                 );

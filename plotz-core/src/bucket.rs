@@ -68,5 +68,5 @@ pub enum Bucket {
     Frame,
     Area(Area),
     Path(Path),
-    Color(&'static ColorRGB),
+    Color(ColorRGB),
 }

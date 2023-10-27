@@ -6,7 +6,7 @@ use std::fmt::Debug;
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct Style {
-    pub color: &'static ColorRGB,
+    pub color: ColorRGB,
     pub thickness: f64,
     pub shading: Option<ShadeConfig>,
 }
@@ -14,7 +14,7 @@ pub struct Style {
 impl Default for Style {
     fn default() -> Self {
         Self {
-            color: &BLACK,
+            color: BLACK,
             thickness: 1.0,
             shading: None,
         }

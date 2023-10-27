@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use argh::FromArgs;
 use itertools::iproduct;
+use lazy_static::lazy_static;
 use plotz_color::*;
 use plotz_core::{canvas::Canvas, frame::*};
 use plotz_geometry::{style::Style, *};
@@ -14,6 +15,10 @@ use plotz_geometry3d::{
 };
 use std::{f64::consts::*, iter::zip};
 use tracing::*;
+
+lazy_static! {
+    static ref G: colorgrad::Gradient = colorgrad::rainbow();
+}
 
 #[derive(FromArgs)]
 #[argh(description = "...")]
@@ -36,12 +41,12 @@ fn cubes(cc: CubesConfig) -> Vec<(Obj3, Style)> {
 
     for ((i, j, k), color) in zip(
         iproduct!(0..cc.i, 0..cc.j, 0..cc.k),
-        (vec![&RED, &YELLOW, &GREEN, &BLUE, &PLUM, &ORANGE])
+        (vec![RED, YELLOW, GREEN, BLUE, PLUM, ORANGE])
             .iter()
             .cycle(),
     ) {
         let style = Style {
-            color,
+            color: *color,
             thickness: 2.0,
             ..Default::default()
         };
@@ -101,7 +106,7 @@ fn main() -> Result<()> {
         .build();
     let _scenedebug = SceneDebug::builder()
         .draw_wireframes(Style {
-            color: &GRAY,
+            color: GRAY,
             thickness: 0.5,
             ..Default::default()
         })
@@ -116,7 +121,7 @@ fn main() -> Result<()> {
             // .objects(scene1()?)
             .objects(scene2()?.collect())
             .occluder_config(occluder::OccluderConfig {
-                color_according_to_depth: true,
+                color_according_to_depth: Some(&G),
                 ..Default::default()
             })
             .build()

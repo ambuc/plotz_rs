@@ -63,60 +63,60 @@ pub enum ShadeAndOutline {
     Both,
 }
 
-fn map_bucket_to_color(bucket: &Bucket) -> Option<&'static ColorRGB> {
+fn map_bucket_to_color(bucket: &Bucket) -> Option<ColorRGB> {
     match bucket {
-        Bucket::Frame => Some(&BLACK),
+        Bucket::Frame => Some(BLACK),
 
-        Bucket::Color(c) => Some(c),
+        Bucket::Color(c) => Some(*c),
 
         Bucket::Area(area) => match area {
-            Area::Beach => Some(&TAN),
-            Area::Fun => Some(&LIGHTCYAN),
-            Area::NaturalRock => Some(&DARKGRAY),
-            Area::Land => Some(&PINK),
-            Area::Park => Some(&GREEN),
-            Area::Parking => Some(&LIGHTCORAL),
-            Area::Water => Some(&LIGHTBLUE),
-            Area::Building => Some(&LIGHTGRAY),
-            Area::Rail | Area::Tree => Some(&LIGHTPINK),
+            Area::Beach => Some(TAN),
+            Area::Fun => Some(LIGHTCYAN),
+            Area::NaturalRock => Some(DARKGRAY),
+            Area::Land => Some(PINK),
+            Area::Park => Some(GREEN),
+            Area::Parking => Some(LIGHTCORAL),
+            Area::Water => Some(LIGHTBLUE),
+            Area::Building => Some(LIGHTGRAY),
+            Area::Rail | Area::Tree => Some(LIGHTPINK),
         },
 
         Bucket::Path(path) => match path {
             BucketPath::Subway(subway) => match subway {
-                Subway::_123 => Some(&RED_123),
-                Subway::_456 => Some(&GREEN_456),
-                Subway::_7 => Some(&PURPLE_7),
-                Subway::_ACE => Some(&BLUE_ACE),
-                Subway::_BDFM => Some(&ORANGE_BDFM),
-                Subway::_G => Some(&LIME_G),
-                Subway::_JZ => Some(&BROWN_JZ),
-                Subway::_L => Some(&GREY_L),
-                Subway::_NQRW => Some(&YELLOW_NQRW),
-                Subway::_S => Some(&GRAY_S),
-                Subway::_T => Some(&TEAL_T),
+                Subway::_123 => Some(RED_123),
+                Subway::_456 => Some(GREEN_456),
+                Subway::_7 => Some(PURPLE_7),
+                Subway::_ACE => Some(BLUE_ACE),
+                Subway::_BDFM => Some(ORANGE_BDFM),
+                Subway::_G => Some(LIME_G),
+                Subway::_JZ => Some(BROWN_JZ),
+                Subway::_L => Some(GREY_L),
+                Subway::_NQRW => Some(YELLOW_NQRW),
+                Subway::_S => Some(GRAY_S),
+                Subway::_T => Some(TEAL_T),
                 Subway::Other => None,
             },
             BucketPath::Highway(highway) => match highway {
-                Highway::Primary | Highway::PrimaryLink => Some(&ORANGE),
+                Highway::Primary | Highway::PrimaryLink => Some(ORANGE),
                 Highway::Secondary
                 | Highway::SecondaryLink
                 | Highway::Tertiary
-                | Highway::TertiaryLink => Some(&ORANGE),
-                Highway::Elevator | Highway::MotorwayLink => Some(&ORANGERED),
-                Highway::Track | Highway::Unclassified => Some(&LIGHTGOLDENROD),
-                Highway::RoadMarking => Some(&LIGHTSALMON),
-                Highway::Service => Some(&LIGHTPINK),
-                Highway::Road | Highway::Path | Highway::Platform => Some(&LIGHTSTEELBLUE),
+                | Highway::TertiaryLink => Some(ORANGE),
+                Highway::Elevator | Highway::MotorwayLink => Some(ORANGERED),
+                Highway::Track | Highway::Unclassified => Some(LIGHTGOLDENROD),
+                Highway::RoadMarking => Some(LIGHTSALMON),
+                Highway::Service => Some(LIGHTPINK),
+                Highway::Road | Highway::Path | Highway::Platform => Some(LIGHTSTEELBLUE),
             },
 
-            BucketPath::Bridge => Some(&AQUAMARINE),
-            BucketPath::Pedestrian => Some(&LIGHTGRAY),
+            BucketPath::Bridge => Some(AQUAMARINE),
+            BucketPath::Pedestrian => Some(LIGHTGRAY),
 
-            BucketPath::Bus => Some(&WHEAT),
-            BucketPath::Barrier => Some(&PINK),
-            BucketPath::Cycleway => Some(&LIGHTGREEN),
-            BucketPath::Rail => Some(&LIGHTYELLOW),
-            BucketPath::Cable => Some(&LIMEGREEN),
+            BucketPath::Bus => Some(WHEAT),
+            BucketPath::Barrier => Some(PINK),
+            BucketPath::Cycleway => Some(LIGHTGREEN),
+            BucketPath::Rail => Some(LIGHTYELLOW),
+            BucketPath::Cable => Some(LIMEGREEN),
             //
             BucketPath::Boundary => None,
         },
@@ -428,7 +428,7 @@ impl Map {
             // at this point there are no polygons, only segments.
             let color = bucket
                 .map(|bucket| map_bucket_to_color(&bucket))
-                .unwrap_or(Some(&BLACK))
+                .unwrap_or(Some(BLACK))
                 .unwrap();
             let mut hs = HashSet::<Sg>::new();
             for (obj, _style) in dos.iter() {
@@ -593,7 +593,7 @@ mod tests {
                         vec![(
                             obj,
                             Style {
-                                color: &ALICEBLUE,
+                                color: ALICEBLUE,
                                 ..Default::default()
                             },
                         )],
@@ -646,7 +646,7 @@ mod tests {
                         vec![(
                             obj,
                             Style {
-                                color: &ALICEBLUE,
+                                color: ALICEBLUE,
                                 ..Default::default()
                             },
                         )],

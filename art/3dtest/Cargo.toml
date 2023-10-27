@@ -7,9 +7,11 @@ edition = "2021"
 argh = "*"
 itertools = "*"
 anyhow = "*"
+colorgrad = "*"
 plotz-color = { path = "../../plotz-color" }
 plotz-core = { path = "../../plotz-core" }
 plotz-geometry = { path = "../../plotz-geometry" }
+lazy_static = "*"
 plotz-geometry3d = { path = "../../plotz-geometry3d" }
 tracing = "*"
 tracing-subscriber = "*"

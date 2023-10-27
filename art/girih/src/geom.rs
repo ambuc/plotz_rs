@@ -26,13 +26,13 @@ pub enum Girih {
 }
 
 impl Girih {
-    pub fn color(&self) -> &'static ColorRGB {
+    pub fn color(&self) -> ColorRGB {
         match self {
-            Girih::Tabl => &LIGHTBLUE,
-            Girih::SheshBand => &LIMEGREEN,
-            Girih::SormehDan => &ORANGERED,
-            Girih::Torange => &PURPLE_7,
-            Girih::Pange => &YELLOW,
+            Girih::Tabl => LIGHTBLUE,
+            Girih::SheshBand => LIMEGREEN,
+            Girih::SormehDan => ORANGERED,
+            Girih::Torange => PURPLE_7,
+            Girih::Pange => YELLOW,
         }
     }
 
@@ -118,7 +118,7 @@ impl Tile {
         pg
     }
 
-    pub fn color(&self) -> &'static ColorRGB {
+    pub fn color(&self) -> ColorRGB {
         self.enum_type.color()
     }
 

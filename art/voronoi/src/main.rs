@@ -23,11 +23,11 @@ struct Args {
 #[derive(Debug, Clone)]
 struct Shade {
     config: ShadeConfig,
-    color: &'static ColorRGB,
+    color: ColorRGB,
 }
 
 impl Shade {
-    fn rand(palette: &Vec<&'static ColorRGB>) -> Result<Shade> {
+    fn rand(palette: &Vec<ColorRGB>) -> Result<Shade> {
         let mut rng = rand::thread_rng();
 
         Ok(Shade {
@@ -36,7 +36,7 @@ impl Shade {
                 .switchback(true)
                 .slope((rng.gen_range(0.0_f64..360.0_f64)).tan())
                 .build(),
-            color: palette.choose(&mut rng).ok_or(anyhow!("?"))?,
+            color: *palette.choose(&mut rng).ok_or(anyhow!("?"))?,
         })
     }
 }
@@ -46,15 +46,15 @@ fn main() -> Result<()> {
 
     let mut rng = rand::thread_rng();
 
-    let palette: Vec<&ColorRGB> = vec![
-        &RED,
-        &YELLOW,
-        &BLUE,
-        &GREEN,
-        &ORANGE,
-        &ORANGERED,
-        &YELLOWGREEN,
-        &BLUEVIOLET,
+    let palette: Vec<ColorRGB> = vec![
+        RED,
+        YELLOW,
+        BLUE,
+        GREEN,
+        ORANGE,
+        ORANGERED,
+        YELLOWGREEN,
+        BLUEVIOLET,
         // &VIOLET,
         // &PINK,
     ];
