@@ -64,23 +64,27 @@ fn scene1() -> Result<Vec<(Obj3, Style)>> {
     }))
 }
 
-fn scene2() -> Result<Vec<(Obj3, Style)>> {
+fn scene2() -> Result<impl Iterator<Item = (Obj3, Style)>> {
     // jengas
-    let jenga: Group3<()> = Cuboid((0, 0, 0), (15, 5, 3));
+    let (x_len, y_len, z_len) = (17.0, 5.0, 3.0);
+    let (_, y_space, z_space) = ((), 1.0, 2.0);
+    let (_, y_num, z_num) = ((), 2, 1);
+    let jenga: Group3<()> = Cuboid((0, 0, 0), (x_len, y_len, z_len));
 
-    let mut i: Vec<_> = vec![];
-    i.extend((jenga.clone() + (0, 0, 0)).into_iter_objects());
-    i.extend((jenga.clone() + (0, 6, 0)).into_iter_objects());
-    i.extend((jenga.clone() + (0, 12, 0)).into_iter_objects());
-    let layer: Group3<()> = Group3::<()>::new(i);
+    let layer: Group3<_> = Group3::new(
+        (0..=y_num)
+            .map(|n| (jenga.clone() + (0, (n as f64) * (y_len + y_space), 0)))
+            .flat_map(|o: Group3<_>| o.into_iter_objects()),
+    );
 
-    let mut g: Vec<Group3<()>> = vec![];
-    g.push(layer.clone());
-    g.push((layer.clone() + (0, 0, 8)).rotate_about_center_z_axis(FRAC_PI_2)?);
-
-    Ok(g.into_iter()
-        .flat_map(|x| x.into_iter_objects().map(|(o, _)| (o, Style::default())))
-        .collect())
+    Ok((0..=z_num)
+        .map(move |n| {
+            (layer.clone() + (0, 0, (n as f64) * (z_len + z_space)))
+                .rotate_about_center_z_axis(if n % 2 == 0 { 0.0 } else { FRAC_PI_2 })
+                .expect("..")
+        })
+        .flat_map(|x: Group3<_>| x.into_iter_objects())
+        .map(|(o, _): (Obj3, _)| (o, Style::default())))
 }
 
 fn main() -> Result<()> {
@@ -110,7 +114,7 @@ fn main() -> Result<()> {
         Scene::builder()
             // .debug(_scenedebug)
             // .objects(scene1()?)
-            .objects(scene2()?)
+            .objects(scene2()?.collect())
             .build()
             .project_with(Projection::default(), Occlusion::True)
             .context("default projection with occlusion")?
