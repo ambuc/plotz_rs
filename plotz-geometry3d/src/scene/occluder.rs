@@ -11,7 +11,7 @@ pub struct OccluderConfig {
     pub color_according_to_depth: Option<&'static colorgrad::Gradient>,
 }
 
-#[derive(Default, TypedBuilder)]
+#[derive(Debug, Default, TypedBuilder)]
 pub struct Occluder {
     pub config: OccluderConfig,
     pub objects: Vec<(Obj, Style)>,
@@ -55,10 +55,9 @@ impl Occluder {
         }
     }
 
-    // Incorporates an object.
+    // Incorporates an objectw
+    #[instrument(skip(self, incoming2))]
     pub fn add(&mut self, incoming2: (Obj, Style)) -> Result<()> {
-        info!("Occluder::add()");
-        info!("\tincoming2: {:#?}", incoming2);
         let mut incoming_os: Vec<(Obj, Style)> = vec![incoming2.clone()];
         for (existing_o, _) in &self.objects {
             incoming_os = incoming_os
@@ -79,20 +78,23 @@ impl Occluder {
     }
 
     // Exports the occluded 2d objects.
+    #[instrument(skip(self))]
     pub fn export(mut self) -> Result<Vec<(Obj, Style)>> {
         // we store them front-to-back, but we want to render them to svg back-to-front.
         self.objects.reverse();
-        Ok(self
+        let x: Vec<_> = self
             .objects
             .into_iter()
             .map(export_obj)
             .flatten_ok()
             .collect::<Result<Vec<_>>>()?
             .into_iter()
-            .collect())
+            .collect();
+        Ok(x)
     }
 }
 
+#[instrument]
 fn export_obj((sobj, style): (Obj, Style)) -> Result<Vec<(Obj, Style)>> {
     match style {
         Style { shading: None, .. } => Ok(vec![(sobj, style)]),

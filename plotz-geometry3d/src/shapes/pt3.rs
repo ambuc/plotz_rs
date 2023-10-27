@@ -32,7 +32,7 @@ pub fn Origin() -> Pt3 {
 impl Debug for Pt3 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Pt3 { x, y, z } = self;
-        write!(f, "Pt3({:.5},{:.5},{:.5})", x.0, y.0, z.0)
+        write!(f, "Pt3({:.1},{:.1},{:.1})", x.0, y.0, z.0)
     }
 }
 

@@ -104,6 +104,7 @@ fn main() -> Result<()> {
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
         .compact()
         .with_max_level(Level::INFO)
+        .with_target(true)
         .without_time()
         .finish();
     tracing::subscriber::set_global_default(subscriber).unwrap();

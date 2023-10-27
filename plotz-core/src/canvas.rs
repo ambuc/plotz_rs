@@ -18,7 +18,7 @@ use plotz_geometry::{
 };
 use rayon::iter::*;
 use std::collections::HashMap;
-use tracing::trace;
+use tracing::*;
 
 type CanvasMap = HashMap<Option<Bucket>, Vec<(Obj, Style)>>;
 

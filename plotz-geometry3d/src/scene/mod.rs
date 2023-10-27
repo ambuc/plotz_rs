@@ -31,14 +31,12 @@ pub struct Scene {
 }
 
 impl Scene {
+    #[instrument(skip(self))]
     pub fn project_with(
         self,
         projection: Projection,
         occlusion: Occlusion,
     ) -> Result<Vec<(Obj, Style)>> {
-        info!("Scene::project_with()");
-        info!("\tprojection: {:#?}", projection);
-        info!("\tocclusion: {:#?}", occlusion);
         match (projection, occlusion) {
             (Projection::Oblique(obl), Occlusion::False) => Ok(self
                 .objects
