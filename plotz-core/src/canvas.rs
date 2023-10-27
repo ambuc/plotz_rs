@@ -1,4 +1,5 @@
 //! Many objects.
+#![allow(missing_docs)]
 
 use crate::{
     bar::make_bar,
@@ -22,6 +23,20 @@ use tracing::*;
 
 type CanvasMap = HashMap<Option<Bucket>, Vec<(Obj, Style)>>;
 
+pub fn to_canvas_map<O: IntoIterator<Item = (Obj, Style)>>(objs: O, autobucket: bool) -> CanvasMap {
+    let mut cm = CanvasMap::new();
+
+    if autobucket {
+        for (b, objs) in &objs.into_iter().group_by(|(_obj, style)| style.color) {
+            cm.entry(Some(Bucket::Color(b))).or_default().extend(objs);
+        }
+    } else {
+        cm.extend([(None, objs.into_iter().collect())])
+    }
+
+    cm
+}
+
 /// Many objects.
 #[derive(Debug, Clone, Default)]
 pub struct Canvas {
@@ -35,29 +50,9 @@ pub struct Canvas {
 impl Canvas {
     /// ctor from objs
     pub fn from_objs<O: IntoIterator<Item = (Obj, Style)>>(objs: O, autobucket: bool) -> Canvas {
-        let objs_vec: Vec<(Obj, Style)> = objs.into_iter().collect();
-        if autobucket {
-            trace!(
-                "Creating Canvas(autobucket=true) from {:?} objects",
-                objs_vec.len()
-            );
-            let mut c = Canvas::default();
-            for (b, objs) in &objs_vec.into_iter().group_by(|(_obj, style)| style.color) {
-                c.dos_by_bucket
-                    .entry(Some(Bucket::Color(b)))
-                    .or_default()
-                    .extend(objs);
-            }
-            c
-        } else {
-            trace!(
-                "Creating Canvas(autobucket=false) from {:?} objects",
-                objs_vec.len()
-            );
-            Canvas {
-                dos_by_bucket: CanvasMap::from([(None, objs_vec)]),
-                frame: None,
-            }
+        Canvas {
+            dos_by_bucket: to_canvas_map(objs, autobucket),
+            ..Default::default()
         }
     }
 
