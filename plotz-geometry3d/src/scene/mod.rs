@@ -28,16 +28,18 @@ pub struct Scene {
 
     #[builder(default)]
     occluder_config: occluder::OccluderConfig,
+
+    #[builder(default)]
+    projection: Projection,
+
+    #[builder(default)]
+    occlusion: Occlusion,
 }
 
 impl Scene {
     #[instrument(skip(self))]
-    pub fn project_with(
-        self,
-        projection: Projection,
-        occlusion: Occlusion,
-    ) -> Result<Vec<(Obj, Style)>> {
-        match (projection, occlusion) {
+    pub fn project(self) -> Result<Vec<(Obj, Style)>> {
+        match (self.projection, self.occlusion) {
             (Projection::Oblique(obl), Occlusion::False) => Ok(self
                 .objects
                 .iter()

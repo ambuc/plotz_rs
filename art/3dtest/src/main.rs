@@ -133,8 +133,10 @@ fn main() -> Result<()> {
                 color_according_to_depth: Some(&GRADIENT),
                 ..Default::default()
             })
+            .projection(Projection::default())
+            .occlusion(Occlusion::True)
             .build()
-            .project_with(Projection::default(), Occlusion::True)
+            .project()
             .context("default projection with occlusion")?
             .into_iter(),
         /*autobucket=*/ false,
@@ -164,7 +166,7 @@ mod tests {
         let _: Vec<Vec<(Obj, Style)>> = Scene::builder()
             .objects(cubes(CubesConfig { i, j, k, width }))
             .build()
-            .project_with(Projection::default(), Occlusion::True)
+            .project()
             .into_iter()
             .collect::<Vec<_>>();
     }
