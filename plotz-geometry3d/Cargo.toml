@@ -15,6 +15,7 @@ anyhow = "*"
 derive_more = "*"
 typed-builder = "*"
 colorgrad = "*"
+tracing = "*"
 
 [dev-dependencies]
 float_eq = "*"

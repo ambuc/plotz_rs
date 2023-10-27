@@ -17,7 +17,7 @@ use std::{f64::consts::*, iter::zip};
 use tracing::*;
 
 lazy_static! {
-    static ref G: colorgrad::Gradient = colorgrad::rainbow();
+    static ref GRADIENT: colorgrad::Gradient = colorgrad::rainbow();
 }
 
 #[derive(FromArgs)]
@@ -89,7 +89,15 @@ fn scene2() -> Result<impl Iterator<Item = (Obj3, Style)>> {
                 .expect("..")
         })
         .flat_map(|x: Group3<_>| x.into_iter_objects())
-        .map(|(o, _): (Obj3, _)| (o, Style::default())))
+        .map(|(o, _): (Obj3, _)| {
+            (
+                o,
+                Style {
+                    thickness: 2.0,
+                    ..Default::default()
+                },
+            )
+        }))
 }
 
 fn main() -> Result<()> {
@@ -121,7 +129,7 @@ fn main() -> Result<()> {
             // .objects(scene1()?)
             .objects(scene2()?.collect())
             .occluder_config(occluder::OccluderConfig {
-                color_according_to_depth: Some(&G),
+                color_according_to_depth: Some(&GRADIENT),
                 ..Default::default()
             })
             .build()

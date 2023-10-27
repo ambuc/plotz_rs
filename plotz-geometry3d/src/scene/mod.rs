@@ -15,6 +15,7 @@ use itertools::Itertools;
 use plotz_color::ColorRGB;
 use plotz_geometry::{obj::Obj, style::Style, *};
 use std::fmt::Debug;
+use tracing::*;
 use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone, Default, TypedBuilder)]
@@ -31,10 +32,13 @@ pub struct Scene {
 
 impl Scene {
     pub fn project_with(
-        &self,
+        self,
         projection: Projection,
         occlusion: Occlusion,
     ) -> Result<Vec<(Obj, Style)>> {
+        info!("Scene::project_with()");
+        info!("\tprojection: {:#?}", projection);
+        info!("\tocclusion: {:#?}", occlusion);
         match (projection, occlusion) {
             (Projection::Oblique(obl), Occlusion::False) => Ok(self
                 .objects
@@ -53,9 +57,9 @@ impl Scene {
                     ..Default::default()
                 };
 
-                let mut sorted_objs: Vec<&(Obj3, Style)> = self
+                let mut sorted_objs: Vec<(Obj3, Style)> = self
                     .objects
-                    .iter()
+                    .into_iter()
                     .sorted_by(|(o1, _), (o2, _)| {
                         Ord::cmp(
                             &FloatOrd(o1.min_dist_along(&obl.view_vector())),
@@ -67,7 +71,8 @@ impl Scene {
                 // optionally color according to depth.
                 if let Some(x) = self.occluder_config.color_according_to_depth {
                     let length = sorted_objs.len();
-                    for (i, (_, mut s)) in sorted_objs.iter_mut().enumerate() {
+
+                    for (i, (_, s)) in sorted_objs.iter_mut().enumerate() {
                         let pct: f64 = (i as f64) / (length as f64);
                         //
                         let c = x.at(pct);
@@ -80,7 +85,7 @@ impl Scene {
                 }
 
                 for sobj3 in sorted_objs {
-                    let (obj, style) = obl.project_styled_obj3(sobj3);
+                    let (obj, style) = obl.project_styled_obj3(&sobj3);
 
                     if let Some(SceneDebug {
                         draw_wireframes,

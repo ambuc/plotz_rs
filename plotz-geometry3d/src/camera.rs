@@ -13,6 +13,7 @@ use plotz_geometry::{
 };
 
 // Any oblique projection.  https://en.wikipedia.org/wiki/3D_projection#Oblique_projection
+#[derive(Debug)]
 pub struct Oblique {
     u_src: Pt3,
     v_src: Pt3,
@@ -74,6 +75,7 @@ impl Oblique {
     }
 }
 
+#[derive(Debug)]
 pub enum Projection {
     /// https://en.wikipedia.org/wiki/Pohlke%27s_theorem
     Oblique(Oblique),
@@ -85,6 +87,7 @@ impl Default for Projection {
     }
 }
 
+#[derive(Debug)]
 pub enum Occlusion {
     False,
     True,
