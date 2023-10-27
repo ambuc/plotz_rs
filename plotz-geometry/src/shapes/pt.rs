@@ -51,7 +51,7 @@ impl Hash for Pt {
 impl Debug for Pt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Pt { x, y } = self;
-        write!(f, "Pt({:.10},{:.10})", x, y)
+        write!(f, "Pt({:.5},{:.5})", x, y)
     }
 }
 

@@ -22,7 +22,7 @@ pub struct ColorRGB {
 
 impl Debug for ColorRGB {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "r {:?} g {:?} b {:?}", self.r, self.g, self.b)
+        write!(f, "r {:.3} g {:.3} b {:.3}", self.r, self.g, self.b)
     }
 }
 

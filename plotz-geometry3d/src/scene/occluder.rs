@@ -3,6 +3,7 @@
 use anyhow::*;
 use itertools::Itertools;
 use plotz_geometry::{crop::Croppable, obj::Obj, shading::shade_polygon, style::Style};
+use tracing::*;
 use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone, Copy, Default, TypedBuilder)]
@@ -56,6 +57,8 @@ impl Occluder {
 
     // Incorporates an object.
     pub fn add(&mut self, incoming2: (Obj, Style)) -> Result<()> {
+        info!("Occluder::add()");
+        info!("\tincoming2: {:#?}", incoming2);
         let mut incoming_os: Vec<(Obj, Style)> = vec![incoming2.clone()];
         for (existing_o, _) in &self.objects {
             incoming_os = incoming_os
