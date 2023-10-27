@@ -1,7 +1,11 @@
 use anyhow::{anyhow, Result};
 use argh::FromArgs;
 use plotz_color::{ColorRGB, *};
-use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_core::{
+    canvas::{self, Canvas},
+    frame::make_frame,
+    svg::Size,
+};
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
@@ -116,8 +120,11 @@ fn main() -> Result<()> {
     // TODO(ambuc): split by group color before printing
     // TODO(ambuc): split by group color before printing
 
-    let canvas = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true)
-        .with_frame(make_frame((DIM, DIM), Pt(20, 20)));
+    let canvas = Canvas {
+        dos_by_bucket: canvas::to_canvas_map(dos.into_iter(), /*autobucket=*/ true),
+        frame: Some(make_frame((DIM, DIM), Pt(20, 20))),
+        ..Default::default()
+    };
 
     canvas.write_to_svg(
         Size {

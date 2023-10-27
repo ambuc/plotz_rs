@@ -20,6 +20,7 @@ use plotz_geometry::{
 use rayon::iter::*;
 use std::collections::HashMap;
 use tracing::*;
+use typed_builder::TypedBuilder;
 
 type CanvasMap = HashMap<Option<Bucket>, Vec<(Obj, Style)>>;
 
@@ -38,32 +39,16 @@ pub fn to_canvas_map<O: IntoIterator<Item = (Obj, Style)>>(objs: O, autobucket: 
 }
 
 /// Many objects.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, TypedBuilder)]
 pub struct Canvas {
-    /// the objs.
+    #[builder(default)]
     pub dos_by_bucket: CanvasMap,
 
-    /// the frame, maybe.
+    #[builder(default, setter(strip_option))]
     pub frame: Option<(Obj, Style)>,
 }
 
 impl Canvas {
-    /// ctor from objs
-    pub fn from_objs<O: IntoIterator<Item = (Obj, Style)>>(objs: O, autobucket: bool) -> Canvas {
-        Canvas {
-            dos_by_bucket: to_canvas_map(objs, autobucket),
-            ..Default::default()
-        }
-    }
-
-    /// with a frame
-    pub fn with_frame(self, frame: (Obj, Style)) -> Canvas {
-        Canvas {
-            frame: Some(frame),
-            ..self
-        }
-    }
-
     /// Returns an iterator of Object2dInner.
     pub fn objs_iter(&self) -> impl Iterator<Item = &impl Bounded> {
         self.dos_by_bucket

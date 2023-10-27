@@ -1,6 +1,10 @@
 use anyhow::Result;
 use argh::FromArgs;
-use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_core::{
+    canvas::{self, Canvas},
+    frame::make_frame,
+    svg::Size,
+};
 use plotz_geometry::{crop::PointLoc, shapes::pg::Pg};
 
 mod ab_rhomb;
@@ -36,11 +40,12 @@ fn main() -> Result<()> {
             .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLoc::Inside)))
     });
 
-    let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ false).with_frame(frame);
+    let canvas = Canvas {
+        dos_by_bucket: canvas::to_canvas_map(dos.into_iter(), /*autobucket=*/ false),
+        frame: Some(frame),
+    };
 
-    //objs.join_adjacent_segments();
-
-    objs.write_to_svg(
+    canvas.write_to_svg(
         Size {
             width: (750.0 * 1.3) as usize,
             height: 750,

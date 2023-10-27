@@ -2,7 +2,11 @@ use anyhow::Result;
 use argh::FromArgs;
 use indicatif::ParallelProgressIterator;
 use plotz_color::*;
-use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_core::{
+    canvas::{self, Canvas},
+    frame::make_frame,
+    svg::Size,
+};
 use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
@@ -138,20 +142,23 @@ fn main() -> Result<()> {
     );
 
     let frame_pg: Pg = frame.0.clone().try_into().unwrap();
-    let objs = Canvas::from_objs(
-        dos.into_iter().flat_map(|(obj, style)| {
-            obj.crop_to(&frame_pg)
-                .expect("todo")
-                .into_iter()
-                .map(|o| (o, style))
-                .collect::<Vec<_>>()
-        }),
-        /*autobucket=*/
-        true,
-    )
-    .with_frame(frame);
+    let canvas = Canvas {
+        dos_by_bucket: canvas::to_canvas_map(
+            dos.into_iter().flat_map(|(obj, style)| {
+                obj.crop_to(&frame_pg)
+                    .expect("todo")
+                    .into_iter()
+                    .map(|o| (o, style))
+                    .collect::<Vec<_>>()
+            }),
+            /*autobucket=*/
+            true,
+        ),
+        frame: Some(frame),
+        ..Default::default()
+    };
 
-    objs.write_to_svg(
+    canvas.write_to_svg(
         // yeah, i know
         Size {
             width: 1000,

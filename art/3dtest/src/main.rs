@@ -3,7 +3,10 @@ use argh::FromArgs;
 use itertools::iproduct;
 use lazy_static::lazy_static;
 use plotz_color::*;
-use plotz_core::{canvas::Canvas, frame::*};
+use plotz_core::{
+    canvas::{self, Canvas},
+    frame::*,
+};
 use plotz_geometry::{style::Style, *};
 use plotz_geometry3d::{
     camera::{Occlusion, Projection},
@@ -123,28 +126,29 @@ fn main() -> Result<()> {
         .build();
 
     let args: Args = argh::from_env();
-    Canvas::from_objs(
-        /*objs=*/
-        Scene::builder()
-            // .debug(_scenedebug)
-            // .objects(scene1()?)
-            .objects(scene2()?.collect())
-            .occluder_config(occluder::OccluderConfig {
-                color_according_to_depth: Some(&GRADIENT),
-                ..Default::default()
-            })
-            .projection(Projection::default())
-            .occlusion(Occlusion::True)
-            .build()
-            .project()
-            .context("default projection with occlusion")?
-            .into_iter(),
-        /*autobucket=*/ false,
-    )
-    .with_frame(make_frame_with_margin(
-        (800.0, 600.0),
-        /*margin=*/ 25.0,
-    ))
+    Canvas {
+        dos_by_bucket: canvas::to_canvas_map(
+            Scene::builder()
+                // .debug(_scenedebug)
+                // .objects(scene1()?)
+                .objects(scene2()?.collect())
+                .occluder_config(occluder::OccluderConfig {
+                    color_according_to_depth: Some(&GRADIENT),
+                    ..Default::default()
+                })
+                .projection(Projection::default())
+                .occlusion(Occlusion::True)
+                .build()
+                .project()
+                .context("default projection with occlusion")?
+                .into_iter(),
+            /*autobucket=*/ false,
+        ),
+        frame: Some(make_frame_with_margin(
+            (800.0, 600.0),
+            /*margin=*/ 25.0,
+        )),
+    }
     .scale_to_fit_frame()?
     .write_to_svg((600, 800), &args.output_path_prefix)?;
     Ok(())

@@ -1,7 +1,11 @@
 use anyhow::Result;
 use argh::FromArgs;
 use plotz_color::*;
-use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_core::{
+    canvas::{self, Canvas},
+    frame::make_frame,
+    svg::Size,
+};
 use plotz_geometry::{
     crop::PointLoc,
     grid::grid_layout::{GridLayout, GridLayoutSettings},
@@ -86,9 +90,13 @@ fn main() -> Result<()> {
         dos.extend(grid_layout.to_object2ds());
     }
 
-    let objs = Canvas::from_objs(dos.into_iter(), /*autobucket=*/ true).with_frame(frame);
+    let canvas = Canvas {
+        dos_by_bucket: canvas::to_canvas_map(dos.into_iter(), /*autobucket=*/ true),
+        frame: Some(frame),
+        ..Default::default()
+    };
 
-    objs.write_to_svg(
+    canvas.write_to_svg(
         Size {
             width: 800,
             height: 1000,

@@ -1,7 +1,11 @@
 use anyhow::Result;
 use argh::FromArgs;
 use plotz_color::*;
-use plotz_core::{canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_core::{
+    canvas::{self, Canvas},
+    frame::make_frame,
+    svg::Size,
+};
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
@@ -254,19 +258,25 @@ fn main() -> Result<()> {
         }
     }
 
-    let mut objs = Canvas::from_objs(obj_vec.into_iter(), /*autobucket=*/ false)
-        .with_frame(make_frame((image_width, image_width), Pt(margin, margin)));
+    let mut canvas = Canvas {
+        dos_by_bucket: canvas::to_canvas_map(obj_vec.into_iter(), /*autobucket=*/ false),
+        frame: Some(make_frame((image_width, image_width), Pt(margin, margin))),
+        ..Default::default()
+    };
 
     let scale = image_width / 2.0 / (grid_cardinality as f64);
 
-    objs.dos_by_bucket.iter_mut().for_each(|(_bucket, layers)| {
-        layers.iter_mut().for_each(|(ref mut obj, _style)| {
-            *obj *= scale;
-            *obj += (margin, margin);
+    canvas
+        .dos_by_bucket
+        .iter_mut()
+        .for_each(|(_bucket, layers)| {
+            layers.iter_mut().for_each(|(ref mut obj, _style)| {
+                *obj *= scale;
+                *obj += (margin, margin);
+            });
         });
-    });
 
-    objs.write_to_svg(
+    canvas.write_to_svg(
         Size {
             width: (image_width + 2.0 * margin) as usize,
             height: (image_width + 2.0 * margin) as usize,

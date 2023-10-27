@@ -2,7 +2,12 @@ use anyhow::Result;
 use argh::FromArgs;
 use indicatif::ProgressIterator;
 use plotz_color::*;
-use plotz_core::{bar::make_bar, canvas::Canvas, frame::make_frame, svg::Size};
+use plotz_core::{
+    bar::make_bar,
+    canvas::{self, Canvas},
+    frame::make_frame,
+    svg::Size,
+};
 use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
@@ -139,18 +144,22 @@ fn main() -> Result<()> {
     }
 
     let frame_pg: Pg = frame.0.clone().try_into().unwrap();
-    Canvas::from_objs(
-        os.into_iter().flat_map(|(obj, style)| {
-            obj.crop_to(&frame_pg)
-                .expect("todo")
-                .into_iter()
-                .map(|o| (o, style))
-                .collect::<Vec<_>>()
-        }),
-        /*autobucket=*/
-        true,
-    )
-    .with_frame(frame)
-    .write_to_svg(size, &args.output_path_prefix)?;
+    let canvas = Canvas {
+        dos_by_bucket: canvas::to_canvas_map(
+            os.into_iter().flat_map(|(obj, style)| {
+                obj.crop_to(&frame_pg)
+                    .expect("todo")
+                    .into_iter()
+                    .map(|o| (o, style))
+                    .collect::<Vec<_>>()
+            }),
+            /*autobucket=*/
+            true,
+        ),
+        frame: Some(frame),
+        ..Default::default()
+    };
+
+    canvas.write_to_svg(size, &args.output_path_prefix)?;
     Ok(())
 }
