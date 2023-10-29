@@ -84,7 +84,10 @@ impl Rotatable for Obj3 {
     fn rotate(&self, by: f64, about: Ry3) -> Result<Self> {
         match self {
             Obj3::Pg3(pg3) => Ok(pg3.rotate(by, about)?.into()),
-            Obj3::Sg3(_) => todo!("sg rotate?"),
+            Obj3::Sg3(_) => {
+                // TODO(https://github.com/ambuc/plotz_rs/issues/5): Support sg3 rotation.
+                todo!("sg rotate? See https://github.com/ambuc/plotz_rs/issues/5.")
+            }
             Obj3::Group3(g3) => Ok(g3.rotate(by, about)?.into()),
         }
     }
