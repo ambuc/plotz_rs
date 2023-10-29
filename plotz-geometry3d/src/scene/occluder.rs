@@ -108,12 +108,7 @@ fn export_obj((sobj, style): (Obj, Style)) -> Result<Vec<(Obj, Style)>> {
         } => match sobj {
             Obj::Pg(pg) => {
                 if shade_config.along_face {
-                    // TODO(jbuckland): apply shade config here.
-                    // TODO(jbuckland): apply shade config here.
-                    // TODO(jbuckland): apply shade config here.
-                    // TODO(jbuckland): apply shade config here.
-                    // TODO(jbuckland): apply shade config here.
-                    // TODO(jbuckland): apply shade config here.
+                    // TODO(https://github.com/ambuc/plotz_rs/issues/2): apply shade config here.
                     Ok(vec![])
                 } else {
                     Ok(shade_polygon(&shade_config, &pg)
