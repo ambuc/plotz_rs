@@ -61,6 +61,16 @@ impl Scene {
                     })
                     .collect();
 
+                // TODO(https://github.com/ambuc/plotz_rs/issues/1):
+                // OK, here is the place to fix -- we don't want to sort by any
+                // individual min or max. we want to take two obj3s, proj them
+                // to obj2s, and find if they intersect.  if they don't
+                // intersect, then the ordering doesn't matter (i think this
+                // means we can order them by dist to obj center). if they do
+                // intersect, then we need to look at the intersection point and
+                // figure out if o1 or o2 is in front _at that point_ and order
+                // by that.
+
                 // optionally color according to depth.
                 if let Some(x) = occluder.config.color_according_to_depth {
                     let length = sorted_objs.len();
