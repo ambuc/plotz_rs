@@ -113,13 +113,6 @@ fn main() -> Result<()> {
         })
     }));
 
-    // TODO(ambuc): split by group color before printing
-    // TODO(ambuc): split by group color before printing
-    // TODO(ambuc): split by group color before printing
-    // TODO(ambuc): split by group color before printing
-    // TODO(ambuc): split by group color before printing
-    // TODO(ambuc): split by group color before printing
-
     Canvas::builder()
         .dos_by_bucket(canvas::to_canvas_map(dos, /*autobucket=*/ true))
         .frame(make_frame((DIM, DIM), Pt(20, 20)))

@@ -393,9 +393,10 @@ impl Croppable for Pg {
                 CropType::Exclusive => {
                     // if exclusive, then we want the bit of |a| _not_ in |b|.
                     if a.totally_contains(b)? {
-                        // TODO(ambuc): must begin to support polygons with cavities !!!
+                        // TODO(https://github.com/ambuc/plotz_rs/issues/4):
+                        // must begin to support polygons with cavities !!!
                         return Err(anyhow!(
-                            "we want a polygon with a cavity here - not yet supported"
+                            "we want a polygon with a cavity here - not yet supported. See https://github.com/ambuc/plotz_rs/issues/4."
                         ));
                     }
                     if b.totally_contains(a)? {
