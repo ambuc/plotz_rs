@@ -23,7 +23,7 @@ pub struct Occluder {
 
 impl Occluder {
     fn hide_a_behind_b(incoming: &Obj, existing: &Obj) -> Result<Vec<Obj>> {
-        // TODO(jbuckland): use quadtrees here to make this MUCH faster please!!!!
+        // TODO(https://github.com/ambuc/plotz_rs/issues/3): use quadtrees here to make this MUCH faster please!!!!
 
         match (&incoming, &existing) {
             // points can/should be occluded, not handled yet.
