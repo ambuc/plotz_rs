@@ -56,7 +56,7 @@ fn main() -> Result<()> {
 
             dos.extend(
                 cas.iter()
-                    .flat_map(|ca| ca.crop_to(&frame_polygon).expect("todo"))
+                    .flat_map(|ca| ca.crop_to(&frame_polygon).unwrap())
                     .map(|ca| -> (Obj, Style) {
                         (
                             Obj::CurveArc(ca),

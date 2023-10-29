@@ -1,7 +1,5 @@
 # `voronoi`
 
-TODO
-
 ## Usage
 
 ```

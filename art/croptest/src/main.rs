@@ -107,29 +107,22 @@ fn main() -> Result<()> {
         // v.extend(subject_sq.annotate(&AnnotationSettings::default()));
 
         let r = r.clone();
-        v.extend(
-            subject_sq
-                .0
-                .crop_to(&r)
-                .expect("todo")
-                .into_iter()
-                .map(|x| {
-                    (
-                        x,
-                        Style {
-                            color: GREEN,
-                            thickness: 2.0,
-                            ..Default::default()
-                        },
-                    )
-                }),
-        );
+        v.extend(subject_sq.0.crop_to(&r).unwrap().into_iter().map(|x| {
+            (
+                x,
+                Style {
+                    color: GREEN,
+                    thickness: 2.0,
+                    ..Default::default()
+                },
+            )
+        }));
 
         v.extend(
             subject_sq
                 .0
                 .crop_excluding(&r.clone())
-                .expect("todo")
+                .unwrap()
                 .into_iter()
                 .map(|x| {
                     (

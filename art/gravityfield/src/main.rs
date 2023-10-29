@@ -148,7 +148,7 @@ fn main() -> Result<()> {
         .dos_by_bucket(canvas::to_canvas_map(
             os.into_iter().flat_map(|(obj, style)| {
                 obj.crop_to(&frame_pg)
-                    .expect("todo")
+                    .unwrap()
                     .into_iter()
                     .map(|o| (o, style))
                     .collect::<Vec<_>>()

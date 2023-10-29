@@ -56,12 +56,8 @@ impl Oblique {
     pub fn project_pg3(&self, pg3: &Pg3) -> Pg {
         Pg(pg3.pts.iter().map(|pt3d| self.project_pt3(pt3d)))
     }
-    pub fn project_group3(&self, g3: &Group3<()>) -> Group<Style> {
-        Group::new(g3.clone().into_iter_objects().map(|(o, _)| match o {
-            Obj3::Pg3(_) => todo!(),
-            Obj3::Sg3(_) => todo!(),
-            Obj3::Group3(_) => todo!(),
-        }))
+    pub fn project_group3(&self, _: &Group3<()>) -> Group<Style> {
+        todo!("https://github.com/ambuc/plotz_rs/issues/6")
     }
     pub fn project_obj3(&self, obj3: &Obj3) -> Obj {
         match obj3 {
