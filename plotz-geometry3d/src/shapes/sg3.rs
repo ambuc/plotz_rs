@@ -1,7 +1,7 @@
 //! A segment in 3d.
 
 use crate::{
-    bounded3::{Bounded3, Bounds3},
+    bounded3::{Bounded3, Bounds3, Bounds3Collector},
     shapes::pt3::Pt3,
 };
 use anyhow::Result;
@@ -132,6 +132,9 @@ impl SubAssign<Pt3> for Sg3 {
 
 impl Bounded3 for Sg3 {
     fn bounds3(&self) -> Result<Bounds3> {
-        todo!("?")
+        let mut bc = Bounds3Collector::default();
+        bc.incorporate(&self.i.bounds3()?)?;
+        bc.incorporate(&self.f.bounds3()?)?;
+        bc.bounds3()
     }
 }
