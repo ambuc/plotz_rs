@@ -45,6 +45,16 @@ impl Obj3 {
     }
 }
 
+impl Obj3 {
+    pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt3> + '_> {
+        match self {
+            Obj3::Pg3(pg3) => Box::new(pg3.iter()),
+            Obj3::Sg3(sg3) => Box::new(sg3.iter()),
+            Obj3::Group3(g3) => Box::new(g3.iter()),
+        }
+    }
+}
+
 impl<T> Add<T> for Obj3
 where
     T: Into<Pt3>,

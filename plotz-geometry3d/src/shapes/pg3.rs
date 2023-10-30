@@ -56,6 +56,10 @@ impl Pg3 {
             .unwrap()
             .0
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Pt3> {
+        self.pts.iter()
+    }
 }
 
 // Constructor for multilines, which are by definition open. The first and last

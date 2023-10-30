@@ -58,6 +58,10 @@ impl Sg3 {
             .unwrap()
             .0
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Pt3> {
+        std::iter::once(&self.i).chain(std::iter::once(&self.f))
+    }
 }
 
 impl Add<Pt3> for Sg3 {

@@ -27,6 +27,10 @@ impl<T: 'static> Group3<T> {
     pub fn into_iter_objects(self) -> Box<dyn Iterator<Item = (Obj3, T)>> {
         Box::new(self.0.into_iter())
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Pt3> {
+        self.0.iter().flat_map(|(x, _)| x.iter())
+    }
 }
 
 impl<T: 'static, U> Add<U> for Group3<T>
