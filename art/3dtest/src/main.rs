@@ -99,7 +99,7 @@ fn scene2() -> Result<impl Iterator<Item = (Obj3, Style)>> {
             (
                 o,
                 Style {
-                    thickness: 2.0,
+                    thickness: 5.0,
                     ..Default::default()
                 },
             )
@@ -151,12 +151,12 @@ fn main() -> Result<()> {
             /*autobucket=*/ false,
         ))
         .frame(make_frame_with_margin(
-            (800.0, 600.0),
+            (800.0, 1150.0),
             /*margin=*/ 25.0,
         ))
         .build()
         .scale_to_fit_frame()?
-        .write_to_svg((600, 800), &args.output_path_prefix)?;
+        .write_to_svg((1150, 800), &args.output_path_prefix)?;
     Ok(())
 }
 
