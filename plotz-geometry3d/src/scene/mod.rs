@@ -19,6 +19,8 @@ use tracing::*;
 use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone, Default, TypedBuilder)]
+// This is what really takes a bucket of objects and sorts and occludes them.
+// Maybe a better name would be |Occluder|.
 pub struct Scene {
     #[builder(default)]
     objects: Vec<(Obj3, Style)>,
@@ -55,8 +57,8 @@ impl Scene {
                     .into_iter()
                     .sorted_by(|(o1, _), (o2, _)| {
                         Ord::cmp(
-                            &FloatOrd(o1.min_dist_along(&obl.view_vector())),
-                            &FloatOrd(o2.min_dist_along(&obl.view_vector())),
+                            &FloatOrd(o1.dist_along(&obl.view_vector())),
+                            &FloatOrd(o2.dist_along(&obl.view_vector())),
                         )
                     })
                     .collect();

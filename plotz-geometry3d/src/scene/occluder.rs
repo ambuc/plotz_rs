@@ -21,6 +21,8 @@ pub struct Occluder {
     pub objects: Vec<(Obj, Style)>,
 }
 
+// Despite the name, this really only layers A atop B atop C and computes their
+// crops. Maybe a better name would be |Obscurer|. Anyway.
 impl Occluder {
     fn hide_a_behind_b(incoming: &Obj, existing: &Obj) -> Result<Vec<Obj>> {
         // TODO(https://github.com/ambuc/plotz_rs/issues/3): use quadtrees here to make this MUCH faster please!!!!
@@ -59,7 +61,7 @@ impl Occluder {
         }
     }
 
-    // Incorporates an objectw
+    // Incorporates an object
     #[instrument(skip(self, incoming2))]
     pub fn add(&mut self, incoming2: (Obj, Style)) -> Result<()> {
         let mut incoming_os: Vec<(Obj, Style)> = vec![incoming2.clone()];
