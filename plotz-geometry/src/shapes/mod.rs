@@ -1,8 +1,9 @@
 //! Shapes.
 
-pub mod curve;
-pub mod pg;
-pub mod pt;
-pub mod ry;
-pub mod sg;
-pub mod txt;
+pub mod curve; // curve
+pub mod ml; // multiline
+pub mod pg; // polygon
+pub mod pt; // point
+pub mod ry; // ray
+pub mod sg; // segment
+pub mod txt; // text
