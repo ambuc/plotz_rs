@@ -1,9 +1,19 @@
 //! A 2D multiline.
 #![allow(missing_docs)]
 
-use super::{pt::Pt, sg::Sg};
+use super::{pg::Pg, pt::Pt, sg::Sg, txt::Txt};
+use crate::{
+    bounded::{Bounded, Bounds},
+    crop::{CropType, Croppable},
+    intersection::IntersectionResult,
+    obj::Obj,
+    style::Style,
+    Annotatable, AnnotationSettings, Nullable, Roundable, Scalable, Translatable,
+};
 use anyhow::{anyhow, Result};
-use std::fmt::Debug;
+use float_ord::FloatOrd;
+use itertools::iproduct;
+use std::{fmt::Debug, ops::*};
 
 #[derive(Clone)]
 pub struct Ml {
@@ -63,6 +73,287 @@ impl TryFrom<Vec<Pt>> for Ml {
             return Err(anyhow!("Hey, multilines can't be cycles!"));
         }
         Ok(Ml { pts: value })
+    }
+}
+
+impl Ml {
+    pub fn to_segments(&self) -> Vec<Sg> {
+        self.pts
+            .iter()
+            .zip(self.pts.iter().skip(1))
+            .map(|(i, j)| Sg(*i, *j))
+            .collect()
+    }
+
+    pub fn rotate(&mut self, about: &Pt, by_rad: f64) {
+        self.pts
+            .iter_mut()
+            .for_each(|pt| pt.rotate_inplace(about, by_rad))
+    }
+
+    pub fn intersects(&self, other: &Self) -> bool {
+        self.intersects_detailed(other).count() != 0
+    }
+
+    pub fn intersects_detailed(&self, other: &Self) -> impl Iterator<Item = IntersectionResult> {
+        iproduct!(self.to_segments(), other.to_segments()).flat_map(|(l1, l2)| l1.intersects(&l2))
+    }
+
+    pub fn intersects_segment(&self, other: &Sg) -> bool {
+        self.to_segments()
+            .iter()
+            .any(|l: &Sg| l.intersects(other).is_some())
+    }
+
+    pub fn intersects_segment_detailed(&self, other: &Sg) -> Vec<IntersectionResult> {
+        self.to_segments()
+            .iter()
+            .flat_map(|l: &Sg| l.intersects(other))
+            .collect::<Vec<_>>()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Pt> {
+        self.pts.iter()
+    }
+
+    /// Mutable iterator.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
+        self.pts.iter_mut()
+    }
+}
+
+impl Croppable for Ml {
+    type Output = Ml;
+
+    fn crop(&self, _other: &Pg, _crop_type: CropType) -> Result<Vec<Self::Output>> {
+        todo!("https://github.com/ambuc/plotz_rs/issues/7")
+    }
+}
+
+impl IntoIterator for Ml {
+    type Item = Pt;
+    type IntoIter = std::vec::IntoIter<Pt>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.pts.into_iter()
+    }
+}
+
+impl<T> Add<T> for &Ml
+where
+    T: Into<Pt>,
+{
+    type Output = Ml;
+    fn add(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
+        Ml {
+            pts: self.pts.iter().map(|p| *p + rhs).collect(),
+        }
+    }
+}
+impl<T> Add<T> for Ml
+where
+    T: Into<Pt>,
+{
+    type Output = Ml;
+    fn add(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
+        &self + rhs
+    }
+}
+impl<T> AddAssign<T> for Ml
+where
+    T: Into<Pt>,
+{
+    fn add_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
+        self.pts.iter_mut().for_each(|p| *p += rhs);
+    }
+}
+impl<T> Div<T> for Ml
+where
+    T: Into<Pt>,
+{
+    type Output = Ml;
+    fn div(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
+        Ml {
+            pts: self.pts.iter().map(|p| *p / rhs).collect(),
+        }
+    }
+}
+impl Div<f64> for Ml {
+    type Output = Ml;
+    fn div(self, rhs: f64) -> Self::Output {
+        Ml {
+            pts: self.pts.iter().map(|p| *p / rhs).collect(),
+        }
+    }
+}
+impl<T> DivAssign<T> for Ml
+where
+    T: Into<Pt>,
+{
+    fn div_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
+        self.pts.iter_mut().for_each(|p| *p /= rhs);
+    }
+}
+impl DivAssign<f64> for Ml {
+    fn div_assign(&mut self, rhs: f64) {
+        self.pts.iter_mut().for_each(|p| *p /= rhs);
+    }
+}
+impl<T> Mul<T> for Ml
+where
+    T: Into<Pt>,
+{
+    type Output = Ml;
+    fn mul(self, rhs: T) -> Ml {
+        let rhs = rhs.into();
+        Ml {
+            pts: self.pts.iter().map(|p| *p * rhs).collect(),
+        }
+    }
+}
+impl Mul<f64> for Ml {
+    type Output = Ml;
+    fn mul(mut self, rhs: f64) -> Ml {
+        self *= rhs;
+        self
+    }
+}
+impl<T> MulAssign<T> for Ml
+where
+    T: Into<Pt>,
+{
+    fn mul_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
+        self.pts.iter_mut().for_each(|p| *p *= rhs);
+    }
+}
+impl MulAssign<f64> for Ml {
+    fn mul_assign(&mut self, rhs: f64) {
+        self.pts.iter_mut().for_each(|p| *p *= rhs);
+    }
+}
+impl<T> Sub<T> for &Ml
+where
+    T: Into<Pt>,
+{
+    type Output = Ml;
+    fn sub(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
+        Ml {
+            pts: self.pts.iter().map(|p| *p - rhs).collect(),
+        }
+    }
+}
+impl<T> Sub<T> for Ml
+where
+    T: Into<Pt>,
+{
+    type Output = Ml;
+    fn sub(self, rhs: T) -> Self::Output {
+        let rhs = rhs.into();
+        Ml {
+            pts: self.pts.iter().map(|p| *p - rhs).collect(),
+        }
+    }
+}
+impl<T> SubAssign<T> for Ml
+where
+    T: Into<Pt>,
+{
+    fn sub_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
+        self.pts.iter_mut().for_each(|p| *p -= rhs);
+    }
+}
+impl<T> RemAssign<T> for Ml
+where
+    T: Into<Pt>,
+{
+    fn rem_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
+        self.pts.iter_mut().for_each(|p| *p %= rhs);
+    }
+}
+
+impl Bounded for Ml {
+    fn bounds(&self) -> Result<Bounds> {
+        Ok(Bounds {
+            top_bound: self
+                .pts
+                .iter()
+                .map(|p| FloatOrd(p.y))
+                .max()
+                .ok_or(anyhow!("not empty"))?
+                .0,
+            bottom_bound: self
+                .pts
+                .iter()
+                .map(|p| FloatOrd(p.y))
+                .min()
+                .ok_or(anyhow!("not empty"))?
+                .0,
+            left_bound: self
+                .pts
+                .iter()
+                .map(|p| FloatOrd(p.x))
+                .min()
+                .ok_or(anyhow!("not empty"))?
+                .0,
+            right_bound: self
+                .pts
+                .iter()
+                .map(|p| FloatOrd(p.x))
+                .max()
+                .ok_or(anyhow!("not empty"))?
+                .0,
+        })
+    }
+}
+
+impl Translatable for Ml {}
+impl Scalable<Pt> for Ml {}
+impl Scalable<f64> for Ml {}
+
+impl Roundable for Ml {
+    fn round_to_nearest(&mut self, f: f64) {
+        self.pts.iter_mut().for_each(|pt| pt.round_to_nearest(f));
+    }
+}
+
+impl Nullable for Ml {
+    fn is_empty(&self) -> bool {
+        self.pts.is_empty()
+    }
+}
+
+impl Annotatable for Ml {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
+        let mut a = vec![];
+
+        let AnnotationSettings {
+            font_size,
+            precision,
+        } = settings;
+        for (_idx, pt) in self.pts.iter().enumerate() {
+            let x = format!("{:.1$}", pt.x, precision);
+            let y = format!("{:.1$}", pt.y, precision);
+            a.push((
+                Txt {
+                    pt: *pt,
+                    inner: format!("({}, {})", x, y),
+                    font_size: *font_size,
+                }
+                .into(),
+                Style::default(),
+            ));
+        }
+
+        a
     }
 }
 
