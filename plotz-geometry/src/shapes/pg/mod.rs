@@ -29,36 +29,12 @@ use std::{
     ops::*,
 };
 
-/// Whether a polygon is open (there should be no line drawn between its last
-/// and first points) or closed (a line should be drawn between its last and
-/// first points).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PolygonKind {
-    /// A polygon is open.
-    Open,
-    /// A polygon is closed.
-    Closed,
-}
-
 /// A multiline is a list of points rendered with connecting line segments.
 /// If constructed with PolygonKind::Open, this is a multiline (unshaded).
 /// If constructed with PolygonKind::Closed, this is a closed, shaded polygon.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Pg {
-    /// The points which describe a polygon or multiline.
     pub pts: Vec<Pt>,
-    /// Whether this polygon is open or closed.
-    pub kind: PolygonKind,
-}
-
-impl Debug for Pg {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Pg { pts, kind } = self;
-        match kind {
-            PolygonKind::Open => write!(f, "Multiline({:?})", pts),
-            PolygonKind::Closed => write!(f, "Pg({:?})", pts),
-        }
-    }
 }
 
 impl PartialEq for Pg {
@@ -93,7 +69,7 @@ impl PartialEq for Pg {
             .take(other.pts.len())
             .collect();
 
-        self_new_pts == other_new_pts && self.kind == other.kind
+        self_new_pts == other_new_pts
     }
 }
 
@@ -111,10 +87,7 @@ pub fn TryPolygon(a: impl IntoIterator<Item = impl Into<Pt>>) -> Result<Pg> {
         let _ = pts.pop();
     }
 
-    let mut p = Pg {
-        pts,
-        kind: PolygonKind::Closed,
-    };
+    let mut p = Pg { pts };
     if p.get_curve_orientation() == Some(CurveOrientation::Negative) {
         p.orient_curve_positively();
     }
@@ -160,14 +133,9 @@ impl Pg {
     /// See test_multiline_to_segments() and test_polygon_to_segments() for
     /// examples.
     pub fn to_segments(&self) -> Vec<Sg> {
-        match self.kind {
-            PolygonKind::Open => zip(self.pts.iter(), self.pts.iter().skip(1))
-                .map(|(x, y)| Sg(*x, *y))
-                .collect(),
-            PolygonKind::Closed => zip(self.pts.iter(), self.pts.iter().cycle().skip(1))
-                .map(|(x, y)| Sg(*x, *y))
-                .collect(),
-        }
+        zip(self.pts.iter(), self.pts.iter().cycle().skip(1))
+            .map(|(x, y)| Sg(*x, *y))
+            .collect()
     }
 
     /// A rotation operation, for rotating one polygon about a point. Accepts a
@@ -224,11 +192,6 @@ impl Pg {
     /// Calculates whether a point is within, without, or along a closed polygon
     /// using the https://en.wikipedia.org/wiki/Winding_number method.
     pub fn contains_pt(&self, other: &Pt) -> Result<PointLoc> {
-        // If |self| is open, error out.
-        if self.kind == PolygonKind::Open {
-            return Err(anyhow!("pg is open"));
-        }
-
         for (idx, pt) in self.pts.iter().enumerate() {
             if other == pt {
                 return Ok(PointLoc::OnPoint(idx));
@@ -310,20 +273,6 @@ impl Pg {
         Pt(sum_x / num, sum_y / num)
     }
 
-    // check that this and the other are both closed and positively oriented.
-    fn crop_check_prerequisites(&self, b: &Pg) -> Result<()> {
-        if self.kind != PolygonKind::Closed {
-            return Err(anyhow!("this polygon not closed"));
-        }
-
-        // frame actually MUST be closed.
-        if b.kind != PolygonKind::Closed {
-            return Err(anyhow!("that polygon not closed"));
-        }
-
-        Ok(())
-    }
-
     // check if this polygon totally contains another.
     // assumes no intersections.
     fn totally_contains(&self, other: &Pg) -> Result<bool> {
@@ -367,8 +316,6 @@ impl Croppable for Pg {
         if a == b {
             return Ok(vec![a.clone()]);
         }
-
-        Pg::crop_check_prerequisites(a, b).expect("failed prerequisites");
 
         // scenario with no intersections.
         if Pg::annotated_intersects_detailed(a, b).is_empty() {

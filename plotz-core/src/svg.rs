@@ -2,12 +2,7 @@
 //!
 use anyhow::Result;
 use plotz_color::BLACK;
-use plotz_geometry::{
-    obj::Obj,
-    shapes::{pg::PolygonKind, txt::Txt},
-    style::Style,
-    *,
-};
+use plotz_geometry::{obj::Obj, shapes::txt::Txt, style::Style, *};
 use std::fmt::Debug;
 
 /// The size of a canvas.
@@ -49,9 +44,7 @@ fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<()> {
             for p in &polygon.pts {
                 context.line_to(p.x, p.y);
             }
-            if polygon.kind == PolygonKind::Closed {
-                context.line_to(polygon.pts[0].x, polygon.pts[0].y);
-            }
+            context.line_to(polygon.pts[0].x, polygon.pts[0].y);
         }
         Obj::Ml(ml) => {
             for p in &ml.pts {

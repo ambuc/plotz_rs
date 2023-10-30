@@ -6,13 +6,9 @@ use crate::{
     bounded::Bounded,
     crop::Croppable,
     shading::shade_config::ShadeConfig,
-    shapes::{
-        pg::{Pg, PolygonKind},
-        pt::Pt,
-        sg::Sg,
-    },
+    shapes::{pg::Pg, pt::Pt, sg::Sg},
 };
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use float_ord::FloatOrd;
 
 fn compute_vertical_step(gap: f64, slope: f64) -> f64 {
@@ -22,10 +18,6 @@ fn compute_vertical_step(gap: f64, slope: f64) -> f64 {
 /// Gap controls how far to step between crosshatched lines
 /// Slope controls the angle of the lines.
 pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Sg>> {
-    if polygon.kind == PolygonKind::Open {
-        return Err(anyhow!("polygon was open."));
-    }
-
     let bounds = polygon.bounds()?;
     let mut segments: Vec<Sg> = vec![];
 

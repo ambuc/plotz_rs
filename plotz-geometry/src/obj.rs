@@ -4,14 +4,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLoc},
     group::Group,
-    shapes::{
-        curve::CurveArc,
-        ml::Ml,
-        pg::{Pg, PolygonKind},
-        pt::Pt,
-        sg::Sg,
-        txt::Txt,
-    },
+    shapes::{curve::CurveArc, ml::Ml, pg::Pg, pt::Pt, sg::Sg, txt::Txt},
     style::Style,
     *,
 };
@@ -307,14 +300,11 @@ impl Croppable for Obj {
                 .into_iter()
                 .map(Obj::from)
                 .collect::<Vec<_>>()),
-            Obj::Pg(pg) => match pg.kind {
-                PolygonKind::Open => todo!(""),
-                PolygonKind::Closed => Ok(pg
-                    .crop(frame, crop_type)?
-                    .into_iter()
-                    .map(Obj::from)
-                    .collect::<Vec<_>>()),
-            },
+            Obj::Pg(pg) => Ok(pg
+                .crop(frame, crop_type)?
+                .into_iter()
+                .map(Obj::from)
+                .collect::<Vec<_>>()),
             Obj::Sg(sg) => Ok(sg
                 .crop(frame, crop_type)?
                 .into_iter()
@@ -362,14 +352,11 @@ impl Croppable for Obj {
                 .into_iter()
                 .map(Obj::from)
                 .collect::<Vec<_>>()),
-            Obj::Pg(pg) => match pg.kind {
-                PolygonKind::Open => todo!(),
-                PolygonKind::Closed => Ok(pg
-                    .crop_excluding(other)?
-                    .into_iter()
-                    .map(Obj::from)
-                    .collect::<Vec<_>>()),
-            },
+            Obj::Pg(pg) => Ok(pg
+                .crop_excluding(other)?
+                .into_iter()
+                .map(Obj::from)
+                .collect::<Vec<_>>()),
             Obj::Sg(sg) => Ok(sg
                 .crop_excluding(other)?
                 .into_iter()
