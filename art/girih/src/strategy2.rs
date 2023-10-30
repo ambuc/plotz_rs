@@ -11,11 +11,7 @@ use plotz_color::BLACK;
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{
-        pg::{multiline::Multiline, Pg},
-        pt::Pt,
-        sg::Sg,
-    },
+    shapes::{ml::Ml, pg::Pg, pt::Pt, sg::Sg},
     style::Style,
 };
 use rand::seq::SliceRandom;
@@ -86,9 +82,11 @@ fn chase(apts: &AnnotatedPlacedTiles) -> Vec<(Obj, Style)> {
         let mut pts = segments.iter().map(|sg| sg.i).collect::<Vec<_>>();
         pts.push(segments.first().unwrap().i);
 
+        let ml: Ml = pts.try_into().unwrap();
+
         // and then make a multiline, and add it to our final outputs list.
         outputs.push((
-            Obj::Pg(Multiline(pts).unwrap()),
+            ml.into(),
             Style {
                 color: plotz_color::take_random_colors(1).next().unwrap(),
                 thickness: 3.0,

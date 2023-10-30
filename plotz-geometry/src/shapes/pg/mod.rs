@@ -1,8 +1,8 @@
 //! A 2D polygon (or multi&line).
+#![allow(missing_docs)]
 
 mod annotated_isxn_result;
 mod crop_graph;
-pub mod multiline;
 
 use self::{annotated_isxn_result::*, crop_graph::*};
 use crate::{
@@ -646,42 +646,14 @@ impl Annotatable for Pg {
             ));
         }
 
-        // for (idx, sg) in self.to_segments().iter().enumerate() {
-        //     a.push(Object2d::new(Txt {
-        //         pt: sg.i.avg(&sg.f),
-        //         inner: format!("s{}", idx.to_string()),
-        //     }));
-        // }
-
         a
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::shapes::pg::multiline::Multiline;
-
     use super::*;
     use float_eq::assert_float_eq;
-
-    #[test]
-    fn test_multiline_to_segments() {
-        assert!(Multiline([(0, 0)]).is_err());
-        assert_eq!(
-            Multiline([(0, 0), (0, 1)]).unwrap().to_segments(),
-            [Sg((0, 0), (0, 1)),]
-        );
-        assert_eq!(
-            Multiline([(0, 0), (0, 1), (0, 2)]).unwrap().to_segments(),
-            [Sg((0, 0), (0, 1)), Sg((0, 1), (0, 2)),]
-        );
-        assert_eq!(
-            Multiline([(0, 0), (0, 1), (0, 2), (0, 3)])
-                .unwrap()
-                .to_segments(),
-            [Sg((0, 0), (0, 1)), Sg((0, 1), (0, 2)), Sg((0, 2), (0, 3)),]
-        );
-    }
 
     #[test]
     fn test_polygon_to_segments() {
@@ -889,23 +861,6 @@ mod tests {
         let suspicious_pt = Pt(228, 400);
         assert_eq!(frame.contains_pt(&suspicious_pt)?, PointLoc::Outside);
         Ok(())
-    }
-
-    #[test]
-    #[should_panic]
-
-    fn test_crop_to_polygon_this_not_closed() {
-        let _ = Multiline([(1, 1), (3, 1), (3, 3), (1, 3)])
-            .unwrap()
-            .crop_to(&Rect((0, 0), (4, 4)).unwrap());
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_crop_to_polygon_that_not_closed() {
-        let _ = Rect((1, 1), (2, 2))
-            .unwrap()
-            .crop_to(&Multiline([(0, 0), (4, 0), (4, 4), (0, 4)]).unwrap());
     }
 
     #[test]

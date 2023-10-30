@@ -6,6 +6,7 @@ use crate::{
     group::Group,
     shapes::{
         curve::CurveArc,
+        ml::Ml,
         pg::{Pg, PolygonKind},
         pt::Pt,
         sg::Sg,
@@ -29,6 +30,8 @@ pub enum Obj {
     Pg(Pg),
     /// A segment.
     Sg(Sg),
+    /// A multiline.
+    Ml(Ml),
     /// An arc.
     CurveArc(CurveArc),
     /// A character to be printed in SVG, at a point.
@@ -42,6 +45,7 @@ impl Obj {
     pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
         match self {
             Obj::Pt(p) => Box::new(p.iter()),
+            Obj::Ml(ml) => Box::new(ml.iter()),
             Obj::Txt(ch) => Box::new(ch.iter()),
             Obj::CurveArc(ca) => Box::new(ca.iter()),
             Obj::Group(g) => Box::new(g.iter()),
@@ -54,6 +58,7 @@ impl Obj {
     pub fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
         match self {
             Obj::Pt(p) => Box::new(p.iter_mut()),
+            Obj::Ml(ml) => Box::new(ml.iter_mut()),
             Obj::Txt(ch) => Box::new(ch.iter_mut()),
             Obj::CurveArc(ca) => Box::new(ca.iter_mut()),
             Obj::Group(g) => Box::new(g.iter_mut()),
@@ -72,6 +77,9 @@ where
         match self {
             Obj::Pt(p) => {
                 *p %= rhs;
+            }
+            Obj::Ml(ml) => {
+                *ml %= rhs;
             }
             Obj::Txt(ch) => {
                 *ch %= rhs;
@@ -101,6 +109,7 @@ where
         let rhs = rhs.into();
         match self {
             Obj::Pt(p) => Obj::from(p + rhs),
+            Obj::Ml(ml) => Obj::from(ml + rhs),
             Obj::Txt(ch) => Obj::from(ch + rhs),
             Obj::CurveArc(ca) => Obj::from(ca + rhs),
             Obj::Group(g) => Obj::from(g + rhs),
@@ -119,6 +128,7 @@ where
         let rhs = rhs.into();
         match self {
             Obj::Pt(p) => Obj::from(p - rhs),
+            Obj::Ml(ml) => Obj::from(ml - rhs),
             Obj::Txt(ch) => Obj::from(ch - rhs),
             Obj::CurveArc(ca) => Obj::from(ca - rhs),
             Obj::Group(g) => Obj::from(g - rhs),
@@ -131,6 +141,7 @@ impl Mul<f64> for Obj {
     type Output = Obj;
     fn mul(self, rhs: f64) -> Self::Output {
         match self {
+            Obj::Ml(ml) => Obj::from(ml * rhs),
             Obj::Pt(p) => Obj::from(p * rhs),
             Obj::Txt(ch) => Obj::from(ch * rhs),
             Obj::CurveArc(ca) => Obj::from(ca * rhs),
@@ -144,6 +155,7 @@ impl Div<f64> for Obj {
     type Output = Obj;
     fn div(self, rhs: f64) -> Self::Output {
         match self {
+            Obj::Ml(ml) => Obj::from(ml / rhs),
             Obj::Pt(p) => Obj::from(p / rhs),
             Obj::Txt(ch) => Obj::from(ch / rhs),
             Obj::CurveArc(ca) => Obj::from(ca / rhs),
@@ -160,6 +172,9 @@ where
     fn add_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
         match self {
+            Obj::Ml(ml) => {
+                *ml += rhs;
+            }
             Obj::Pt(p) => {
                 *p += rhs;
             }
@@ -203,6 +218,9 @@ where
             Obj::Pg(pg) => {
                 *pg -= rhs;
             }
+            Obj::Ml(ml) => {
+                *ml -= rhs;
+            }
             Obj::Sg(sg) => {
                 *sg -= rhs;
             }
@@ -231,6 +249,9 @@ impl MulAssign<f64> for Obj {
             Obj::Sg(sg) => {
                 *sg *= rhs;
             }
+            Obj::Ml(ml) => {
+                *ml *= rhs;
+            }
         }
     }
 }
@@ -238,6 +259,9 @@ impl MulAssign<f64> for Obj {
 impl DivAssign<f64> for Obj {
     fn div_assign(&mut self, rhs: f64) {
         match self {
+            Obj::Ml(ml) => {
+                *ml /= rhs;
+            }
             Obj::Pt(p) => {
                 *p /= rhs;
             }
@@ -274,16 +298,17 @@ impl Croppable for Obj {
                     Ok(vec![])
                 }
             }
+            Obj::Ml(ml) => Ok(ml
+                .to_segments()
+                .into_iter()
+                .map(|sg| sg.crop(frame, crop_type))
+                .flatten_ok()
+                .collect::<Result<Vec<_>>>()?
+                .into_iter()
+                .map(Obj::from)
+                .collect::<Vec<_>>()),
             Obj::Pg(pg) => match pg.kind {
-                PolygonKind::Open => Ok(pg
-                    .to_segments()
-                    .into_iter()
-                    .map(|sg| sg.crop(frame, crop_type))
-                    .flatten_ok()
-                    .collect::<Result<Vec<_>>>()?
-                    .into_iter()
-                    .map(Obj::from)
-                    .collect::<Vec<_>>()),
+                PolygonKind::Open => todo!(""),
                 PolygonKind::Closed => Ok(pg
                     .crop(frame, crop_type)?
                     .into_iter()
@@ -328,16 +353,17 @@ impl Croppable for Obj {
                     Ok(vec![self.clone()])
                 }
             }
+            Obj::Ml(ml) => Ok(ml
+                .to_segments()
+                .into_iter()
+                .map(|sg| sg.crop_excluding(other))
+                .flatten_ok()
+                .collect::<Result<Vec<_>>>()?
+                .into_iter()
+                .map(Obj::from)
+                .collect::<Vec<_>>()),
             Obj::Pg(pg) => match pg.kind {
-                PolygonKind::Open => Ok(pg
-                    .to_segments()
-                    .into_iter()
-                    .map(|sg| sg.crop_excluding(other))
-                    .flatten_ok()
-                    .collect::<Result<Vec<_>>>()?
-                    .into_iter()
-                    .map(Obj::from)
-                    .collect::<Vec<_>>()),
+                PolygonKind::Open => todo!(),
                 PolygonKind::Closed => Ok(pg
                     .crop_excluding(other)?
                     .into_iter()
@@ -374,6 +400,7 @@ impl Annotatable for Obj {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
         match self {
             Obj::Pg(pg) => pg.annotate(settings),
+            Obj::Ml(ml) => ml.annotate(settings),
             Obj::Group(g) => g.annotate(settings),
             Obj::Pt(_) | Obj::Sg(_) | Obj::CurveArc(_) | Obj::Txt(_) => vec![],
         }

@@ -395,4 +395,19 @@ mod tests {
         assert!(<Vec<Pt> as TryInto<Ml>>::try_into(val).is_err());
         Ok(())
     }
+
+    #[test]
+    fn test_multiline_to_segments() -> Result<()> {
+        {
+            let ml: Ml = vec![Pt(0, 0), Pt(0, 1)].try_into()?;
+            assert_eq!(ml.to_segments(), [Sg((0, 0), (0, 1))]);
+        }
+
+        {
+            let ml: Ml = vec![Pt(0, 0), Pt(0, 1), Pt(0, 2)].try_into()?;
+            assert_eq!(ml.to_segments(), [Sg((0, 0), (0, 1)), Sg((0, 1), (0, 2))]);
+        }
+
+        Ok(())
+    }
 }

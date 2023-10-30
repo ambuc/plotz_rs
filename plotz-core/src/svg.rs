@@ -53,6 +53,11 @@ fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<()> {
                 context.line_to(polygon.pts[0].x, polygon.pts[0].y);
             }
         }
+        Obj::Ml(ml) => {
+            for p in &ml.pts {
+                context.line_to(p.x, p.y);
+            }
+        }
         Obj::Sg(segment) => {
             context.line_to(segment.i.x, segment.i.y);
             context.line_to(segment.f.x, segment.f.y);

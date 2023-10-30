@@ -9,10 +9,7 @@ use plotz_core::{
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{
-        pg::{multiline::Multiline, Pg},
-        pt::Pt,
-    },
+    shapes::{ml::Ml, pg::Pg, pt::Pt},
     style::Style,
 };
 use rand::prelude::SliceRandom;
@@ -168,35 +165,39 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)
     .flat_map(|(cell_id, cell, rot)| {
         let mut ret = vec![];
         ret.push({
-            let mut pg: Pg = match cell {
-                Fill::Blue => Multiline([(0.25, 0.0), (0.5, 0.25), (0.75, 0.0)]).unwrap(),
-                Fill::Green => {
-                    Multiline([(0.25, 0.0), (0.25, 0.25), (0.75, 0.25), (0.75, 0.0)]).unwrap()
-                }
-                Fill::Red => Multiline([
-                    (0.25, 0.0),
-                    (5.0 / 16.0, 3.0 / 16.0),
-                    (0.5, 0.25),
-                    (11.0 / 16.0, 3.0 / 16.0),
-                    (0.75, 0.0),
-                ])
+            let mut ml: Ml = match cell {
+                Fill::Blue => vec![Pt(0.25, 0.0), Pt(0.5, 0.25), Pt(0.75, 0.0)]
+                    .try_into()
+                    .unwrap(),
+                Fill::Green => vec![Pt(0.25, 0.0), Pt(0.25, 0.25), Pt(0.75, 0.25), Pt(0.75, 0.0)]
+                    .try_into()
+                    .unwrap(),
+                Fill::Red => vec![
+                    Pt(0.25, 0.0),
+                    Pt(5.0 / 16.0, 3.0 / 16.0),
+                    Pt(0.5, 0.25),
+                    Pt(11.0 / 16.0, 3.0 / 16.0),
+                    Pt(0.75, 0.0),
+                ]
+                .try_into()
                 .unwrap(),
-                Fill::White => Multiline([
-                    (0.25, 0.0),
-                    (7.0 / 16.0, 1.0 / 16.0),
-                    (0.5, 0.25),
-                    (9.0 / 16.0, 1.0 / 16.0),
-                    (0.75, 0.0),
-                ])
+                Fill::White => vec![
+                    Pt(0.25, 0.0),
+                    Pt(7.0 / 16.0, 1.0 / 16.0),
+                    Pt(0.5, 0.25),
+                    Pt(9.0 / 16.0, 1.0 / 16.0),
+                    Pt(0.75, 0.0),
+                ]
+                .try_into()
                 .unwrap(),
             };
 
-            pg *= 2.0;
-            pg.rotate(&Pt(1, 1), rot);
-            pg += (2.0 * row_idx as f64, 2.0 * col_idx as f64);
+            ml *= 2.0;
+            ml.rotate(&Pt(1, 1), rot);
+            ml += (2.0 * row_idx as f64, 2.0 * col_idx as f64);
 
             (
-                Obj::Pg(pg),
+                ml.into(),
                 Style {
                     color: [BLUE, GREEN, RED, YELLOW][cell.as_usize()],
                     ..Default::default()

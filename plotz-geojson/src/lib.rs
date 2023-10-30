@@ -7,7 +7,8 @@ use anyhow::{anyhow, Result};
 use plotz_geometry::{
     obj::Obj,
     shapes::{
-        pg::{multiline::Multiline, Pg, TryPolygon},
+        ml::Ml,
+        pg::{Pg, TryPolygon},
         pt::Pt,
     },
 };
@@ -132,19 +133,19 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>> {
 }
 
 fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj>> {
-    Ok(vec![Obj::from(Multiline(
-        coordinates
-            .as_array()
-            .ok_or(anyhow!("not array"))?
-            .iter()
-            .map(|p| {
-                Ok(Pt(
-                    p[0].as_f64().ok_or(anyhow!("value not f64"))?,
-                    p[1].as_f64().ok_or(anyhow!("value not f64"))?,
-                ))
-            })
-            .collect::<Result<Vec<_>>>()?,
-    )?)])
+    let ml: Ml = coordinates
+        .as_array()
+        .ok_or(anyhow!("not array"))?
+        .iter()
+        .map(|p| {
+            Ok(Pt(
+                p[0].as_f64().ok_or(anyhow!("value not f64"))?,
+                p[1].as_f64().ok_or(anyhow!("value not f64"))?,
+            ))
+        })
+        .collect::<Result<Vec<_>>>()?
+        .try_into()?;
+    Ok(vec![Obj::from(ml)])
 }
 
 fn parse_to_multilinestring(coordinates: &Value) -> Result<Vec<Obj>> {
@@ -241,19 +242,16 @@ mod tests {
             [-74.014_248_1, 40.721_380_6],
             [-74.013_283_1, 40.721_267_8],
         ]);
-        assert_eq!(
-            parse_to_linestring(&geojson).unwrap(),
-            vec![Obj::from(
-                Multiline([
-                    (-74.015_651_1, 40.721_544_6),
-                    (-74.015_493_9, 40.721_526_2),
-                    (-74.014_280_9, 40.721_384_4),
-                    (-74.014_248_1, 40.721_380_6),
-                    (-74.013_283_1, 40.721_267_8),
-                ])
-                .unwrap()
-            )]
-        );
+        let ml: Ml = (vec![
+            Pt(-74.015_651_1, 40.721_544_6),
+            Pt(-74.015_493_9, 40.721_526_2),
+            Pt(-74.014_280_9, 40.721_384_4),
+            Pt(-74.014_248_1, 40.721_380_6),
+            Pt(-74.013_283_1, 40.721_267_8),
+        ])
+        .try_into()
+        .unwrap();
+        assert_eq!(parse_to_linestring(&geojson).unwrap(), vec![Obj::from(ml)]);
     }
 
     #[test]
@@ -278,10 +276,10 @@ mod tests {
         //     ],
         // );
 
-        assert_eq!(
-            polygons[1].0,
-            Obj::from(Multiline([(1.0, 1.0), (1.0, 2.5), (2.0, 5.0)]).unwrap())
-        );
+        let ml: Ml = vec![Pt(1.0, 1.0), Pt(1.0, 2.5), Pt(2.0, 5.0)]
+            .try_into()
+            .unwrap();
+        assert_eq!(polygons[1].0, ml.into(),);
         // assert_symbol_tuple_list(
         //     polygons[1].1.clone(),
         //     [

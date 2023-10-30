@@ -45,6 +45,10 @@ impl Occluder {
                 unimplemented!("no support for curvearcs yet")
             }
 
+            (Obj::Ml(_), _) => {
+                unimplemented!("no support for multilines yet")
+            }
+
             (Obj::Pg(a), Obj::Pg(b)) => Ok(a
                 .crop_excluding(b)
                 .context(format!("crop excluding: \na\n\t{:?}\n\nb\n\t{:?}", a, b))?
@@ -57,7 +61,9 @@ impl Occluder {
 
             //
             // you can't hide something behind a segment or a point or a char. don't be daft.
-            (incoming, Obj::Sg(_) | Obj::Pt(_) | Obj::Txt(_)) => Ok(vec![(**incoming).clone()]),
+            (incoming, Obj::Ml(_) | Obj::Sg(_) | Obj::Pt(_) | Obj::Txt(_)) => {
+                Ok(vec![(**incoming).clone()])
+            }
         }
     }
 

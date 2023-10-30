@@ -11,11 +11,7 @@ use plotz_core::{
 use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
-    shapes::{
-        curve::CurveArc,
-        pg::{multiline::Multiline, Pg},
-        pt::Pt,
-    },
+    shapes::{curve::CurveArc, ml::Ml, pg::Pg, pt::Pt},
     style::Style,
 };
 use plotz_physics::{framework, particle::*};
@@ -133,7 +129,10 @@ fn main() -> Result<()> {
                 // If the object has no history, it is a static particle -- a circle.
                 0 => CurveArc(p.position, 0.0..=TAU, 2.0).into(),
                 // Otherwise, chart its course.
-                _ => Multiline(p.history).unwrap().into(),
+                _ => {
+                    let ml: Ml = p.history.try_into().unwrap();
+                    ml.into()
+                }
             },
             Style {
                 color: p.metadata.unwrap().color,
