@@ -36,22 +36,8 @@ pub struct Scene {
 }
 
 impl Scene {
-    pub fn check_collisions(&self) -> Result<()> {
-        for (i, (o1, _)) in self.objects.iter().enumerate() {
-            for (j, (o2, _)) in self.objects.iter().enumerate() {
-                if i == j {
-                    continue;
-                }
-                //  o1.
-            }
-        }
-        Ok(())
-    }
-
     #[instrument(skip(self))]
     pub fn project(self) -> Result<Vec<(Obj, Style)>> {
-        self.check_collisions()?;
-
         match (self.projection, self.occluder) {
             (Projection::Oblique(obl), None) => Ok(self
                 .objects
