@@ -9,7 +9,11 @@ use plotz_core::{
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{ml::Ml, pg::Pg, pt::Pt},
+    shapes::{
+        ml::{Ml, Ml_from_pts},
+        pg::Pg,
+        pt::Pt,
+    },
     style::Style,
 };
 use rand::prelude::SliceRandom;
@@ -166,30 +170,27 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)
         let mut ret = vec![];
         ret.push({
             let mut ml: Ml = match cell {
-                Fill::Blue => vec![Pt(0.25, 0.0), Pt(0.5, 0.25), Pt(0.75, 0.0)]
-                    .try_into()
-                    .unwrap(),
-                Fill::Green => vec![Pt(0.25, 0.0), Pt(0.25, 0.25), Pt(0.75, 0.25), Pt(0.75, 0.0)]
-                    .try_into()
-                    .unwrap(),
-                Fill::Red => vec![
+                Fill::Blue => Ml_from_pts(vec![Pt(0.25, 0.0), Pt(0.5, 0.25), Pt(0.75, 0.0)]),
+                Fill::Green => Ml_from_pts(vec![
+                    Pt(0.25, 0.0),
+                    Pt(0.25, 0.25),
+                    Pt(0.75, 0.25),
+                    Pt(0.75, 0.0),
+                ]),
+                Fill::Red => Ml_from_pts(vec![
                     Pt(0.25, 0.0),
                     Pt(5.0 / 16.0, 3.0 / 16.0),
                     Pt(0.5, 0.25),
                     Pt(11.0 / 16.0, 3.0 / 16.0),
                     Pt(0.75, 0.0),
-                ]
-                .try_into()
-                .unwrap(),
-                Fill::White => vec![
+                ]),
+                Fill::White => Ml_from_pts(vec![
                     Pt(0.25, 0.0),
                     Pt(7.0 / 16.0, 1.0 / 16.0),
                     Pt(0.5, 0.25),
                     Pt(9.0 / 16.0, 1.0 / 16.0),
                     Pt(0.75, 0.0),
-                ]
-                .try_into()
-                .unwrap(),
+                ]),
             };
 
             ml *= 2.0;

@@ -10,7 +10,7 @@ use plotz_core::{
 use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
-    shapes::{curve::CurveArc, ml::Ml, pg::Pg, pt::Pt, sg::Sg},
+    shapes::{curve::CurveArc, ml::Ml_from_pts, pg::Pg, pt::Pt, sg::Sg},
     style::Style,
 };
 use rand::{thread_rng, Rng};
@@ -122,9 +122,8 @@ fn main() -> Result<()> {
                             history.push(next);
                         }
 
-                        let ml: Ml = history.try_into().expect("Multiline");
                         (
-                            ml.into(),
+                            Ml_from_pts(history).into(),
                             Style {
                                 color: cluster_color,
                                 ..Default::default()

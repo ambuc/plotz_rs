@@ -76,6 +76,24 @@ impl TryFrom<Vec<Pt>> for Ml {
     }
 }
 
+#[allow(non_snake_case)]
+pub fn Ml_from_pts(a: impl IntoIterator<Item = impl Into<Pt>>) -> Ml {
+    a.into_iter()
+        .map(|x| x.into())
+        .collect::<Vec<_>>()
+        .try_into()
+        .unwrap()
+}
+
+#[allow(non_snake_case)]
+pub fn Ml_from_sgs(a: impl IntoIterator<Item = impl Into<Sg>>) -> Ml {
+    a.into_iter()
+        .map(|x| x.into())
+        .collect::<Vec<_>>()
+        .try_into()
+        .unwrap()
+}
+
 impl Ml {
     pub fn to_segments(&self) -> Vec<Sg> {
         self.pts
