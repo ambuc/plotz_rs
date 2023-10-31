@@ -6,7 +6,7 @@
 use anyhow::{anyhow, Result};
 use plotz_geometry::{
     obj::Obj,
-    shapes::{ml::Ml_from_pts, pg::Pg, pt::Pt},
+    shapes::{ml::Ml, pg::Pg, pt::Pt},
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -129,19 +129,17 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>> {
 }
 
 fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj>> {
-    Ok(vec![Ml_from_pts(
-        coordinates
-            .as_array()
-            .ok_or(anyhow!("not array"))?
-            .iter()
-            .map(|p| {
-                Ok(Pt(
-                    p[0].as_f64().ok_or(anyhow!("value not f64"))?,
-                    p[1].as_f64().ok_or(anyhow!("value not f64"))?,
-                ))
-            })
-            .collect::<Result<Vec<_>>>()?,
-    )
+    Ok(vec![Ml(coordinates
+        .as_array()
+        .ok_or(anyhow!("not array"))?
+        .iter()
+        .map(|p| {
+            Ok(Pt(
+                p[0].as_f64().ok_or(anyhow!("value not f64"))?,
+                p[1].as_f64().ok_or(anyhow!("value not f64"))?,
+            ))
+        })
+        .collect::<Result<Vec<_>>>()?)
     .into()])
 }
 
@@ -243,12 +241,12 @@ mod tests {
         ]);
         assert_eq!(
             parse_to_linestring(&geojson).unwrap(),
-            vec![Obj::from(Ml_from_pts(vec![
-                Pt(-74.015_651_1, 40.721_544_6),
-                Pt(-74.015_493_9, 40.721_526_2),
-                Pt(-74.014_280_9, 40.721_384_4),
-                Pt(-74.014_248_1, 40.721_380_6),
-                Pt(-74.013_283_1, 40.721_267_8),
+            vec![Obj::from(Ml(vec![
+                (-74.015_651_1, 40.721_544_6),
+                (-74.015_493_9, 40.721_526_2),
+                (-74.014_280_9, 40.721_384_4),
+                (-74.014_248_1, 40.721_380_6),
+                (-74.013_283_1, 40.721_267_8),
             ]))]
         );
     }
