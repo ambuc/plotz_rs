@@ -1,16 +1,16 @@
 // https://tilings.math.uni-bielefeld.de/substitution/danzers-7-fold-original/
 
-use plotz_geometry::{obj::Obj, style::Style};
-
 use float_cmp::assert_approx_eq;
 use lazy_static::lazy_static;
 use plotz_color::*;
 use plotz_geometry::{
+    obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
         pg::Pg,
         pt::{PolarPt, Pt},
     },
+    style::Style,
 };
 use std::f64::consts::PI;
 
@@ -251,7 +251,7 @@ pub fn make() -> Vec<(Obj, Style)> {
         .flat_map(|tile| {
             let color = tile.kind.color();
 
-            let p = Pg(tile.pts);
+            let p = Pg(tile.pts).unwrap();
 
             let config = ShadeConfig::builder()
                 .gap(1.0)

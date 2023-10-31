@@ -54,7 +54,7 @@ impl Oblique {
         Sg(self.project_pt3(&sg3.i), self.project_pt3(&sg3.f))
     }
     pub fn project_pg3(&self, pg3: &Pg3) -> Pg {
-        Pg(pg3.pts.iter().map(|pt3d| self.project_pt3(pt3d)))
+        Pg(pg3.pts.iter().map(|pt3d| self.project_pt3(pt3d))).unwrap()
     }
     pub fn project_group3(&self, _: &Group3<()>) -> Group<Style> {
         todo!("https://github.com/ambuc/plotz_rs/issues/6")

@@ -148,7 +148,7 @@ mod test_super {
     }
 
     #[test]
-    fn test_write_simple_layer_to_svg() {
+    fn test_write_simple_layer_to_svg() -> Result<()> {
         let tmp_dir = TempDir::new("example").unwrap();
         let path = tmp_dir.path().join("out.svg");
 
@@ -158,7 +158,7 @@ mod test_super {
                 height: 1024,
             },
             path.to_str().unwrap(),
-            vec![&(Obj::Pg(Pg([(0, 0), (0, 1), (1, 0)])), Style::default())],
+            vec![&(Obj::Pg(Pg([(0, 0), (0, 1), (1, 0)])?), Style::default())],
         )
         .unwrap();
 
@@ -167,10 +167,11 @@ mod test_super {
         assert!(actual.contains("height=\"1024pt\""));
         assert!(actual.contains("<g id=\""));
         // assert!(actual.contains("<path style=\"fill:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;\" d=\"M 0 0 L 0 1 L 1 0 L 0 0 \"/>"));
+        Ok(())
     }
 
     #[test]
-    fn test_write_complex_layer_to_svg() {
+    fn test_write_complex_layer_to_svg() -> Result<()> {
         let tmp_dir = TempDir::new("example").unwrap();
         let path = tmp_dir.path().join("out.svg");
 
@@ -181,8 +182,8 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![
-                &(Obj::Pg(Pg([(0, 0), (0, 1), (1, 0)])), Style::default()),
-                &(Obj::Pg(Pg([(5, 5), (5, 6), (6, 5)])), Style::default()),
+                &(Obj::Pg(Pg([(0, 0), (0, 1), (1, 0)])?), Style::default()),
+                &(Obj::Pg(Pg([(5, 5), (5, 6), (6, 5)])?), Style::default()),
             ],
         )
         .unwrap();
@@ -193,5 +194,6 @@ mod test_super {
         assert!(actual.contains("<g id=\""));
         // assert!(actual.contains("<path style=\"fill:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;\" d=\"M 0 0 L 0 1 L 1 0 L 0 0 \"/>"));
         // assert!(actual.contains("<path style=\"fill:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;\" d=\"M 5 5 L 5 6 L 6 5 L 5 5 \"/>"));
+        Ok(())
     }
 }

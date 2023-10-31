@@ -1,12 +1,14 @@
 //! Default frames.
 
-use plotz_geometry::{obj::Obj, style::Style};
-
-use plotz_geometry::shapes::{pg::Pg, pt::Pt};
+use plotz_geometry::{
+    obj::Obj,
+    shapes::{pg::Pg, pt::Pt},
+    style::Style,
+};
 
 /// Makes a frame given (width, height) and (x,y) offset.
 pub fn make_frame_pg((w, h): (f64, f64), offset: impl Into<Pt>) -> Pg {
-    let mut p = Pg([(0.0, 0.0), (0.0, w), (h, w), (h, 0.0)]) + offset;
+    let mut p = Pg([(0.0, 0.0), (0.0, w), (h, w), (h, 0.0)]).unwrap() + offset;
     p.orient_curve_positively();
     p
 }

@@ -512,7 +512,7 @@ fn paths_to_files(
 mod tests {
     use super::*;
     use float_eq::assert_float_eq;
-    use plotz_geometry::bounded::BoundsCollector;
+    use plotz_geometry::{bounded::BoundsCollector, shapes::pg::Pg};
     use tempdir::TempDir;
 
     #[test]
@@ -573,7 +573,7 @@ mod tests {
     }
 
     #[test]
-    fn test_bl_shift() {
+    fn test_bl_shift() -> Result<()> {
         use plotz_color::*;
 
         for (initial, expected) in [
@@ -584,7 +584,7 @@ mod tests {
             // shift negative
             ([(1, 1), (1, 2), (2, 1)], [(0, 0), (0, 1), (1, 0)]),
         ] {
-            let obj = Obj::Pg(Pg(initial));
+            let obj = Obj::Pg(Pg(initial)?);
             let mut map = Map {
                 canvas: {
                     let mut canvas = Canvas::default();
@@ -606,12 +606,13 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].0, Obj::Pg(Pg(expected)));
+            assert_eq!(x.next().unwrap()[0].0, Obj::Pg(Pg(expected)?));
         }
+        Ok(())
     }
 
     #[test]
-    fn test_apply_scaling() {
+    fn test_apply_scaling() -> Result<()> {
         use plotz_color::*;
 
         for (size, scale_factor, initial, expected) in [
@@ -636,7 +637,7 @@ mod tests {
                 [Pt(0, 0), Pt(0, 900), Pt(900, 0)],
             ),
         ] {
-            let obj = Obj::Pg(Pg(initial));
+            let obj = Obj::Pg(Pg(initial)?);
             let mut map = Map {
                 center: None,
                 canvas: {
@@ -658,7 +659,8 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].0, Obj::Pg(Pg(expected)));
+            assert_eq!(x.next().unwrap()[0].0, Obj::Pg(Pg(expected)?));
         }
+        Ok(())
     }
 }

@@ -1,6 +1,5 @@
 //! Crop graph for polygons.
 
-use super::TryPolygon;
 use crate::{
     crop::{CropType, PointLoc},
     intersection::{Intersection, IntersectionResult, Pair, Which},
@@ -368,7 +367,7 @@ impl<'a> CropGraph<'a> {
         }
 
         let dbg = format!("pts: {:?}", pts);
-        Ok(Some(TryPolygon(pts).context(dbg)?))
+        Ok(Some(Pg(pts).context(dbg)?))
     }
 
     #[allow(unused)]
@@ -409,7 +408,7 @@ mod test {
         let f = Pt(80, 75);
         let g = Pt(60, 90);
         let h = Pt(90, 90);
-        Pg([a, b, e, f, c, d, h, g, a])
+        Pg([a, b, e, f, c, d, h, g, a]).unwrap()
     }
 
     fn h_shape() -> Pg {
@@ -425,7 +424,7 @@ mod test {
         let j = Pt(70, 80);
         let k = Pt(70, 110);
         let l = Pt(60, 110);
-        Pg([a, b, c, d, e, f, g, h, i, j, k, l, a])
+        Pg([a, b, c, d, e, f, g, h, i, j, k, l, a]).unwrap()
     }
 
     #[test_case(u_shape(), CropType::Exclusive; "u-shape, exclusive")]
@@ -491,7 +490,7 @@ mod test {
             Pt(-0.09289321881345258269, -0.32010101267766694066),
             Pt(0.00000000000000000000, -0.38578643762690512098),
             Pt(0.29289321881345276033, -0.17867965644035743722),
-        ]);
+        ])?;
 
         let b = Pg([
             Pt(0.80000000000000004441, -0.53725830020304798929),
@@ -501,7 +500,7 @@ mod test {
             Pt(0.00000000000000000000, 0.02842712474619002450),
             Pt(0.00000000000000000000, -0.25441558772842887137),
             Pt(0.80000000000000004441, -0.82010101267766688515),
-        ]);
+        ])?;
 
         let _ = a.crop(&b, CropType::Exclusive)?;
         let _ = a.crop(&b, CropType::Inclusive)?;

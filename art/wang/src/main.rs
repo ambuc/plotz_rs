@@ -206,7 +206,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)
             )
         });
         ret.extend({
-            let mut pg: Pg = Pg([(0.1, 0.1), (0.5, 0.5), (0.9, 0.1)]);
+            let mut pg: Pg = Pg([(0.1, 0.1), (0.5, 0.5), (0.9, 0.1)]).unwrap();
 
             pg *= 2.0;
             pg.rotate(&Pt(1, 1), rot);

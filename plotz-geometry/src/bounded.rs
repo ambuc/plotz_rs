@@ -23,7 +23,7 @@ pub struct Bounds {
 impl Bounds {
     /// Creates a frame, suitable for cropping.
     pub fn to_polygon(&self) -> Pg {
-        Pg([self.tl(), self.tr(), self.br(), self.bl(), self.tl()])
+        Pg([self.tl(), self.tr(), self.br(), self.bl(), self.tl()]).unwrap()
     }
     /// Whether or not bounds contain a point.
     pub fn contains_pt(&self, pt: Pt) -> Result<PointLoc> {
@@ -177,14 +177,14 @@ pub fn streaming_bbox<'a>(it: impl IntoIterator<Item = &'a (impl Bounded + 'a)>)
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use crate::shapes::{pg::Pg, pt::Pt};
+    use crate::shapes::pt::Pt;
 
     #[test]
     fn test_streaming_bbox() {
         let polygons = vec![
-            Pg([(0, 0), (1, 0), (1, 1)]),
-            Pg([(2, 0), (3, 0), (3, 1)]),
-            Pg([(0, 2), (1, 2), (1, 3)]),
+            Pg([(0, 0), (1, 0), (1, 1)]).unwrap(),
+            Pg([(2, 0), (3, 0), (3, 1)]).unwrap(),
+            Pg([(0, 2), (1, 2), (1, 3)]).unwrap(),
         ];
         let bounds = streaming_bbox(&polygons).unwrap();
         assert_eq!(bounds.bl(), Pt(0, 0));

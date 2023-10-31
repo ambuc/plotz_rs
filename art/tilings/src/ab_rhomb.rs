@@ -1,11 +1,11 @@
 // https://tilings.math.uni-bielefeld.de/substitution/ammann-beenker-rhomb-triangle/
 
-use plotz_geometry::{obj::Obj, style::Style};
+use plotz_geometry::{obj::Obj, shapes::pg::Pg, style::Style};
 
 use plotz_color::*;
 use plotz_geometry::{
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{pg::Pg, pt::Pt},
+    shapes::pt::Pt,
 };
 
 struct T1([Pt; 3]);
@@ -138,7 +138,7 @@ pub fn make() -> Vec<(Obj, Style)> {
         .into_iter()
         .flat_map(|tile| {
             let color = tile.color();
-            let mut p = Pg(tile.pts());
+            let mut p = Pg(tile.pts()).unwrap();
             p *= (1, -1); // flip
             p *= 530.0;
             p += (-17, 240); // translate

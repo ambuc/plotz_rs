@@ -1,16 +1,16 @@
 // https://tilings.math.uni-bielefeld.de/substitution/cromwell-kite-rhombus-trapezium/
 
-use plotz_geometry::{obj::Obj, style::Style};
-
 use plotz_color::*;
 use plotz_geometry::{
     group::Group,
     interpolate::extrapolate_2d as extrapolate,
+    obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
         pg::Pg,
         pt::{PolarPt, Pt},
     },
+    style::Style,
 };
 use std::f64::consts::PI;
 
@@ -287,7 +287,7 @@ pub fn make() -> Vec<(Obj, Style)> {
         .into_iter()
         .flat_map(|tile| {
             let color = tile.color();
-            let mut p = Pg(tile.pts());
+            let mut p = Pg(tile.pts()).unwrap();
             p *= (1, -1); // flip
             p *= 3500.0;
             p += (95, -300); // translate

@@ -113,7 +113,7 @@ impl Tile {
         // we are constructing a closed polygon -- so we techincally don't need that
         // very last point, Pg() automatically closes it for us.
         accumulated.pop();
-        let mut pg = Pg(accumulated);
+        let mut pg = Pg(accumulated).unwrap();
         pg.rotate(&Pt(0, 0), 0.00001);
         pg
     }

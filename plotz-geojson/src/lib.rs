@@ -6,11 +6,7 @@
 use anyhow::{anyhow, Result};
 use plotz_geometry::{
     obj::Obj,
-    shapes::{
-        ml::Ml_from_pts,
-        pg::{Pg, TryPolygon},
-        pt::Pt,
-    },
+    shapes::{ml::Ml_from_pts, pg::Pg, pt::Pt},
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -171,19 +167,17 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj>> {
         .ok_or(anyhow!("not array"))?
         .iter()
         .map(|points_list| {
-            TryPolygon(
-                points_list
-                    .as_array()
-                    .ok_or(anyhow!("not array"))?
-                    .iter()
-                    .map(|p| {
-                        Ok(Pt(
-                            p[0].as_f64().ok_or(anyhow!("not f64"))?,
-                            p[1].as_f64().ok_or(anyhow!("not f64"))?,
-                        ))
-                    })
-                    .collect::<Result<Vec<_>>>()?,
-            )
+            Pg(points_list
+                .as_array()
+                .ok_or(anyhow!("not array"))?
+                .iter()
+                .map(|p| {
+                    Ok(Pt(
+                        p[0].as_f64().ok_or(anyhow!("not f64"))?,
+                        p[1].as_f64().ok_or(anyhow!("not f64"))?,
+                    ))
+                })
+                .collect::<Result<Vec<_>>>()?)
         })
         .collect::<Result<_, _>>()?)
     .map(|v: Vec<Pg>| v.into_iter().map(Obj::from).collect::<Vec<_>>())
@@ -225,13 +219,16 @@ mod tests {
         ]]);
         assert_eq!(
             parse_to_polygon(&geojson).unwrap(),
-            vec![Obj::from(Pg([
-                (-74.015_651_1, 40.721_544_6),
-                (-74.015_493_9, 40.721_526_2),
-                (-74.014_280_9, 40.721_384_4),
-                (-74.014_248_1, 40.721_380_6),
-                (-74.013_283_1, 40.721_267_8),
-            ]))]
+            vec![Obj::from(
+                Pg([
+                    (-74.015_651_1, 40.721_544_6),
+                    (-74.015_493_9, 40.721_526_2),
+                    (-74.014_280_9, 40.721_384_4),
+                    (-74.014_248_1, 40.721_380_6),
+                    (-74.013_283_1, 40.721_267_8),
+                ])
+                .unwrap()
+            )]
         );
     }
 
@@ -257,16 +254,16 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_real_geojson() {
-        let file = std::fs::File::open("testdata/example.geojson").unwrap();
+    fn test_parse_real_geojson() -> Result<()> {
+        let file = std::fs::File::open("testdata/example.geojson")?;
         let reader = std::io::BufReader::new(file);
 
-        let polygons = parse_geojson(serde_json::from_reader(reader).unwrap()).unwrap();
+        let polygons = parse_geojson(serde_json::from_reader(reader)?)?;
 
         assert_eq!(polygons.len(), 4);
         assert_eq!(
             polygons[0].0,
-            Obj::from(Pg([(0.0, 0.0), (1.0, 2.5), (2.0, 5.0)]))
+            Obj::from(Pg([(0.0, 0.0), (1.0, 2.5), (2.0, 5.0)])?)
         );
 
         // assert_symbol_tuple_list(
@@ -278,9 +275,7 @@ mod tests {
         //     ],
         // );
 
-        let ml: Ml = vec![Pt(1.0, 1.0), Pt(1.0, 2.5), Pt(2.0, 5.0)]
-            .try_into()
-            .unwrap();
+        let ml: Ml = vec![Pt(1.0, 1.0), Pt(1.0, 2.5), Pt(2.0, 5.0)].try_into()?;
         assert_eq!(polygons[1].0, ml.into(),);
         // assert_symbol_tuple_list(
         //     polygons[1].1.clone(),
@@ -296,12 +291,13 @@ mod tests {
 
         assert_eq!(
             polygons[2].0,
-            Obj::from(Pg([(2.0, 2.0), (1.0, 2.5), (2.0, 5.0)]))
+            Obj::from(Pg([(2.0, 2.0), (1.0, 2.5), (2.0, 5.0)])?)
         );
 
         assert_eq!(
             polygons[3].0,
-            Obj::from(Pg([(3.0, 3.0), (1.0, 2.5), (2.0, 5.0)]))
+            Obj::from(Pg([(3.0, 3.0), (1.0, 2.5), (2.0, 5.0)])?)
         );
+        Ok(())
     }
 }

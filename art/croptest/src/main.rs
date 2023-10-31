@@ -97,7 +97,7 @@ fn main() -> Result<()> {
         };
 
         let subject_sq = (
-            Obj::Pg(Pg(pts)) + offset,
+            Obj::Pg(Pg(pts)?) + offset,
             Style {
                 color: RED,
                 ..Default::default()
