@@ -49,6 +49,8 @@ impl<T> Bounded for Group<T> {
     }
 }
 
+// TODO(jbuckland): generics? crate::ops_defaults!(Group<T>);
+
 impl<T> AddAssign<Pt> for Group<T> {
     fn add_assign(&mut self, rhs: Pt) {
         self.0.iter_mut().for_each(|(o, _)| {

@@ -150,19 +150,6 @@ impl IntoIterator for Ml {
 
 crate::ops_defaults!(Ml);
 
-impl<T> Sub<T> for &Ml
-where
-    T: Into<Pt>,
-{
-    type Output = Ml;
-    fn sub(self, rhs: T) -> Self::Output {
-        let rhs = rhs.into();
-        Ml {
-            pts: self.pts.iter().map(|p| *p - rhs).collect(),
-        }
-    }
-}
-
 impl Bounded for Ml {
     fn bounds(&self) -> Result<Bounds> {
         Ok(Bounds {

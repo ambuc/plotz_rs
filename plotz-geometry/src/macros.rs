@@ -15,6 +15,18 @@ macro_rules! ops_generic {
                 x
             }
         }
+
+        impl<T> $trait<T> for &$name
+        where
+            T: Into<Pt> + Copy,
+        {
+            type Output = $name;
+            fn $fn(self, rhs: T) -> Self::Output {
+                let mut x = self.clone();
+                x.iter_mut().for_each(|pt| *pt = pt.$fn(rhs.into()));
+                x
+            }
+        }
     };
 }
 #[macro_export]
