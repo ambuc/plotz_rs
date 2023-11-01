@@ -26,7 +26,7 @@ macro_rules! ops_generic_ref {
     ($name:ident, $rhs:ident, $trait:ident, $fn:ident) => {
         impl<T> $trait<T> for &$name
         where
-            T: Into<Pt>,
+            T: Into<$rhs>,
         {
             type Output = $name;
             fn $fn(self, rhs: T) -> Self::Output {
@@ -56,21 +56,28 @@ macro_rules! ops_assign_generic {
 }
 
 #[macro_export]
+macro_rules! ops_defaults_t {
+    ($name:ident, $rhs:ident) => {
+        $crate::ops_generic!($name, $rhs, Add, add);
+        $crate::ops_generic!($name, $rhs, Div, div);
+        $crate::ops_generic!($name, $rhs, Mul, mul);
+        $crate::ops_generic!($name, $rhs, Sub, sub);
+        $crate::ops_generic_ref!($name, $rhs, Add, add);
+        $crate::ops_generic_ref!($name, $rhs, Div, div);
+        $crate::ops_generic_ref!($name, $rhs, Mul, mul);
+        $crate::ops_generic_ref!($name, $rhs, Sub, sub);
+        $crate::ops_assign_generic!($name, $rhs, AddAssign, add_assign);
+        $crate::ops_assign_generic!($name, $rhs, DivAssign, div_assign);
+        $crate::ops_assign_generic!($name, $rhs, SubAssign, sub_assign);
+        $crate::ops_assign_generic!($name, $rhs, MulAssign, mul_assign);
+        $crate::ops_assign_generic!($name, $rhs, RemAssign, rem_assign);
+    };
+}
+
+#[macro_export]
 macro_rules! ops_defaults_2d {
     ($name:ident) => {
-        $crate::ops_generic!($name, Pt, Add, add);
-        $crate::ops_generic!($name, Pt, Div, div);
-        $crate::ops_generic!($name, Pt, Mul, mul);
-        $crate::ops_generic!($name, Pt, Sub, sub);
-        $crate::ops_generic_ref!($name, Pt, Add, add);
-        $crate::ops_generic_ref!($name, Pt, Div, div);
-        $crate::ops_generic_ref!($name, Pt, Mul, mul);
-        $crate::ops_generic_ref!($name, Pt, Sub, sub);
-        $crate::ops_assign_generic!($name, Pt, AddAssign, add_assign);
-        $crate::ops_assign_generic!($name, Pt, DivAssign, div_assign);
-        $crate::ops_assign_generic!($name, Pt, SubAssign, sub_assign);
-        $crate::ops_assign_generic!($name, Pt, MulAssign, mul_assign);
-        $crate::ops_assign_generic!($name, Pt, RemAssign, rem_assign);
+        $crate::ops_defaults_t!($name, Pt);
 
         impl $crate::Translatable for $name {}
         impl $crate::Scalable<Pt> for $name {}

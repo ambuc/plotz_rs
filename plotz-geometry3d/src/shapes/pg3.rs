@@ -60,6 +60,9 @@ impl Pg3 {
     pub fn iter(&self) -> impl Iterator<Item = &Pt3> {
         self.pts.iter()
     }
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt3> {
+        self.pts.iter_mut()
+    }
 }
 
 // Constructor for multilines, which are by definition open. The first and last
@@ -79,98 +82,7 @@ pub fn Pg3(a: impl IntoIterator<Item = Pt3>) -> Pg3 {
     Pg3 { pts }
 }
 
-impl Add<Pt3> for &Pg3 {
-    type Output = Pg3;
-    fn add(self, rhs: Pt3) -> Self::Output {
-        Pg3 {
-            pts: self.pts.iter().map(|p| *p + rhs).collect(),
-        }
-    }
-}
-impl Add<Pt3> for Pg3 {
-    type Output = Pg3;
-    fn add(self, rhs: Pt3) -> Self::Output {
-        &self + rhs
-    }
-}
-impl AddAssign<Pt3> for Pg3 {
-    fn add_assign(&mut self, rhs: Pt3) {
-        self.pts.iter_mut().for_each(|p| *p += rhs);
-    }
-}
-impl Div<Pt3> for Pg3 {
-    type Output = Pg3;
-    fn div(self, rhs: Pt3) -> Self::Output {
-        Pg3 {
-            pts: self.pts.iter().map(|p| *p / rhs).collect(),
-        }
-    }
-}
-impl Div<f64> for Pg3 {
-    type Output = Pg3;
-    fn div(self, rhs: f64) -> Self::Output {
-        Pg3 {
-            pts: self.pts.iter().map(|p| *p / rhs).collect(),
-        }
-    }
-}
-impl DivAssign<Pt3> for Pg3 {
-    fn div_assign(&mut self, rhs: Pt3) {
-        self.pts.iter_mut().for_each(|p| *p /= rhs);
-    }
-}
-impl DivAssign<f64> for Pg3 {
-    fn div_assign(&mut self, rhs: f64) {
-        self.pts.iter_mut().for_each(|p| *p /= rhs);
-    }
-}
-impl Mul<Pt3> for Pg3 {
-    type Output = Pg3;
-    fn mul(self, rhs: Pt3) -> Pg3 {
-        Pg3 {
-            pts: self.pts.iter().map(|p| *p * rhs).collect(),
-        }
-    }
-}
-impl Mul<f64> for Pg3 {
-    type Output = Pg3;
-    fn mul(self, rhs: f64) -> Pg3 {
-        let mut x = self;
-        x *= rhs;
-        x
-    }
-}
-impl MulAssign<Pt3> for Pg3 {
-    fn mul_assign(&mut self, rhs: Pt3) {
-        self.pts.iter_mut().for_each(|p| *p *= rhs);
-    }
-}
-impl MulAssign<f64> for Pg3 {
-    fn mul_assign(&mut self, rhs: f64) {
-        self.pts.iter_mut().for_each(|p| *p *= rhs);
-    }
-}
-impl Sub<Pt3> for &Pg3 {
-    type Output = Pg3;
-    fn sub(self, rhs: Pt3) -> Self::Output {
-        Pg3 {
-            pts: self.pts.iter().map(|p| *p - rhs).collect(),
-        }
-    }
-}
-impl Sub<Pt3> for Pg3 {
-    type Output = Pg3;
-    fn sub(self, rhs: Pt3) -> Self::Output {
-        Pg3 {
-            pts: self.pts.iter().map(|p| *p - rhs).collect(),
-        }
-    }
-}
-impl SubAssign<Pt3> for Pg3 {
-    fn sub_assign(&mut self, rhs: Pt3) {
-        self.pts.iter_mut().for_each(|p| *p -= rhs);
-    }
-}
+plotz_geometry::ops_defaults_t!(Pg3, Pt3);
 
 impl Rotatable for Pg3 {
     fn rotate(&self, by: f64, about: Ry3) -> Result<Self> {

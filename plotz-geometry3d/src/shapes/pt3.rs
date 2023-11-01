@@ -166,6 +166,18 @@ impl SubAssign<Pt3> for Pt3 {
     }
 }
 
+impl<T> RemAssign<T> for Pt3
+where
+    T: Into<Pt3>,
+{
+    fn rem_assign(&mut self, rhs: T) {
+        let rhs = rhs.into();
+        self.x = FloatOrd(self.x.0.rem_euclid(rhs.x.0));
+        self.y = FloatOrd(self.y.0.rem_euclid(rhs.y.0));
+        self.z = FloatOrd(self.z.0.rem_euclid(rhs.z.0));
+    }
+}
+
 impl Pt3 {
     // https://en.wikipedia.org/wiki/Dot_product
     pub fn dot(&self, other: &Pt3) -> f64 {
