@@ -49,70 +49,7 @@ impl<T> Bounded for Group<T> {
     }
 }
 
-impl<T> AddAssign<Pt> for Group<T> {
-    fn add_assign(&mut self, rhs: Pt) {
-        self.0.iter_mut().for_each(|(o, _)| {
-            *o += rhs;
-        });
-    }
-}
-
-impl<T> SubAssign<Pt> for Group<T> {
-    fn sub_assign(&mut self, rhs: Pt) {
-        self.0.iter_mut().for_each(|(o, _)| {
-            *o -= rhs;
-        });
-    }
-}
-
-impl<T> Add<Pt> for Group<T> {
-    type Output = Self;
-    fn add(self, rhs: Pt) -> Self::Output {
-        Self::new(self.0.into_iter().map(|(o, s)| (o + rhs, s)))
-    }
-}
-impl<T> Sub<Pt> for Group<T> {
-    type Output = Self;
-    fn sub(self, rhs: Pt) -> Self::Output {
-        Self::new(self.0.into_iter().map(|(o, s)| (o - rhs, s)))
-    }
-}
-
-impl<T> Mul<f64> for Group<T> {
-    type Output = Self;
-    fn mul(self, rhs: f64) -> Self::Output {
-        Self::new(self.0.into_iter().map(|(o, s)| (o * rhs, s)))
-    }
-}
-
-impl<T> MulAssign<f64> for Group<T> {
-    fn mul_assign(&mut self, rhs: f64) {
-        self.0.iter_mut().for_each(|(o, _)| {
-            *o *= rhs;
-        })
-    }
-}
-
-impl<T> Div<f64> for Group<T> {
-    type Output = Self;
-    fn div(self, rhs: f64) -> Self::Output {
-        Self::new(self.0.into_iter().map(|(o, s)| (o / rhs, s)))
-    }
-}
-
-impl<T> DivAssign<f64> for Group<T> {
-    fn div_assign(&mut self, rhs: f64) {
-        self.0.iter_mut().for_each(|(o, _)| {
-            *o /= rhs;
-        })
-    }
-}
-
-impl<T> RemAssign<Pt> for Group<T> {
-    fn rem_assign(&mut self, rhs: Pt) {
-        self.0.iter_mut().for_each(|(o, _)| *o %= rhs);
-    }
-}
+crate::ops_generic_defaults_t!(Group, Pt);
 
 impl<T> Croppable for Group<T>
 where
