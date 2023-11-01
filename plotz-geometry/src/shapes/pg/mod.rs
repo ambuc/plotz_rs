@@ -32,7 +32,6 @@ use std::{
 #[derive(Debug, Clone)]
 pub struct Pg {
     pub pts: Vec<Pt>,
-    pub inner: Vec<Pg>,
 }
 
 impl PartialEq for Pg {
@@ -85,30 +84,11 @@ pub fn Pg(a: impl IntoIterator<Item = impl Into<Pt>>) -> Result<Pg> {
         let _ = pts.pop();
     }
 
-    let mut p = Pg { pts, inner: vec![] };
+    let mut p = Pg { pts };
     if p.get_curve_orientation() == Some(CurveOrientation::Negative) {
         p.orient_curve_positively();
     }
     Ok(p)
-}
-
-#[allow(non_snake_case)]
-pub fn PgWithCavities(a: impl IntoIterator<Item = impl Into<Pt>>, b: Vec<Pg>) -> Result<Pg> {
-    let outer: Pg = Pg(a)?;
-    for inner_pg in &b {
-        for pt in &inner_pg.pts {
-            if matches!(outer.contains_pt(pt)?, PointLoc::Outside) {
-                return Err(anyhow!(
-                    "Cannot construct PgWithCavities where a pt {:?} in an inner polygon is outside of the outer polygon.",
-                    pt
-                ));
-            }
-        }
-    }
-    Ok(Pg {
-        pts: outer.pts,
-        inner: b,
-    })
 }
 
 /// Convenience constructor for rectangles.
@@ -136,14 +116,6 @@ pub enum CurveOrientation {
 
 impl Pg {
     /// Returns the segments of a polygon, one at a time.
-    ///
-    /// If this is an open polygon, we return only the line segments without the
-    /// final closure.
-    ///
-    /// If this is a closed polygon, we also generate the final closure.
-    ///
-    /// See test_multiline_to_segments() and test_polygon_to_segments() for
-    /// examples.
     pub fn to_segments(&self) -> Vec<Sg> {
         zip(self.pts.iter(), self.pts.iter().cycle().skip(1))
             .map(|(x, y)| Sg(*x, *y))
@@ -1213,19 +1185,6 @@ mod tests {
         for (idx, p) in frame.iter().enumerate() {
             assert_eq!(src[idx], *p);
         }
-        Ok(())
-    }
-
-    #[test_case(Rect((0,0),(1,1))?, vec![]; "no inner")]
-    #[test_case(Rect((0,0),(1,1))?, vec![Rect((0,0),(1,1))?]; "inner is self")]
-    fn test_pg_with_cavities_should_succeed(a: Pg, b: Vec<Pg>) -> Result<()> {
-        let _: Pg = PgWithCavities(a, b)?;
-        Ok(())
-    }
-
-    #[test_case(Rect((0,0),(1,1))?, vec![Rect((0,0),(2,2))?]; "inner is larger")]
-    fn test_pg_with_cavities_should_fail(a: Pg, b: Vec<Pg>) -> Result<()> {
-        assert!(PgWithCavities(a, b).is_err());
         Ok(())
     }
 }
