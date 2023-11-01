@@ -227,9 +227,10 @@ where
 }
 impl Mul<f64> for Ml {
     type Output = Ml;
-    fn mul(mut self, rhs: f64) -> Ml {
-        self *= rhs;
-        self
+    fn mul(self, rhs: f64) -> Ml {
+        let mut x = self;
+        x *= rhs;
+        x
     }
 }
 impl<T> MulAssign<T> for Ml

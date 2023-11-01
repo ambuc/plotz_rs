@@ -134,9 +134,10 @@ impl Mul<Pt3> for Pg3 {
 }
 impl Mul<f64> for Pg3 {
     type Output = Pg3;
-    fn mul(mut self, rhs: f64) -> Pg3 {
-        self *= rhs;
-        self
+    fn mul(self, rhs: f64) -> Pg3 {
+        let mut x = self;
+        x *= rhs;
+        x
     }
 }
 impl MulAssign<Pt3> for Pg3 {
