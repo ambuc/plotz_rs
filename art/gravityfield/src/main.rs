@@ -58,7 +58,7 @@ fn main() -> Result<()> {
         // (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
         /*offset=*/
         (margin, margin),
-    );
+    )?;
 
     let mut framework: framework::Framework<Metadata> = framework::Framework {
         config: framework::Config { pow: 1.2 },

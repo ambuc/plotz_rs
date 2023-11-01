@@ -253,7 +253,7 @@ fn main() -> Result<()> {
 
     let mut canvas = Canvas::builder()
         .dos_by_bucket(canvas::to_canvas_map(obj_vec, /*autobucket=*/ false))
-        .frame(make_frame((image_width, image_width), Pt(margin, margin)))
+        .frame(make_frame((image_width, image_width), Pt(margin, margin))?)
         .build();
 
     let scale = image_width / 2.0 / (grid_cardinality as f64);

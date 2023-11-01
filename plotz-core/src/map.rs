@@ -474,7 +474,7 @@ impl Map {
                     config.size.width as f64 - 2.0 * margin,
                 ),
                 Pt(margin, margin),
-            );
+            )?;
             let frame_pg: Pg = frame.0.clone().try_into().unwrap();
             self.canvas.frame = Some(frame);
             let () = self.crop_to_frame(&frame_pg)?;

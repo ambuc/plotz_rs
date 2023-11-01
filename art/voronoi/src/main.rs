@@ -117,7 +117,7 @@ fn main() -> Result<()> {
 
     Canvas::builder()
         .dos_by_bucket(canvas::to_canvas_map(dos, /*autobucket=*/ true))
-        .frame(make_frame((DIM, DIM), Pt(20, 20)))
+        .frame(make_frame((DIM, DIM), Pt(20, 20))?)
         .build()
         .write_to_svg(
             Size {

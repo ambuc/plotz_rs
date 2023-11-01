@@ -175,7 +175,7 @@ fn main() -> Result<()> {
 
     Canvas::builder()
         .dos_by_bucket(canvas::to_canvas_map(obj_vec, /*autobucket=*/ false))
-        .frame(make_frame((image_width, image_width), Pt(margin, margin)))
+        .frame(make_frame((image_width, image_width), Pt(margin, margin))?)
         .build()
         .scale_to_fit_frame()?
         .write_to_svg(

@@ -50,7 +50,7 @@ fn main() -> Result<()> {
         .frame(make_frame(
             /*wh=*/ (800.0 - 2.0 * margin, 1000.0 - 2.0 * margin),
             /*offset=*/ (margin, margin),
-        ))
+        )?)
         .build()
         .write_to_svg(
             Size {

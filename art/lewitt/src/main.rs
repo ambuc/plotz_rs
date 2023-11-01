@@ -41,7 +41,7 @@ fn main() -> Result<()> {
     let frame = make_frame(
         (1000.0 - 2.0 * mgn, 800.0 - 2.0 * mgn),
         /*offset=*/ (mgn, mgn),
-    );
+    )?;
 
     {
         let mut grid_layout = GridLayout::new(
