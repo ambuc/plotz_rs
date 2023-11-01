@@ -300,8 +300,6 @@ impl DivAssign<f64> for Obj {
     }
 }
 
-impl Scalable<f64> for Obj {}
-
 impl Croppable for Obj {
     type Output = Obj;
     fn crop(&self, frame: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>> {

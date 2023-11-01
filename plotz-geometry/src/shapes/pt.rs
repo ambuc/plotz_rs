@@ -279,10 +279,6 @@ impl Bounded for Pt {
     }
 }
 
-impl Translatable for Pt {}
-impl Scalable<Pt> for Pt {}
-impl Scalable<f64> for Pt {}
-
 impl Roundable for Pt {
     fn round_to_nearest(&mut self, f: f64) {
         self.x -= self.x % f;

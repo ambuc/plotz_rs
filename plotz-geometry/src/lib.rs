@@ -21,13 +21,6 @@ use enum_dispatch::enum_dispatch;
 use std::ops::*;
 use typed_builder::TypedBuilder;
 
-/// A geometric figure which can be translated by an xy shift (represented by a Point).
-#[enum_dispatch(Obj)]
-pub trait Translatable: Add<Pt> + AddAssign<Pt> + Sub<Pt> + SubAssign<Pt> + Sized {}
-
-/// A geometric figure which can be scaled by a factor of |f|.
-pub trait Scalable<T>: Mul<T> + MulAssign<T> + Div<T> + DivAssign<T> + Sized {}
-
 /// The same as |Translatable|, but in-place. (See add vs. add_assign.)
 #[enum_dispatch(Obj)]
 pub trait TranslatableAssign: AddAssign<Pt> + SubAssign<Pt> {}

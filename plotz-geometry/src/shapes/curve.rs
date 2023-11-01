@@ -497,9 +497,6 @@ impl Croppable for CurveArc {
     }
 }
 
-impl Translatable for CurveArc {}
-impl Scalable<f64> for CurveArc {}
-
 impl Nullable for CurveArc {
     fn is_empty(&self) -> bool {
         false

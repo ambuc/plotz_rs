@@ -78,9 +78,5 @@ macro_rules! ops_defaults_t {
 macro_rules! ops_defaults_2d {
     ($name:ident) => {
         $crate::ops_defaults_t!($name, Pt);
-
-        impl $crate::Translatable for $name {}
-        impl $crate::Scalable<Pt> for $name {}
-        impl $crate::Scalable<f64> for $name {}
     };
 }

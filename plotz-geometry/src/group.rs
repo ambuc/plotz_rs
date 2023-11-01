@@ -116,10 +116,6 @@ impl<T> RemAssign<Pt> for Group<T> {
     }
 }
 
-impl<T> Translatable for Group<T> {}
-
-impl<T> Scalable<f64> for Group<T> {}
-
 impl<T> Croppable for Group<T>
 where
     T: Clone,
