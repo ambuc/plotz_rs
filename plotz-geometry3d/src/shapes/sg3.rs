@@ -62,77 +62,12 @@ impl Sg3 {
     pub fn iter(&self) -> impl Iterator<Item = &Pt3> {
         std::iter::once(&self.i).chain(std::iter::once(&self.f))
     }
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt3> {
+        std::iter::once(&mut self.i).chain(std::iter::once(&mut self.f))
+    }
 }
 
-impl Add<Pt3> for Sg3 {
-    type Output = Sg3;
-    fn add(self, rhs: Pt3) -> Self::Output {
-        Sg3(self.i + rhs, self.f + rhs)
-    }
-}
-impl AddAssign<Pt3> for Sg3 {
-    fn add_assign(&mut self, rhs: Pt3) {
-        *self = Sg3(self.i + rhs, self.f + rhs);
-    }
-}
-impl Div<Pt3> for Sg3 {
-    type Output = Sg3;
-    fn div(self, rhs: Pt3) -> Self::Output {
-        Sg3(self.i / rhs, self.f / rhs)
-    }
-}
-impl Div<f64> for Sg3 {
-    type Output = Sg3;
-    fn div(self, rhs: f64) -> Self::Output {
-        Sg3(self.i / rhs, self.f / rhs)
-    }
-}
-impl DivAssign<Pt3> for Sg3 {
-    fn div_assign(&mut self, rhs: Pt3) {
-        *self = Sg3(self.i / rhs, self.f / rhs);
-    }
-}
-impl DivAssign<f64> for Sg3 {
-    fn div_assign(&mut self, rhs: f64) {
-        *self = Sg3(self.i / rhs, self.f / rhs)
-    }
-}
-impl Mul<Pt3> for Sg3 {
-    type Output = Sg3;
-    fn mul(self, rhs: Pt3) -> Self::Output {
-        Sg3(self.i * rhs, self.f * rhs)
-    }
-}
-impl Mul<f64> for Sg3 {
-    type Output = Sg3;
-    fn mul(self, rhs: f64) -> Self::Output {
-        Sg3(self.i * rhs, self.f * rhs)
-    }
-}
-impl MulAssign<Pt3> for Sg3 {
-    fn mul_assign(&mut self, rhs: Pt3) {
-        *self = Sg3(self.i * rhs, self.f * rhs);
-    }
-}
-impl MulAssign<f64> for Sg3 {
-    fn mul_assign(&mut self, rhs: f64) {
-        *self = Sg3(self.i * rhs, self.f * rhs);
-    }
-}
-impl Sub<Pt3> for Sg3 {
-    type Output = Sg3;
-    fn sub(self, rhs: Pt3) -> Self::Output {
-        Sg3 {
-            i: self.i - rhs,
-            f: self.f - rhs,
-        }
-    }
-}
-impl SubAssign<Pt3> for Sg3 {
-    fn sub_assign(&mut self, rhs: Pt3) {
-        *self = Sg3(self.i - rhs, self.f - rhs);
-    }
-}
+plotz_geometry::ops_defaults_t!(Sg3, Pt3);
 
 impl Bounded3 for Sg3 {
     fn bounds3(&self) -> Result<Bounds3> {
