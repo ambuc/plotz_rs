@@ -8,7 +8,7 @@ use crate::{
     intersection::IntersectionResult,
     obj::Obj,
     style::Style,
-    Annotatable, AnnotationSettings, Nullable, Roundable, Scalable, Translatable,
+    Annotatable, AnnotationSettings, Nullable, Roundable,
 };
 use anyhow::{anyhow, Result};
 use float_ord::FloatOrd;
@@ -184,10 +184,6 @@ impl Bounded for Ml {
         })
     }
 }
-
-impl Translatable for Ml {}
-impl Scalable<Pt> for Ml {}
-impl Scalable<f64> for Ml {}
 
 impl Roundable for Ml {
     fn round_to_nearest(&mut self, f: f64) {

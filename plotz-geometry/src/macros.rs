@@ -71,5 +71,9 @@ macro_rules! ops_defaults {
         $crate::ops_assign_generic!($name, SubAssign, sub_assign);
         $crate::ops_assign_generic!($name, MulAssign, mul_assign);
         $crate::ops_assign_generic!($name, RemAssign, rem_assign);
+
+        impl $crate::Translatable for $name {}
+        impl $crate::Scalable<Pt> for $name {}
+        impl $crate::Scalable<f64> for $name {}
     };
 }

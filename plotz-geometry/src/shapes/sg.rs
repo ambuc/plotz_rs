@@ -7,7 +7,7 @@ use crate::{
     interpolate::interpolate_2d_checked,
     intersection::{Intersection, IntersectionResult, MultipleIntersections},
     shapes::{pg::Pg, pt::Pt, ry::Ry},
-    Nullable, Roundable, Scalable, Translatable,
+    Nullable, Roundable,
 };
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
@@ -314,10 +314,6 @@ impl Croppable for Sg {
         unimplemented!("we haven't implemented segment crop excluding yet.");
     }
 }
-
-impl Translatable for Sg {}
-impl Scalable<Pt> for Sg {}
-impl Scalable<f64> for Sg {}
 
 impl Roundable for Sg {
     fn round_to_nearest(&mut self, f: f64) {

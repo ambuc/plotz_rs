@@ -39,10 +39,6 @@ impl Bounded for Txt {
 
 crate::ops_defaults!(Txt);
 
-impl Translatable for Txt {}
-impl Scalable<Pt> for Txt {}
-impl Scalable<f64> for Txt {}
-
 impl Nullable for Txt {
     fn is_empty(&self) -> bool {
         false

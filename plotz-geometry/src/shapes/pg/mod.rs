@@ -412,10 +412,6 @@ impl Bounded for Pg {
     }
 }
 
-impl Translatable for Pg {}
-impl Scalable<Pt> for Pg {}
-impl Scalable<f64> for Pg {}
-
 impl Roundable for Pg {
     fn round_to_nearest(&mut self, f: f64) {
         self.pts.iter_mut().for_each(|pt| pt.round_to_nearest(f));
