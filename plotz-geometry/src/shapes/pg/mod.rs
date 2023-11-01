@@ -585,7 +585,6 @@ impl Annotatable for Pg {
 mod tests {
     use super::*;
     use float_eq::assert_float_eq;
-    use test_case::test_case;
 
     #[test]
     fn test_polygon_to_segments() -> Result<()> {
