@@ -148,79 +148,8 @@ impl IntoIterator for Ml {
     }
 }
 
-impl<T> Add<T> for &Ml
-where
-    T: Into<Pt>,
-{
-    type Output = Ml;
-    fn add(self, rhs: T) -> Self::Output {
-        let rhs = rhs.into();
-        Ml {
-            pts: self.pts.iter().map(|p| *p + rhs).collect(),
-        }
-    }
-}
-impl<T> Add<T> for Ml
-where
-    T: Into<Pt>,
-{
-    type Output = Ml;
-    fn add(self, rhs: T) -> Self::Output {
-        let rhs = rhs.into();
-        &self + rhs
-    }
-}
-impl<T> AddAssign<T> for Ml
-where
-    T: Into<Pt>,
-{
-    fn add_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        self.pts.iter_mut().for_each(|p| *p += rhs);
-    }
-}
-impl<T> Div<T> for Ml
-where
-    T: Into<Pt>,
-{
-    type Output = Ml;
-    fn div(self, rhs: T) -> Self::Output {
-        let rhs = rhs.into();
-        Ml {
-            pts: self.pts.iter().map(|p| *p / rhs).collect(),
-        }
-    }
-}
-impl<T> DivAssign<T> for Ml
-where
-    T: Into<Pt>,
-{
-    fn div_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        self.pts.iter_mut().for_each(|p| *p /= rhs);
-    }
-}
-impl<T> Mul<T> for Ml
-where
-    T: Into<Pt>,
-{
-    type Output = Ml;
-    fn mul(self, rhs: T) -> Ml {
-        let rhs = rhs.into();
-        Ml {
-            pts: self.pts.iter().map(|p| *p * rhs).collect(),
-        }
-    }
-}
-impl<T> MulAssign<T> for Ml
-where
-    T: Into<Pt>,
-{
-    fn mul_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        self.pts.iter_mut().for_each(|p| *p *= rhs);
-    }
-}
+crate::ops_defaults!(Ml);
+
 impl<T> Sub<T> for &Ml
 where
     T: Into<Pt>,
@@ -231,36 +160,6 @@ where
         Ml {
             pts: self.pts.iter().map(|p| *p - rhs).collect(),
         }
-    }
-}
-impl<T> Sub<T> for Ml
-where
-    T: Into<Pt>,
-{
-    type Output = Ml;
-    fn sub(self, rhs: T) -> Self::Output {
-        let rhs = rhs.into();
-        Ml {
-            pts: self.pts.iter().map(|p| *p - rhs).collect(),
-        }
-    }
-}
-impl<T> SubAssign<T> for Ml
-where
-    T: Into<Pt>,
-{
-    fn sub_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        self.pts.iter_mut().for_each(|p| *p -= rhs);
-    }
-}
-impl<T> RemAssign<T> for Ml
-where
-    T: Into<Pt>,
-{
-    fn rem_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        self.pts.iter_mut().for_each(|p| *p %= rhs);
     }
 }
 

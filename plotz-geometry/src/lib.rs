@@ -4,15 +4,17 @@
 
 pub mod bounded;
 pub mod crop;
+pub mod grid;
 pub mod group;
 pub mod interpolate;
 pub mod intersection;
 pub mod obj;
-pub mod style;
-
-pub mod grid;
 pub mod shading;
 pub mod shapes;
+pub mod style;
+
+#[macro_use]
+pub mod macros;
 
 use crate::{obj::Obj, shapes::pt::Pt, style::Style};
 use enum_dispatch::enum_dispatch;

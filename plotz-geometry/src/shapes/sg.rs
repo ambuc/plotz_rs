@@ -7,7 +7,7 @@ use crate::{
     interpolate::interpolate_2d_checked,
     intersection::{Intersection, IntersectionResult, MultipleIntersections},
     shapes::{pg::Pg, pt::Pt, ry::Ry},
-    *,
+    Nullable, Roundable, Scalable, Translatable,
 };
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
@@ -219,54 +219,7 @@ impl Sg {
     }
 }
 
-macro_rules! ops_generic {
-    ($name:ident, $trait:ident, $fn:ident) => {
-        impl<T> $trait<T> for $name
-        where
-            T: Into<Pt> + Copy,
-        {
-            type Output = Self;
-            fn $fn(self, rhs: T) -> Self::Output {
-                let mut x = self.clone();
-                x.iter_mut().for_each(|pt| *pt = pt.$fn(rhs.into()));
-                x
-            }
-        }
-    };
-}
-// macro_rules! ops {
-//     ($name:ident, $t:ident, $trait:ident, $fn:ident) => {
-//         impl $trait<$t> for $name {
-//             type Output = $name;
-//             fn $fn(self, rhs: $t) -> Self::Output {
-//                 self.$fn
-//             }
-
-//         }
-//     }
-// }
-macro_rules! ops_assign_generic {
-    ($name:ident, $trait:ident, $fn:ident) => {
-        impl<T> $trait<T> for $name
-        where
-            T: Into<Pt> + Copy,
-        {
-            fn $fn(&mut self, rhs: T) {
-                self.iter_mut().for_each(|pt| pt.$fn(rhs.into()));
-            }
-        }
-    };
-}
-
-ops_generic!(Sg, Add, add);
-ops_generic!(Sg, Div, div);
-ops_generic!(Sg, Mul, mul);
-ops_generic!(Sg, Sub, sub);
-ops_assign_generic!(Sg, AddAssign, add_assign);
-ops_assign_generic!(Sg, DivAssign, div_assign);
-ops_assign_generic!(Sg, SubAssign, sub_assign);
-ops_assign_generic!(Sg, MulAssign, mul_assign);
-ops_assign_generic!(Sg, RemAssign, rem_assign);
+crate::ops_defaults!(Sg);
 
 impl Bounded for Sg {
     fn bounds(&self) -> Result<Bounds> {
