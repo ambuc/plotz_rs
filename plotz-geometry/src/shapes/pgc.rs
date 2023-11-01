@@ -101,25 +101,12 @@ where
         x
     }
 }
-impl Div<f64> for Pgc {
-    type Output = Pgc;
-    fn div(self, rhs: f64) -> Self::Output {
-        let mut x = self;
-        x /= rhs;
-        x
-    }
-}
 impl<T> DivAssign<T> for Pgc
 where
     T: Into<Pt>,
 {
     fn div_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
-        self.iter_mut().for_each(|p| *p /= rhs);
-    }
-}
-impl DivAssign<f64> for Pgc {
-    fn div_assign(&mut self, rhs: f64) {
         self.iter_mut().for_each(|p| *p /= rhs);
     }
 }
@@ -135,25 +122,12 @@ where
         x
     }
 }
-impl Mul<f64> for Pgc {
-    type Output = Pgc;
-    fn mul(self, rhs: f64) -> Pgc {
-        let mut x = self;
-        x *= rhs;
-        x
-    }
-}
 impl<T> MulAssign<T> for Pgc
 where
     T: Into<Pt>,
 {
     fn mul_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
-        self.iter_mut().for_each(|p| *p *= rhs);
-    }
-}
-impl MulAssign<f64> for Pgc {
-    fn mul_assign(&mut self, rhs: f64) {
         self.iter_mut().for_each(|p| *p *= rhs);
     }
 }

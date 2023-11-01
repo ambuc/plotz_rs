@@ -414,23 +414,12 @@ where
         Pg(self.pts.iter().map(|p| *p / rhs)).unwrap()
     }
 }
-impl Div<f64> for Pg {
-    type Output = Pg;
-    fn div(self, rhs: f64) -> Self::Output {
-        Pg(self.pts.iter().map(|p| *p / rhs)).unwrap()
-    }
-}
 impl<T> DivAssign<T> for Pg
 where
     T: Into<Pt>,
 {
     fn div_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
-        self.pts.iter_mut().for_each(|p| *p /= rhs);
-    }
-}
-impl DivAssign<f64> for Pg {
-    fn div_assign(&mut self, rhs: f64) {
         self.pts.iter_mut().for_each(|p| *p /= rhs);
     }
 }
@@ -444,25 +433,12 @@ where
         Pg(self.pts.iter().map(|p| *p * rhs)).unwrap()
     }
 }
-impl Mul<f64> for Pg {
-    type Output = Pg;
-    fn mul(self, rhs: f64) -> Pg {
-        let mut x = self;
-        x *= rhs;
-        x
-    }
-}
 impl<T> MulAssign<T> for Pg
 where
     T: Into<Pt>,
 {
     fn mul_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
-        self.pts.iter_mut().for_each(|p| *p *= rhs);
-    }
-}
-impl MulAssign<f64> for Pg {
-    fn mul_assign(&mut self, rhs: f64) {
         self.pts.iter_mut().for_each(|p| *p *= rhs);
     }
 }

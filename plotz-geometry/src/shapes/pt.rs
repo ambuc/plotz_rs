@@ -68,6 +68,12 @@ where
     }
 }
 
+impl From<f64> for Pt {
+    fn from(n: f64) -> Self {
+        Pt { x: n, y: n }
+    }
+}
+
 impl<T1, T2> From<(T1, T2)> for Pt
 where
     f64: From<T1>,
@@ -135,12 +141,6 @@ where
         Pt(self.x / rhs.x, self.y / rhs.y)
     }
 }
-impl Div<f64> for Pt {
-    type Output = Self;
-    fn div(self, rhs: f64) -> Self::Output {
-        Pt(self.x / rhs, self.y / rhs)
-    }
-}
 impl<T> DivAssign<T> for Pt
 where
     T: Into<Pt>,
@@ -149,12 +149,6 @@ where
         let rhs = rhs.into();
         self.x /= rhs.x;
         self.y /= rhs.y;
-    }
-}
-impl DivAssign<f64> for Pt {
-    fn div_assign(&mut self, rhs: f64) {
-        self.x /= rhs;
-        self.y /= rhs;
     }
 }
 impl<T> Mul<T> for Pt
@@ -167,12 +161,6 @@ where
         Pt(self.x * rhs.x, self.y * rhs.y)
     }
 }
-impl Mul<f64> for Pt {
-    type Output = Self;
-    fn mul(self, rhs: f64) -> Self::Output {
-        Pt(self.x * rhs, self.y * rhs)
-    }
-}
 impl<T> MulAssign<T> for Pt
 where
     T: Into<Pt>,
@@ -181,12 +169,6 @@ where
         let rhs = rhs.into();
         self.x *= rhs.x;
         self.y *= rhs.y;
-    }
-}
-impl MulAssign<f64> for Pt {
-    fn mul_assign(&mut self, rhs: f64) {
-        self.x *= rhs;
-        self.y *= rhs;
     }
 }
 impl<T> RemAssign<T> for Pt

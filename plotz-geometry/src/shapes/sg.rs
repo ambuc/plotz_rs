@@ -234,6 +234,17 @@ macro_rules! ops_generic {
         }
     };
 }
+// macro_rules! ops {
+//     ($name:ident, $t:ident, $trait:ident, $fn:ident) => {
+//         impl $trait<$t> for $name {
+//             type Output = $name;
+//             fn $fn(self, rhs: $t) -> Self::Output {
+//                 self.$fn
+//             }
+
+//         }
+//     }
+// }
 macro_rules! ops_assign_generic {
     ($name:ident, $trait:ident, $fn:ident) => {
         impl<T> $trait<T> for $name
@@ -256,29 +267,6 @@ ops_assign_generic!(Sg, DivAssign, div_assign);
 ops_assign_generic!(Sg, SubAssign, sub_assign);
 ops_assign_generic!(Sg, MulAssign, mul_assign);
 ops_assign_generic!(Sg, RemAssign, rem_assign);
-
-impl Div<f64> for Sg {
-    type Output = Sg;
-    fn div(self, rhs: f64) -> Self::Output {
-        Sg(self.i / rhs, self.f / rhs)
-    }
-}
-impl DivAssign<f64> for Sg {
-    fn div_assign(&mut self, rhs: f64) {
-        *self = Sg(self.i / rhs, self.f / rhs)
-    }
-}
-impl Mul<f64> for Sg {
-    type Output = Sg;
-    fn mul(self, rhs: f64) -> Self::Output {
-        Sg(self.i * rhs, self.f * rhs)
-    }
-}
-impl MulAssign<f64> for Sg {
-    fn mul_assign(&mut self, rhs: f64) {
-        *self = Sg(self.i * rhs, self.f * rhs);
-    }
-}
 
 impl Bounded for Sg {
     fn bounds(&self) -> Result<Bounds> {
