@@ -375,7 +375,7 @@ impl IntoIterator for Pg {
     }
 }
 
-crate::ops_defaults!(Pg);
+crate::ops_defaults_2d!(Pg);
 
 impl Bounded for Pg {
     fn bounds(&self) -> Result<Bounds> {
