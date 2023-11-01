@@ -37,7 +37,7 @@ impl Bounded for Txt {
     }
 }
 
-crate::ops_defaults_2d!(Txt);
+crate::ops_defaults_t!(Txt, Pt);
 
 impl Nullable for Txt {
     fn is_empty(&self) -> bool {

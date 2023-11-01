@@ -68,7 +68,7 @@ impl Bounded for Pgc {
     }
 }
 
-crate::ops_defaults_2d!(Pgc);
+crate::ops_defaults_t!(Pgc, Pt);
 
 impl Annotatable for Pgc {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {

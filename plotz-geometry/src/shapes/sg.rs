@@ -219,7 +219,7 @@ impl Sg {
     }
 }
 
-crate::ops_defaults_2d!(Sg);
+crate::ops_defaults_t!(Sg, Pt);
 
 impl Bounded for Sg {
     fn bounds(&self) -> Result<Bounds> {

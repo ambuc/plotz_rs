@@ -73,10 +73,3 @@ macro_rules! ops_defaults_t {
         $crate::ops_assign_generic!($name, $rhs, RemAssign, rem_assign);
     };
 }
-
-#[macro_export]
-macro_rules! ops_defaults_2d {
-    ($name:ident) => {
-        $crate::ops_defaults_t!($name, Pt);
-    };
-}

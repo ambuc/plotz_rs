@@ -148,7 +148,7 @@ impl IntoIterator for Ml {
     }
 }
 
-crate::ops_defaults_2d!(Ml);
+crate::ops_defaults_t!(Ml, Pt);
 
 impl Bounded for Ml {
     fn bounds(&self) -> Result<Bounds> {
