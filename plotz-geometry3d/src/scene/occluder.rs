@@ -59,6 +59,10 @@ impl Occluder {
                 unimplemented!("no support for pg x sg yet");
             }
 
+            (Obj::Pgc(_), _) | (_, Obj::Pgc(_)) => {
+                unimplemented!("TODO(jbuckland): implement cropping.")
+            }
+
             //
             // you can't hide something behind a segment or a point or a char. don't be daft.
             (incoming, Obj::Ml(_) | Obj::Sg(_) | Obj::Pt(_) | Obj::Txt(_)) => {

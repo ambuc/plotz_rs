@@ -17,6 +17,7 @@ fn compute_vertical_step(gap: f64, slope: f64) -> f64 {
 
 /// Gap controls how far to step between crosshatched lines
 /// Slope controls the angle of the lines.
+// TODO(jbuckland): shade Pgc?
 pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Sg>> {
     let bounds = polygon.bounds()?;
     let mut segments: Vec<Sg> = vec![];

@@ -4,7 +4,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLoc},
     group::Group,
-    shapes::{curve::CurveArc, ml::Ml, pg::Pg, pt::Pt, sg::Sg, txt::Txt},
+    shapes::{curve::CurveArc, ml::Ml, pg::Pg, pgc::Pgc, pt::Pt, sg::Sg, txt::Txt},
     style::Style,
     *,
 };
@@ -21,6 +21,8 @@ pub enum Obj {
     Pt(Pt),
     /// A polygon.
     Pg(Pg),
+    /// A polygon with cavities.
+    Pgc(Pgc),
     /// A segment.
     Sg(Sg),
     /// A multiline.
@@ -43,6 +45,7 @@ impl Obj {
             Obj::CurveArc(ca) => Box::new(ca.iter()),
             Obj::Group(g) => Box::new(g.iter()),
             Obj::Pg(pg) => Box::new(pg.iter()),
+            Obj::Pgc(pgc) => Box::new(pgc.iter()),
             Obj::Sg(sg) => Box::new(sg.iter()),
         }
     }
@@ -56,6 +59,7 @@ impl Obj {
             Obj::CurveArc(ca) => Box::new(ca.iter_mut()),
             Obj::Group(g) => Box::new(g.iter_mut()),
             Obj::Pg(pg) => Box::new(pg.iter_mut()),
+            Obj::Pgc(pgc) => Box::new(pgc.iter_mut()),
             Obj::Sg(sg) => Box::new(sg.iter_mut()),
         }
     }
@@ -86,6 +90,9 @@ where
             Obj::Pg(pg) => {
                 *pg %= rhs;
             }
+            Obj::Pgc(pgc) => {
+                *pgc %= rhs;
+            }
             Obj::Sg(sg) => {
                 *sg %= rhs;
             }
@@ -107,6 +114,7 @@ where
             Obj::CurveArc(ca) => Obj::from(ca + rhs),
             Obj::Group(g) => Obj::from(g + rhs),
             Obj::Pg(pg) => Obj::from(pg + rhs),
+            Obj::Pgc(pgc) => Obj::from(pgc + rhs),
             Obj::Sg(sg) => Obj::from(sg + rhs),
         }
     }
@@ -126,6 +134,7 @@ where
             Obj::CurveArc(ca) => Obj::from(ca - rhs),
             Obj::Group(g) => Obj::from(g - rhs),
             Obj::Pg(pg) => Obj::from(pg - rhs),
+            Obj::Pgc(pgc) => Obj::from(pgc - rhs),
             Obj::Sg(sg) => Obj::from(sg - rhs),
         }
     }
@@ -140,6 +149,7 @@ impl Mul<f64> for Obj {
             Obj::CurveArc(ca) => Obj::from(ca * rhs),
             Obj::Group(g) => Obj::from(g * rhs),
             Obj::Pg(pg) => Obj::from(pg * rhs),
+            Obj::Pgc(pgc) => Obj::from(pgc * rhs),
             Obj::Sg(sg) => Obj::from(sg * rhs),
         }
     }
@@ -154,6 +164,7 @@ impl Div<f64> for Obj {
             Obj::CurveArc(ca) => Obj::from(ca / rhs),
             Obj::Group(g) => Obj::from(g / rhs),
             Obj::Pg(pg) => Obj::from(pg / rhs),
+            Obj::Pgc(pgc) => Obj::from(pgc / rhs),
             Obj::Sg(sg) => Obj::from(sg / rhs),
         }
     }
@@ -183,6 +194,9 @@ where
             Obj::Pg(pg) => {
                 *pg += rhs;
             }
+            Obj::Pgc(pgc) => {
+                *pgc += rhs;
+            }
             Obj::Sg(sg) => {
                 *sg += rhs;
             }
@@ -211,6 +225,9 @@ where
             Obj::Pg(pg) => {
                 *pg -= rhs;
             }
+            Obj::Pgc(pgc) => {
+                *pgc -= rhs;
+            }
             Obj::Ml(ml) => {
                 *ml -= rhs;
             }
@@ -238,6 +255,9 @@ impl MulAssign<f64> for Obj {
             }
             Obj::Pg(pg) => {
                 *pg *= rhs;
+            }
+            Obj::Pgc(pgc) => {
+                *pgc *= rhs;
             }
             Obj::Sg(sg) => {
                 *sg *= rhs;
@@ -269,6 +289,9 @@ impl DivAssign<f64> for Obj {
             }
             Obj::Pg(pg) => {
                 *pg /= rhs;
+            }
+            Obj::Pgc(pgc) => {
+                *pgc /= rhs;
             }
             Obj::Sg(sg) => {
                 *sg /= rhs;
@@ -305,6 +328,7 @@ impl Croppable for Obj {
                 .into_iter()
                 .map(Obj::from)
                 .collect::<Vec<_>>()),
+            Obj::Pgc(_) => unimplemented!("TODO: implement cropping for Pgc."),
             Obj::Sg(sg) => Ok(sg
                 .crop(frame, crop_type)?
                 .into_iter()
@@ -357,6 +381,7 @@ impl Croppable for Obj {
                 .into_iter()
                 .map(Obj::from)
                 .collect::<Vec<_>>()),
+            Obj::Pgc(_) => unimplemented!("TODO: implement cropping for Pgc."),
             Obj::Sg(sg) => Ok(sg
                 .crop_excluding(other)?
                 .into_iter()
@@ -387,6 +412,7 @@ impl Annotatable for Obj {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
         match self {
             Obj::Pg(pg) => pg.annotate(settings),
+            Obj::Pgc(pgc) => pgc.annotate(settings),
             Obj::Ml(ml) => ml.annotate(settings),
             Obj::Group(g) => g.annotate(settings),
             Obj::Pt(_) | Obj::Sg(_) | Obj::CurveArc(_) | Obj::Txt(_) => vec![],

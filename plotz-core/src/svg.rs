@@ -46,6 +46,15 @@ fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<()> {
             }
             context.line_to(polygon.pts[0].x, polygon.pts[0].y);
         }
+        // TODO(ambuc): each element should probably implement write to cairo,
+        // or maybe there's a foreign typestate pattern we can use here to avoid
+        // depending on cairo from that crate.
+        Obj::Pgc(pgc) => {
+            write_doi_to_context(&Obj::Pg(pgc.outer.clone()), context)?;
+            for i in &pgc.inner {
+                write_doi_to_context(&Obj::Pg(i.clone()), context)?;
+            }
+        }
         Obj::Ml(ml) => {
             for p in &ml.pts {
                 context.line_to(p.x, p.y);
