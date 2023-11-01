@@ -32,6 +32,7 @@ use std::{
 #[derive(Debug, Clone)]
 pub struct Pg {
     pub pts: Vec<Pt>,
+    pub inner: Vec<Pg>,
 }
 
 impl PartialEq for Pg {
@@ -72,7 +73,7 @@ impl PartialEq for Pg {
 
 /// Constructor for polygons. Polygons must have inner area, so they must have
 /// three or more points. Constructing a polygon from two or fewer points will
-/// result in a PolygonConstructorErrorip
+/// result in a PolygonConstructorError
 #[allow(non_snake_case)]
 pub fn Pg(a: impl IntoIterator<Item = impl Into<Pt>>) -> Result<Pg> {
     let mut pts: Vec<Pt> = a.into_iter().map(|x| x.into()).collect();
@@ -84,11 +85,30 @@ pub fn Pg(a: impl IntoIterator<Item = impl Into<Pt>>) -> Result<Pg> {
         let _ = pts.pop();
     }
 
-    let mut p = Pg { pts };
+    let mut p = Pg { pts, inner: vec![] };
     if p.get_curve_orientation() == Some(CurveOrientation::Negative) {
         p.orient_curve_positively();
     }
     Ok(p)
+}
+
+#[allow(non_snake_case)]
+pub fn PgWithCavities(a: impl IntoIterator<Item = impl Into<Pt>>, b: Vec<Pg>) -> Result<Pg> {
+    let outer: Pg = Pg(a)?;
+    for inner_pg in &b {
+        for pt in &inner_pg.pts {
+            if matches!(outer.contains_pt(pt)?, PointLoc::Outside) {
+                return Err(anyhow!(
+                    "Cannot construct PgWithCavities where a pt {:?} in an inner polygon is outside of the outer polygon.",
+                    pt
+                ));
+            }
+        }
+    }
+    Ok(Pg {
+        pts: outer.pts,
+        inner: b,
+    })
 }
 
 /// Convenience constructor for rectangles.
@@ -593,6 +613,7 @@ impl Annotatable for Pg {
 mod tests {
     use super::*;
     use float_eq::assert_float_eq;
+    use test_case::test_case;
 
     #[test]
     fn test_polygon_to_segments() -> Result<()> {
@@ -1192,6 +1213,19 @@ mod tests {
         for (idx, p) in frame.iter().enumerate() {
             assert_eq!(src[idx], *p);
         }
+        Ok(())
+    }
+
+    #[test_case(Rect((0,0),(1,1))?, vec![]; "no inner")]
+    #[test_case(Rect((0,0),(1,1))?, vec![Rect((0,0),(1,1))?]; "inner is self")]
+    fn test_pg_with_cavities_should_succeed(a: Pg, b: Vec<Pg>) -> Result<()> {
+        let _: Pg = PgWithCavities(a, b)?;
+        Ok(())
+    }
+
+    #[test_case(Rect((0,0),(1,1))?, vec![Rect((0,0),(2,2))?]; "inner is larger")]
+    fn test_pg_with_cavities_should_fail(a: Pg, b: Vec<Pg>) -> Result<()> {
+        assert!(PgWithCavities(a, b).is_err());
         Ok(())
     }
 }
