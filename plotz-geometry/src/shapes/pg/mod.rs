@@ -422,12 +422,6 @@ impl Roundable for Pg {
     }
 }
 
-impl Nullable for Pg {
-    fn is_empty(&self) -> bool {
-        self.pts.is_empty()
-    }
-}
-
 impl Object for Pg {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
         let mut a = vec![];
@@ -451,6 +445,10 @@ impl Object for Pg {
         }
 
         a
+    }
+
+    fn is_empty(&self) -> bool {
+        self.pts.is_empty()
     }
 }
 

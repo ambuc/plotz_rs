@@ -83,17 +83,14 @@ where
     }
 }
 
-impl<T> Nullable for Group<T> {
-    fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-}
-
 impl<T> Object for Group<T> {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
         self.0
             .iter()
             .flat_map(|(o, _)| o.annotate(settings))
             .collect()
+    }
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 }

@@ -8,7 +8,7 @@ use crate::{
     intersection::IntersectionResult,
     obj::{Obj, ObjType},
     style::Style,
-    AnnotationSettings, Nullable, Object, Roundable,
+    AnnotationSettings, Object, Roundable,
 };
 use anyhow::{anyhow, Result};
 use float_ord::FloatOrd;
@@ -195,12 +195,6 @@ impl Roundable for Ml {
     }
 }
 
-impl Nullable for Ml {
-    fn is_empty(&self) -> bool {
-        self.pts.is_empty()
-    }
-}
-
 impl Object for Ml {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
         let mut a = vec![];
@@ -224,6 +218,10 @@ impl Object for Ml {
         }
 
         a
+    }
+
+    fn is_empty(&self) -> bool {
+        self.pts.is_empty()
     }
 }
 

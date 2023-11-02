@@ -428,4 +428,8 @@ impl Object for Obj {
             Obj::Pt(_) | Obj::Sg(_) | Obj::CurveArc(_) | Obj::Txt(_) => vec![],
         }
     }
+
+    fn is_empty(&self) -> bool {
+        false
+    }
 }

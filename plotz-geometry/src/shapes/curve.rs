@@ -22,6 +22,8 @@ use std::{
     ops::*,
 };
 
+use super::txt::Txt;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 /// A single curvearc, i.e. some section of a circle.
 pub struct CurveArc {
@@ -502,9 +504,33 @@ impl Croppable for CurveArc {
     }
 }
 
-impl Nullable for CurveArc {
+impl Object for CurveArc {
     fn is_empty(&self) -> bool {
         false
+    }
+
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
+        let mut a = vec![];
+
+        let AnnotationSettings {
+            font_size,
+            precision,
+        } = settings;
+        for (_idx, pt) in self.iter().enumerate() {
+            let x = format!("{:.1$}", pt.x, precision);
+            let y = format!("{:.1$}", pt.y, precision);
+            a.push((
+                Txt {
+                    pt: *pt,
+                    inner: format!("({}, {})", x, y),
+                    font_size: *font_size,
+                }
+                .into(),
+                Style::default(),
+            ));
+        }
+
+        a
     }
 }
 

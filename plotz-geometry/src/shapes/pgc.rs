@@ -7,7 +7,7 @@ use crate::{
     obj::{Obj, ObjType},
     shapes::{pg::Pg, pt::Pt},
     style::Style,
-    AnnotationSettings, Nullable, Object,
+    AnnotationSettings, Object,
 };
 use anyhow::{anyhow, Result};
 use std::ops::*;
@@ -60,12 +60,6 @@ impl PartialEq for Pgc {
     }
 }
 
-impl Nullable for Pgc {
-    fn is_empty(&self) -> bool {
-        self.outer.is_empty() || self.inner.is_empty()
-    }
-}
-
 impl Bounded for Pgc {
     fn bounds(&self) -> Result<Bounds> {
         self.outer.bounds()
@@ -97,5 +91,9 @@ impl Object for Pgc {
         }
 
         a
+    }
+
+    fn is_empty(&self) -> bool {
+        self.outer.is_empty() || self.inner.is_empty()
     }
 }

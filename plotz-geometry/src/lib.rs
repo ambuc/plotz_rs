@@ -37,13 +37,6 @@ pub trait Roundable {
     fn round_to_nearest(&mut self, f: f64);
 }
 
-/// A geometric figure which can be empty. Most can't.
-#[enum_dispatch(Obj)]
-pub trait Nullable {
-    /// Is it empty?
-    fn is_empty(&self) -> bool;
-}
-
 /// Settings for debug annotation (font size, etc.)
 #[derive(Debug, Clone, TypedBuilder)]
 pub struct AnnotationSettings {
@@ -66,4 +59,7 @@ impl Default for AnnotationSettings {
 pub trait Object {
     /// Return the labelled points and segments.
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)>;
+
+    /// Is it empty?
+    fn is_empty(&self) -> bool;
 }

@@ -45,7 +45,11 @@ impl Bounded for Txt {
 
 crate::ops_defaults_t!(Txt, Pt);
 
-impl Nullable for Txt {
+impl Object for Txt {
+    fn annotate(&self, _: &AnnotationSettings) -> Vec<(Obj, Style)> {
+        vec![]
+    }
+
     fn is_empty(&self) -> bool {
         false
     }
