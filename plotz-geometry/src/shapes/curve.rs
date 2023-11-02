@@ -55,9 +55,6 @@ impl CurveArc {
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         std::iter::once(&mut self.ctr)
     }
-    pub fn objtype(&self) -> ObjType {
-        ObjType::CurveArc
-    }
 }
 
 impl Bounded for CurveArc {
@@ -531,6 +528,10 @@ impl Object for CurveArc {
         }
 
         a
+    }
+
+    fn objtype(&self) -> ObjType {
+        ObjType::CurveArc
     }
 }
 

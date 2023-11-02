@@ -284,10 +284,6 @@ impl Pg {
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         self.pts.iter_mut()
     }
-
-    pub fn objtype(&self) -> ObjType {
-        ObjType::Polygon
-    }
 }
 
 impl Croppable for Pg {
@@ -449,6 +445,10 @@ impl Object for Pg {
 
     fn is_empty(&self) -> bool {
         self.pts.is_empty()
+    }
+
+    fn objtype(&self) -> ObjType {
+        ObjType::Polygon
     }
 }
 

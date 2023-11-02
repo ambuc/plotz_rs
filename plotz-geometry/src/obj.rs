@@ -432,4 +432,17 @@ impl Object for Obj {
     fn is_empty(&self) -> bool {
         false
     }
+
+    fn objtype(&self) -> ObjType {
+        match self {
+            Obj::CurveArc(_) => ObjType::CurveArc,
+            Obj::Group(_) => ObjType::Group,
+            Obj::Ml(_) => ObjType::Multiline,
+            Obj::Pg(_) => ObjType::Group,
+            Obj::Pgc(_) => ObjType::PolygonWithCavities,
+            Obj::Pt(_) => ObjType::Point,
+            Obj::Sg(_) => ObjType::Segment,
+            Obj::Txt(_) => ObjType::Text,
+        }
+    }
 }

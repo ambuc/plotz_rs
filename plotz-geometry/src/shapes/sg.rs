@@ -222,10 +222,6 @@ impl Sg {
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         std::iter::once(&mut self.i).chain(std::iter::once(&mut self.f))
     }
-
-    pub fn objtype(&self) -> ObjType {
-        ObjType::Segment
-    }
 }
 
 crate::ops_defaults_t!(Sg, Pt);
@@ -358,6 +354,10 @@ impl Object for Sg {
         }
 
         a
+    }
+
+    fn objtype(&self) -> ObjType {
+        ObjType::Segment
     }
 }
 

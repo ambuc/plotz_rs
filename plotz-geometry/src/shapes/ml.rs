@@ -129,10 +129,6 @@ impl Ml {
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         self.pts.iter_mut()
     }
-
-    pub fn objtype(&self) -> ObjType {
-        ObjType::Multiline
-    }
 }
 
 impl Croppable for Ml {
@@ -222,6 +218,10 @@ impl Object for Ml {
 
     fn is_empty(&self) -> bool {
         self.pts.is_empty()
+    }
+
+    fn objtype(&self) -> ObjType {
+        ObjType::Multiline
     }
 }
 

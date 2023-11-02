@@ -48,10 +48,6 @@ impl Pgc {
             .iter_mut()
             .chain(self.inner.iter_mut().flat_map(|i| i.iter_mut()))
     }
-
-    pub fn objtype(&self) -> ObjType {
-        ObjType::PolygonWithCavities
-    }
 }
 
 impl PartialEq for Pgc {
@@ -95,5 +91,9 @@ impl Object for Pgc {
 
     fn is_empty(&self) -> bool {
         self.outer.is_empty() || self.inner.is_empty()
+    }
+
+    fn objtype(&self) -> ObjType {
+        ObjType::PolygonWithCavities
     }
 }

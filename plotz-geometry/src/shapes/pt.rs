@@ -270,10 +270,6 @@ impl Pt {
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         std::iter::once(self)
     }
-
-    pub fn objtype(&self) -> ObjType {
-        ObjType::Point
-    }
 }
 
 impl Bounded for Pt {
@@ -321,6 +317,10 @@ impl Object for Pt {
         }
 
         a
+    }
+
+    fn objtype(&self) -> ObjType {
+        ObjType::Point
     }
 }
 

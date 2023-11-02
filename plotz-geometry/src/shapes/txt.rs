@@ -31,10 +31,6 @@ impl Txt {
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         std::iter::once(&mut self.pt)
     }
-
-    pub fn objtype(&self) -> ObjType {
-        ObjType::Point
-    }
 }
 
 impl Bounded for Txt {
@@ -52,5 +48,9 @@ impl Object for Txt {
 
     fn is_empty(&self) -> bool {
         false
+    }
+
+    fn objtype(&self) -> ObjType {
+        ObjType::Point
     }
 }

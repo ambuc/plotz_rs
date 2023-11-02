@@ -90,7 +90,12 @@ impl<T> Object for Group<T> {
             .flat_map(|(o, _)| o.annotate(settings))
             .collect()
     }
+
     fn is_empty(&self) -> bool {
         self.0.is_empty()
+    }
+
+    fn objtype(&self) -> ObjType {
+        ObjType::Group
     }
 }

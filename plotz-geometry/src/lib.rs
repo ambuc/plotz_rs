@@ -18,6 +18,7 @@ pub mod macros;
 
 use crate::{obj::Obj, shapes::pt::Pt, style::Style};
 use enum_dispatch::enum_dispatch;
+use obj::ObjType;
 use std::ops::*;
 use typed_builder::TypedBuilder;
 
@@ -62,4 +63,7 @@ pub trait Object {
 
     /// Is it empty?
     fn is_empty(&self) -> bool;
+
+    /// What type of object is this?
+    fn objtype(&self) -> ObjType;
 }
