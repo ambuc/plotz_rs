@@ -53,12 +53,6 @@ pub struct AnnotationSettings {
     pub precision: usize,
 }
 
-/// Something which can have its points and segments labelled.
-pub trait Annotatable {
-    /// Return the labelled points and segments.
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)>;
-}
-
 impl Default for AnnotationSettings {
     fn default() -> Self {
         Self {
@@ -66,4 +60,10 @@ impl Default for AnnotationSettings {
             precision: 0,
         }
     }
+}
+
+/// A 2d object.
+pub trait Object {
+    /// Return the labelled points and segments.
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)>;
 }

@@ -1,5 +1,6 @@
 //! The inner value of a Object2d, i.e. the enum which holds some geometric thingy.
 #![allow(missing_docs)]
+
 use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLoc},
@@ -417,7 +418,7 @@ impl Croppable for Obj {
     }
 }
 
-impl Annotatable for Obj {
+impl Object for Obj {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
         match self {
             Obj::Pg(pg) => pg.annotate(settings),

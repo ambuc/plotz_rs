@@ -89,7 +89,7 @@ impl<T> Nullable for Group<T> {
     }
 }
 
-impl<T> Annotatable for Group<T> {
+impl<T> Object for Group<T> {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
         self.0
             .iter()

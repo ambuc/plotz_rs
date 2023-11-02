@@ -7,7 +7,7 @@ use crate::{
     obj::{Obj, ObjType},
     shapes::{pg::Pg, pt::Pt},
     style::Style,
-    Annotatable, AnnotationSettings, Nullable,
+    AnnotationSettings, Nullable, Object,
 };
 use anyhow::{anyhow, Result};
 use std::ops::*;
@@ -74,7 +74,7 @@ impl Bounded for Pgc {
 
 crate::ops_defaults_t!(Pgc, Pt);
 
-impl Annotatable for Pgc {
+impl Object for Pgc {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
         let mut a = vec![];
 

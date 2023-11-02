@@ -428,7 +428,7 @@ impl Nullable for Pg {
     }
 }
 
-impl Annotatable for Pg {
+impl Object for Pg {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
         let mut a = vec![];
 

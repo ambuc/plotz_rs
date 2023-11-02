@@ -8,7 +8,7 @@ use crate::{
     intersection::IntersectionResult,
     obj::{Obj, ObjType},
     style::Style,
-    Annotatable, AnnotationSettings, Nullable, Roundable,
+    AnnotationSettings, Nullable, Object, Roundable,
 };
 use anyhow::{anyhow, Result};
 use float_ord::FloatOrd;
@@ -201,7 +201,7 @@ impl Nullable for Ml {
     }
 }
 
-impl Annotatable for Ml {
+impl Object for Ml {
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
         let mut a = vec![];
 
