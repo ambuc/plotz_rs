@@ -1,7 +1,9 @@
 //! A 2D point.
+#![allow(missing_docs)]
 
 use crate::{
     bounded::{Bounded, Bounds},
+    obj::ObjType,
     shapes::{pg::abp, sg::Sg},
     *,
 };
@@ -265,6 +267,10 @@ impl Pt {
     /// Mutable iterator.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         std::iter::once(self)
+    }
+
+    pub fn objtype(&self) -> ObjType {
+        ObjType::Point
     }
 }
 

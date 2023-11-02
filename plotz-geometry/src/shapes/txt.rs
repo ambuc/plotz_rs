@@ -1,7 +1,9 @@
 //! A character at a point.
+#![allow(missing_docs)]
 
 use crate::{
     bounded::{Bounded, Bounds},
+    obj::ObjType,
     shapes::pt::Pt,
     *,
 };
@@ -28,6 +30,10 @@ impl Txt {
     /// Mutable iterator.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         std::iter::once(&mut self.pt)
+    }
+
+    pub fn objtype(&self) -> ObjType {
+        ObjType::Point
     }
 }
 

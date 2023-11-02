@@ -1,9 +1,11 @@
 //! A curve.
+#![allow(missing_docs)]
 
 use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLoc},
     interpolate::interpolate_2d_checked,
+    obj::ObjType,
     shapes::{
         pg::{abp, Pg},
         pt::{PolarPt, Pt},
@@ -50,6 +52,9 @@ impl CurveArc {
     /// Mutable iterator.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         std::iter::once(&mut self.ctr)
+    }
+    pub fn objtype(&self) -> ObjType {
+        ObjType::CurveArc
     }
 }
 

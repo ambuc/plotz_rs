@@ -1,9 +1,10 @@
 //! A group of objects.
+#![allow(missing_docs)]
 
 use crate::{
     bounded::{Bounded, Bounds, BoundsCollector},
     crop::{CropType, Croppable},
-    obj::Obj,
+    obj::{Obj, ObjType},
     shapes::{pg::Pg, pt::Pt},
     style::Style,
     *,
@@ -36,6 +37,10 @@ impl<T> Group<T> {
     /// Mutable iterator.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         self.0.iter_mut().flat_map(|(x, _)| x.iter_mut())
+    }
+
+    pub fn objtype(&self) -> ObjType {
+        ObjType::Point
     }
 }
 

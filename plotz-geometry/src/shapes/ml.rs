@@ -6,7 +6,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable},
     intersection::IntersectionResult,
-    obj::Obj,
+    obj::{Obj, ObjType},
     style::Style,
     Annotatable, AnnotationSettings, Nullable, Roundable,
 };
@@ -128,6 +128,10 @@ impl Ml {
     /// Mutable iterator.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         self.pts.iter_mut()
+    }
+
+    pub fn objtype(&self) -> ObjType {
+        ObjType::Multiline
     }
 }
 

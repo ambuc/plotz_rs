@@ -4,7 +4,7 @@
 use crate::{
     bounded::{Bounded, Bounds},
     crop::PointLoc,
-    obj::Obj,
+    obj::{Obj, ObjType},
     shapes::{pg::Pg, pt::Pt},
     style::Style,
     Annotatable, AnnotationSettings, Nullable,
@@ -47,6 +47,10 @@ impl Pgc {
         self.outer
             .iter_mut()
             .chain(self.inner.iter_mut().flat_map(|i| i.iter_mut()))
+    }
+
+    pub fn objtype(&self) -> ObjType {
+        ObjType::PolygonWithCavities
     }
 }
 

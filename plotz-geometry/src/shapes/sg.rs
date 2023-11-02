@@ -1,4 +1,5 @@
 //! A 2D segment.
+#![allow(missing_docs)]
 
 use crate::{
     bounded::{Bounded, Bounds},
@@ -6,6 +7,7 @@ use crate::{
     interpolate,
     interpolate::interpolate_2d_checked,
     intersection::{Intersection, IntersectionResult, MultipleIntersections},
+    obj::ObjType,
     shapes::{pg::Pg, pt::Pt, ry::Ry},
     Nullable, Roundable,
 };
@@ -216,6 +218,10 @@ impl Sg {
     /// Mutable iterator.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         std::iter::once(&mut self.i).chain(std::iter::once(&mut self.f))
+    }
+
+    pub fn objtype(&self) -> ObjType {
+        ObjType::Segment
     }
 }
 

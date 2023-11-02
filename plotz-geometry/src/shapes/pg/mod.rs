@@ -9,7 +9,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLoc},
     intersection::IntersectionResult,
-    obj::Obj,
+    obj::{Obj, ObjType},
     shapes::{
         pt::Pt,
         sg::{Contains, Sg},
@@ -283,6 +283,10 @@ impl Pg {
     /// Mutable iterator.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
         self.pts.iter_mut()
+    }
+
+    pub fn objtype(&self) -> ObjType {
+        ObjType::Polygon
     }
 }
 

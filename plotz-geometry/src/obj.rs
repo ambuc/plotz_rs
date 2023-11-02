@@ -1,5 +1,5 @@
 //! The inner value of a Object2d, i.e. the enum which holds some geometric thingy.
-
+#![allow(missing_docs)]
 use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLoc},
@@ -12,6 +12,17 @@ use anyhow::Result;
 use enum_dispatch::enum_dispatch;
 use itertools::Itertools;
 use std::{fmt::Debug, ops::*};
+
+pub enum ObjType {
+    Point,
+    Polygon,
+    PolygonWithCavities,
+    Segment,
+    Multiline,
+    CurveArc,
+    Text,
+    Group,
+}
 
 /// Either a polygon or a segment.
 #[derive(Debug, PartialEq, Clone)]
