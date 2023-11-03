@@ -17,8 +17,6 @@ pub mod style;
 pub mod macros;
 
 use crate::{obj::Obj, shapes::pt::Pt, style::Style};
-use bounded::Bounded;
-use crop::Croppable;
 use enum_dispatch::enum_dispatch;
 use obj::ObjType;
 use std::ops::*;
@@ -74,26 +72,4 @@ pub trait Object {
 
     /// Mutable iterator
     fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_>;
-}
-
-trait NumOps<T>:
-    Add<T>
-    + AddAssign<T>
-    + Div<T>
-    + Div<f64>
-    + DivAssign<T>
-    + DivAssign<f64>
-    + Mul<T>
-    + Mul<f64>
-    + MulAssign<T>
-    + MulAssign<f64>
-    + RemAssign<T>
-    + Sub<T>
-    + SubAssign<T>
-{
-    //
-}
-
-trait ObjComplete<T>: Object + Bounded + Croppable + NumOps<T> {
-    //
 }
