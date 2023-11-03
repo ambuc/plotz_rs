@@ -69,10 +69,6 @@ where
 }
 
 impl<T> Object for Group<T> {
-    fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
     fn objtype(&self) -> ObjType {
         ObjType::Group
     }
