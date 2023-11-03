@@ -17,6 +17,8 @@ pub mod style;
 pub mod macros;
 
 use crate::{obj::Obj, shapes::pt::Pt, style::Style};
+use bounded::Bounded;
+use crop::Croppable;
 use enum_dispatch::enum_dispatch;
 use obj::ObjType;
 use std::ops::*;
@@ -66,4 +68,22 @@ pub trait Object {
 
     /// What type of object is this?
     fn objtype(&self) -> ObjType;
+}
+
+trait NumOps<T>:
+    Add<T>
+    + Sub<T>
+    + Mul<T>
+    + Div<T>
+    + AddAssign<T>
+    + SubAssign<T>
+    + MulAssign<T>
+    + DivAssign<T>
+    + RemAssign<T>
+{
+    //
+}
+
+trait ObjComplete<T>: Object + Bounded + Croppable + NumOps<T> {
+    //
 }
