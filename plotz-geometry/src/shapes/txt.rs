@@ -21,18 +21,6 @@ pub struct Txt {
     pub font_size: f64,
 }
 
-impl Txt {
-    /// Iterator.
-    pub fn iter(&self) -> impl Iterator<Item = &Pt> {
-        std::iter::once(&self.pt)
-    }
-
-    /// Mutable iterator.
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
-        std::iter::once(&mut self.pt)
-    }
-}
-
 impl Bounded for Txt {
     fn bounds(&self) -> Result<Bounds> {
         self.pt.bounds()
@@ -52,5 +40,13 @@ impl Object for Txt {
 
     fn objtype(&self) -> ObjType {
         ObjType::Point
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        Box::new(std::iter::once(&self.pt))
+    }
+
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        Box::new(std::iter::once(&mut self.pt))
     }
 }

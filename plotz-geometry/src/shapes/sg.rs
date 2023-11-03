@@ -212,16 +212,6 @@ impl Sg {
         let ray = self.ray_perpendicular();
         (ray.clone().rotate(PI), ray)
     }
-
-    /// Iterator.
-    pub fn iter(&self) -> impl Iterator<Item = &Pt> {
-        std::iter::once(&self.i).chain(std::iter::once(&self.f))
-    }
-
-    /// Mutable iterator.
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
-        std::iter::once(&mut self.i).chain(std::iter::once(&mut self.f))
-    }
 }
 
 crate::ops_defaults_t!(Sg, Pt);
@@ -358,6 +348,14 @@ impl Object for Sg {
 
     fn objtype(&self) -> ObjType {
         ObjType::Segment
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        Box::new(std::iter::once(&self.i).chain(std::iter::once(&self.f)))
+    }
+
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        Box::new(std::iter::once(&mut self.i).chain(std::iter::once(&mut self.f)))
     }
 }
 

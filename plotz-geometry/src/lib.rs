@@ -68,6 +68,12 @@ pub trait Object {
 
     /// What type of object is this?
     fn objtype(&self) -> ObjType;
+
+    /// Iterator
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_>;
+
+    /// Mutable iterator
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_>;
 }
 
 trait NumOps<T>:

@@ -5,7 +5,7 @@ use plotz_core::{
     frame::make_frame,
     svg::Size,
 };
-use plotz_geometry::{crop::PointLoc, shapes::pg::Pg};
+use plotz_geometry::{crop::PointLoc, obj::Obj, shapes::pg::Pg, style::Style, Object};
 
 mod ab_rhomb;
 mod cromwell;
@@ -24,7 +24,7 @@ struct Args {
 fn main() -> Result<()> {
     let args: Args = argh::from_env();
 
-    let mut dos = match args.pattern.as_ref() {
+    let mut dos: Vec<(Obj, Style)> = match args.pattern.as_ref() {
         "ab_rhomb" => ab_rhomb::make(),
         "cromwell" => cromwell::make(),
         "danzers" => danzers::make(),

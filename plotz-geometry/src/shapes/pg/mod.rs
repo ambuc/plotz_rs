@@ -274,16 +274,6 @@ impl Pg {
             .iter()
             .all(|pt| matches!(self.contains_pt(pt), Ok(PointLoc::Outside))))
     }
-
-    /// Iterator.
-    pub fn iter(&self) -> impl Iterator<Item = &Pt> {
-        self.pts.iter()
-    }
-
-    /// Mutable iterator.
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
-        self.pts.iter_mut()
-    }
 }
 
 impl Croppable for Pg {
@@ -449,6 +439,14 @@ impl Object for Pg {
 
     fn objtype(&self) -> ObjType {
         ObjType::Polygon
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        Box::new(self.pts.iter())
+    }
+
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        Box::new(self.pts.iter_mut())
     }
 }
 

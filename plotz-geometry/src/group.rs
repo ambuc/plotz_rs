@@ -28,20 +28,6 @@ impl<T> Group<T> {
     pub fn iter_objects(&self) -> Box<dyn Iterator<Item = &(Obj, T)> + '_> {
         Box::new(self.0.iter())
     }
-
-    /// Iterator.
-    pub fn iter(&self) -> impl Iterator<Item = &Pt> {
-        self.0.iter().flat_map(|(x, _)| x.iter())
-    }
-
-    /// Mutable iterator.
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
-        self.0.iter_mut().flat_map(|(x, _)| x.iter_mut())
-    }
-
-    pub fn objtype(&self) -> ObjType {
-        ObjType::Point
-    }
 }
 
 impl<T> Bounded for Group<T> {
@@ -97,5 +83,13 @@ impl<T> Object for Group<T> {
 
     fn objtype(&self) -> ObjType {
         ObjType::Group
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        Box::new(self.0.iter().flat_map(|(x, _)| x.iter()))
+    }
+
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        Box::new(self.0.iter_mut().flat_map(|(x, _)| x.iter_mut()))
     }
 }

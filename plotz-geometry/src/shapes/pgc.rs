@@ -34,22 +34,6 @@ pub fn Pgc(a: impl Into<Pg>, b: impl IntoIterator<Item = impl Into<Pg>>) -> Resu
     Ok(Pgc { outer, inner })
 }
 
-impl Pgc {
-    /// Iterator.
-    pub fn iter(&self) -> impl Iterator<Item = &Pt> {
-        self.outer
-            .iter()
-            .chain(self.inner.iter().flat_map(|i| i.iter()))
-    }
-
-    /// Mutable iterator.
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
-        self.outer
-            .iter_mut()
-            .chain(self.inner.iter_mut().flat_map(|i| i.iter_mut()))
-    }
-}
-
 impl PartialEq for Pgc {
     fn eq(&self, _: &Self) -> bool {
         unimplemented!("TODO(jbuckland): implement partialeq. we should compare each polygon flexibly _and_ w/o respect for inner ordering");
@@ -95,5 +79,21 @@ impl Object for Pgc {
 
     fn objtype(&self) -> ObjType {
         ObjType::PolygonWithCavities
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        Box::new(
+            self.outer
+                .iter()
+                .chain(self.inner.iter().flat_map(|i| i.iter())),
+        )
+    }
+
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        Box::new(
+            self.outer
+                .iter_mut()
+                .chain(self.inner.iter_mut().flat_map(|i| i.iter_mut())),
+        )
     }
 }

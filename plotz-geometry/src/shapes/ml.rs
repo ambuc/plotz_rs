@@ -120,15 +120,6 @@ impl Ml {
             .flat_map(|l: &Sg| l.intersects(other))
             .collect::<Vec<_>>()
     }
-
-    pub fn iter(&self) -> impl Iterator<Item = &Pt> {
-        self.pts.iter()
-    }
-
-    /// Mutable iterator.
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
-        self.pts.iter_mut()
-    }
 }
 
 impl Croppable for Ml {
@@ -222,6 +213,14 @@ impl Object for Ml {
 
     fn objtype(&self) -> ObjType {
         ObjType::Multiline
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        Box::new(self.pts.iter())
+    }
+
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        Box::new(self.pts.iter_mut())
     }
 }
 

@@ -47,14 +47,6 @@ impl CurveArc {
     fn angle_range(&self) -> RangeInclusive<f64> {
         self.angle_i..=self.angle_f
     }
-    /// Iterator.
-    pub fn iter(&self) -> impl Iterator<Item = &Pt> {
-        std::iter::once(&self.ctr)
-    }
-    /// Mutable iterator.
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt> {
-        std::iter::once(&mut self.ctr)
-    }
 }
 
 impl Bounded for CurveArc {
@@ -532,6 +524,16 @@ impl Object for CurveArc {
 
     fn objtype(&self) -> ObjType {
         ObjType::CurveArc
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        // NB: this can't impl. bounded, it's not the whole picture.
+        Box::new(std::iter::once(&self.ctr))
+    }
+
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        // NB: this can't impl. mutable transforms, it's not the whole picture.
+        Box::new(std::iter::once(&mut self.ctr))
     }
 }
 

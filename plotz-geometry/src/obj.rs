@@ -47,36 +47,6 @@ pub enum Obj {
     Group(Group<Style>),
 }
 
-impl Obj {
-    /// Iterator.
-    pub fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
-        match self {
-            Obj::Pt(p) => Box::new(p.iter()),
-            Obj::Ml(ml) => Box::new(ml.iter()),
-            Obj::Txt(ch) => Box::new(ch.iter()),
-            Obj::CurveArc(ca) => Box::new(ca.iter()),
-            Obj::Group(g) => Box::new(g.iter()),
-            Obj::Pg(pg) => Box::new(pg.iter()),
-            Obj::Pgc(pgc) => Box::new(pgc.iter()),
-            Obj::Sg(sg) => Box::new(sg.iter()),
-        }
-    }
-
-    /// Mutable iterator.
-    pub fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
-        match self {
-            Obj::Pt(p) => Box::new(p.iter_mut()),
-            Obj::Ml(ml) => Box::new(ml.iter_mut()),
-            Obj::Txt(ch) => Box::new(ch.iter_mut()),
-            Obj::CurveArc(ca) => Box::new(ca.iter_mut()),
-            Obj::Group(g) => Box::new(g.iter_mut()),
-            Obj::Pg(pg) => Box::new(pg.iter_mut()),
-            Obj::Pgc(pgc) => Box::new(pgc.iter_mut()),
-            Obj::Sg(sg) => Box::new(sg.iter_mut()),
-        }
-    }
-}
-
 impl<T> RemAssign<T> for Obj
 where
     T: Into<Pt>,
@@ -443,6 +413,32 @@ impl Object for Obj {
             Obj::Pt(_) => ObjType::Point,
             Obj::Sg(_) => ObjType::Segment,
             Obj::Txt(_) => ObjType::Text,
+        }
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+        match self {
+            Obj::Pt(p) => Box::new(p.iter()),
+            Obj::Ml(ml) => Box::new(ml.iter()),
+            Obj::Txt(ch) => Box::new(ch.iter()),
+            Obj::CurveArc(ca) => Box::new(ca.iter()),
+            Obj::Group(g) => Box::new(g.iter()),
+            Obj::Pg(pg) => Box::new(pg.iter()),
+            Obj::Pgc(pgc) => Box::new(pgc.iter()),
+            Obj::Sg(sg) => Box::new(sg.iter()),
+        }
+    }
+
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+        match self {
+            Obj::Pt(p) => Box::new(p.iter_mut()),
+            Obj::Ml(ml) => Box::new(ml.iter_mut()),
+            Obj::Txt(ch) => Box::new(ch.iter_mut()),
+            Obj::CurveArc(ca) => Box::new(ca.iter_mut()),
+            Obj::Group(g) => Box::new(g.iter_mut()),
+            Obj::Pg(pg) => Box::new(pg.iter_mut()),
+            Obj::Pgc(pgc) => Box::new(pgc.iter_mut()),
+            Obj::Sg(sg) => Box::new(sg.iter_mut()),
         }
     }
 }
