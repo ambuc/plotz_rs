@@ -315,10 +315,6 @@ impl Roundable for Sg {
 }
 
 impl Object for Sg {
-    fn is_empty(&self) -> bool {
-        false
-    }
-
     fn objtype(&self) -> ObjType {
         ObjType::Segment
     }

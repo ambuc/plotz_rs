@@ -279,10 +279,6 @@ impl Roundable for Pt {
 }
 
 impl Object for Pt {
-    fn is_empty(&self) -> bool {
-        false
-    }
-
     fn objtype(&self) -> ObjType {
         ObjType::Point
     }

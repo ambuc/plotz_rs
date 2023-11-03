@@ -407,10 +407,6 @@ impl Roundable for Pg {
 }
 
 impl Object for Pg {
-    fn is_empty(&self) -> bool {
-        self.pts.is_empty()
-    }
-
     fn objtype(&self) -> ObjType {
         ObjType::Polygon
     }

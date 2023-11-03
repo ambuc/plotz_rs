@@ -182,10 +182,6 @@ impl Roundable for Ml {
 }
 
 impl Object for Ml {
-    fn is_empty(&self) -> bool {
-        self.pts.is_empty()
-    }
-
     fn objtype(&self) -> ObjType {
         ObjType::Multiline
     }

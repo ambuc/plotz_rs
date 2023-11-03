@@ -46,10 +46,6 @@ impl Bounded for Pgc {
 crate::ops_defaults_t!(Pgc, Pt);
 
 impl Object for Pgc {
-    fn is_empty(&self) -> bool {
-        self.outer.is_empty() || self.inner.is_empty()
-    }
-
     fn objtype(&self) -> ObjType {
         ObjType::PolygonWithCavities
     }

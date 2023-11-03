@@ -492,10 +492,6 @@ impl Croppable for CurveArc {
 }
 
 impl Object for CurveArc {
-    fn is_empty(&self) -> bool {
-        false
-    }
-
     fn objtype(&self) -> ObjType {
         ObjType::CurveArc
     }

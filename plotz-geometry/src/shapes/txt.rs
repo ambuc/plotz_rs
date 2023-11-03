@@ -30,10 +30,6 @@ impl Bounded for Txt {
 crate::ops_defaults_t!(Txt, Pt);
 
 impl Object for Txt {
-    fn is_empty(&self) -> bool {
-        false
-    }
-
     fn objtype(&self) -> ObjType {
         ObjType::Point
     }

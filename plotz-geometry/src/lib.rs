@@ -85,7 +85,9 @@ pub trait Object {
     }
 
     /// Is it empty?
-    fn is_empty(&self) -> bool;
+    fn is_empty(&self) -> bool {
+        self.iter().count() == 0
+    }
 
     /// What type of object is this?
     fn objtype(&self) -> ObjType;
