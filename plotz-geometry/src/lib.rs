@@ -78,14 +78,18 @@ pub trait Object {
 
 trait NumOps<T>:
     Add<T>
-    + Sub<T>
-    + Mul<T>
-    + Div<T>
     + AddAssign<T>
-    + SubAssign<T>
-    + MulAssign<T>
+    + Div<T>
+    + Div<f64>
     + DivAssign<T>
+    + DivAssign<f64>
+    + Mul<T>
+    + Mul<f64>
+    + MulAssign<T>
+    + MulAssign<f64>
     + RemAssign<T>
+    + Sub<T>
+    + SubAssign<T>
 {
     //
 }
