@@ -4,15 +4,12 @@
 use crate::{
     bounded::{Bounded, Bounds},
     crop::PointLoc,
-    obj::{Obj, ObjType},
+    obj::ObjType,
     shapes::{pg::Pg, pt::Pt},
-    style::Style,
-    AnnotationSettings, Object,
+    Object,
 };
 use anyhow::{anyhow, Result};
 use std::ops::*;
-
-use super::txt::Txt;
 
 #[derive(Debug, Clone)]
 pub struct Pgc {
@@ -49,30 +46,6 @@ impl Bounded for Pgc {
 crate::ops_defaults_t!(Pgc, Pt);
 
 impl Object for Pgc {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
-        let mut a = vec![];
-
-        let AnnotationSettings {
-            font_size,
-            precision,
-        } = settings;
-        for (_idx, pt) in self.iter().enumerate() {
-            let x = format!("{:.1$}", pt.x, precision);
-            let y = format!("{:.1$}", pt.y, precision);
-            a.push((
-                Txt {
-                    pt: *pt,
-                    inner: format!("({}, {})", x, y),
-                    font_size: *font_size,
-                }
-                .into(),
-                Style::default(),
-            ));
-        }
-
-        a
-    }
-
     fn is_empty(&self) -> bool {
         self.outer.is_empty() || self.inner.is_empty()
     }

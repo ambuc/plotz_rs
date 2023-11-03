@@ -19,6 +19,7 @@ pub mod macros;
 use crate::{obj::Obj, shapes::pt::Pt, style::Style};
 use enum_dispatch::enum_dispatch;
 use obj::ObjType;
+use shapes::txt::Txt;
 use std::ops::*;
 use typed_builder::TypedBuilder;
 
@@ -59,7 +60,29 @@ impl Default for AnnotationSettings {
 /// A 2d object.
 pub trait Object {
     /// Return the labelled points and segments.
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)>;
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
+        let mut a = vec![];
+
+        let AnnotationSettings {
+            font_size,
+            precision,
+        } = settings;
+        for (_idx, pt) in self.iter().enumerate() {
+            let x = format!("{:.1$}", pt.x, precision);
+            let y = format!("{:.1$}", pt.y, precision);
+            a.push((
+                Txt {
+                    pt: *pt,
+                    inner: format!("({}, {})", x, y),
+                    font_size: *font_size,
+                }
+                .into(),
+                Style::default(),
+            ));
+        }
+
+        a
+    }
 
     /// Is it empty?
     fn is_empty(&self) -> bool;

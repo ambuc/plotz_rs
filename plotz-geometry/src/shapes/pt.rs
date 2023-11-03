@@ -12,8 +12,6 @@ use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::{convert::From, fmt::Debug, hash::Hash, ops::*};
 
-use super::txt::Txt;
-
 /// A point in 2D space.
 #[derive(Copy, Clone)]
 pub struct Pt {
@@ -283,30 +281,6 @@ impl Roundable for Pt {
 impl Object for Pt {
     fn is_empty(&self) -> bool {
         false
-    }
-
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
-        let mut a = vec![];
-
-        let AnnotationSettings {
-            font_size,
-            precision,
-        } = settings;
-        for (_idx, pt) in self.iter().enumerate() {
-            let x = format!("{:.1$}", pt.x, precision);
-            let y = format!("{:.1$}", pt.y, precision);
-            a.push((
-                Txt {
-                    pt: *pt,
-                    inner: format!("({}, {})", x, y),
-                    font_size: *font_size,
-                }
-                .into(),
-                Style::default(),
-            ));
-        }
-
-        a
     }
 
     fn objtype(&self) -> ObjType {

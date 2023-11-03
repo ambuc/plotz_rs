@@ -9,13 +9,11 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLoc},
     intersection::IntersectionResult,
-    obj::{Obj, ObjType},
+    obj::ObjType,
     shapes::{
         pt::Pt,
         sg::{Contains, Sg},
-        txt::Txt,
     },
-    style::Style,
     *,
 };
 use anyhow::{anyhow, Context, Result};
@@ -409,30 +407,6 @@ impl Roundable for Pg {
 }
 
 impl Object for Pg {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
-        let mut a = vec![];
-
-        let AnnotationSettings {
-            font_size,
-            precision,
-        } = settings;
-        for (_idx, pt) in self.pts.iter().enumerate() {
-            let x = format!("{:.1$}", pt.x, precision);
-            let y = format!("{:.1$}", pt.y, precision);
-            a.push((
-                Txt {
-                    pt: *pt,
-                    inner: format!("({}, {})", x, y),
-                    font_size: *font_size,
-                }
-                .into(),
-                Style::default(),
-            ));
-        }
-
-        a
-    }
-
     fn is_empty(&self) -> bool {
         self.pts.is_empty()
     }

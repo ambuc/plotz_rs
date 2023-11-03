@@ -7,10 +7,9 @@ use crate::{
     interpolate,
     interpolate::interpolate_2d_checked,
     intersection::{Intersection, IntersectionResult, MultipleIntersections},
-    obj::{Obj, ObjType},
+    obj::ObjType,
     shapes::{pg::Pg, pt::Pt, ry::Ry},
-    style::Style,
-    AnnotationSettings, Object, Roundable,
+    Object, Roundable,
 };
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
@@ -21,8 +20,6 @@ use std::{
     fmt::Debug,
     ops::*,
 };
-
-use super::txt::Txt;
 
 #[derive(Debug, PartialEq, Eq)]
 enum _Orientation {
@@ -320,30 +317,6 @@ impl Roundable for Sg {
 impl Object for Sg {
     fn is_empty(&self) -> bool {
         false
-    }
-
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
-        let mut a = vec![];
-
-        let AnnotationSettings {
-            font_size,
-            precision,
-        } = settings;
-        for (_idx, pt) in self.iter().enumerate() {
-            let x = format!("{:.1$}", pt.x, precision);
-            let y = format!("{:.1$}", pt.y, precision);
-            a.push((
-                Txt {
-                    pt: *pt,
-                    inner: format!("({}, {})", x, y),
-                    font_size: *font_size,
-                }
-                .into(),
-                Style::default(),
-            ));
-        }
-
-        a
     }
 
     fn objtype(&self) -> ObjType {

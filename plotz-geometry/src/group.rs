@@ -6,7 +6,6 @@ use crate::{
     crop::{CropType, Croppable},
     obj::{Obj, ObjType},
     shapes::{pg::Pg, pt::Pt},
-    style::Style,
     *,
 };
 use anyhow::Result;
@@ -70,13 +69,6 @@ where
 }
 
 impl<T> Object for Group<T> {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
-        self.0
-            .iter()
-            .flat_map(|(o, _)| o.annotate(settings))
-            .collect()
-    }
-
     fn is_empty(&self) -> bool {
         self.0.is_empty()
     }

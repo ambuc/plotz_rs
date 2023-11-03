@@ -389,16 +389,6 @@ impl Croppable for Obj {
 }
 
 impl Object for Obj {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
-        match self {
-            Obj::Pg(pg) => pg.annotate(settings),
-            Obj::Pgc(pgc) => pgc.annotate(settings),
-            Obj::Ml(ml) => ml.annotate(settings),
-            Obj::Group(g) => g.annotate(settings),
-            Obj::Pt(_) | Obj::Sg(_) | Obj::CurveArc(_) | Obj::Txt(_) => vec![],
-        }
-    }
-
     fn is_empty(&self) -> bool {
         false
     }

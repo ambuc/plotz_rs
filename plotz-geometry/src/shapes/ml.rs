@@ -1,14 +1,13 @@
 //! A 2D multiline.
 #![allow(missing_docs)]
 
-use super::{pg::Pg, pt::Pt, sg::Sg, txt::Txt};
+use super::{pg::Pg, pt::Pt, sg::Sg};
 use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable},
     intersection::IntersectionResult,
-    obj::{Obj, ObjType},
-    style::Style,
-    AnnotationSettings, Object, Roundable,
+    obj::ObjType,
+    Object, Roundable,
 };
 use anyhow::{anyhow, Result};
 use float_ord::FloatOrd;
@@ -183,30 +182,6 @@ impl Roundable for Ml {
 }
 
 impl Object for Ml {
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
-        let mut a = vec![];
-
-        let AnnotationSettings {
-            font_size,
-            precision,
-        } = settings;
-        for (_idx, pt) in self.pts.iter().enumerate() {
-            let x = format!("{:.1$}", pt.x, precision);
-            let y = format!("{:.1$}", pt.y, precision);
-            a.push((
-                Txt {
-                    pt: *pt,
-                    inner: format!("({}, {})", x, y),
-                    font_size: *font_size,
-                }
-                .into(),
-                Style::default(),
-            ));
-        }
-
-        a
-    }
-
     fn is_empty(&self) -> bool {
         self.pts.is_empty()
     }
