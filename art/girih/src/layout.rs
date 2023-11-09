@@ -2,7 +2,7 @@ use crate::geom::*;
 use anyhow::{anyhow, Result};
 use indicatif::ProgressBar;
 use itertools::Itertools;
-use plotz_geometry::shapes::{point::Pt, polygon::Pg, segment::Sg};
+use plotz_geometry::shapes::{point::Point, polygon::Pg, segment::Sg};
 use rand::seq::SliceRandom;
 use std::f64::consts::TAU;
 
@@ -72,7 +72,7 @@ impl Layout {
             }
         }
 
-        let ctr: Pt = Pt(0, 0);
+        let ctr: Point = Point(0, 0);
         bare_edges
             .into_iter()
             .min_by_key(|sg| float_ord::FloatOrd(sg.midpoint().dist(&ctr)))

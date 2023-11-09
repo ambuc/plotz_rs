@@ -9,7 +9,7 @@ use plotz_core::{
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{multiline::Ml, point::Pt, polygon::Pg},
+    shapes::{multiline::Ml, point::Point, polygon::Pg},
     style::Style,
 };
 use rand::prelude::SliceRandom;
@@ -185,7 +185,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)
             };
 
             ml *= 2.0;
-            ml.rotate(&Pt(1, 1), rot);
+            ml.rotate(&Point(1, 1), rot);
             ml += (2.0 * row_idx as f64, 2.0 * col_idx as f64);
 
             (
@@ -200,7 +200,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)
             let mut pg: Pg = Pg([(0.1, 0.1), (0.5, 0.5), (0.9, 0.1)]).unwrap();
 
             pg *= 2.0;
-            pg.rotate(&Pt(1, 1), rot);
+            pg.rotate(&Point(1, 1), rot);
             pg += (2.0 * row_idx as f64, 2.0 * col_idx as f64);
 
             shade_polygon(&ShadeConfig::builder().gap(0.05).slope(0.0).build(), &pg)
@@ -253,7 +253,10 @@ fn main() -> Result<()> {
 
     let mut canvas = Canvas::builder()
         .dos_by_bucket(canvas::to_canvas_map(obj_vec, /*autobucket=*/ false))
-        .frame(make_frame((image_width, image_width), Pt(margin, margin))?)
+        .frame(make_frame(
+            (image_width, image_width),
+            Point(margin, margin),
+        )?)
         .build();
 
     let scale = image_width / 2.0 / (grid_cardinality as f64);

@@ -6,7 +6,7 @@
 use anyhow::{anyhow, Result};
 use plotz_geometry::{
     obj::Obj,
-    shapes::{multiline::Ml, point::Pt, polygon::Pg},
+    shapes::{multiline::Ml, point::Point, polygon::Pg},
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -134,7 +134,7 @@ fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj>> {
         .ok_or(anyhow!("not array"))?
         .iter()
         .map(|p| {
-            Ok(Pt(
+            Ok(Point(
                 p[0].as_f64().ok_or(anyhow!("value not f64"))?,
                 p[1].as_f64().ok_or(anyhow!("value not f64"))?,
             ))
@@ -170,7 +170,7 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj>> {
                 .ok_or(anyhow!("not array"))?
                 .iter()
                 .map(|p| {
-                    Ok(Pt(
+                    Ok(Point(
                         p[0].as_f64().ok_or(anyhow!("not f64"))?,
                         p[1].as_f64().ok_or(anyhow!("not f64"))?,
                     ))
@@ -273,7 +273,7 @@ mod tests {
         //     ],
         // );
 
-        let ml: Ml = vec![Pt(1.0, 1.0), Pt(1.0, 2.5), Pt(2.0, 5.0)].try_into()?;
+        let ml: Ml = vec![Point(1.0, 1.0), Point(1.0, 2.5), Point(2.0, 5.0)].try_into()?;
         assert_eq!(polygons[1].0, ml.into(),);
         // assert_symbol_tuple_list(
         //     polygons[1].1.clone(),

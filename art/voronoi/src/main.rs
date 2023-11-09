@@ -9,7 +9,7 @@ use plotz_core::{
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{point::Pt, polygon::Pg},
+    shapes::{point::Point, polygon::Pg},
     style::Style,
 };
 use rand::{prelude::SliceRandom, Rng};
@@ -117,7 +117,7 @@ fn main() -> Result<()> {
 
     Canvas::builder()
         .dos_by_bucket(canvas::to_canvas_map(dos, /*autobucket=*/ true))
-        .frame(make_frame((DIM, DIM), Pt(20, 20))?)
+        .frame(make_frame((DIM, DIM), Point(20, 20))?)
         .build()
         .write_to_svg(
             Size {

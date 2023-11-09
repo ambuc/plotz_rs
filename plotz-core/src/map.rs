@@ -19,7 +19,7 @@ use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{point::Pt, polygon::Pg, segment::Sg},
+    shapes::{point::Point, polygon::Pg, segment::Sg},
     style::Style,
 };
 use rand::{thread_rng, Rng};
@@ -164,12 +164,12 @@ pub struct Map {
     canvas: Canvas,
 
     // user-configurable, there might be a desired pt to put at the center of the output.
-    center: Option<Pt>,
+    center: Option<Point>,
 }
 impl Map {
     /// Consumes MapConfig, performs bucketing and coloring, and returns an
     /// unadjusted Map instance.
-    pub fn new(map_config: &MapConfig, center: Option<Pt>) -> Result<Map> {
+    pub fn new(map_config: &MapConfig, center: Option<Point>) -> Result<Map> {
         let bucketer = DefaultBucketer2 {};
 
         let mut canvas = Canvas::default();
@@ -252,13 +252,13 @@ impl Map {
 
     fn adjust_centering(&mut self, dest_size: &Size) -> Result<()> {
         let shift = match self.center {
-            Some(desired_center) => Pt(
+            Some(desired_center) => Point(
                 dest_size.width as f64 / 2.0 - desired_center.x,
                 dest_size.height as f64 / 2.0 - desired_center.y,
             ),
             None => {
                 let canvas_bounds = self.canvas.bounds()?;
-                Pt(
+                Point(
                     (dest_size.width as f64 - canvas_bounds.x_max) / 2.0,
                     (dest_size.height as f64 - canvas_bounds.y_max) / 2.0,
                 )
@@ -450,7 +450,7 @@ impl Map {
                     config.size.height as f64 - 2.0 * margin,
                     config.size.width as f64 - 2.0 * margin,
                 ),
-                Pt(margin, margin),
+                Point(margin, margin),
             )?;
             let frame_pg: Pg = frame.0.clone().try_into().unwrap();
             self.canvas.frame = Some(frame);
@@ -599,8 +599,8 @@ mod tests {
                     height: 1024,
                 },
                 0.9,
-                [Pt(0, 0), Pt(0, 1.0), Pt(1.0, 0)],
-                [Pt(0, 0), Pt(0, 921.60), Pt(921.60, 0)],
+                [Point(0, 0), Point(0, 1.0), Point(1.0, 0)],
+                [Point(0, 0), Point(0, 921.60), Point(921.60, 0)],
             ),
             // rescale: 100 * 0.9 = 90
             (
@@ -609,8 +609,8 @@ mod tests {
                     height: 1000,
                 },
                 0.9,
-                [Pt(0, 0), Pt(0, 1), Pt(1, 0)],
-                [Pt(0, 0), Pt(0, 900), Pt(900, 0)],
+                [Point(0, 0), Point(0, 1), Point(1, 0)],
+                [Point(0, 0), Point(0, 900), Point(900, 0)],
             ),
         ] {
             let obj = Obj::Pg(Pg(initial)?);

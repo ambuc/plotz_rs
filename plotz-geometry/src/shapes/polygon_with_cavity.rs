@@ -5,7 +5,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::PointLoc,
     obj::ObjType2d,
-    shapes::{point::Pt, polygon::Pg},
+    shapes::{point::Point, polygon::Pg},
     Object,
 };
 use anyhow::{anyhow, Result};
@@ -43,14 +43,14 @@ impl Bounded for Pgc {
     }
 }
 
-crate::ops_defaults_t!(Pgc, Pt);
+crate::ops_defaults_t!(Pgc, Point);
 
 impl Object for Pgc {
     fn objtype(&self) -> ObjType2d {
         ObjType2d::Polygon2dWithCavities
     }
 
-    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    fn iter(&self) -> Box<dyn Iterator<Item = &Point> + '_> {
         Box::new(
             self.outer
                 .iter()
@@ -58,7 +58,7 @@ impl Object for Pgc {
         )
     }
 
-    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Point> + '_> {
         Box::new(
             self.outer
                 .iter_mut()

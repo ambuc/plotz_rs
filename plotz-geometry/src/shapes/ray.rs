@@ -3,7 +3,7 @@
 use crate::{
     intersection::IntersectionResult,
     shapes::{
-        point::{PolarPt, Pt},
+        point::{Point, PolarPt},
         segment::Sg,
     },
 };
@@ -12,7 +12,7 @@ use std::f64::consts::TAU;
 /// A ray which emits from a pt and goes in a direction.
 #[derive(Copy, Clone)]
 pub struct Ry {
-    pt: Pt,
+    pt: Point,
     angle_out_rad: f64,
 }
 
@@ -20,7 +20,7 @@ pub struct Ry {
 ///
 /// As a favor, we mod the incoming |angle_out_rad|  by TAU.
 #[allow(non_snake_case)]
-pub fn Ry(pt: Pt, angle_out_rad: f64) -> Ry {
+pub fn Ry(pt: Point, angle_out_rad: f64) -> Ry {
     Ry {
         pt,
         angle_out_rad: angle_out_rad % TAU,

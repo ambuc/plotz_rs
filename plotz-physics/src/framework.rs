@@ -1,6 +1,6 @@
 use crate::particle::*;
 
-use plotz_geometry::shapes::point::Pt;
+use plotz_geometry::shapes::point::Point;
 use std::collections::HashMap;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
@@ -36,20 +36,20 @@ impl<T> Framework<T> {
 
     pub fn advance(&mut self) {
         // make array of next positions
-        let mut deltas: Vec<(uuid::Uuid, Pt)> = vec![];
+        let mut deltas: Vec<(uuid::Uuid, Point)> = vec![];
 
         // TODO(ambuc): parallelize this !
         for (uuid, particle) in self.particles_mobile() {
-            let delta: Pt = self
+            let delta: Point = self
                 .charged_particles_which_are_not(*uuid)
-                .map(|(_uuid, extant_particle)| -> Pt {
+                .map(|(_uuid, extant_particle)| -> Point {
                     let m1 = particle.charge.unwrap_or(1.0);
                     let m2 = extant_particle.charge.unwrap_or(1.0);
                     let r = particle.position.dist(&extant_particle.position);
                     let d = extant_particle.position - particle.position;
                     d * m1 * m2 / r.powf(self.config.pow)
                 })
-                .fold(Pt(0, 0), |acc, x| acc + x);
+                .fold(Point(0, 0), |acc, x| acc + x);
 
             deltas.push((*uuid, delta));
         }

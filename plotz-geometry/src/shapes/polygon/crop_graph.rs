@@ -4,7 +4,7 @@ use crate::{
     crop::{CropType, PointLoc},
     intersection::{Intersection, IntersectionResult, Pair, Which},
     shapes::{
-        point::{is_colinear_n, Pt},
+        point::{is_colinear_n, Point},
         polygon::Pg,
     },
 };
@@ -24,7 +24,7 @@ use typed_builder::TypedBuilder;
 #[derive(Debug, TypedBuilder)]
 pub struct CropGraph<'a> {
     #[builder(default)]
-    graph: DiGraphMap<Pt, ()>,
+    graph: DiGraphMap<Point, ()>,
 
     a: &'a Pg,
 
@@ -40,11 +40,11 @@ pub struct CropGraph<'a> {
     // to one in this vec) before treating it as a hashable value. if it is
     // known,
     #[builder(default)]
-    known_pts: Vec<Pt>,
+    known_pts: Vec<Point>,
 }
 
 impl<'a> CropGraph<'a> {
-    pub fn run(a: &Pg, b: &Pg, crop_type: CropType) -> Result<(Vec<Pg>, DiGraphMap<Pt, ()>)> {
+    pub fn run(a: &Pg, b: &Pg, crop_type: CropType) -> Result<(Vec<Pg>, DiGraphMap<Point, ()>)> {
         let mut crop_graph = CropGraph::builder().a(a).b(b).build();
         crop_graph.build_from_polygons(crop_type);
         crop_graph.remove_nodes_outside_polygon(Which::A);
@@ -70,7 +70,7 @@ impl<'a> CropGraph<'a> {
         ))
     }
 
-    fn normalize_pt(&mut self, pt: &Pt) -> Pt {
+    fn normalize_pt(&mut self, pt: &Point) -> Point {
         // if something in self.known_pts matches, return that instead.
         // otherwise insert pt into known_pts and return it.
 
@@ -278,12 +278,12 @@ impl<'a> CropGraph<'a> {
 
     // Returns a polygon, if possible. An error state here represents some vailed invariant.
     fn extract_polygon(&mut self) -> Result<Option<Pg>> {
-        let mut pts: Vec<Pt> = vec![];
+        let mut pts: Vec<Point> = vec![];
 
         if self.graph.node_count() == 0 {
             return Ok(None);
         }
-        let mut curr_node: Pt = {
+        let mut curr_node: Point = {
             if let Some(pt) = self
                 .graph
                 .nodes()
@@ -304,7 +304,7 @@ impl<'a> CropGraph<'a> {
         while !pts.contains(&curr_node) {
             pts.push(curr_node);
 
-            let next_node: Option<Pt> = match self
+            let next_node: Option<Point> = match self
                 .graph
                 .neighbors_directed(curr_node, Outgoing)
                 .collect::<Vec<_>>()[..]
@@ -400,30 +400,30 @@ mod test {
     use test_case::test_case;
 
     fn u_shape() -> Pg {
-        let a = Pt(60, 60);
-        let b = Pt(70, 60);
-        let c = Pt(80, 60);
-        let d = Pt(90, 60);
-        let e = Pt(70, 75);
-        let f = Pt(80, 75);
-        let g = Pt(60, 90);
-        let h = Pt(90, 90);
+        let a = Point(60, 60);
+        let b = Point(70, 60);
+        let c = Point(80, 60);
+        let d = Point(90, 60);
+        let e = Point(70, 75);
+        let f = Point(80, 75);
+        let g = Point(60, 90);
+        let h = Point(90, 90);
         Pg([a, b, e, f, c, d, h, g, a]).unwrap()
     }
 
     fn h_shape() -> Pg {
-        let a = Pt(60, 40);
-        let b = Pt(70, 40);
-        let c = Pt(70, 70);
-        let d = Pt(80, 70);
-        let e = Pt(80, 40);
-        let f = Pt(90, 40);
-        let g = Pt(90, 110);
-        let h = Pt(80, 110);
-        let i = Pt(80, 80);
-        let j = Pt(70, 80);
-        let k = Pt(70, 110);
-        let l = Pt(60, 110);
+        let a = Point(60, 40);
+        let b = Point(70, 40);
+        let c = Point(70, 70);
+        let d = Point(80, 70);
+        let e = Point(80, 40);
+        let f = Point(90, 40);
+        let g = Point(90, 110);
+        let h = Point(80, 110);
+        let i = Point(80, 80);
+        let j = Point(70, 80);
+        let k = Point(70, 110);
+        let l = Point(60, 110);
         Pg([a, b, c, d, e, f, g, h, i, j, k, l, a]).unwrap()
     }
 
@@ -437,7 +437,7 @@ mod test {
         for (_idx, offset) in iproduct!(0..=5, 0..=4).map(|(i, j)| {
             (
                 (i, j),
-                Pt((i as f64 - 3.0) * margin, (j as f64 - 3.0) * margin),
+                Point((i as f64 - 3.0) * margin, (j as f64 - 3.0) * margin),
             )
         })
         // .filter(|(idx, _)| *idx == (1, 2))
@@ -481,25 +481,25 @@ mod test {
     #[test]
     fn test_reproduce_error() -> Result<()> {
         let a = Pg([
-            Pt(0.19999999999999995559, -0.11299423149111920139),
-            Pt(0.19999999999999995559, 0.16984848098349947243),
-            Pt(0.50710678118654750612, 0.38700576850888046554),
-            Pt(0.49999999999999988898, 0.38198051533946364433),
-            Pt(0.00000000000000000000, 0.02842712474619002450),
-            Pt(0.00000000000000000000, -0.25441558772842887137),
-            Pt(-0.09289321881345258269, -0.32010101267766694066),
-            Pt(0.00000000000000000000, -0.38578643762690512098),
-            Pt(0.29289321881345276033, -0.17867965644035743722),
+            Point(0.19999999999999995559, -0.11299423149111920139),
+            Point(0.19999999999999995559, 0.16984848098349947243),
+            Point(0.50710678118654750612, 0.38700576850888046554),
+            Point(0.49999999999999988898, 0.38198051533946364433),
+            Point(0.00000000000000000000, 0.02842712474619002450),
+            Point(0.00000000000000000000, -0.25441558772842887137),
+            Point(-0.09289321881345258269, -0.32010101267766694066),
+            Point(0.00000000000000000000, -0.38578643762690512098),
+            Point(0.29289321881345276033, -0.17867965644035743722),
         ])?;
 
         let b = Pg([
-            Pt(0.80000000000000004441, -0.53725830020304798929),
-            Pt(0.19999999999999995559, -0.11299423149111920139),
-            Pt(0.19999999999999995559, 0.16984848098349947243),
-            Pt(0.36568542494923800268, 0.28700576850888048774),
-            Pt(0.00000000000000000000, 0.02842712474619002450),
-            Pt(0.00000000000000000000, -0.25441558772842887137),
-            Pt(0.80000000000000004441, -0.82010101267766688515),
+            Point(0.80000000000000004441, -0.53725830020304798929),
+            Point(0.19999999999999995559, -0.11299423149111920139),
+            Point(0.19999999999999995559, 0.16984848098349947243),
+            Point(0.36568542494923800268, 0.28700576850888048774),
+            Point(0.00000000000000000000, 0.02842712474619002450),
+            Point(0.00000000000000000000, -0.25441558772842887137),
+            Point(0.80000000000000004441, -0.82010101267766688515),
         ])?;
 
         let _ = a.crop(&b, CropType::Exclusive)?;

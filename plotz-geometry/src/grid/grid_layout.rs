@@ -4,7 +4,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::Croppable,
     obj::Obj,
-    shapes::point::Pt,
+    shapes::point::Point,
     style::Style,
 };
 use anyhow::Result;
@@ -85,7 +85,7 @@ impl GridLayout {
     }
 
     /// Returns the center of the cubby.
-    pub fn cubby_ctr(&self, (i, j): (usize, usize)) -> Pt {
+    pub fn cubby_ctr(&self, (i, j): (usize, usize)) -> Point {
         self.get_cubby_bounds((i, j)).center()
     }
 

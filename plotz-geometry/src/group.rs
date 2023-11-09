@@ -5,7 +5,7 @@ use crate::{
     bounded::{streaming_bbox, Bounded, Bounds},
     crop::{CropType, Croppable},
     obj::{Obj, ObjType2d},
-    shapes::{point::Pt, polygon::Pg},
+    shapes::{point::Point, polygon::Pg},
     *,
 };
 use anyhow::Result;
@@ -35,7 +35,7 @@ impl<T> Bounded for Group<T> {
     }
 }
 
-crate::ops_generic_defaults_t!(Group, Pt);
+crate::ops_generic_defaults_t!(Group, Point);
 
 impl<T> Croppable for Group<T>
 where
@@ -69,11 +69,11 @@ impl<T> Object for Group<T> {
         ObjType2d::Group2d
     }
 
-    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    fn iter(&self) -> Box<dyn Iterator<Item = &Point> + '_> {
         Box::new(self.0.iter().flat_map(|(x, _)| x.iter()))
     }
 
-    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Point> + '_> {
         Box::new(self.0.iter_mut().flat_map(|(x, _)| x.iter_mut()))
     }
 }

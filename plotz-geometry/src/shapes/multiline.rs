@@ -1,7 +1,7 @@
 //! A 2D multiline.
 #![allow(missing_docs)]
 
-use super::{point::Pt, polygon::Pg, segment::Sg};
+use super::{point::Point, polygon::Pg, segment::Sg};
 use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable},
@@ -21,7 +21,7 @@ pub struct Ml {
     // (2) for each (sg_{i}, sg_{i+1}), sg_{i}.f == sg_{i+1}.i
     // (3) sgs.last().f != sgs.first().i
     // panicable offence. Don't make me panic!
-    pub pts: Vec<Pt>,
+    pub pts: Vec<Point>,
 }
 
 impl Debug for Ml {
@@ -61,10 +61,10 @@ impl TryFrom<Vec<Sg>> for Ml {
     }
 }
 
-impl TryFrom<Vec<Pt>> for Ml {
+impl TryFrom<Vec<Point>> for Ml {
     type Error = anyhow::Error;
 
-    fn try_from(value: Vec<Pt>) -> Result<Self> {
+    fn try_from(value: Vec<Point>) -> Result<Self> {
         if value.is_empty() {
             return Err(anyhow!("Prospective ML was empty!"));
         }
@@ -76,7 +76,7 @@ impl TryFrom<Vec<Pt>> for Ml {
 }
 
 #[allow(non_snake_case)]
-pub fn Ml(a: impl IntoIterator<Item = impl Into<Pt>>) -> Ml {
+pub fn Ml(a: impl IntoIterator<Item = impl Into<Point>>) -> Ml {
     a.into_iter()
         .map(|x| x.into())
         .collect::<Vec<_>>()
@@ -93,7 +93,7 @@ impl Ml {
             .collect()
     }
 
-    pub fn rotate(&mut self, about: &Pt, by_rad: f64) {
+    pub fn rotate(&mut self, about: &Point, by_rad: f64) {
         self.pts
             .iter_mut()
             .for_each(|pt| pt.rotate_inplace(about, by_rad))
@@ -130,15 +130,15 @@ impl Croppable for Ml {
 }
 
 impl IntoIterator for Ml {
-    type Item = Pt;
-    type IntoIter = std::vec::IntoIter<Pt>;
+    type Item = Point;
+    type IntoIter = std::vec::IntoIter<Point>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.pts.into_iter()
     }
 }
 
-crate::ops_defaults_t!(Ml, Pt);
+crate::ops_defaults_t!(Ml, Point);
 
 impl Bounded for Ml {
     fn bounds(&self) -> Result<Bounds> {
@@ -180,11 +180,11 @@ impl Object for Ml {
         ObjType2d::Multiline2d
     }
 
-    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    fn iter(&self) -> Box<dyn Iterator<Item = &Point> + '_> {
         Box::new(self.pts.iter())
     }
 
-    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Point> + '_> {
         Box::new(self.pts.iter_mut())
     }
 }
@@ -194,10 +194,10 @@ mod tests {
     use super::*;
     use test_case::test_case;
 
-    #[test_case(vec![Sg((0,0),(0,1))], Ml{pts: vec![Pt(0,0),Pt(0,1)]}; "one link")]
-    #[test_case(vec![Sg((0,0),(0,1)), Sg((0,1),(1,1))], Ml{pts: vec![Pt(0,0),Pt(0,1),Pt(1,1)]}; "two links")]
+    #[test_case(vec![Sg((0,0),(0,1))], Ml{pts: vec![Point(0,0),Point(0,1)]}; "one link")]
+    #[test_case(vec![Sg((0,0),(0,1)), Sg((0,1),(1,1))], Ml{pts: vec![Point(0,0),Point(0,1),Point(1,1)]}; "two links")]
     // useful test because this self-intersects -- but is not a cycle.
-    #[test_case(vec![Sg((0,0),(0,1)), Sg((0,1),(0,0)), Sg((0,0),(0,1))], Ml{pts: vec![Pt(0,0),Pt(0,1),Pt(0,0),Pt(0,1)]}; "scribble")]
+    #[test_case(vec![Sg((0,0),(0,1)), Sg((0,1),(0,0)), Sg((0,0),(0,1))], Ml{pts: vec![Point(0,0),Point(0,1),Point(0,0),Point(0,1)]}; "scribble")]
     fn test_try_from_vec_sg_should_succeed(val: Vec<Sg>, expected: Ml) -> Result<()> {
         let actual: Ml = val.try_into()?;
         assert_eq!(actual, expected);
@@ -212,31 +212,31 @@ mod tests {
         Ok(())
     }
 
-    #[test_case(vec![Pt(0,0), Pt(0,1)]; "one link")]
-    #[test_case(vec![Pt(0,0), Pt(0,1), Pt(0,0), Pt(0,1)]; "scribble")]
-    #[test_case(vec![Pt(0,0), Pt(0,1), Pt(1,1)]; "two links")]
-    fn test_try_from_vec_pts_should_succeed(val: Vec<Pt>) -> Result<()> {
+    #[test_case(vec![Point(0,0), Point(0,1)]; "one link")]
+    #[test_case(vec![Point(0,0), Point(0,1), Point(0,0), Point(0,1)]; "scribble")]
+    #[test_case(vec![Point(0,0), Point(0,1), Point(1,1)]; "two links")]
+    fn test_try_from_vec_pts_should_succeed(val: Vec<Point>) -> Result<()> {
         let _: Ml = val.try_into()?;
         Ok(())
     }
 
     #[test_case(vec![]; "empty")]
-    #[test_case(vec![Pt(0,0)]; "one")]
-    #[test_case(vec![Pt(0,0), Pt(1,1), Pt(0,0)]; "cycle")]
-    fn test_try_from_vec_pts_should_fail(val: Vec<Pt>) -> Result<()> {
-        assert!(<Vec<Pt> as TryInto<Ml>>::try_into(val).is_err());
+    #[test_case(vec![Point(0,0)]; "one")]
+    #[test_case(vec![Point(0,0), Point(1,1), Point(0,0)]; "cycle")]
+    fn test_try_from_vec_pts_should_fail(val: Vec<Point>) -> Result<()> {
+        assert!(<Vec<Point> as TryInto<Ml>>::try_into(val).is_err());
         Ok(())
     }
 
     #[test]
     fn test_multiline_to_segments() -> Result<()> {
         {
-            let ml: Ml = vec![Pt(0, 0), Pt(0, 1)].try_into()?;
+            let ml: Ml = vec![Point(0, 0), Point(0, 1)].try_into()?;
             assert_eq!(ml.to_segments(), [Sg((0, 0), (0, 1))]);
         }
 
         {
-            let ml: Ml = vec![Pt(0, 0), Pt(0, 1), Pt(0, 2)].try_into()?;
+            let ml: Ml = vec![Point(0, 0), Point(0, 1), Point(0, 2)].try_into()?;
             assert_eq!(ml.to_segments(), [Sg((0, 0), (0, 1)), Sg((0, 1), (0, 2))]);
         }
 

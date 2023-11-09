@@ -5,7 +5,7 @@ use plotz_geometry::{
     crop::PointLoc,
     intersection::{Intersection, IntersectionResult},
     shapes::{
-        point::{PolarPt, Pt},
+        point::{Point, PolarPt},
         polygon::Pg,
         ray::Ry,
         segment::Sg,
@@ -98,7 +98,7 @@ impl Tile {
     // but that's it. you have to place this somewhere sensible upon usage.
     pub fn to_naive_pg(&self) -> Pg {
         let vertex_turn_angles: &[f64] = &self.angles_deg();
-        let mut cursor_position = Pt(0, 0);
+        let mut cursor_position = Point(0, 0);
         let mut cursor_angle_rad = 0.0;
         let mut accumulated = vec![cursor_position];
         for vertex_turn_angle in vertex_turn_angles
@@ -114,7 +114,7 @@ impl Tile {
         // very last point, Pg() automatically closes it for us.
         accumulated.pop();
         let mut pg = Pg(accumulated).unwrap();
-        pg.rotate(&Pt(0, 0), 0.00001);
+        pg.rotate(&Point(0, 0), 0.00001);
         pg
     }
 
@@ -257,7 +257,7 @@ impl PlacedTile {
     }
 
     pub fn to_annotated_placed_tiles(&self) -> Result<AnnotatedPlacedTile> {
-        let axis = Pt(0, 0);
+        let axis = Point(0, 0);
         let offset = 0.01;
 
         Ok(AnnotatedPlacedTile {
@@ -281,14 +281,14 @@ impl PlacedTile {
         })
     }
 
-    pub fn test_pts(&self) -> Result<Vec<Pt>> {
+    pub fn test_pts(&self) -> Result<Vec<Point>> {
         let cand_ctr = self.pg.bounds()?.center();
         Ok(std::iter::once(cand_ctr)
             .chain(
                 self.pg
                     .to_segments()
                     .iter()
-                    .map(|sg| -> Pt { sg.midpoint() }),
+                    .map(|sg| -> Point { sg.midpoint() }),
             )
             .chain(self.pg.pts.iter().map(|pt| pt.avg(&cand_ctr)))
             .collect::<Vec<_>>())

@@ -1,4 +1,4 @@
-use plotz_geometry::shapes::point::Pt;
+use plotz_geometry::shapes::point::Point;
 use typed_builder::TypedBuilder;
 
 pub enum Mobility {
@@ -14,7 +14,7 @@ pub enum Visibility {
 #[derive(TypedBuilder)]
 pub struct Particle<T> {
     #[builder(setter(into))]
-    pub position: Pt,
+    pub position: Point,
 
     pub mobility: Mobility,
 
@@ -28,7 +28,7 @@ pub struct Particle<T> {
     pub metadata: Option<T>,
 
     #[builder(default=vec![])]
-    pub history: Vec<Pt>,
+    pub history: Vec<Point>,
 }
 
 impl<T> Particle<T> {

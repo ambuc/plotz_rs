@@ -11,7 +11,7 @@ use plotz_color::BLACK;
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{multiline::Ml, point::Pt, polygon::Pg, segment::Sg},
+    shapes::{multiline::Ml, point::Point, polygon::Pg, segment::Sg},
     style::Style,
 };
 use rand::seq::SliceRandom;
@@ -28,7 +28,7 @@ enum Instr {
 #[derive(Debug)]
 struct Display(Vec<Instr>);
 
-fn pts_eq_within(a: Pt, b: Pt, epsilon: f64) -> bool {
+fn pts_eq_within(a: Point, b: Point, epsilon: f64) -> bool {
     a.dist(&b) < epsilon
 }
 fn vals_eq_within(a: f64, b: f64, epsilon: f64) -> bool {

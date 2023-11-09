@@ -9,7 +9,7 @@ use plotz_core::{
     map::{Map, MapConfig},
     svg::Size,
 };
-use plotz_geometry::shapes::point::Pt;
+use plotz_geometry::shapes::point::Point;
 
 #[derive(FromArgs, Debug)]
 #[argh(description = "...")]
@@ -61,7 +61,7 @@ fn main_inner(args: Args) -> Result<()> {
     let map = Map::new(
         &map_config,
         match (args.center_lat, args.center_lng) {
-            (Some(x), Some(y)) => Some(Pt(y, x)),
+            (Some(x), Some(y)) => Some(Point(y, x)),
             _ => None,
         },
     )?;

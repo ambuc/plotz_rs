@@ -13,7 +13,7 @@ use itertools::Itertools;
 use plotz_geometry::{
     bounded::{streaming_bbox, Bounded, Bounds},
     obj::Obj,
-    shapes::point::Pt,
+    shapes::point::Point,
     style::Style,
     *,
 };
@@ -66,7 +66,7 @@ impl Canvas {
     }
 
     /// Mutates every object in the canvas according to some |f|.
-    pub fn mutate_all(&mut self, f: impl Fn(&mut Pt)) {
+    pub fn mutate_all(&mut self, f: impl Fn(&mut Point)) {
         self.objs_iter_mut().for_each(|o| o.iter_mut().for_each(&f))
     }
 
@@ -106,7 +106,7 @@ impl Canvas {
 
             self.dos_by_bucket.iter_mut().for_each(|(_bucket, dos)| {
                 dos.iter_mut().for_each(|(obj, _style)| {
-                    obj.iter_mut().for_each(|pt: &mut Pt| {
+                    obj.iter_mut().for_each(|pt: &mut Point| {
                         *pt += translate_diff;
                     });
                 });

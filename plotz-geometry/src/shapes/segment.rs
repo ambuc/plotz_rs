@@ -8,7 +8,7 @@ use crate::{
     interpolate::interpolate_2d_checked,
     intersection::{Intersection, IntersectionResult, MultipleIntersections},
     obj::ObjType2d,
-    shapes::{point::Pt, polygon::Pg, ray::Ry},
+    shapes::{point::Point, polygon::Pg, ray::Ry},
     Object,
 };
 use anyhow::{anyhow, Result};
@@ -42,14 +42,14 @@ pub enum Contains {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Sg {
     /// The initial point of the segment.
-    pub i: Pt,
+    pub i: Point,
     /// The final point of the segment.
-    pub f: Pt,
+    pub f: Point,
 }
 
 /// An alternate constructor for segments.
 #[allow(non_snake_case)]
-pub fn Sg(i: impl Into<Pt>, f: impl Into<Pt>) -> Sg {
+pub fn Sg(i: impl Into<Point>, f: impl Into<Point>) -> Sg {
     Sg {
         i: i.into(),
         f: f.into(),
@@ -58,7 +58,7 @@ pub fn Sg(i: impl Into<Pt>, f: impl Into<Pt>) -> Sg {
 
 impl Sg {
     // Internal helper function; see https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/.
-    fn _ccw(&self, other: &Pt) -> Result<_Orientation> {
+    fn _ccw(&self, other: &Point) -> Result<_Orientation> {
         use std::cmp::Ordering;
         match PartialOrd::partial_cmp(
             &((other.y - self.i.y) * (self.f.x - self.i.x)
@@ -86,13 +86,13 @@ impl Sg {
 
     /// A rotation operation, for rotating a line segment about a point. Accepts
     /// a |by| argument in radians.
-    pub fn rotate(&mut self, about: &Pt, by: f64) {
+    pub fn rotate(&mut self, about: &Point, by: f64) {
         self.i.rotate_inplace(about, by);
         self.f.rotate_inplace(about, by);
     }
 
     /// Returns true if this line segment has point |other| along it.
-    pub fn line_segment_contains_pt(&self, other: &Pt) -> Option<Contains> {
+    pub fn line_segment_contains_pt(&self, other: &Point) -> Option<Contains> {
         if *other == self.i {
             return Some(Contains::AtStart);
         }
@@ -158,7 +158,7 @@ impl Sg {
         (p1_x, p1_y): (f64, f64),
         (p2_x, p2_y): (f64, f64),
         (p3_x, p3_y): (f64, f64),
-    ) -> Option<Pt> {
+    ) -> Option<Point> {
         let s1_x = p1_x - p0_x;
         let s1_y = p1_y - p0_y;
         let s2_x = p3_x - p2_x;
@@ -170,7 +170,7 @@ impl Sg {
         if (0_f64..=1_f64).contains(&s) && (0_f64..=1_f64).contains(&t) {
             let i_x = p0_x + (t * s1_x);
             let i_y = p0_y + (t * s1_y);
-            return Some(Pt(i_x, i_y));
+            return Some(Point(i_x, i_y));
         }
         None
     }
@@ -193,7 +193,7 @@ impl Sg {
     }
 
     /// Midpoint of a segment.
-    pub fn midpoint(&self) -> Pt {
+    pub fn midpoint(&self) -> Point {
         (self.i + self.f) / 2.0
     }
 
@@ -211,7 +211,7 @@ impl Sg {
     }
 }
 
-crate::ops_defaults_t!(Sg, Pt);
+crate::ops_defaults_t!(Sg, Point);
 
 impl Bounded for Sg {
     fn bounds(&self) -> Result<Bounds> {
@@ -312,11 +312,11 @@ impl Object for Sg {
         ObjType2d::Segment2d
     }
 
-    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    fn iter(&self) -> Box<dyn Iterator<Item = &Point> + '_> {
         Box::new(std::iter::once(&self.i).chain(std::iter::once(&self.f)))
     }
 
-    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Point> + '_> {
         Box::new(std::iter::once(&mut self.i).chain(std::iter::once(&mut self.f)))
     }
 }
@@ -335,15 +335,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0, 2);
-        let b = Pt(1, 2);
-        let c = Pt(2, 2);
-        let d = Pt(0, 1);
-        let e = Pt(1, 1);
-        let f = Pt(2, 1);
-        let g = Pt(0, 0);
-        let h = Pt(1, 0);
-        let i = Pt(2, 0);
+        let a = Point(0, 2);
+        let b = Point(1, 2);
+        let c = Point(2, 2);
+        let d = Point(0, 1);
+        let e = Point(1, 1);
+        let f = Point(2, 1);
+        let g = Point(0, 0);
+        let h = Point(1, 0);
+        let i = Point(2, 0);
 
         // m=0
         assert_eq!(Sg(g, h).slope(), 0.0);
@@ -393,7 +393,7 @@ mod tests {
         use float_eq::assert_float_eq;
         use std::f64::consts::PI;
 
-        let origin = Pt(0, 0);
+        let origin = Point(0, 0);
 
         //      ^
         //      |
@@ -459,8 +459,8 @@ mod tests {
 
     #[test]
     fn test_equality() {
-        let a = Pt(0, 2);
-        let b = Pt(1, 2);
+        let a = Point(0, 2);
+        let b = Point(1, 2);
         assert!(Sg(a, b) == Sg(a, b));
         assert!(Sg(a, b) != Sg(b, a));
     }
@@ -475,12 +475,12 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0, 2);
-        let b = Pt(1, 2);
-        let c = Pt(2, 2);
-        let e = Pt(1, 1);
-        let g = Pt(0, 0);
-        let i = Pt(2, 0);
+        let a = Point(0, 2);
+        let b = Point(1, 2);
+        let c = Point(2, 2);
+        let e = Point(1, 1);
+        let g = Point(0, 0);
+        let i = Point(2, 0);
 
         // colinear
         assert_eq!(
@@ -600,8 +600,8 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0, 2);
-        let c = Pt(2, 2);
+        let a = Point(0, 2);
+        let c = Point(2, 2);
 
         assert_eq!(
             Sg(a, c).line_segment_contains_pt(&a).unwrap(),
@@ -612,8 +612,8 @@ mod tests {
     fn test_segment() {
         assert_eq!(
             Sg {
-                i: Pt(0, 0),
-                f: Pt(0, 1)
+                i: Point(0, 0),
+                f: Point(0, 1)
             },
             Sg((0, 0), (0, 1))
         );
@@ -679,10 +679,10 @@ mod tests {
         assert_eq!(b.y_max, 2.0);
         assert_eq!(b.x_min, 0.0);
         assert_eq!(b.x_max, 1.0);
-        assert_eq!(b.x_min_y_min(), Pt(0, 1));
-        assert_eq!(b.x_min_y_max(), Pt(0, 2));
-        assert_eq!(b.x_max_y_min(), Pt(1, 1));
-        assert_eq!(b.x_max_y_max(), Pt(1, 2));
+        assert_eq!(b.x_min_y_min(), Point(0, 1));
+        assert_eq!(b.x_min_y_max(), Point(0, 2));
+        assert_eq!(b.x_max_y_min(), Point(1, 1));
+        assert_eq!(b.x_max_y_max(), Point(1, 2));
         Ok(())
     }
 }

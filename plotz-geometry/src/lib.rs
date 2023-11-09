@@ -16,7 +16,7 @@ pub mod style;
 #[macro_use]
 pub mod macros;
 
-use crate::{obj::Obj, shapes::point::Pt, style::Style};
+use crate::{obj::Obj, shapes::point::Point, style::Style};
 use enum_dispatch::enum_dispatch;
 use obj::ObjType2d;
 use shapes::text::Txt;
@@ -78,8 +78,8 @@ pub trait Object {
     fn objtype(&self) -> ObjType2d;
 
     /// Iterator
-    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_>;
+    fn iter(&self) -> Box<dyn Iterator<Item = &Point> + '_>;
 
     /// Mutable iterator
-    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_>;
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Point> + '_>;
 }

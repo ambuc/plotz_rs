@@ -10,7 +10,7 @@ use plotz_core::{
 use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
-    shapes::{curve::CurveArc, multiline::Ml, point::Pt, polygon::Pg, segment::Sg},
+    shapes::{curve::CurveArc, multiline::Ml, point::Point, polygon::Pg, segment::Sg},
     style::Style,
 };
 use rand::{thread_rng, Rng};
@@ -36,7 +36,7 @@ struct Args {
 }
 
 fn main() -> Result<()> {
-    let uniform_shift = Pt(0, 0);
+    let uniform_shift = Point(0, 0);
 
     let args: Args = argh::from_env();
 
@@ -69,7 +69,7 @@ fn main() -> Result<()> {
         for j in (0..=(700 / GRID_GRANULARITY)).map(|n| n * GRID_GRANULARITY) {
             let dx = thread_rng().gen_range(ARROW_RANGE.clone());
             let dy = thread_rng().gen_range(ARROW_RANGE.clone());
-            let arrow_i = Pt(i as f64, j as f64);
+            let arrow_i = Point(i as f64, j as f64);
             let arrow_f = arrow_i + (dx, dy) + uniform_shift;
             let arrow = Sg(arrow_i, arrow_f);
             arrows_store.push(arrow);
@@ -97,7 +97,7 @@ fn main() -> Result<()> {
                 let cluster_color = random_color();
                 let rx = thread_rng().gen_range(0..=900);
                 let ry = thread_rng().gen_range(0..=700);
-                let cluster_center = Pt(rx, ry);
+                let cluster_center = Point(rx, ry);
 
                 (0..NUM_PTS_PER_CLUSTER)
                     .into_par_iter()
@@ -111,14 +111,14 @@ fn main() -> Result<()> {
                         let num_steps = thread_rng().gen_range(NUM_STEPS_RANGE.clone());
                         for _ in 0..=num_steps {
                             let last = history.last().unwrap();
-                            let del: Pt = arrows_store
+                            let del: Point = arrows_store
                                 .iter()
                                 .map(|arrow| {
                                     let scaling_factor: f64 = last.dist(&arrow.i).sqrt();
                                     (arrow.f - arrow.i) * scaling_factor / MOMENTUM
                                 })
-                                .fold(Pt(0, 0), |acc, x| acc + x);
-                            let next: Pt = *last + del;
+                                .fold(Point(0, 0), |acc, x| acc + x);
+                            let next: Point = *last + del;
                             history.push(next);
                         }
 

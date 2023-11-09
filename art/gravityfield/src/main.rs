@@ -11,7 +11,7 @@ use plotz_core::{
 use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
-    shapes::{curve::CurveArc, multiline::Ml, point::Pt, polygon::Pg},
+    shapes::{curve::CurveArc, multiline::Ml, point::Point, polygon::Pg},
     style::Style,
 };
 use plotz_physics::{framework, particle::*};
@@ -89,7 +89,7 @@ fn main() -> Result<()> {
 
         for _ in 0..NUM_CLUSTERS {
             let cluster_color = random_color();
-            let cluster_center = Pt(
+            let cluster_center = Point(
                 thread_rng().gen_range(0..=900),
                 thread_rng().gen_range(0..=700),
             );

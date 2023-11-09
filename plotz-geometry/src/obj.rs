@@ -6,7 +6,7 @@ use crate::{
     crop::{CropType, Croppable, PointLoc},
     group::Group,
     shapes::{
-        curve::CurveArc, multiline::Ml, point::Pt, polygon::Pg, polygon_with_cavity::Pgc,
+        curve::CurveArc, multiline::Ml, point::Point, polygon::Pg, polygon_with_cavity::Pgc,
         segment::Sg, text::Txt,
     },
     style::Style,
@@ -32,7 +32,7 @@ pub enum ObjType2d {
 #[derive(Debug, PartialEq, Clone)]
 #[enum_dispatch]
 pub enum Obj {
-    Pt(Pt),              // A point.
+    Pt(Point),           // A point.
     Pg(Pg),              // A polygon.
     Pgc(Pgc),            // A polygon with cavities.
     Sg(Sg),              // A segment.
@@ -42,7 +42,7 @@ pub enum Obj {
     Group(Group<Style>), // A group of other objects.
 }
 
-crate::ops_defaults_t!(Obj, Pt);
+crate::ops_defaults_t!(Obj, Point);
 
 impl Croppable for Obj {
     type Output = Obj;

@@ -9,7 +9,7 @@ use crate::{
 };
 use plotz_geometry::{
     obj::Obj,
-    shapes::{point::Pt, polygon::Pg, segment::Sg},
+    shapes::{point::Point, polygon::Pg, segment::Sg},
 };
 
 // Any oblique projection.  https://en.wikipedia.org/wiki/3D_projection#Oblique_projection
@@ -18,9 +18,9 @@ pub struct Oblique {
     u_src: Pt3,
     v_src: Pt3,
     w_src: Pt3,
-    u_dst: Pt,
-    v_dst: Pt,
-    w_dst: Pt,
+    u_dst: Point,
+    v_dst: Point,
+    w_dst: Point,
 }
 
 impl Default for Oblique {
@@ -33,9 +33,9 @@ impl Default for Oblique {
             u_src: Pt3(1, 0, 0),
             v_src: Pt3(0, 1, 0),
             w_src: Pt3(0, 0, 1),
-            u_dst: Pt(-1, spread),
-            v_dst: Pt(1, spread),
-            w_dst: Pt(0, -1),
+            u_dst: Point(-1, spread),
+            v_dst: Point(1, spread),
+            w_dst: Point(0, -1),
         }
     }
 }
@@ -45,7 +45,7 @@ impl Oblique {
         Pt3(0, 0, 0) - self.u_src - self.v_src - self.w_src
     }
 
-    pub fn project_pt3(&self, pt3d: &Pt3) -> Pt {
+    pub fn project_pt3(&self, pt3d: &Pt3) -> Point {
         (self.u_dst * pt3d.dot(&self.u_src))
             + (self.v_dst * pt3d.dot(&self.v_src))
             + (self.w_dst * pt3d.dot(&self.w_src))

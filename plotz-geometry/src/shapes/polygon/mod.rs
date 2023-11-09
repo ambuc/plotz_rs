@@ -11,7 +11,7 @@ use crate::{
     intersection::IntersectionResult,
     obj::ObjType2d,
     shapes::{
-        point::Pt,
+        point::Point,
         segment::{Contains, Sg},
     },
     *,
@@ -29,7 +29,7 @@ use std::{
 
 #[derive(Debug, Clone)]
 pub struct Pg {
-    pub pts: Vec<Pt>,
+    pub pts: Vec<Point>,
 }
 
 impl PartialEq for Pg {
@@ -72,8 +72,8 @@ impl PartialEq for Pg {
 /// three or more points. Constructing a polygon from two or fewer points will
 /// result in a PolygonConstructorError
 #[allow(non_snake_case)]
-pub fn Pg(a: impl IntoIterator<Item = impl Into<Pt>>) -> Result<Pg> {
-    let mut pts: Vec<Pt> = a.into_iter().map(|x| x.into()).collect();
+pub fn Pg(a: impl IntoIterator<Item = impl Into<Point>>) -> Result<Pg> {
+    let mut pts: Vec<Point> = a.into_iter().map(|x| x.into()).collect();
     if pts.len() <= 2 {
         return Err(anyhow!("two or fewer points"));
     }
@@ -91,14 +91,14 @@ pub fn Pg(a: impl IntoIterator<Item = impl Into<Pt>>) -> Result<Pg> {
 
 /// Convenience constructor for rectangles.
 #[allow(non_snake_case)]
-pub fn Rect<T1, T2>(tl: impl Into<Pt>, (w, h): (T1, T2)) -> Result<Pg>
+pub fn Rect<T1, T2>(tl: impl Into<Point>, (w, h): (T1, T2)) -> Result<Pg>
 where
     f64: From<T1>,
     f64: From<T2>,
     T1: std::marker::Copy,
     T2: std::marker::Copy,
 {
-    let tl: Pt = tl.into();
+    let tl: Point = tl.into();
     Pg([tl, tl + (w, 0), tl + (w, h), tl + (0, h)])
 }
 
@@ -122,7 +122,7 @@ impl Pg {
 
     /// A rotation operation, for rotating one polygon about a point. Accepts a
     /// |by| argument in radians.
-    pub fn rotate(&mut self, about: &Pt, by: f64) {
+    pub fn rotate(&mut self, about: &Point, by: f64) {
         self.pts
             .iter_mut()
             .for_each(|pt| pt.rotate_inplace(about, by))
@@ -173,7 +173,7 @@ impl Pg {
 
     /// Calculates whether a point is within, without, or along a closed polygon
     /// using the https://en.wikipedia.org/wiki/Winding_number method.
-    pub fn contains_pt(&self, other: &Pt) -> Result<PointLoc> {
+    pub fn contains_pt(&self, other: &Point) -> Result<PointLoc> {
         for (idx, pt) in self.pts.iter().enumerate() {
             if other == pt {
                 return Ok(PointLoc::OnPoint(idx));
@@ -203,7 +203,7 @@ impl Pg {
     }
 
     /// True if the area or points/edges of this polygon contain a point.
-    pub fn point_is_inside_or_on_border(&self, other: &Pt) -> bool {
+    pub fn point_is_inside_or_on_border(&self, other: &Point) -> bool {
         matches!(
             self.contains_pt(other),
             Ok(PointLoc::Inside | PointLoc::OnPoint(_) | PointLoc::OnSegment(_))
@@ -211,12 +211,12 @@ impl Pg {
     }
 
     /// True if the area of this polygon contains a point.
-    pub fn point_is_inside(&self, other: &Pt) -> bool {
+    pub fn point_is_inside(&self, other: &Point) -> bool {
         matches!(self.contains_pt(other), Ok(PointLoc::Inside))
     }
 
     /// True if the point is totally outside the polygon.
-    pub fn point_is_outside(&self, pt: &Pt) -> bool {
+    pub fn point_is_outside(&self, pt: &Point) -> bool {
         matches!(self.contains_pt(pt), Ok(PointLoc::Outside))
     }
 
@@ -248,11 +248,11 @@ impl Pg {
 
     /// Returns the average point across all points in the polygon. NB: Not the
     /// same as the center or centroid or whatever.
-    pub fn average(&self) -> Pt {
+    pub fn average(&self) -> Point {
         let num: f64 = self.pts.len() as f64;
         let sum_x: f64 = self.pts.iter().map(|pt| pt.x).sum();
         let sum_y: f64 = self.pts.iter().map(|pt| pt.y).sum();
-        Pt(sum_x / num, sum_y / num)
+        Point(sum_x / num, sum_y / num)
     }
 
     // check if this polygon totally contains another.
@@ -339,9 +339,9 @@ impl Croppable for Pg {
 }
 
 /// Angle between points. Projects OI onto OJ and finds the angle IOJ.
-pub fn abp(o: &Pt, i: &Pt, j: &Pt) -> f64 {
-    let a: Pt = *i - *o;
-    let b: Pt = *j - *o;
+pub fn abp(o: &Point, i: &Point, j: &Point) -> f64 {
+    let a: Point = *i - *o;
+    let b: Point = *j - *o;
     let angle = f64::atan2(
         /*det=*/ a.x * b.y - a.y * b.x,
         /*dot=*/ a.x * b.x + a.y * b.y,
@@ -355,15 +355,15 @@ pub fn abp(o: &Pt, i: &Pt, j: &Pt) -> f64 {
 }
 
 impl IntoIterator for Pg {
-    type Item = Pt;
-    type IntoIter = std::vec::IntoIter<Pt>;
+    type Item = Point;
+    type IntoIter = std::vec::IntoIter<Point>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.pts.into_iter()
     }
 }
 
-crate::ops_defaults_t!(Pg, Pt);
+crate::ops_defaults_t!(Pg, Point);
 
 impl Bounded for Pg {
     fn bounds(&self) -> Result<Bounds> {
@@ -405,11 +405,11 @@ impl Object for Pg {
         ObjType2d::Polygon2d
     }
 
-    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
+    fn iter(&self) -> Box<dyn Iterator<Item = &Point> + '_> {
         Box::new(self.pts.iter())
     }
 
-    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Point> + '_> {
         Box::new(self.pts.iter_mut())
     }
 }
@@ -450,15 +450,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0, 2);
-        let b = Pt(1, 2);
-        let c = Pt(2, 2);
-        let d = Pt(0, 1);
-        let e = Pt(1, 1);
-        let f = Pt(2, 1);
-        let g = Pt(0, 0);
-        let h = Pt(1, 0);
-        let i = Pt(2, 0);
+        let a = Point(0, 2);
+        let b = Point(1, 2);
+        let c = Point(2, 2);
+        let d = Point(0, 1);
+        let e = Point(1, 1);
+        let f = Point(2, 1);
+        let g = Point(0, 0);
+        let h = Point(1, 0);
+        let i = Point(2, 0);
 
         // Positive area intersection.
         assert!(Pg([a, c, i, g])?.intersects(&Pg([b, f, h, d])?));
@@ -486,15 +486,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0, 2);
-        let b = Pt(1, 2);
-        let c = Pt(2, 2);
-        let d = Pt(0, 1);
-        let e = Pt(1, 1);
-        let f = Pt(2, 1);
-        let g = Pt(0, 0);
-        let h = Pt(1, 0);
-        let i = Pt(2, 0);
+        let a = Point(0, 2);
+        let b = Point(1, 2);
+        let c = Point(2, 2);
+        let d = Point(0, 1);
+        let e = Point(1, 1);
+        let f = Point(2, 1);
+        let g = Point(0, 0);
+        let h = Point(1, 0);
+        let i = Point(2, 0);
 
         // circle around E. (quadrants 1, 2, 3, 4)
         assert_float_eq!(abp(&e, &f, &b), PI / 2.0, ulps <= 10);
@@ -549,15 +549,15 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0, 2);
-        let b = Pt(1, 2);
-        let c = Pt(2, 2);
-        let d = Pt(0, 1);
-        let e = Pt(1, 1);
-        let f = Pt(2, 1);
-        let g = Pt(0, 0);
-        let h = Pt(1, 0);
-        let i = Pt(2, 0);
+        let a = Point(0, 2);
+        let b = Point(1, 2);
+        let c = Point(2, 2);
+        let d = Point(0, 1);
+        let e = Point(1, 1);
+        let f = Point(2, 1);
+        let g = Point(0, 0);
+        let h = Point(1, 0);
+        let i = Point(2, 0);
 
         // frame [a,c,i,g] should contain a, b, c, d, e, f, g, h, and i.
         let frame1 = Pg([a, c, i, g])?;
@@ -624,7 +624,7 @@ mod tests {
             (227.19, 195.84),
             (228.17, 202.35),
         ])?;
-        let suspicious_pt = Pt(228, 400);
+        let suspicious_pt = Point(228, 400);
         assert_eq!(frame.contains_pt(&suspicious_pt)?, PointLoc::Outside);
         Ok(())
     }
@@ -845,10 +845,10 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0, 2);
-        let c = Pt(2, 2);
-        let g = Pt(0, 0);
-        let i = Pt(2, 0);
+        let a = Point(0, 2);
+        let c = Point(2, 2);
+        let g = Point(0, 0);
+        let i = Point(2, 0);
 
         assert_eq!(
             Pg([a, c, i, g])?.get_curve_orientation(),
@@ -872,10 +872,10 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let a = Pt(0, 2);
-        let c = Pt(2, 2);
-        let g = Pt(0, 0);
-        let i = Pt(2, 0);
+        let a = Point(0, 2);
+        let c = Point(2, 2);
+        let g = Point(0, 0);
+        let i = Point(2, 0);
         let mut p = Pg([a, g, i, c])?;
         assert_eq!(p.get_curve_orientation(), Some(CurveOrientation::Positive));
         p.orient_curve_positively();
@@ -911,20 +911,20 @@ mod tests {
         //   |
         // --G--H--I->
         //   |
-        let h = Pt(1, 0);
-        let f = Pt(2, 1);
-        let b = Pt(1, 2);
-        let d = Pt(0, 1);
+        let h = Point(1, 0);
+        let f = Point(2, 1);
+        let b = Point(1, 2);
+        let d = Point(0, 1);
         let p = Pg([h, f, b, d])?;
         let bounds = p.bounds()?;
         assert_eq!(bounds.y_max, 2.0);
         assert_eq!(bounds.y_min, 0.0);
         assert_eq!(bounds.x_min, 0.0);
         assert_eq!(bounds.x_max, 2.0);
-        assert_eq!(bounds.x_min_y_max(), Pt(0, 2));
-        assert_eq!(bounds.x_min_y_min(), Pt(0, 0));
-        assert_eq!(bounds.x_max_y_max(), Pt(2, 2));
-        assert_eq!(bounds.x_max_y_min(), Pt(2, 0));
+        assert_eq!(bounds.x_min_y_max(), Point(0, 2));
+        assert_eq!(bounds.x_min_y_min(), Point(0, 0));
+        assert_eq!(bounds.x_max_y_max(), Point(2, 2));
+        assert_eq!(bounds.x_max_y_min(), Point(2, 0));
         Ok(())
     }
 
@@ -1005,14 +1005,17 @@ mod tests {
     #[test]
     fn test_into_iter() -> Result<()> {
         let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)])?;
-        let pts: Vec<Pt> = frame.into_iter().collect();
-        assert_eq!(pts, vec![Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)]);
+        let pts: Vec<Point> = frame.into_iter().collect();
+        assert_eq!(
+            pts,
+            vec![Point(1, 0), Point(2, 1), Point(1, 2), Point(0, 1)]
+        );
         Ok(())
     }
 
     #[test]
     fn test_iter() -> Result<()> {
-        let src = vec![Pt(1, 0), Pt(2, 1), Pt(1, 2), Pt(0, 1)];
+        let src = vec![Point(1, 0), Point(2, 1), Point(1, 2), Point(0, 1)];
         let frame = Pg(src.clone())?;
         for (idx, p) in frame.iter().enumerate() {
             assert_eq!(src[idx], *p);

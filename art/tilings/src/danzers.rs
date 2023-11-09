@@ -7,7 +7,7 @@ use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
-        point::{PolarPt, Pt},
+        point::{Point, PolarPt},
         polygon::Pg,
     },
     style::Style,
@@ -86,11 +86,11 @@ impl Kind {
 #[derive(Debug, Clone, Copy)]
 struct Tile {
     kind: Kind,
-    pts: [Pt; 3],
+    pts: [Point; 3],
 }
 
 #[allow(non_snake_case)]
-fn Tile(kind: Kind, p1: Pt, p2: Pt, p3: Pt) -> Tile {
+fn Tile(kind: Kind, p1: Point, p2: Point, p3: Point) -> Tile {
     let e = 1000.0 * f64::EPSILON;
     match kind {
         Kind::T0 => {
@@ -187,7 +187,7 @@ fn expand_tile(tile: &Tile) -> Vec<Tile> {
 }
 
 pub fn make() -> Vec<(Obj, Style)> {
-    let origin = Pt(0.1, 0.1);
+    let origin = Point(0.1, 0.1);
 
     let t0 = Tile(
         Kind::T0,
@@ -218,7 +218,7 @@ pub fn make() -> Vec<(Obj, Style)> {
 
             // centerings
             t_copy.pts.iter_mut().for_each(|pt| {
-                pt.rotate_inplace(&Pt(0, 0), 0.0 * PI);
+                pt.rotate_inplace(&Point(0, 0), 0.0 * PI);
                 *pt *= (1, -1);
                 *pt *= 270.0;
                 *pt += (40.0 + 270.0 * (jdx as f64), 150.0 + 150.0 * (idx as f64));

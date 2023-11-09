@@ -5,7 +5,7 @@ use std::cmp::{max, min};
 
 use crate::{
     crop::PointLoc,
-    shapes::{point::Pt, polygon::Pg},
+    shapes::{point::Point, polygon::Pg},
 };
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
@@ -40,7 +40,7 @@ impl Bounds {
         .unwrap()
     }
 
-    pub fn contains_pt(&self, pt: Pt) -> Result<PointLoc> {
+    pub fn contains_pt(&self, pt: Point) -> Result<PointLoc> {
         self.to_polygon().contains_pt(&pt)
     }
 
@@ -50,21 +50,21 @@ impl Bounds {
     pub fn y_span(&self) -> f64 {
         self.y_min - self.y_max
     }
-    pub fn x_min_y_max(&self) -> Pt {
-        Pt(self.x_min, self.y_max)
+    pub fn x_min_y_max(&self) -> Point {
+        Point(self.x_min, self.y_max)
     }
-    pub fn x_max_y_max(&self) -> Pt {
-        Pt(self.x_max, self.y_max)
+    pub fn x_max_y_max(&self) -> Point {
+        Point(self.x_max, self.y_max)
     }
-    pub fn x_min_y_min(&self) -> Pt {
-        Pt(self.x_min, self.y_min)
+    pub fn x_min_y_min(&self) -> Point {
+        Point(self.x_min, self.y_min)
     }
-    pub fn x_max_y_min(&self) -> Pt {
-        Pt(self.x_max, self.y_min)
+    pub fn x_max_y_min(&self) -> Point {
+        Point(self.x_max, self.y_min)
     }
 
-    pub fn center(&self) -> Pt {
-        Pt(
+    pub fn center(&self) -> Point {
+        Point(
             self.x_min + (self.x_span() / 2.0),
             self.y_max + (self.y_span() / 2.0),
         )
@@ -99,7 +99,7 @@ pub fn streaming_bbox<'a>(it: impl IntoIterator<Item = &'a (impl Bounded + 'a)>)
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use crate::shapes::point::Pt;
+    use crate::shapes::point::Point;
 
     #[test]
     fn test_streaming_bbox() {
@@ -109,9 +109,9 @@ mod test_super {
             Pg([(0, 2), (1, 2), (1, 3)]).unwrap(),
         ];
         let bounds = streaming_bbox(&polygons).unwrap();
-        assert_eq!(bounds.x_min_y_min(), Pt(0, 0));
-        assert_eq!(bounds.x_min_y_max(), Pt(0, 3));
-        assert_eq!(bounds.x_max_y_max(), Pt(3, 3));
-        assert_eq!(bounds.x_max_y_min(), Pt(3, 0));
+        assert_eq!(bounds.x_min_y_min(), Point(0, 0));
+        assert_eq!(bounds.x_min_y_max(), Point(0, 3));
+        assert_eq!(bounds.x_max_y_max(), Point(3, 3));
+        assert_eq!(bounds.x_max_y_min(), Point(3, 0));
     }
 }

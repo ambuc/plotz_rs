@@ -5,10 +5,10 @@ use plotz_geometry::{obj::Obj, shapes::polygon::Pg, style::Style};
 use plotz_color::*;
 use plotz_geometry::{
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::point::Pt,
+    shapes::point::Point,
 };
 
-struct T1([Pt; 3]);
+struct T1([Point; 3]);
 impl Tile for T1 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let sq2: f64 = 2.0_f64.sqrt();
@@ -30,7 +30,7 @@ impl Tile for T1 {
     fn color(&self) -> &'static ColorRGB {
         &WHITE
     }
-    fn pts(&self) -> Vec<Pt> {
+    fn pts(&self) -> Vec<Point> {
         self.0.to_vec()
     }
     fn slope(&self) -> f64 {
@@ -38,7 +38,7 @@ impl Tile for T1 {
         ((c.y - a.y) / (c.x - a.x)).atan()
     }
 }
-struct T2([Pt; 3]);
+struct T2([Point; 3]);
 impl Tile for T2 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let sq2: f64 = 2.0_f64.sqrt();
@@ -60,7 +60,7 @@ impl Tile for T2 {
     fn color(&self) -> &'static ColorRGB {
         &WHITE
     }
-    fn pts(&self) -> Vec<Pt> {
+    fn pts(&self) -> Vec<Point> {
         self.0.to_vec()
     }
     fn slope(&self) -> f64 {
@@ -68,7 +68,7 @@ impl Tile for T2 {
         ((c.y - a.y) / (c.x - a.x)).atan()
     }
 }
-struct T3([Pt; 4]);
+struct T3([Point; 4]);
 impl Tile for T3 {
     fn expand(&self) -> Vec<Box<dyn Tile>> {
         let T3([a, b, c, d]) = self;
@@ -92,7 +92,7 @@ impl Tile for T3 {
     fn color(&self) -> &'static ColorRGB {
         &BLUE
     }
-    fn pts(&self) -> Vec<Pt> {
+    fn pts(&self) -> Vec<Point> {
         self.0.to_vec()
     }
     fn slope(&self) -> f64 {
@@ -104,12 +104,12 @@ impl Tile for T3 {
 trait Tile {
     fn expand(&self) -> Vec<Box<dyn Tile>>;
     fn color(&self) -> &'static ColorRGB;
-    fn pts(&self) -> Vec<Pt>;
+    fn pts(&self) -> Vec<Point>;
     fn slope(&self) -> f64;
 }
 
 pub fn make() -> Vec<(Obj, Style)> {
-    let origin = Pt(0.1, 0.1);
+    let origin = Point(0.1, 0.1);
 
     let sq2: f64 = 2.0_f64.sqrt();
     let ell = 1.0;

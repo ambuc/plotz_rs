@@ -10,7 +10,7 @@ use plotz_geometry::{
     crop::PointLoc,
     grid::grid_layout::{GridLayout, GridLayoutSettings},
     obj::Obj,
-    shapes::{curve::CurveArc, point::Pt},
+    shapes::{curve::CurveArc, point::Point},
     style::Style,
 };
 use rand::{seq::SliceRandom, thread_rng, Rng};
@@ -59,9 +59,9 @@ fn main() -> Result<()> {
                 let cubby = (i, j);
                 let bounds = grid_layout.get_cubby_bounds(cubby);
                 for color in COLORS[0..3].choose_multiple(&mut rng, 3) {
-                    let curve_arc_ctr: Pt = || -> Pt {
+                    let curve_arc_ctr: Point = || -> Point {
                         loop {
-                            let cand = Pt(rng.gen_range(0.0..800.0), rng.gen_range(0.0..1000.0));
+                            let cand = Point(rng.gen_range(0.0..800.0), rng.gen_range(0.0..1000.0));
                             if !matches!(bounds.contains_pt(cand), Ok(PointLoc::Inside)) {
                                 return cand;
                             }

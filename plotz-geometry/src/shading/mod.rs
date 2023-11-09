@@ -6,7 +6,7 @@ use crate::{
     bounded::Bounded,
     crop::Croppable,
     shading::shade_config::ShadeConfig,
-    shapes::{point::Pt, polygon::Pg, segment::Sg},
+    shapes::{point::Point, polygon::Pg, segment::Sg},
 };
 use anyhow::Result;
 use float_ord::FloatOrd;
@@ -22,8 +22,8 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Sg>> {
     let bounds = polygon.bounds()?;
     let mut segments: Vec<Sg> = vec![];
 
-    let xnudge = Pt(1, -1);
-    let ynudge = Pt(-1, 1);
+    let xnudge = Point(1, -1);
+    let ynudge = Point(-1, 1);
     let mut line = if config.slope > 0.0 {
         Sg(
             bounds.x_min_y_max() - xnudge,
