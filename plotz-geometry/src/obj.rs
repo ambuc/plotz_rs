@@ -7,21 +7,22 @@ use crate::{
     group::Group,
     shapes::{curve::CurveArc, ml::Ml, pg::Pg, pgc::Pgc, pt::Pt, sg::Sg, txt::Txt},
     style::Style,
+    Object,
 };
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
 use itertools::Itertools;
 use std::{fmt::Debug, ops::*};
 
-pub enum ObjType {
-    Point,
-    Polygon,
-    PolygonWithCavities,
-    Segment,
-    Multiline,
+pub enum ObjType2d {
+    Point2d,
+    Polygon2d,
+    Polygon2dWithCavities,
+    Segment2d,
+    Multiline2d,
     CurveArc,
-    Text,
-    Group,
+    Text2d,
+    Group2d,
 }
 
 /// Either a polygon or a segment.
@@ -38,78 +39,7 @@ pub enum Obj {
     Group(Group<Style>), // A group of other objects.
 }
 
-macro_rules! impl_ops {
-    ($trait:ident, $fn:ident, $rhs:ident) => {
-        impl<T> $trait<T> for Obj
-        where
-            T: Into<$rhs>,
-        {
-            type Output = Obj;
-            fn $fn(self, rhs: T) -> Self::Output {
-                let rhs = rhs.into();
-                match self {
-                    Obj::CurveArc(x) => Obj::from(x.$fn(rhs)),
-                    Obj::Group(x) => Obj::from(x.$fn(rhs)),
-                    Obj::Ml(x) => Obj::from(x.$fn(rhs)),
-                    Obj::Pg(x) => Obj::from(x.$fn(rhs)),
-                    Obj::Pgc(x) => Obj::from(x.$fn(rhs)),
-                    Obj::Pt(x) => Obj::from(x.$fn(rhs)),
-                    Obj::Sg(x) => Obj::from(x.$fn(rhs)),
-                    Obj::Txt(x) => Obj::from(x.$fn(rhs)),
-                }
-            }
-        }
-    };
-}
-
-macro_rules! impl_ops_assign {
-    ($trait:ident, $fn:ident, $rhs:ident) => {
-        impl<T> $trait<T> for Obj
-        where
-            T: Into<$rhs>,
-        {
-            fn $fn(&mut self, rhs: T) {
-                let rhs = rhs.into();
-                match self {
-                    Obj::CurveArc(x) => {
-                        x.$fn(rhs);
-                    }
-                    Obj::Group(x) => {
-                        x.$fn(rhs);
-                    }
-                    Obj::Ml(x) => {
-                        x.$fn(rhs);
-                    }
-                    Obj::Pg(x) => {
-                        x.$fn(rhs);
-                    }
-                    Obj::Pgc(x) => {
-                        x.$fn(rhs);
-                    }
-                    Obj::Pt(x) => {
-                        x.$fn(rhs);
-                    }
-                    Obj::Sg(x) => {
-                        x.$fn(rhs);
-                    }
-                    Obj::Txt(x) => {
-                        x.$fn(rhs);
-                    }
-                }
-            }
-        }
-    };
-}
-
-impl_ops!(Add, add, Pt);
-impl_ops!(Div, div, f64);
-impl_ops!(Mul, mul, f64);
-impl_ops!(Sub, sub, Pt);
-impl_ops_assign!(AddAssign, add_assign, Pt);
-impl_ops_assign!(DivAssign, div_assign, f64);
-impl_ops_assign!(MulAssign, mul_assign, f64);
-impl_ops_assign!(RemAssign, rem_assign, Pt);
-impl_ops_assign!(SubAssign, sub_assign, Pt);
+crate::ops_defaults_t!(Obj, Pt);
 
 impl Croppable for Obj {
     type Output = Obj;

@@ -7,7 +7,7 @@ use crate::{
     interpolate,
     interpolate::interpolate_2d_checked,
     intersection::{Intersection, IntersectionResult, MultipleIntersections},
-    obj::ObjType,
+    obj::ObjType2d,
     shapes::{pg::Pg, pt::Pt, ry::Ry},
     Object, Roundable,
 };
@@ -315,8 +315,8 @@ impl Roundable for Sg {
 }
 
 impl Object for Sg {
-    fn objtype(&self) -> ObjType {
-        ObjType::Segment
+    fn objtype(&self) -> ObjType2d {
+        ObjType2d::Segment2d
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {

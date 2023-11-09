@@ -5,7 +5,7 @@ use anyhow::Result;
 
 use crate::{
     bounded3::{streaming_bbox, Bounded3, Bounds3},
-    obj3::{Obj3, ObjType},
+    obj3::{Obj3, ObjType3d},
     shapes::{pt3::Pt3, ry3::Ry3},
     Object, Rotatable, RotatableBounds,
 };
@@ -59,8 +59,8 @@ impl<T: 'static> Bounded3 for Group3<T> {
 }
 
 impl<T> Object for Group3<T> {
-    fn objtype(&self) -> ObjType {
-        ObjType::Group
+    fn objtype(&self) -> ObjType3d {
+        ObjType3d::Group3d
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &Pt3> + '_> {

@@ -5,7 +5,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLoc},
     interpolate::interpolate_2d_checked,
-    obj::ObjType,
+    obj::ObjType2d,
     shapes::{
         pg::{abp, Pg},
         pt::{PolarPt, Pt},
@@ -492,8 +492,8 @@ impl Croppable for CurveArc {
 }
 
 impl Object for CurveArc {
-    fn objtype(&self) -> ObjType {
-        ObjType::CurveArc
+    fn objtype(&self) -> ObjType2d {
+        ObjType2d::CurveArc
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {

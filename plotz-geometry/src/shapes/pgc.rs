@@ -4,7 +4,7 @@
 use crate::{
     bounded::{Bounded, Bounds},
     crop::PointLoc,
-    obj::ObjType,
+    obj::ObjType2d,
     shapes::{pg::Pg, pt::Pt},
     Object,
 };
@@ -46,8 +46,8 @@ impl Bounded for Pgc {
 crate::ops_defaults_t!(Pgc, Pt);
 
 impl Object for Pgc {
-    fn objtype(&self) -> ObjType {
-        ObjType::PolygonWithCavities
+    fn objtype(&self) -> ObjType2d {
+        ObjType2d::Polygon2dWithCavities
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {

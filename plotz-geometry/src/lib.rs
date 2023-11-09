@@ -18,7 +18,7 @@ pub mod macros;
 
 use crate::{obj::Obj, shapes::pt::Pt, style::Style};
 use enum_dispatch::enum_dispatch;
-use obj::ObjType;
+use obj::ObjType2d;
 use shapes::txt::Txt;
 use std::ops::*;
 use typed_builder::TypedBuilder;
@@ -91,7 +91,7 @@ pub trait Object {
     }
 
     /// What type of object is this?
-    fn objtype(&self) -> ObjType;
+    fn objtype(&self) -> ObjType2d;
 
     /// Iterator
     fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_>;

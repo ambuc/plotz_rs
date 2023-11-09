@@ -10,11 +10,11 @@ use anyhow::Result;
 use enum_dispatch::enum_dispatch;
 use std::ops::*;
 
-pub enum ObjType {
-    Point,
-    Segment,
-    Polygon,
-    Group,
+pub enum ObjType3d {
+    Point3d,
+    Segment3d,
+    Polygon3d,
+    Group3d,
 }
 
 #[derive(Debug, Clone)]
@@ -67,13 +67,3 @@ impl Rotatable for Obj3 {
         }
     }
 }
-
-// impl Bounded3 for Obj3 {
-// fn bounds3(&self) -> Result<Bounds3> {
-//     match self {
-//         Obj3::Pg3(pg3) => pg3.bounds3(),
-//         Obj3::Sg3(sg3) => sg3.bounds3(),
-//         Obj3::Group3(g3) => g3.bounds3(),
-//     }
-// }
-// }

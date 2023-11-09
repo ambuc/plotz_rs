@@ -9,7 +9,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLoc},
     intersection::IntersectionResult,
-    obj::ObjType,
+    obj::ObjType2d,
     shapes::{
         pt::Pt,
         sg::{Contains, Sg},
@@ -407,8 +407,8 @@ impl Roundable for Pg {
 }
 
 impl Object for Pg {
-    fn objtype(&self) -> ObjType {
-        ObjType::Polygon
+    fn objtype(&self) -> ObjType2d {
+        ObjType2d::Polygon2d
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {

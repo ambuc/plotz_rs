@@ -3,7 +3,7 @@
 
 use crate::{
     bounded::{Bounded, Bounds},
-    obj::ObjType,
+    obj::ObjType2d,
     shapes::{pg::abp, sg::Sg},
     *,
 };
@@ -279,8 +279,8 @@ impl Roundable for Pt {
 }
 
 impl Object for Pt {
-    fn objtype(&self) -> ObjType {
-        ObjType::Point
+    fn objtype(&self) -> ObjType2d {
+        ObjType2d::Point2d
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {

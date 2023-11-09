@@ -3,7 +3,7 @@
 #![allow(missing_docs)]
 
 use crate::{
-    obj3::{Obj3, ObjType},
+    obj3::{Obj3, ObjType3d},
     shapes::{pt3::Pt3, ry3::Ry3},
 };
 use anyhow::Result;
@@ -49,7 +49,7 @@ pub trait Object {
     }
 
     /// What type of object is this?
-    fn objtype(&self) -> ObjType;
+    fn objtype(&self) -> ObjType3d;
 
     /// Iterator
     fn iter(&self) -> Box<dyn Iterator<Item = &Pt3> + '_>;

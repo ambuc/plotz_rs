@@ -4,7 +4,7 @@
 use crate::{
     bounded::{streaming_bbox, Bounded, Bounds},
     crop::{CropType, Croppable},
-    obj::{Obj, ObjType},
+    obj::{Obj, ObjType2d},
     shapes::{pg::Pg, pt::Pt},
     *,
 };
@@ -65,8 +65,8 @@ where
 }
 
 impl<T> Object for Group<T> {
-    fn objtype(&self) -> ObjType {
-        ObjType::Group
+    fn objtype(&self) -> ObjType2d {
+        ObjType2d::Group2d
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {

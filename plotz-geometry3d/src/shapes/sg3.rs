@@ -2,7 +2,7 @@
 
 use crate::{
     bounded3::{streaming_bbox, Bounded3, Bounds3},
-    obj3::ObjType,
+    obj3::ObjType3d,
     shapes::pt3::Pt3,
     Object,
 };
@@ -71,8 +71,8 @@ impl Bounded3 for Sg3 {
 }
 
 impl Object for Sg3 {
-    fn objtype(&self) -> ObjType {
-        ObjType::Segment
+    fn objtype(&self) -> ObjType3d {
+        ObjType3d::Segment3d
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &Pt3> + '_> {

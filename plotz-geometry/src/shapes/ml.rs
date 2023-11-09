@@ -6,7 +6,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable},
     intersection::IntersectionResult,
-    obj::ObjType,
+    obj::ObjType2d,
     Object, Roundable,
 };
 use anyhow::{anyhow, Result};
@@ -182,8 +182,8 @@ impl Roundable for Ml {
 }
 
 impl Object for Ml {
-    fn objtype(&self) -> ObjType {
-        ObjType::Multiline
+    fn objtype(&self) -> ObjType2d {
+        ObjType2d::Multiline2d
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
