@@ -51,16 +51,16 @@ crate::impl_ops_assign!(SubAssign, sub_assign, Pt);
 impl Croppable for Obj {
     type Output = Obj;
     fn crop(&self, frame: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>> {
-        match &self {
+        Ok(match &self {
             Obj::Pt(pt) => {
                 assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(pt), Ok(PointLoc::Outside)) {
-                    Ok(vec![self.clone()])
+                    vec![self.clone()]
                 } else {
-                    Ok(vec![])
+                    vec![]
                 }
             }
-            Obj::Ml(ml) => Ok(ml
+            Obj::Ml(ml) => ml
                 .to_segments()
                 .into_iter()
                 .map(|sg| sg.crop(frame, crop_type))
@@ -68,37 +68,37 @@ impl Croppable for Obj {
                 .collect::<Result<Vec<_>>>()?
                 .into_iter()
                 .map(Obj::from)
-                .collect::<Vec<_>>()),
-            Obj::Pg(pg) => Ok(pg
+                .collect::<Vec<_>>(),
+            Obj::Pg(pg) => pg
                 .crop(frame, crop_type)?
                 .into_iter()
                 .map(Obj::from)
-                .collect::<Vec<_>>()),
+                .collect::<Vec<_>>(),
             Obj::Pgc(_) => unimplemented!("TODO: implement cropping for Pgc."),
-            Obj::Sg(sg) => Ok(sg
+            Obj::Sg(sg) => sg
                 .crop(frame, crop_type)?
                 .into_iter()
                 .map(Obj::from)
-                .collect::<Vec<_>>()),
-            Obj::CurveArc(ca) => Ok(ca
+                .collect::<Vec<_>>(),
+            Obj::CurveArc(ca) => ca
                 .crop(frame, crop_type)?
                 .into_iter()
                 .map(Obj::from)
-                .collect::<Vec<_>>()),
+                .collect::<Vec<_>>(),
             Obj::Txt(ch) => {
                 assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(&ch.pt), Ok(PointLoc::Outside)) {
-                    Ok(vec![self.clone()])
+                    vec![self.clone()]
                 } else {
-                    Ok(vec![])
+                    vec![]
                 }
             }
-            Obj::Group(g) => Ok(g
+            Obj::Group(g) => g
                 .crop(frame, crop_type)?
                 .into_iter()
                 .map(Obj::from)
-                .collect::<Vec<_>>()),
-        }
+                .collect::<Vec<_>>(),
+        })
     }
 
     fn crop_excluding(&self, other: &Pg) -> Result<Vec<Self::Output>>
