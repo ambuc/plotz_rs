@@ -7,7 +7,7 @@ use crate::{
     crop::PointLoc,
     shapes::{pg::Pg, pt::Pt},
 };
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use enum_dispatch::enum_dispatch;
 use float_ord::FloatOrd;
 
@@ -79,56 +79,6 @@ impl Bounds {
 #[enum_dispatch(Obj)]
 pub trait Bounded {
     fn bounds(&self) -> Result<Bounds>;
-}
-
-pub struct BoundsCollector {
-    x_max: FloatOrd<f64>,
-    x_min: FloatOrd<f64>,
-    y_max: FloatOrd<f64>,
-    y_min: FloatOrd<f64>,
-    items_seen: usize,
-}
-
-impl Default for BoundsCollector {
-    fn default() -> Self {
-        BoundsCollector {
-            x_max: FloatOrd(f64::MIN),
-            x_min: FloatOrd(f64::MAX),
-            y_max: FloatOrd(f64::MIN),
-            y_min: FloatOrd(f64::MAX),
-            items_seen: 0,
-        }
-    }
-}
-
-impl BoundsCollector {
-    pub fn items_seen(&self) -> usize {
-        self.items_seen
-    }
-
-    pub fn incorporate(&mut self, b: &impl Bounded) -> Result<()> {
-        let bounds = b.bounds()?;
-        self.x_max = max(self.x_max, FloatOrd(bounds.x_max));
-        self.x_min = min(self.x_min, FloatOrd(bounds.x_min));
-        self.y_max = max(self.y_max, FloatOrd(bounds.y_max));
-        self.y_min = min(self.y_min, FloatOrd(bounds.y_min));
-        self.items_seen += 1;
-        Ok(())
-    }
-}
-
-impl Bounded for BoundsCollector {
-    fn bounds(&self) -> Result<Bounds> {
-        if self.items_seen == 0 {
-            return Err(anyhow!("empty!"));
-        }
-        Ok(Bounds {
-            x_max: self.x_max.0,
-            x_min: self.x_min.0,
-            y_max: self.y_max.0,
-            y_min: self.y_min.0,
-        })
-    }
 }
 
 pub fn streaming_bbox<'a>(it: impl IntoIterator<Item = &'a (impl Bounded + 'a)>) -> Result<Bounds> {

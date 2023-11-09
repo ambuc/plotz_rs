@@ -2,7 +2,7 @@
 #![allow(missing_docs)]
 
 use crate::{
-    bounded::{Bounded, Bounds, BoundsCollector},
+    bounded::{streaming_bbox, Bounded, Bounds},
     crop::{CropType, Croppable},
     obj::{Obj, ObjType},
     shapes::{pg::Pg, pt::Pt},
@@ -31,11 +31,7 @@ impl<T> Group<T> {
 
 impl<T> Bounded for Group<T> {
     fn bounds(&self) -> Result<Bounds> {
-        let mut bc = BoundsCollector::default();
-        for pt in self.iter() {
-            bc.incorporate(pt)?;
-        }
-        bc.bounds()
+        streaming_bbox(self.iter())
     }
 }
 
