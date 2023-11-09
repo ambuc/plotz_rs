@@ -10,7 +10,7 @@ use plotz_core::{
 use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
-    shapes::{curve::CurveArc, multiline::Ml, point::Point, polygon::Pg, segment::Sg},
+    shapes::{curve::CurveArc, multiline::Ml, point::Point, polygon::Pg, segment::Segment},
     style::Style,
 };
 use rand::{thread_rng, Rng};
@@ -48,7 +48,7 @@ fn main() -> Result<()> {
         /*offset=*/ (mgn, mgn),
     )?;
 
-    let mut arrows_store: Vec<Sg> = vec![];
+    let mut arrows_store: Vec<Segment> = vec![];
 
     let arrow_style = Style {
         thickness: 2.0,
@@ -71,7 +71,7 @@ fn main() -> Result<()> {
             let dy = thread_rng().gen_range(ARROW_RANGE.clone());
             let arrow_i = Point(i as f64, j as f64);
             let arrow_f = arrow_i + (dx, dy) + uniform_shift;
-            let arrow = Sg(arrow_i, arrow_f);
+            let arrow = Segment(arrow_i, arrow_f);
             arrows_store.push(arrow);
             if PRINT_ARROWS {
                 dos.extend([

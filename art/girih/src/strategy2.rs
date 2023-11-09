@@ -11,7 +11,7 @@ use plotz_color::BLACK;
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{multiline::Ml, point::Point, polygon::Pg, segment::Sg},
+    shapes::{multiline::Ml, point::Point, polygon::Pg, segment::Segment},
     style::Style,
 };
 use rand::seq::SliceRandom;
@@ -37,14 +37,14 @@ fn vals_eq_within(a: f64, b: f64, epsilon: f64) -> bool {
 
 fn chase(apts: &AnnotatedPlacedTiles) -> Vec<(Obj, Style)> {
     // first of all, we're guaranteed that every element in so2s is a strap. nothing else.
-    let mut inputs: Vec<Sg> = apts.straps.iter().map(|(_, sg)| *sg).collect();
+    let mut inputs: Vec<Segment> = apts.straps.iter().map(|(_, sg)| *sg).collect();
 
     let mut outputs: Vec<(Obj, Style)> = vec![];
     let epsilon = 0.001;
 
     // collect links in the chain. implicitly going sg.i -> sg.f.
     while let Some(first) = inputs.pop() {
-        let mut segments: Vec<Sg> = vec![first];
+        let mut segments: Vec<Segment> = vec![first];
 
         'l: loop {
             let last = segments.last().unwrap();
@@ -68,7 +68,7 @@ fn chase(apts: &AnnotatedPlacedTiles) -> Vec<(Obj, Style)> {
                     .unwrap(),
             };
 
-            let cand_sg: Sg = inputs.remove(next_idx); // get next sg
+            let cand_sg: Segment = inputs.remove(next_idx); // get next sg
 
             let next_sg = if pts_eq_within(cand_sg.i, last.f, epsilon) {
                 cand_sg

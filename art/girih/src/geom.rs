@@ -8,7 +8,7 @@ use plotz_geometry::{
         point::{Point, PolarPt},
         polygon::Pg,
         ray::Ray,
-        segment::Sg,
+        segment::Segment,
     },
 };
 use rand::seq::SliceRandom;
@@ -149,7 +149,7 @@ impl Tile {
 #[derive(Debug)]
 pub struct Constraint<'a> {
     pub src_index: usize,
-    pub target: &'a Sg,
+    pub target: &'a Segment,
 }
 
 #[derive(Debug)]
@@ -159,7 +159,7 @@ pub struct PlacedTile {
 }
 
 impl PlacedTile {
-    pub fn to_strapwork(&self) -> Result<Vec<Sg>> {
+    pub fn to_strapwork(&self) -> Result<Vec<Segment>> {
         let g = self.tile.enum_type;
         let mut strapwork = vec![];
 
@@ -187,11 +187,11 @@ impl PlacedTile {
             let a_ray: Ray = Ray(edge1.midpoint(), a_ray_angle);
 
             if let Some(IntersectionResult::OneIntersection(_)) = a_ray.intersects_sg(edgeb) {
-                strapwork.push(Sg(edge1.midpoint(), edgeb.midpoint()));
+                strapwork.push(Segment(edge1.midpoint(), edgeb.midpoint()));
             } else {
                 // imagine a bridge from a_mdpt to b_mdpt.
                 // out of the center of the bridge rise2 a perpendicular tower.
-                let bridge = Sg(edge1.midpoint(), edgeb.midpoint());
+                let bridge = Segment(edge1.midpoint(), edgeb.midpoint());
                 let tower_a = Ray(bridge.midpoint(), bridge.ray_angle() - FRAC_PI_2);
                 let tower_b = Ray(bridge.midpoint(), bridge.ray_angle() + FRAC_PI_2);
 
@@ -202,7 +202,10 @@ impl PlacedTile {
                     _ => panic!("oh"),
                 };
 
-                strapwork.extend(&[Sg(edge1.midpoint(), ztex), Sg(ztex, edgeb.midpoint())]);
+                strapwork.extend(&[
+                    Segment(edge1.midpoint(), ztex),
+                    Segment(ztex, edgeb.midpoint()),
+                ]);
             }
         }
 
@@ -212,7 +215,7 @@ impl PlacedTile {
 
         let mut s_ver = vec![];
 
-        let tile_contains = |sg: &Sg| {
+        let tile_contains = |sg: &Segment| {
             self.pg.point_is_inside_or_on_border(&sg.i)
                 && self.pg.point_is_inside_or_on_border(&sg.f)
         };
@@ -240,10 +243,10 @@ impl PlacedTile {
 
                     match (perp_ray_1.intersects_sg(&s), perp_ray_2.intersects_sg(&s)) {
                         (Some(IntersectionResult::OneIntersection(Intersection { pt, .. })), _) => {
-                            s_ver.push(Sg(pt_inside, pt));
+                            s_ver.push(Segment(pt_inside, pt));
                         }
                         (_, Some(IntersectionResult::OneIntersection(Intersection { pt, .. }))) => {
-                            s_ver.push(Sg(pt_inside, pt));
+                            s_ver.push(Segment(pt_inside, pt));
                         }
                         _ => panic!("OH"),
                     }
@@ -298,7 +301,7 @@ impl PlacedTile {
 pub struct AnnotatedPlacedTile {
     pub girih: Girih,
     pub outline: Pg,
-    pub straps: Vec<Sg>,
+    pub straps: Vec<Segment>,
 }
 
 #[cfg(test)]

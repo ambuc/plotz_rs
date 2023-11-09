@@ -9,7 +9,7 @@ use crate::{
 };
 use plotz_geometry::{
     obj::Obj,
-    shapes::{point::Point, polygon::Pg, segment::Sg},
+    shapes::{point::Point, polygon::Pg, segment::Segment},
 };
 
 // Any oblique projection.  https://en.wikipedia.org/wiki/3D_projection#Oblique_projection
@@ -50,8 +50,8 @@ impl Oblique {
             + (self.v_dst * pt3d.dot(&self.v_src))
             + (self.w_dst * pt3d.dot(&self.w_src))
     }
-    pub fn project_sg3(&self, sg3: &Sg3) -> Sg {
-        Sg(self.project_pt3(&sg3.i), self.project_pt3(&sg3.f))
+    pub fn project_sg3(&self, sg3: &Sg3) -> Segment {
+        Segment(self.project_pt3(&sg3.i), self.project_pt3(&sg3.f))
     }
     pub fn project_pg3(&self, pg3: &Pg3) -> Pg {
         Pg(pg3.pts.iter().map(|pt3d| self.project_pt3(pt3d))).unwrap()

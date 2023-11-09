@@ -6,7 +6,7 @@ use crate::{
     bounded::Bounded,
     crop::Croppable,
     shading::shade_config::ShadeConfig,
-    shapes::{point::Point, polygon::Pg, segment::Sg},
+    shapes::{point::Point, polygon::Pg, segment::Segment},
 };
 use anyhow::Result;
 use float_ord::FloatOrd;
@@ -18,19 +18,19 @@ fn compute_vertical_step(gap: f64, slope: f64) -> f64 {
 /// Gap controls how far to step between crosshatched lines
 /// Slope controls the angle of the lines.
 // TODO(jbuckland): shade Pgc?
-pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Sg>> {
+pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Segment>> {
     let bounds = polygon.bounds()?;
-    let mut segments: Vec<Sg> = vec![];
+    let mut segments: Vec<Segment> = vec![];
 
     let xnudge = Point(1, -1);
     let ynudge = Point(-1, 1);
     let mut line = if config.slope > 0.0 {
-        Sg(
+        Segment(
             bounds.x_min_y_max() - xnudge,
             bounds.x_min_y_max() + (bounds.x_span(), bounds.x_span() * config.slope) + xnudge,
         )
     } else {
-        Sg(
+        Segment(
             bounds.x_max_y_max() - ynudge,
             bounds.x_max_y_max()
                 + (
@@ -59,9 +59,9 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Sg>> {
             .zip([true, false].iter().cycle())
             .map(|((sa, sb), should_alternate)| {
                 if *should_alternate {
-                    Sg(sa.i, sb.f)
+                    Segment(sa.i, sb.f)
                 } else {
-                    Sg(sb.i, sa.f)
+                    Segment(sb.i, sa.f)
                 }
             })
             .collect())

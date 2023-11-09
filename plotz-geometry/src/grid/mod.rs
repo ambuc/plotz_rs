@@ -4,7 +4,7 @@ pub mod grid_layout;
 
 use crate::{
     obj::Obj,
-    shapes::{point::Point, segment::Sg},
+    shapes::{point::Point, segment::Segment},
     style::Style,
 };
 use num::range_step;
@@ -52,7 +52,7 @@ impl Grid {
             let i = Point((self.x_init + x) as f64, (self.y_init) as f64);
             let f = i + (0, h);
             v.push((
-                Sg(i, f).into(),
+                Segment(i, f).into(),
                 Style {
                     color: self.minor_color,
                     thickness: self.minor_thickness,
@@ -64,7 +64,7 @@ impl Grid {
             let i = Point((self.x_init + x) as f64, (self.y_init) as f64);
             let f = i + (0, h);
             v.push((
-                Sg(i, f).into(),
+                Segment(i, f).into(),
                 Style {
                     color: self.major_color,
                     thickness: self.minor_thickness,
@@ -76,7 +76,7 @@ impl Grid {
             let i = Point((self.x_init) as f64, (self.y_init + y) as f64);
             let f = i + (w, 0);
             v.push((
-                Sg(i, f).into(),
+                Segment(i, f).into(),
                 Style {
                     color: self.minor_color,
                     thickness: self.minor_thickness,
@@ -88,7 +88,7 @@ impl Grid {
             let i = Point((self.x_init) as f64, (self.y_init + y) as f64);
             let f = i + (w, 0);
             v.push((
-                Sg(i, f).into(),
+                Segment(i, f).into(),
                 Style {
                     color: self.major_color,
                     thickness: self.major_thickness,

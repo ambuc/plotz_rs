@@ -1,7 +1,7 @@
 //! A 2D multiline.
 #![allow(missing_docs)]
 
-use super::{point::Point, polygon::Pg, segment::Sg};
+use super::{point::Point, polygon::Pg, segment::Segment};
 use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable},
@@ -37,10 +37,10 @@ impl PartialEq for Ml {
     }
 }
 
-impl TryFrom<Vec<Sg>> for Ml {
+impl TryFrom<Vec<Segment>> for Ml {
     type Error = anyhow::Error;
 
-    fn try_from(value: Vec<Sg>) -> Result<Self> {
+    fn try_from(value: Vec<Segment>) -> Result<Self> {
         let mut pts = vec![];
         if value.is_empty() {
             return Err(anyhow!("Prospective ML was empty!"));
@@ -85,11 +85,11 @@ pub fn Ml(a: impl IntoIterator<Item = impl Into<Point>>) -> Ml {
 }
 
 impl Ml {
-    pub fn to_segments(&self) -> Vec<Sg> {
+    pub fn to_segments(&self) -> Vec<Segment> {
         self.pts
             .iter()
             .zip(self.pts.iter().skip(1))
-            .map(|(i, j)| Sg(*i, *j))
+            .map(|(i, j)| Segment(*i, *j))
             .collect()
     }
 
@@ -107,16 +107,16 @@ impl Ml {
         iproduct!(self.to_segments(), other.to_segments()).flat_map(|(l1, l2)| l1.intersects(&l2))
     }
 
-    pub fn intersects_segment(&self, other: &Sg) -> bool {
+    pub fn intersects_segment(&self, other: &Segment) -> bool {
         self.to_segments()
             .iter()
-            .any(|l: &Sg| l.intersects(other).is_some())
+            .any(|l: &Segment| l.intersects(other).is_some())
     }
 
-    pub fn intersects_segment_detailed(&self, other: &Sg) -> Vec<IntersectionResult> {
+    pub fn intersects_segment_detailed(&self, other: &Segment) -> Vec<IntersectionResult> {
         self.to_segments()
             .iter()
-            .flat_map(|l: &Sg| l.intersects(other))
+            .flat_map(|l: &Segment| l.intersects(other))
             .collect::<Vec<_>>()
     }
 }
@@ -194,21 +194,21 @@ mod tests {
     use super::*;
     use test_case::test_case;
 
-    #[test_case(vec![Sg((0,0),(0,1))], Ml{pts: vec![Point(0,0),Point(0,1)]}; "one link")]
-    #[test_case(vec![Sg((0,0),(0,1)), Sg((0,1),(1,1))], Ml{pts: vec![Point(0,0),Point(0,1),Point(1,1)]}; "two links")]
+    #[test_case(vec![Segment((0,0),(0,1))], Ml{pts: vec![Point(0,0),Point(0,1)]}; "one link")]
+    #[test_case(vec![Segment((0,0),(0,1)), Segment((0,1),(1,1))], Ml{pts: vec![Point(0,0),Point(0,1),Point(1,1)]}; "two links")]
     // useful test because this self-intersects -- but is not a cycle.
-    #[test_case(vec![Sg((0,0),(0,1)), Sg((0,1),(0,0)), Sg((0,0),(0,1))], Ml{pts: vec![Point(0,0),Point(0,1),Point(0,0),Point(0,1)]}; "scribble")]
-    fn test_try_from_vec_sg_should_succeed(val: Vec<Sg>, expected: Ml) -> Result<()> {
+    #[test_case(vec![Segment((0,0),(0,1)), Segment((0,1),(0,0)), Segment((0,0),(0,1))], Ml{pts: vec![Point(0,0),Point(0,1),Point(0,0),Point(0,1)]}; "scribble")]
+    fn test_try_from_vec_sg_should_succeed(val: Vec<Segment>, expected: Ml) -> Result<()> {
         let actual: Ml = val.try_into()?;
         assert_eq!(actual, expected);
         Ok(())
     }
 
     #[test_case(vec![]; "empty")]
-    #[test_case(vec![Sg((0,0),(0,0))]; "no distance")]
-    #[test_case(vec![Sg((0,0),(1,1)), Sg((1,1),(0,0))]; "cycle")]
-    fn test_try_from_vec_sg_should_fail(val: Vec<Sg>) -> Result<()> {
-        assert!(<Vec<Sg> as TryInto<Ml>>::try_into(val).is_err());
+    #[test_case(vec![Segment((0,0),(0,0))]; "no distance")]
+    #[test_case(vec![Segment((0,0),(1,1)), Segment((1,1),(0,0))]; "cycle")]
+    fn test_try_from_vec_sg_should_fail(val: Vec<Segment>) -> Result<()> {
+        assert!(<Vec<Segment> as TryInto<Ml>>::try_into(val).is_err());
         Ok(())
     }
 
@@ -232,12 +232,15 @@ mod tests {
     fn test_multiline_to_segments() -> Result<()> {
         {
             let ml: Ml = vec![Point(0, 0), Point(0, 1)].try_into()?;
-            assert_eq!(ml.to_segments(), [Sg((0, 0), (0, 1))]);
+            assert_eq!(ml.to_segments(), [Segment((0, 0), (0, 1))]);
         }
 
         {
             let ml: Ml = vec![Point(0, 0), Point(0, 1), Point(0, 2)].try_into()?;
-            assert_eq!(ml.to_segments(), [Sg((0, 0), (0, 1)), Sg((0, 1), (0, 2))]);
+            assert_eq!(
+                ml.to_segments(),
+                [Segment((0, 0), (0, 1)), Segment((0, 1), (0, 2))]
+            );
         }
 
         Ok(())

@@ -4,7 +4,7 @@ use crate::{
     intersection::IntersectionResult,
     shapes::{
         point::{Point, PolarPt},
-        segment::Sg,
+        segment::Segment,
     },
 };
 use std::f64::consts::TAU;
@@ -30,14 +30,14 @@ pub fn Ray(pt: Point, angle_out_rad: f64) -> Ray {
 impl Ray {
     /// Returns if one ray intersects another.
     pub fn intersects(&self, other: &Ray) -> Option<IntersectionResult> {
-        let self_sg = Sg(self.pt, self.pt + PolarPt(10.0, self.angle_out_rad));
-        let other_sg = Sg(other.pt, other.pt + PolarPt(10.0, other.angle_out_rad));
+        let self_sg = Segment(self.pt, self.pt + PolarPt(10.0, self.angle_out_rad));
+        let other_sg = Segment(other.pt, other.pt + PolarPt(10.0, other.angle_out_rad));
         self_sg.intersects(&other_sg)
     }
 
     /// Returns if one ray intersects a segment.
-    pub fn intersects_sg(&self, other: &Sg) -> Option<IntersectionResult> {
-        let self_sg = Sg(self.pt, self.pt + PolarPt(10.0, self.angle_out_rad));
+    pub fn intersects_sg(&self, other: &Segment) -> Option<IntersectionResult> {
+        let self_sg = Segment(self.pt, self.pt + PolarPt(10.0, self.angle_out_rad));
         self_sg.intersects(other)
     }
 
@@ -51,8 +51,8 @@ impl Ray {
 
     /// returns a Sg - keeps the initial point, and goes a distance |len| along
     /// the ray.
-    pub fn to_sg(&self, len: f64) -> Sg {
-        Sg {
+    pub fn to_sg(&self, len: f64) -> Segment {
+        Segment {
             i: self.pt,
             f: self.pt + PolarPt(len, self.angle_out_rad),
         }

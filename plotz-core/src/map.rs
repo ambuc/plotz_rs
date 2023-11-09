@@ -19,7 +19,7 @@ use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{point::Point, polygon::Pg, segment::Sg},
+    shapes::{point::Point, polygon::Pg, segment::Segment},
     style::Style,
 };
 use rand::{thread_rng, Rng};
@@ -407,7 +407,7 @@ impl Map {
                 .map(|bucket| map_bucket_to_color(&bucket))
                 .unwrap_or(Some(BLACK))
                 .unwrap();
-            let mut hs = HashSet::<Sg>::new();
+            let mut hs = HashSet::<Segment>::new();
             for (obj, _style) in dos.iter() {
                 if let Obj::Sg(sg) = obj {
                     hs.insert(*sg);

@@ -4,7 +4,7 @@
 use crate::{
     bounded::{Bounded, Bounds},
     obj::ObjType2d,
-    shapes::{polygon::abp, segment::Sg},
+    shapes::{polygon::abp, segment::Segment},
     *,
 };
 use anyhow::Result;
@@ -233,7 +233,7 @@ impl Point {
 
     /// Distance between two points.
     pub fn dist(&self, other: &Point) -> f64 {
-        Sg(*self, *other).abs()
+        Segment(*self, *other).abs()
     }
 
     /// Average of two points.

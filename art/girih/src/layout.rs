@@ -2,7 +2,7 @@ use crate::geom::*;
 use anyhow::{anyhow, Result};
 use indicatif::ProgressBar;
 use itertools::Itertools;
-use plotz_geometry::shapes::{point::Point, polygon::Pg, segment::Sg};
+use plotz_geometry::shapes::{point::Point, polygon::Pg, segment::Segment};
 use rand::seq::SliceRandom;
 use std::f64::consts::TAU;
 
@@ -26,7 +26,7 @@ impl Settings {
 #[derive(Debug, Clone)]
 pub struct AnnotatedPlacedTiles {
     pub outlines: Vec<(Girih, Pg)>,
-    pub straps: Vec<(Girih, Sg)>,
+    pub straps: Vec<(Girih, Segment)>,
 }
 
 pub struct Layout {
@@ -55,7 +55,7 @@ impl Layout {
         Ok(spts)
     }
 
-    fn next_bare_edge(&self) -> Result<Sg> {
+    fn next_bare_edge(&self) -> Result<Segment> {
         let mut bare_edges = vec![];
         for placed_tile in &self.placed_tiles {
             for segment in placed_tile.pg.to_segments() {
@@ -109,7 +109,7 @@ impl Layout {
         if cand.pg.to_segments().iter().any(|cand_sg| -> bool {
             // returns true if there's a collision
             let mut results: Vec<bool> = vec![];
-            let mut rotor = Sg(cand_sg.i, cand_sg.midpoint());
+            let mut rotor = Segment(cand_sg.i, cand_sg.midpoint());
             rotor.rotate(&cand_sg.i, 0.001 * TAU); // offset
             for _ in 0..=10 {
                 // ten times, rotate the rotor by TAU/10 (or, (2PI)/10)
@@ -150,7 +150,7 @@ impl Layout {
             return Ok(true);
         }
 
-        let next_bare_edge: Sg = self.next_bare_edge()?;
+        let next_bare_edge: Segment = self.next_bare_edge()?;
 
         for g in self.settings.choices() {
             let next_tiles: Vec<_> = [next_bare_edge, next_bare_edge.flip()]

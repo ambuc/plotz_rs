@@ -12,7 +12,7 @@ use crate::{
     obj::ObjType2d,
     shapes::{
         point::Point,
-        segment::{Contains, Sg},
+        segment::{Contains, Segment},
     },
     *,
 };
@@ -114,9 +114,9 @@ pub enum CurveOrientation {
 
 impl Pg {
     /// Returns the segments of a polygon, one at a time.
-    pub fn to_segments(&self) -> Vec<Sg> {
+    pub fn to_segments(&self) -> Vec<Segment> {
         zip(self.pts.iter(), self.pts.iter().cycle().skip(1))
-            .map(|(x, y)| Sg(*x, *y))
+            .map(|(x, y)| Segment(*x, *y))
             .collect()
     }
 
@@ -156,7 +156,7 @@ impl Pg {
     }
 
     /// Returns true if any line segment from this polygon intersects other.
-    pub fn intersects_segment(&self, other: &Sg) -> bool {
+    pub fn intersects_segment(&self, other: &Segment) -> bool {
         self.to_segments()
             .iter()
             .any(|l| l.intersects(other).is_some())
@@ -164,7 +164,7 @@ impl Pg {
 
     /// Returns the detailed set of intersection outcomes between this polygon's
     /// segments and another segment.
-    pub fn intersects_segment_detailed(&self, other: &Sg) -> Vec<IntersectionResult> {
+    pub fn intersects_segment_detailed(&self, other: &Segment) -> Vec<IntersectionResult> {
         self.to_segments()
             .iter()
             .flat_map(|l| l.intersects(other))
@@ -425,16 +425,20 @@ mod tests {
 
         assert_eq!(
             Pg([(0, 0), (0, 1), (0, 2)])?.to_segments(),
-            [Sg((0, 0), (0, 1)), Sg((0, 1), (0, 2)), Sg((0, 2), (0, 0)),]
+            [
+                Segment((0, 0), (0, 1)),
+                Segment((0, 1), (0, 2)),
+                Segment((0, 2), (0, 0)),
+            ]
         );
 
         assert_eq!(
             Pg([(0, 0), (0, 1), (0, 2), (0, 3)])?.to_segments(),
             [
-                Sg((0, 0), (0, 1)),
-                Sg((0, 1), (0, 2)),
-                Sg((0, 2), (0, 3)),
-                Sg((0, 3), (0, 0)),
+                Segment((0, 0), (0, 1)),
+                Segment((0, 1), (0, 2)),
+                Segment((0, 2), (0, 3)),
+                Segment((0, 3), (0, 0)),
             ]
         );
         Ok(())
@@ -960,10 +964,14 @@ mod tests {
             (3, 5),
             (0, 5),
         ])?;
-        let segment = Sg((0, 2), (5, 2));
+        let segment = Segment((0, 2), (5, 2));
         assert_eq!(
             segment.crop_to(&frame)?,
-            vec![Sg((0, 2), (1, 2)), Sg((2, 2), (3, 2)), Sg((4, 2), (5, 2)),]
+            vec![
+                Segment((0, 2), (1, 2)),
+                Segment((2, 2), (3, 2)),
+                Segment((4, 2), (5, 2)),
+            ]
         );
         Ok(())
     }
@@ -972,8 +980,8 @@ mod tests {
     fn test_frame_to_segment_crop() -> Result<()> {
         let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)])?;
         assert_eq!(
-            Sg((0, 2), (2, 0)).crop_to(&frame)?,
-            vec![Sg((0.5, 1.5), (1.5, 0.5))]
+            Segment((0, 2), (2, 0)).crop_to(&frame)?,
+            vec![Segment((0.5, 1.5), (1.5, 0.5))]
         );
         Ok(())
     }
@@ -981,23 +989,23 @@ mod tests {
     fn test_frame_to_segment_crop_02() -> Result<()> {
         let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)])?;
         assert_eq!(
-            Sg((0, 0), (2, 2)).crop_to(&frame)?,
-            vec![Sg((0.5, 0.5), (1.5, 1.5))]
+            Segment((0, 0), (2, 2)).crop_to(&frame)?,
+            vec![Segment((0.5, 0.5), (1.5, 1.5))]
         );
         Ok(())
     }
     #[test]
     fn test_frame_to_segment_crop_empty() -> Result<()> {
         let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)])?;
-        assert_eq!(Sg((0, 2), (2, 2)).crop_to(&frame)?, vec![]);
+        assert_eq!(Segment((0, 2), (2, 2)).crop_to(&frame)?, vec![]);
         Ok(())
     }
     #[test]
     fn test_frame_to_segment_crop_unchanged() -> Result<()> {
         let frame = Pg([(1, 0), (2, 1), (1, 2), (0, 1)])?;
         assert_eq!(
-            Sg((0, 1), (2, 1)).crop_to(&frame)?,
-            vec![Sg((0, 1), (2, 1))]
+            Segment((0, 1), (2, 1)).crop_to(&frame)?,
+            vec![Segment((0, 1), (2, 1))]
         );
         Ok(())
     }
