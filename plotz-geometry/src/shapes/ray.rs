@@ -11,7 +11,7 @@ use std::f64::consts::TAU;
 
 /// A ray which emits from a pt and goes in a direction.
 #[derive(Copy, Clone)]
-pub struct Ry {
+pub struct Ray {
     pt: Point,
     angle_out_rad: f64,
 }
@@ -20,16 +20,16 @@ pub struct Ry {
 ///
 /// As a favor, we mod the incoming |angle_out_rad|  by TAU.
 #[allow(non_snake_case)]
-pub fn Ry(pt: Point, angle_out_rad: f64) -> Ry {
-    Ry {
+pub fn Ray(pt: Point, angle_out_rad: f64) -> Ray {
+    Ray {
         pt,
         angle_out_rad: angle_out_rad % TAU,
     }
 }
 
-impl Ry {
+impl Ray {
     /// Returns if one ray intersects another.
-    pub fn intersects(&self, other: &Ry) -> Option<IntersectionResult> {
+    pub fn intersects(&self, other: &Ray) -> Option<IntersectionResult> {
         let self_sg = Sg(self.pt, self.pt + PolarPt(10.0, self.angle_out_rad));
         let other_sg = Sg(other.pt, other.pt + PolarPt(10.0, other.angle_out_rad));
         self_sg.intersects(&other_sg)
@@ -42,8 +42,8 @@ impl Ry {
     }
 
     /// Returns a version of this ray rotated by |angle| rad.
-    pub fn rotate(&self, angle: f64) -> Ry {
-        Ry {
+    pub fn rotate(&self, angle: f64) -> Ray {
+        Ray {
             pt: self.pt,
             angle_out_rad: (self.angle_out_rad + angle) % TAU,
         }

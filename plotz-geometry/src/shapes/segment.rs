@@ -8,7 +8,7 @@ use crate::{
     interpolate::interpolate_2d_checked,
     intersection::{Intersection, IntersectionResult, MultipleIntersections},
     obj::ObjType2d,
-    shapes::{point::Point, polygon::Pg, ray::Ry},
+    shapes::{point::Point, polygon::Pg, ray::Ray},
     Object,
 };
 use anyhow::{anyhow, Result};
@@ -199,13 +199,13 @@ impl Sg {
 
     /// Generates a ray perpendicular to this segment and emitting from its
     /// midpoint. One of the two angles, dunno which.
-    pub fn ray_perpendicular(&self) -> Ry {
-        Ry(self.midpoint(), self.ray_angle() + FRAC_PI_2)
+    pub fn ray_perpendicular(&self) -> Ray {
+        Ray(self.midpoint(), self.ray_angle() + FRAC_PI_2)
     }
 
     /// Generates both perpendicular rays which emit from the midpoint of this
     /// segment.
-    pub fn rays_perpendicular_both(&self) -> (Ry, Ry) {
+    pub fn rays_perpendicular_both(&self) -> (Ray, Ray) {
         let ray = self.ray_perpendicular();
         (ray.clone().rotate(PI), ray)
     }

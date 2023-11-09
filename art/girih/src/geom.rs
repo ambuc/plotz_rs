@@ -7,7 +7,7 @@ use plotz_geometry::{
     shapes::{
         point::{Point, PolarPt},
         polygon::Pg,
-        ray::Ry,
+        ray::Ray,
         segment::Sg,
     },
 };
@@ -184,7 +184,7 @@ impl PlacedTile {
                 }
             };
 
-            let a_ray: Ry = Ry(edge1.midpoint(), a_ray_angle);
+            let a_ray: Ray = Ray(edge1.midpoint(), a_ray_angle);
 
             if let Some(IntersectionResult::OneIntersection(_)) = a_ray.intersects_sg(edgeb) {
                 strapwork.push(Sg(edge1.midpoint(), edgeb.midpoint()));
@@ -192,8 +192,8 @@ impl PlacedTile {
                 // imagine a bridge from a_mdpt to b_mdpt.
                 // out of the center of the bridge rise2 a perpendicular tower.
                 let bridge = Sg(edge1.midpoint(), edgeb.midpoint());
-                let tower_a = Ry(bridge.midpoint(), bridge.ray_angle() - FRAC_PI_2);
-                let tower_b = Ry(bridge.midpoint(), bridge.ray_angle() + FRAC_PI_2);
+                let tower_a = Ray(bridge.midpoint(), bridge.ray_angle() - FRAC_PI_2);
+                let tower_b = Ray(bridge.midpoint(), bridge.ray_angle() + FRAC_PI_2);
 
                 // ztex lies at the intersection of a_ray and the tower.
                 let ztex = match (tower_a.intersects(&a_ray), tower_b.intersects(&a_ray)) {
