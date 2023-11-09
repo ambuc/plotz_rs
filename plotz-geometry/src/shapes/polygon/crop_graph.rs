@@ -142,7 +142,7 @@ impl<'a> CropGraph<'a> {
                         let from = self.graph.add_node(from_pt_normalized);
                         assert_eq!(from, from_pt_normalized);
 
-                        let to_pt = isxns[0].pt();
+                        let to_pt = isxns[0].pt;
                         let to_pt_normalized = self.normalize_pt(&to_pt);
                         let to = self.graph.add_node(to_pt_normalized);
                         assert_eq!(to, to_pt_normalized);
@@ -153,12 +153,12 @@ impl<'a> CropGraph<'a> {
                     }
 
                     for (i, j) in isxns.iter().tuple_windows() {
-                        let from_pt = i.pt();
+                        let from_pt = i.pt;
                         let from_pt_normalized = self.normalize_pt(&from_pt);
                         let from = self.graph.add_node(from_pt_normalized);
                         assert_eq!(from, from_pt_normalized);
 
-                        let to_pt = j.pt();
+                        let to_pt = j.pt;
                         let to_pt_normalized = self.normalize_pt(&to_pt);
                         let to = self.graph.add_node(to_pt_normalized);
                         assert_eq!(to, to_pt_normalized);
@@ -167,7 +167,7 @@ impl<'a> CropGraph<'a> {
                     }
 
                     {
-                        let from_pt = isxns.last().unwrap().pt();
+                        let from_pt = isxns.last().unwrap().pt;
                         let from_pt_normalized = self.normalize_pt(&from_pt);
                         let from = self.graph.add_node(from_pt_normalized);
                         assert_eq!(from, from_pt_normalized);

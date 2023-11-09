@@ -18,11 +18,8 @@ use std::fmt::Debug;
 ///    occurs. Guaranteed to be 0.0<=x<=1.0.
 #[derive(PartialEq, Copy, Clone)]
 pub struct Intersection {
-    /// pt
     pub pt: Point,
-    /// a_pct
     a_pct: Percent,
-    /// b_pct
     b_pct: Percent,
 }
 
@@ -34,11 +31,6 @@ impl Intersection {
             a_pct: Percent::new(a)?,
             b_pct: Percent::new(b)?,
         })
-    }
-
-    /// The point.
-    pub fn pt(&self) -> Point {
-        self.pt
     }
 
     /// The percent of the way along line A at which the intersection occurs.
