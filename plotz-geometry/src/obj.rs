@@ -6,7 +6,7 @@ use crate::{
     crop::{CropType, Croppable, PointLoc},
     group::Group,
     shapes::{
-        curve::CurveArc, multiline::Ml, point::Point, polygon::Pg, polygon_with_cavity::Pgc,
+        curve::CurveArc, multiline::Multiline, point::Point, polygon::Pg, polygon_with_cavity::Pgc,
         segment::Segment, text::Txt,
     },
     style::Style,
@@ -36,7 +36,7 @@ pub enum Obj {
     Pg(Pg),              // A polygon.
     Pgc(Pgc),            // A polygon with cavities.
     Sg(Segment),         // A segment.
-    Ml(Ml),              // A multiline.
+    Ml(Multiline),       // A multiline.
     CurveArc(CurveArc),  // An arc.
     Txt(Txt),            // A character to be printed in SVG, at a point.
     Group(Group<Style>), // A group of other objects.

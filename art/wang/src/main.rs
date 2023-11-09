@@ -9,7 +9,7 @@ use plotz_core::{
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{multiline::Ml, point::Point, polygon::Pg},
+    shapes::{multiline::Multiline, point::Point, polygon::Pg},
     style::Style,
 };
 use rand::prelude::SliceRandom;
@@ -165,17 +165,19 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)
     .flat_map(|(cell_id, cell, rot)| {
         let mut ret = vec![];
         ret.push({
-            let mut ml: Ml = match cell {
-                Fill::Blue => Ml(vec![(0.25, 0.0), (0.5, 0.25), (0.75, 0.0)]),
-                Fill::Green => Ml(vec![(0.25, 0.0), (0.25, 0.25), (0.75, 0.25), (0.75, 0.0)]),
-                Fill::Red => Ml(vec![
+            let mut ml: Multiline = match cell {
+                Fill::Blue => Multiline(vec![(0.25, 0.0), (0.5, 0.25), (0.75, 0.0)]),
+                Fill::Green => {
+                    Multiline(vec![(0.25, 0.0), (0.25, 0.25), (0.75, 0.25), (0.75, 0.0)])
+                }
+                Fill::Red => Multiline(vec![
                     (0.25, 0.0),
                     (5.0 / 16.0, 3.0 / 16.0),
                     (0.5, 0.25),
                     (11.0 / 16.0, 3.0 / 16.0),
                     (0.75, 0.0),
                 ]),
-                Fill::White => Ml(vec![
+                Fill::White => Multiline(vec![
                     (0.25, 0.0),
                     (7.0 / 16.0, 1.0 / 16.0),
                     (0.5, 0.25),
