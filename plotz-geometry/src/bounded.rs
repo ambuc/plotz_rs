@@ -122,17 +122,16 @@ impl Bounded for BoundsCollector {
     }
 }
 
-/// Given an iterator of bounded items, computes the bounding box for that
-/// collection.
 pub fn streaming_bbox<'a>(it: impl IntoIterator<Item = &'a (impl Bounded + 'a)>) -> Result<Bounds> {
-    let mut bc = BoundsCollector::default();
-    for i in it {
-        bc.incorporate(i)?;
-    }
-    if bc.items_seen == 0 {
-        return Err(anyhow!("no items seen"));
-    }
-    bc.bounds()
+    it.into_iter()
+        .try_fold(
+            BoundsCollector::default(),
+            |mut acc, x| -> Result<BoundsCollector> {
+                acc.incorporate(x)?;
+                Ok(acc)
+            },
+        )?
+        .bounds()
 }
 
 #[cfg(test)]

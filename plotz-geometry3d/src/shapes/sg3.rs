@@ -67,8 +67,8 @@ plotz_geometry::ops_defaults_t!(Sg3, Pt3);
 impl Bounded3 for Sg3 {
     fn bounds3(&self) -> Result<Bounds3> {
         let mut bc = Bounds3Collector::default();
-        bc.incorporate(&self.i.bounds3()?)?;
-        bc.incorporate(&self.f.bounds3()?)?;
+        bc.incorporate(&self.i)?;
+        bc.incorporate(&self.f)?;
         bc.bounds3()
     }
 }

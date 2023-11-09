@@ -2,7 +2,7 @@ use crate::{
     group3::Group3,
     shapes::{cuboid3d::Cuboid, pt3::Pt3},
 };
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use enum_dispatch::enum_dispatch;
 use float_ord::FloatOrd;
 use std::cmp::{max, min};
@@ -79,7 +79,8 @@ impl Bounds3Collector {
     pub fn items_seen(&self) -> usize {
         self.items_seen
     }
-    pub fn incorporate(&mut self, bounds: &Bounds3) -> Result<()> {
+    pub fn incorporate(&mut self, b: &impl Bounded3) -> Result<()> {
+        let bounds = b.bounds3()?;
         self.x_max = max(self.x_max, FloatOrd(bounds.x_max));
         self.x_min = min(self.x_min, FloatOrd(bounds.x_min));
         self.y_max = max(self.y_max, FloatOrd(bounds.y_max));
@@ -108,12 +109,13 @@ impl Bounded3 for Bounds3Collector {
 pub fn streaming_bbox<'a>(
     it: impl IntoIterator<Item = &'a (impl Bounded3 + 'a)>,
 ) -> Result<Bounds3> {
-    let mut bc = Bounds3Collector::default();
-    for i in it {
-        bc.incorporate(&i.bounds3()?)?;
-    }
-    if bc.items_seen == 0 {
-        return Err(anyhow!("no items seen"));
-    }
-    bc.bounds3()
+    it.into_iter()
+        .try_fold(
+            Bounds3Collector::default(),
+            |mut acc, x| -> Result<Bounds3Collector> {
+                acc.incorporate(x)?;
+                Ok(acc)
+            },
+        )?
+        .bounds3()
 }

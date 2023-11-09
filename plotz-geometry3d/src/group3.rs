@@ -56,7 +56,7 @@ impl<T: 'static> Bounded3 for Group3<T> {
     fn bounds3(&self) -> Result<Bounds3> {
         let mut bc = Bounds3Collector::default();
         for (i, _) in self.0.iter() {
-            bc.incorporate(&i.bounds3()?)?;
+            bc.incorporate(i)?;
         }
         bc.bounds3()
     }
