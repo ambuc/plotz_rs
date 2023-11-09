@@ -27,9 +27,9 @@ impl Segment3 {
     pub fn abs(&self) -> f64 {
         let two = 2_f64;
         (0_f64
-            + (self.f.x.0 - self.i.x.0).powf(two)
-            + (self.f.y.0 - self.i.y.0).powf(two)
-            + (self.f.z.0 - self.i.z.0).powf(two))
+            + (self.f.x - self.i.x).powf(two)
+            + (self.f.y - self.i.y).powf(two)
+            + (self.f.z - self.i.z).powf(two))
         .sqrt()
     }
 

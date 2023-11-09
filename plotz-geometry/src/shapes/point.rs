@@ -12,12 +12,9 @@ use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::{convert::From, fmt::Debug, hash::Hash, ops::*};
 
-/// A point in 2D space.
 #[derive(Copy, Clone)]
 pub struct Point {
-    /// The x-coordinate of the point.
     pub x: f64,
-    /// The y-coordinate of the point.
     pub y: f64,
 }
 

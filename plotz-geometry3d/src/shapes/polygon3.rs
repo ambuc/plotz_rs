@@ -29,9 +29,9 @@ impl Polygon3 {
     // The average point of the polygon.
     pub fn average_pt(&self) -> Point3 {
         let num: f64 = self.pts.len() as f64;
-        let sum_x: f64 = self.pts.iter().map(|pt| pt.x.0).sum();
-        let sum_y: f64 = self.pts.iter().map(|pt| pt.y.0).sum();
-        let sum_z: f64 = self.pts.iter().map(|pt| pt.z.0).sum();
+        let sum_x: f64 = self.pts.iter().map(|pt| pt.x).sum();
+        let sum_y: f64 = self.pts.iter().map(|pt| pt.y).sum();
+        let sum_z: f64 = self.pts.iter().map(|pt| pt.z).sum();
         Point3(sum_x, sum_y, sum_z) / num
     }
 

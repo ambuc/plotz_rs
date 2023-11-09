@@ -17,11 +17,34 @@ use std::{
     ops::*,
 };
 
-#[derive(Hash, Copy, Clone, PartialOrd, Ord)]
+#[derive(Copy, Clone)]
 pub struct Point3 {
-    pub x: FloatOrd<f64>,
-    pub y: FloatOrd<f64>,
-    pub z: FloatOrd<f64>,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+}
+
+impl PartialOrd for Point3 {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Point3 {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        FloatOrd(self.x)
+            .cmp(&FloatOrd(other.x))
+            .then(FloatOrd(self.y).cmp(&FloatOrd(other.y)))
+            .then(FloatOrd(self.z).cmp(&FloatOrd(other.z)))
+    }
+}
+
+impl Hash for Point3 {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        FloatOrd(self.x).hash(state);
+        FloatOrd(self.y).hash(state);
+        FloatOrd(self.z).hash(state);
+    }
 }
 
 #[allow(non_snake_case)]
@@ -32,16 +55,16 @@ pub fn Origin() -> Point3 {
 impl Debug for Point3 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Point3 { x, y, z } = self;
-        write!(f, "Pt3({:.1},{:.1},{:.1})", x.0, y.0, z.0)
+        write!(f, "Pt3({:.1},{:.1},{:.1})", x, y, z)
     }
 }
 
 impl PartialEq for Point3 {
     fn eq(&self, other: &Self) -> bool {
         let e = 0.0000001;
-        approx_eq!(f64, self.x.0, other.x.0, epsilon = e)
-            && approx_eq!(f64, self.y.0, other.y.0, epsilon = e)
-            && approx_eq!(f64, self.z.0, other.z.0, epsilon = e)
+        approx_eq!(f64, self.x, other.x, epsilon = e)
+            && approx_eq!(f64, self.y, other.y, epsilon = e)
+            && approx_eq!(f64, self.z, other.z, epsilon = e)
     }
 }
 
@@ -56,9 +79,9 @@ where
     f64: From<T3>,
 {
     Point3 {
-        x: FloatOrd(x.into()),
-        y: FloatOrd(y.into()),
-        z: FloatOrd(z.into()),
+        x: x.into(),
+        y: y.into(),
+        z: z.into(),
     }
 }
 
@@ -78,7 +101,7 @@ where
     T: From<f64>,
 {
     fn from(val: Point3) -> Self {
-        (val.x.0.into(), val.y.0.into(), val.z.0.into())
+        (val.x.into(), val.y.into(), val.z.into())
     }
 }
 
@@ -97,11 +120,7 @@ macro_rules! ops_trait {
             type Output = Self;
             fn $fn(self, rhs: T) -> Self::Output {
                 let rhs = rhs.into();
-                Point3(
-                    self.x.0.$fn(rhs.x.0),
-                    self.y.0.$fn(rhs.y.0),
-                    self.z.0.$fn(rhs.z.0),
-                )
+                Point3(self.x.$fn(rhs.x), self.y.$fn(rhs.y), self.z.$fn(rhs.z))
             }
         }
     };
@@ -115,9 +134,9 @@ macro_rules! ops_mut_trait {
         {
             fn $fn(&mut self, rhs: T) {
                 let rhs = rhs.into();
-                self.x.0.$fn(rhs.x.0);
-                self.y.0.$fn(rhs.y.0);
-                self.z.0.$fn(rhs.z.0);
+                self.x.$fn(rhs.x);
+                self.y.$fn(rhs.y);
+                self.z.$fn(rhs.z);
             }
         }
     };
@@ -137,13 +156,13 @@ ops_trait!(Sub, sub);
 impl Point3 {
     // https://en.wikipedia.org/wiki/Dot_product
     pub fn dot(&self, other: &Point3) -> f64 {
-        (self.x.0 * other.x.0) + (self.y.0 * other.y.0) + (self.z.0 * other.z.0)
+        (self.x * other.x) + (self.y * other.y) + (self.z * other.z)
     }
     // average of two points.
     pub fn avg(&self, other: &Point3) -> Point3 {
-        let avg_x = (self.x.0 + other.x.0) / 2.0;
-        let avg_y = (self.y.0 + other.y.0) / 2.0;
-        let avg_z = (self.z.0 + other.z.0) / 2.0;
+        let avg_x = (self.x + other.x) / 2.0;
+        let avg_y = (self.y + other.y) / 2.0;
+        let avg_z = (self.z + other.z) / 2.0;
         Point3(avg_x, avg_y, avg_z)
     }
 
@@ -224,12 +243,12 @@ impl Rotatable for Point3 {
 impl Bounded3 for Point3 {
     fn bounds3(&self) -> Result<Bounds3> {
         Ok(Bounds3 {
-            x_min: self.x.0,
-            x_max: self.x.0,
-            y_min: self.y.0,
-            y_max: self.y.0,
-            z_min: self.z.0,
-            z_max: self.z.0,
+            x_min: self.x,
+            x_max: self.x,
+            y_min: self.y,
+            y_max: self.y,
+            z_min: self.z,
+            z_max: self.z,
         })
     }
 }
