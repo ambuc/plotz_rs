@@ -20,6 +20,15 @@ pub struct Bounds {
 }
 
 impl Bounds {
+    pub fn join(self, other: &Self) -> Self {
+        Self {
+            y_max: max(FloatOrd(self.y_max), FloatOrd(other.y_max)).0,
+            x_max: max(FloatOrd(self.x_max), FloatOrd(other.x_max)).0,
+            y_min: min(FloatOrd(self.y_min), FloatOrd(other.y_min)).0,
+            x_min: min(FloatOrd(self.x_min), FloatOrd(other.x_min)).0,
+        }
+    }
+
     pub fn to_polygon(&self) -> Pg {
         Pg([
             self.x_min_y_max(),
@@ -123,15 +132,18 @@ impl Bounded for BoundsCollector {
 }
 
 pub fn streaming_bbox<'a>(it: impl IntoIterator<Item = &'a (impl Bounded + 'a)>) -> Result<Bounds> {
-    it.into_iter()
-        .try_fold(
-            BoundsCollector::default(),
-            |mut acc, x| -> Result<BoundsCollector> {
-                acc.incorporate(x)?;
-                Ok(acc)
-            },
-        )?
-        .bounds()
+    it.into_iter().try_fold(
+        Bounds {
+            x_max: f64::MIN,
+            x_min: f64::MAX,
+            y_max: f64::MIN,
+            y_min: f64::MAX,
+        },
+        |prev, x| {
+            let b = x.bounds()?;
+            Ok(prev.join(&b))
+        },
+    )
 }
 
 #[cfg(test)]

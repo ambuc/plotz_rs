@@ -18,6 +18,17 @@ pub struct Bounds3 {
 }
 
 impl Bounds3 {
+    pub fn join(self, other: &Self) -> Self {
+        Self {
+            z_max: max(FloatOrd(self.z_max), FloatOrd(other.z_max)).0,
+            y_max: max(FloatOrd(self.y_max), FloatOrd(other.y_max)).0,
+            x_max: max(FloatOrd(self.x_max), FloatOrd(other.x_max)).0,
+            z_min: min(FloatOrd(self.z_min), FloatOrd(other.z_min)).0,
+            y_min: min(FloatOrd(self.y_min), FloatOrd(other.y_min)).0,
+            x_min: min(FloatOrd(self.x_min), FloatOrd(other.x_min)).0,
+        }
+    }
+
     pub fn to_cuboid(&self) -> Group3<()> {
         Cuboid(
             (self.x_min, self.y_min, self.z_min),
@@ -51,71 +62,21 @@ pub trait Bounded3 {
     fn bounds3(&self) -> Result<Bounds3>;
 }
 
-pub struct Bounds3Collector {
-    x_min: FloatOrd<f64>,
-    y_min: FloatOrd<f64>,
-    z_min: FloatOrd<f64>,
-    x_max: FloatOrd<f64>,
-    y_max: FloatOrd<f64>,
-    z_max: FloatOrd<f64>,
-    items_seen: usize,
-}
-
-impl Default for Bounds3Collector {
-    fn default() -> Self {
-        Bounds3Collector {
-            x_max: FloatOrd(f64::MIN),
-            x_min: FloatOrd(f64::MAX),
-            y_max: FloatOrd(f64::MIN),
-            y_min: FloatOrd(f64::MAX),
-            z_max: FloatOrd(f64::MIN),
-            z_min: FloatOrd(f64::MAX),
-            items_seen: 0,
-        }
-    }
-}
-
-impl Bounds3Collector {
-    pub fn items_seen(&self) -> usize {
-        self.items_seen
-    }
-    pub fn incorporate(&mut self, b: &impl Bounded3) -> Result<()> {
-        let bounds = b.bounds3()?;
-        self.x_max = max(self.x_max, FloatOrd(bounds.x_max));
-        self.x_min = min(self.x_min, FloatOrd(bounds.x_min));
-        self.y_max = max(self.y_max, FloatOrd(bounds.y_max));
-        self.y_min = min(self.y_min, FloatOrd(bounds.y_min));
-        self.z_max = max(self.z_max, FloatOrd(bounds.z_max));
-        self.z_min = min(self.z_min, FloatOrd(bounds.z_min));
-        self.items_seen += 1;
-
-        Ok(())
-    }
-}
-
-impl Bounded3 for Bounds3Collector {
-    fn bounds3(&self) -> Result<Bounds3> {
-        Ok(Bounds3 {
-            x_min: self.x_min.0,
-            x_max: self.x_max.0,
-            y_min: self.y_min.0,
-            y_max: self.y_max.0,
-            z_min: self.z_min.0,
-            z_max: self.z_max.0,
-        })
-    }
-}
-
 pub fn streaming_bbox<'a>(
     it: impl IntoIterator<Item = &'a (impl Bounded3 + 'a)>,
 ) -> Result<Bounds3> {
-    it.into_iter()
-        .try_fold(
-            Bounds3Collector::default(),
-            |mut acc, x| -> Result<Bounds3Collector> {
-                acc.incorporate(x)?;
-                Ok(acc)
-            },
-        )?
-        .bounds3()
+    it.into_iter().try_fold(
+        Bounds3 {
+            x_max: f64::MIN,
+            x_min: f64::MAX,
+            y_max: f64::MIN,
+            y_min: f64::MAX,
+            z_max: f64::MIN,
+            z_min: f64::MAX,
+        },
+        |prev, x| {
+            let b = x.bounds3()?;
+            Ok(prev.join(&b))
+        },
+    )
 }

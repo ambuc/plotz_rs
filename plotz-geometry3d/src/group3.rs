@@ -4,7 +4,7 @@
 use anyhow::Result;
 
 use crate::{
-    bounded3::{Bounded3, Bounds3, Bounds3Collector},
+    bounded3::{streaming_bbox, Bounded3, Bounds3},
     obj3::{Obj3, ObjType},
     shapes::{pt3::Pt3, ry3::Ry3},
     Object, Rotatable, RotatableBounds,
@@ -54,11 +54,7 @@ where
 
 impl<T: 'static> Bounded3 for Group3<T> {
     fn bounds3(&self) -> Result<Bounds3> {
-        let mut bc = Bounds3Collector::default();
-        for (i, _) in self.0.iter() {
-            bc.incorporate(i)?;
-        }
-        bc.bounds3()
+        streaming_bbox(self.iter())
     }
 }
 

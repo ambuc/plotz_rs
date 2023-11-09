@@ -1,7 +1,7 @@
 //! A segment in 3d.
 
 use crate::{
-    bounded3::{Bounded3, Bounds3, Bounds3Collector},
+    bounded3::{streaming_bbox, Bounded3, Bounds3},
     obj3::ObjType,
     shapes::pt3::Pt3,
     Object,
@@ -66,10 +66,7 @@ plotz_geometry::ops_defaults_t!(Sg3, Pt3);
 
 impl Bounded3 for Sg3 {
     fn bounds3(&self) -> Result<Bounds3> {
-        let mut bc = Bounds3Collector::default();
-        bc.incorporate(&self.i)?;
-        bc.incorporate(&self.f)?;
-        bc.bounds3()
+        streaming_bbox(self.iter())
     }
 }
 
