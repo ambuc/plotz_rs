@@ -9,7 +9,7 @@ use crate::{
     intersection::{Intersection, IntersectionResult, MultipleIntersections},
     obj::ObjType2d,
     shapes::{pg::Pg, pt::Pt, ry::Ry},
-    Object, Roundable,
+    Object,
 };
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
@@ -304,13 +304,6 @@ impl Croppable for Sg {
         Self: Sized,
     {
         unimplemented!("we haven't implemented segment crop excluding yet.");
-    }
-}
-
-impl Roundable for Sg {
-    fn round_to_nearest(&mut self, f: f64) {
-        self.i.round_to_nearest(f);
-        self.f.round_to_nearest(f);
     }
 }
 

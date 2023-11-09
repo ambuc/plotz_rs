@@ -7,7 +7,7 @@ use crate::{
     crop::{CropType, Croppable},
     intersection::IntersectionResult,
     obj::ObjType2d,
-    Object, Roundable,
+    Object,
 };
 use anyhow::{anyhow, Result};
 use float_ord::FloatOrd;
@@ -172,12 +172,6 @@ impl Bounded for Ml {
                 .ok_or(anyhow!("not empty"))?
                 .0,
         })
-    }
-}
-
-impl Roundable for Ml {
-    fn round_to_nearest(&mut self, f: f64) {
-        self.pts.iter_mut().for_each(|pt| pt.round_to_nearest(f));
     }
 }
 

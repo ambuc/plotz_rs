@@ -400,12 +400,6 @@ impl Bounded for Pg {
     }
 }
 
-impl Roundable for Pg {
-    fn round_to_nearest(&mut self, f: f64) {
-        self.pts.iter_mut().for_each(|pt| pt.round_to_nearest(f));
-    }
-}
-
 impl Object for Pg {
     fn objtype(&self) -> ObjType2d {
         ObjType2d::Polygon2d

@@ -21,7 +21,6 @@ use plotz_geometry::{
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{pg::Pg, pt::Pt, sg::Sg},
     style::Style,
-    *,
 };
 use rand::{thread_rng, Rng};
 use std::{
@@ -394,26 +393,6 @@ impl Map {
         }
     }
 
-    /// For every object in every layer, round its points to the nearest |q|.
-    /// |q| is 0.5 for now.
-    pub fn quantize_layers(&mut self) {
-        trace!("Quantizing layers.");
-        for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
-            let q = 0.5;
-            for (ref mut obj, _style) in dos.iter_mut() {
-                match obj {
-                    Obj::Sg(ref mut sg) => {
-                        sg.round_to_nearest(q);
-                    }
-                    Obj::Pg(ref mut pg) => {
-                        pg.round_to_nearest(q);
-                    }
-                    _ => {}
-                }
-            }
-        }
-    }
-
     /// Simplifies the inner layers for faster, less repetitive plotting.
     /// Innards of this are subject to change. For now I think we want to
     /// segmentify things, quantize them, dedup them, ...? magic ..? and then
@@ -421,8 +400,6 @@ impl Map {
     pub fn simplify_layers(&mut self) {
         trace!("Simplifying layers.");
         self.polygons_to_segments(); // prereq
-
-        self.quantize_layers(); // prereq
 
         for (bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             // at this point there are no polygons, only segments.

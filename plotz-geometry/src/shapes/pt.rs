@@ -271,13 +271,6 @@ impl Bounded for Pt {
     }
 }
 
-impl Roundable for Pt {
-    fn round_to_nearest(&mut self, f: f64) {
-        self.x -= self.x % f;
-        self.y -= self.y % f;
-    }
-}
-
 impl Object for Pt {
     fn objtype(&self) -> ObjType2d {
         ObjType2d::Point2d
