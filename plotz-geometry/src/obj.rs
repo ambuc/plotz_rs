@@ -7,7 +7,6 @@ use crate::{
     group::Group,
     shapes::{curve::CurveArc, ml::Ml, pg::Pg, pgc::Pgc, pt::Pt, sg::Sg, txt::Txt},
     style::Style,
-    *,
 };
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
@@ -29,22 +28,14 @@ pub enum ObjType {
 #[derive(Debug, PartialEq, Clone)]
 #[enum_dispatch]
 pub enum Obj {
-    /// A point.
-    Pt(Pt),
-    /// A polygon.
-    Pg(Pg),
-    /// A polygon with cavities.
-    Pgc(Pgc),
-    /// A segment.
-    Sg(Sg),
-    /// A multiline.
-    Ml(Ml),
-    /// An arc.
-    CurveArc(CurveArc),
-    /// A character to be printed in SVG, at a point.
-    Txt(Txt),
-    /// A group of other objects.
-    Group(Group<Style>),
+    Pt(Pt),              // A point.
+    Pg(Pg),              // A polygon.
+    Pgc(Pgc),            // A polygon with cavities.
+    Sg(Sg),              // A segment.
+    Ml(Ml),              // A multiline.
+    CurveArc(CurveArc),  // An arc.
+    Txt(Txt),            // A character to be printed in SVG, at a point.
+    Group(Group<Style>), // A group of other objects.
 }
 
 crate::impl_ops!(Add, add, Pt);
@@ -159,47 +150,6 @@ impl Croppable for Obj {
                 .into_iter()
                 .map(Obj::from)
                 .collect::<Vec<_>>()),
-        }
-    }
-}
-
-impl Object for Obj {
-    fn objtype(&self) -> ObjType {
-        match self {
-            Obj::CurveArc(_) => ObjType::CurveArc,
-            Obj::Group(_) => ObjType::Group,
-            Obj::Ml(_) => ObjType::Multiline,
-            Obj::Pg(_) => ObjType::Group,
-            Obj::Pgc(_) => ObjType::PolygonWithCavities,
-            Obj::Pt(_) => ObjType::Point,
-            Obj::Sg(_) => ObjType::Segment,
-            Obj::Txt(_) => ObjType::Text,
-        }
-    }
-
-    fn iter(&self) -> Box<dyn Iterator<Item = &Pt> + '_> {
-        match self {
-            Obj::Pt(p) => Box::new(p.iter()),
-            Obj::Ml(ml) => Box::new(ml.iter()),
-            Obj::Txt(ch) => Box::new(ch.iter()),
-            Obj::CurveArc(ca) => Box::new(ca.iter()),
-            Obj::Group(g) => Box::new(g.iter()),
-            Obj::Pg(pg) => Box::new(pg.iter()),
-            Obj::Pgc(pgc) => Box::new(pgc.iter()),
-            Obj::Sg(sg) => Box::new(sg.iter()),
-        }
-    }
-
-    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt> + '_> {
-        match self {
-            Obj::Pt(p) => Box::new(p.iter_mut()),
-            Obj::Ml(ml) => Box::new(ml.iter_mut()),
-            Obj::Txt(ch) => Box::new(ch.iter_mut()),
-            Obj::CurveArc(ca) => Box::new(ca.iter_mut()),
-            Obj::Group(g) => Box::new(g.iter_mut()),
-            Obj::Pg(pg) => Box::new(pg.iter_mut()),
-            Obj::Pgc(pgc) => Box::new(pgc.iter_mut()),
-            Obj::Sg(sg) => Box::new(sg.iter_mut()),
         }
     }
 }

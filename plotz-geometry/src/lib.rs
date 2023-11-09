@@ -58,6 +58,7 @@ impl Default for AnnotationSettings {
 }
 
 /// A 2d object.
+#[enum_dispatch(Obj)]
 pub trait Object {
     /// Return the labelled points and segments.
     fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
