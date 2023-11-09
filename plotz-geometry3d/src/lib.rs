@@ -2,13 +2,15 @@
 
 #![allow(missing_docs)]
 
-use std::f64::consts::FRAC_PI_2;
-
+use crate::{
+    obj3::{Obj3, ObjType},
+    shapes::{pg3::Pg3, pt3::Pt3, ry3::Ry3, sg3::Sg3},
+};
 use anyhow::Result;
 use bounded3::Bounded3;
 use enum_dispatch::enum_dispatch;
-use obj3::ObjType;
-use shapes::{pt3::Pt3, ry3::Ry3};
+use group3::Group3;
+use std::f64::consts::FRAC_PI_2;
 
 pub mod bounded3;
 pub mod camera;
@@ -39,8 +41,8 @@ pub trait RotatableBounds: Bounded3 + Rotatable {
     }
 }
 
-/// A 2d object.
-#[enum_dispatch(Obj)]
+/// A 3d object.
+#[enum_dispatch(Obj3)]
 pub trait Object {
     /// Is it empty?
     fn is_empty(&self) -> bool {
