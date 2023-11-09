@@ -149,3 +149,68 @@ macro_rules! ops_generic_defaults_t {
         $crate::ops_assign_generic_generic!($name, $rhs, RemAssign, rem_assign);
     };
 }
+
+#[macro_export]
+macro_rules! impl_ops {
+    ($trait:ident, $fn:ident, $rhs:ident) => {
+        impl<T> $trait<T> for Obj
+        where
+            T: Into<$rhs>,
+        {
+            type Output = Obj;
+            fn $fn(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into();
+                match self {
+                    Obj::CurveArc(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Group(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Ml(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Pg(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Pgc(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Pt(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Sg(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Txt(x) => Obj::from(x.$fn(rhs)),
+                }
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! impl_ops_assign {
+    ($trait:ident, $fn:ident, $rhs:ident) => {
+        impl<T> $trait<T> for Obj
+        where
+            T: Into<$rhs>,
+        {
+            fn $fn(&mut self, rhs: T) {
+                let rhs = rhs.into();
+                match self {
+                    Obj::CurveArc(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Group(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Ml(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Pg(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Pgc(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Pt(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Sg(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Txt(x) => {
+                        x.$fn(rhs);
+                    }
+                }
+            }
+        }
+    };
+}
