@@ -2,8 +2,9 @@
 
 use crate::{
     bounded3::{streaming_bbox, Bounded3, Bounds3},
+    obj3::ObjType,
     shapes::pt3::Pt3,
-    Rotatable,
+    Object, Rotatable,
 };
 use anyhow::Result;
 use float_ord::FloatOrd;
@@ -56,13 +57,6 @@ impl Pg3 {
             .unwrap()
             .0
     }
-
-    pub fn iter(&self) -> impl Iterator<Item = &Pt3> {
-        self.pts.iter()
-    }
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt3> {
-        self.pts.iter_mut()
-    }
 }
 
 // Constructor for multilines, which are by definition open. The first and last
@@ -97,5 +91,19 @@ impl Rotatable for Pg3 {
 impl Bounded3 for Pg3 {
     fn bounds3(&self) -> Result<Bounds3> {
         streaming_bbox(self.pts.iter())
+    }
+}
+
+impl Object for Pg3 {
+    fn objtype(&self) -> ObjType {
+        ObjType::Polygon
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt3> + '_> {
+        Box::new(self.pts.iter())
+    }
+
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt3> + '_> {
+        Box::new(self.pts.iter_mut())
     }
 }
