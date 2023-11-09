@@ -5,7 +5,9 @@ use plotz_core::{
     frame::make_frame,
     svg::Size,
 };
-use plotz_geometry::{crop::PointLoc, obj2::Obj2, shapes::polygon::Polygon, style::Style, Object};
+use plotz_geometry::{
+    crop::PointLocation, obj2::Obj2, shapes::polygon::Polygon, style::Style, Object,
+};
 
 mod ab_rhomb;
 mod cromwell;
@@ -37,7 +39,7 @@ fn main() -> Result<()> {
     // drain things not in frame
     dos.retain(|(obj, _style)| {
         obj.iter()
-            .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLoc::Inside)))
+            .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLocation::Inside)))
     });
 
     Canvas::builder()

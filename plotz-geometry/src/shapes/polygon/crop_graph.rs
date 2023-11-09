@@ -1,7 +1,7 @@
 //! Crop graph for polygons.
 
 use crate::{
-    crop::{CropType, PointLoc},
+    crop::{CropType, PointLocation},
     intersection::{Intersection, IntersectionResult, Pair, Which},
     shapes::{
         point::{is_colinear_n, Point},
@@ -263,7 +263,7 @@ impl<'a> CropGraph<'a> {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
                 self.get(which).contains_pt(&edge.0.avg(&edge.1)),
-                Ok(PointLoc::Outside),
+                Ok(PointLocation::Outside),
             )
         }) {
             self.graph.remove_edge(i, j);
@@ -273,7 +273,7 @@ impl<'a> CropGraph<'a> {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
                 self.get(which).contains_pt(&edge.0.avg(&edge.1)),
-                Ok(PointLoc::Inside)
+                Ok(PointLocation::Inside)
             )
         }) {
             self.graph.remove_edge(i, j);

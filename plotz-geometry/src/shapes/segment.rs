@@ -3,7 +3,7 @@
 
 use crate::{
     bounded::{Bounded, Bounds},
-    crop::{CropType, Croppable, PointLoc},
+    crop::{CropType, Croppable, PointLocation},
     interpolate,
     interpolate::interpolate_2d_checked,
     intersection::{Intersection, IntersectionResult, MultipleIntersections},
@@ -236,9 +236,9 @@ impl Croppable for Segment {
         let frame_segments = frame.to_segments();
         let mut resultants: Vec<Segment> = vec![];
         let mut curr_pt = self.i;
-        let mut curr_pen_down = !matches!(frame.contains_pt(&self.i)?, PointLoc::Outside);
+        let mut curr_pen_down = !matches!(frame.contains_pt(&self.i)?, PointLocation::Outside);
 
-        if let (PointLoc::Inside, PointLoc::Inside) =
+        if let (PointLocation::Inside, PointLocation::Inside) =
             (frame.contains_pt(&self.i)?, frame.contains_pt(&self.f)?)
         {
             resultants.push(*self);
@@ -284,7 +284,9 @@ impl Croppable for Segment {
                         return Ok(resultants);
                     }
 
-                    if !matches!(frame.contains_pt(&new_pt)?, PointLoc::Outside) && curr_pen_down {
+                    if !matches!(frame.contains_pt(&new_pt)?, PointLocation::Outside)
+                        && curr_pen_down
+                    {
                         resultants.push(Segment(curr_pt, new_pt));
                     }
                     curr_pt = new_pt;

@@ -4,7 +4,7 @@
 use std::cmp::{max, min};
 
 use crate::{
-    crop::PointLoc,
+    crop::PointLocation,
     shapes::{point::Point, polygon::Polygon},
 };
 use anyhow::Result;
@@ -40,7 +40,7 @@ impl Bounds {
         .unwrap()
     }
 
-    pub fn contains_pt(&self, pt: Point) -> Result<PointLoc> {
+    pub fn contains_pt(&self, pt: Point) -> Result<PointLocation> {
         self.to_polygon().contains_pt(&pt)
     }
 

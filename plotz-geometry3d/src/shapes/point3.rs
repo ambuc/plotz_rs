@@ -160,10 +160,11 @@ impl Point3 {
     }
     // average of two points.
     pub fn avg(&self, other: &Point3) -> Point3 {
-        let avg_x = (self.x + other.x) / 2.0;
-        let avg_y = (self.y + other.y) / 2.0;
-        let avg_z = (self.z + other.z) / 2.0;
-        Point3(avg_x, avg_y, avg_z)
+        Point3(
+            (self.x + other.x) / 2.0,
+            (self.y + other.y) / 2.0,
+            (self.z + other.z) / 2.0,
+        )
     }
 
     /// Distance between two points.

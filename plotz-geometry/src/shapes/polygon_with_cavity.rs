@@ -3,7 +3,7 @@
 
 use crate::{
     bounded::{Bounded, Bounds},
-    crop::PointLoc,
+    crop::PointLocation,
     obj2::ObjType2d,
     shapes::{point::Point, polygon::Polygon},
     Object,
@@ -26,7 +26,7 @@ pub fn PolygonWithCavities(
     let outer: Polygon = a.into();
     for inner_pg in &inner {
         for pt in &inner_pg.pts {
-            if outer.contains_pt(pt)? == PointLoc::Outside {
+            if outer.contains_pt(pt)? == PointLocation::Outside {
                 return Err(anyhow!("pt in inner is outside of outer"));
             }
         }

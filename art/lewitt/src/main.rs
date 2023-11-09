@@ -7,7 +7,7 @@ use plotz_core::{
     svg::Size,
 };
 use plotz_geometry::{
-    crop::PointLoc,
+    crop::PointLocation,
     grid::grid_layout::{GridLayout, GridLayoutSettings},
     obj2::Obj2,
     shapes::{curve::CurveArc, point::Point},
@@ -62,7 +62,7 @@ fn main() -> Result<()> {
                     let curve_arc_ctr: Point = || -> Point {
                         loop {
                             let cand = Point(rng.gen_range(0.0..800.0), rng.gen_range(0.0..1000.0));
-                            if !matches!(bounds.contains_pt(cand), Ok(PointLoc::Inside)) {
+                            if !matches!(bounds.contains_pt(cand), Ok(PointLocation::Inside)) {
                                 return cand;
                             }
                         }

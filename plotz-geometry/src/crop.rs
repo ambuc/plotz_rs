@@ -4,7 +4,7 @@ use anyhow::Result;
 
 /// Whether a point lies outside, inside, or on a vertex or edge of a polygon.
 #[derive(Debug, PartialEq, Eq)]
-pub enum PointLoc {
+pub enum PointLocation {
     /// A point lies outside a polygon.
     Outside,
     /// A point lies inside a polygon.

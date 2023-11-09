@@ -3,7 +3,7 @@
 
 use crate::{
     bounded::{Bounded, Bounds},
-    crop::{CropType, Croppable, PointLoc},
+    crop::{CropType, Croppable, PointLocation},
     interpolate::interpolate_2d_checked,
     obj2::ObjType2d,
     shapes::{
@@ -440,8 +440,8 @@ impl Croppable for CurveArc {
             let contains_i = frame.contains_pt(&self.pt_i());
             let contains_f = frame.contains_pt(&self.pt_f());
             if let (
-                Ok(PointLoc::Inside | PointLoc::OnSegment(_) | PointLoc::OnPoint(_)),
-                Ok(PointLoc::Inside | PointLoc::OnSegment(_) | PointLoc::OnPoint(_)),
+                Ok(PointLocation::Inside | PointLocation::OnSegment(_) | PointLocation::OnPoint(_)),
+                Ok(PointLocation::Inside | PointLocation::OnSegment(_) | PointLocation::OnPoint(_)),
             ) = (contains_i, contains_f)
             {
                 return Ok(vec![*self]);
@@ -454,10 +454,10 @@ impl Croppable for CurveArc {
                 FloatOrd(self.angle_i + (self.angle_f - self.angle_i) * cl.as_f64())
             })
             .collect::<Vec<_>>();
-        if !matches!(frame.contains_pt(&self.pt_i()), Ok(PointLoc::Outside)) {
+        if !matches!(frame.contains_pt(&self.pt_i()), Ok(PointLocation::Outside)) {
             isxns_angles.insert(0, FloatOrd(self.angle_i));
         }
-        if !matches!(frame.contains_pt(&self.pt_f()), Ok(PointLoc::Outside)) {
+        if !matches!(frame.contains_pt(&self.pt_f()), Ok(PointLocation::Outside)) {
             isxns_angles.insert(0, FloatOrd(self.angle_f));
         }
         isxns_angles.sort();
@@ -476,7 +476,7 @@ impl Croppable for CurveArc {
             })
         {
             let mdpt = self.ctr + PolarPt(self.radius, (a1 + a2) / 2.0);
-            if !matches!(frame.contains_pt(&mdpt), Ok(PointLoc::Outside)) {
+            if !matches!(frame.contains_pt(&mdpt), Ok(PointLocation::Outside)) {
                 r.push(CurveArc(self.ctr, a1..=a2, self.radius));
             }
         }
