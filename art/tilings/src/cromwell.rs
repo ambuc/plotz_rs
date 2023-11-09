@@ -301,7 +301,7 @@ pub fn make() -> Vec<(Obj, Style)> {
 
             // std::iter::empty() //
             std::iter::once((
-                Obj::Pg(p),
+                Obj::Polygon(p),
                 Style {
                     color: *color,
                     ..Default::default()
@@ -310,7 +310,7 @@ pub fn make() -> Vec<(Obj, Style)> {
             .chain([(
                 Obj::Group(Group::new(segments.into_iter().map(|s| {
                     (
-                        Obj::Sg(s),
+                        Obj::Segment(s),
                         Style {
                             color: *color,
                             ..Default::default()

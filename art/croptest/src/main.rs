@@ -61,7 +61,7 @@ fn main() -> Result<()> {
         let r = Rect((50, 50), (50, 50)).unwrap();
 
         let base_sq = (
-            Obj::Pg(r.clone()),
+            Obj::Polygon(r.clone()),
             Style {
                 thickness: 2.0,
                 ..Default::default()
@@ -97,7 +97,7 @@ fn main() -> Result<()> {
         };
 
         let subject_sq = (
-            Obj::Pg(Polygon(pts)?) + offset,
+            Obj::Polygon(Polygon(pts)?) + offset,
             Style {
                 color: RED,
                 ..Default::default()

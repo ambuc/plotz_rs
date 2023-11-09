@@ -493,7 +493,7 @@ impl Croppable for CurveArc {
 
 impl Object for CurveArc {
     fn objtype(&self) -> ObjType2d {
-        ObjType2d::CurveArc
+        ObjType2d::CurveArc2d
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &Point> + '_> {

@@ -261,10 +261,10 @@ pub fn make() -> Vec<(Obj, Style)> {
             let segments = shade_polygon(&config, &p).unwrap();
 
             let mut ret: Vec<(Obj, Style)> = vec![];
-            ret.push((Obj::Pg(p), Style::default()));
+            ret.push((Obj::Polygon(p), Style::default()));
             ret.extend(segments.into_iter().map(|s| {
                 (
-                    Obj::Sg(s),
+                    Obj::Segment(s),
                     Style {
                         color: *color,
                         ..Default::default()

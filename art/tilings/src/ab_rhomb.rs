@@ -152,7 +152,7 @@ pub fn make() -> Vec<(Obj, Style)> {
 
             std::iter::empty().chain(segments.into_iter().map(|s| {
                 (
-                    Obj::Sg(s),
+                    Obj::Segment(s),
                     Style {
                         color: *color,
                         ..Default::default()

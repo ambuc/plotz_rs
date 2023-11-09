@@ -61,8 +61,8 @@ impl Oblique {
     }
     pub fn project_obj3(&self, obj3: &Obj3) -> Obj {
         match obj3 {
-            Obj3::Pg3(pg3d) => Obj::Pg(self.project_pg3(pg3d)),
-            Obj3::Sg3(sg3d) => Obj::Sg(self.project_sg3(sg3d)),
+            Obj3::Pg3(pg3d) => Obj::Polygon(self.project_pg3(pg3d)),
+            Obj3::Sg3(sg3d) => Obj::Segment(self.project_sg3(sg3d)),
             Obj3::Group3(g3d) => Obj::Group(self.project_group3(g3d)),
         }
     }

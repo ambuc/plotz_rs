@@ -29,11 +29,11 @@ impl Occluder {
 
         match (&incoming, &existing) {
             // points can/should be occluded, not handled yet.
-            (Obj::Pt(_), _) => {
+            (Obj::Point(_), _) => {
                 unimplemented!("no support for points yet")
             }
             // chars are points, see above.
-            (Obj::Txt(_), _) => {
+            (Obj::Text(_), _) => {
                 unimplemented!("no support for chars yet")
             }
             // groups are not handled yet.
@@ -45,27 +45,27 @@ impl Occluder {
                 unimplemented!("no support for curvearcs yet")
             }
 
-            (Obj::Ml(_), _) => {
+            (Obj::Multiline(_), _) => {
                 unimplemented!("no support for multilines yet")
             }
 
-            (Obj::Pg(a), Obj::Pg(b)) => Ok(a
+            (Obj::Polygon(a), Obj::Polygon(b)) => Ok(a
                 .crop_excluding(b)
                 .context(format!("crop excluding: \na\n\t{:?}\n\nb\n\t{:?}", a, b))?
                 .into_iter()
                 .map(Obj::from)
                 .collect()),
-            (Obj::Sg(_sg), Obj::Pg(_pg)) => {
+            (Obj::Segment(_sg), Obj::Polygon(_pg)) => {
                 unimplemented!("no support for pg x sg yet");
             }
 
-            (Obj::Pgc(_), _) | (_, Obj::Pgc(_)) => {
+            (Obj::PolygonWithCavities(_), _) | (_, Obj::PolygonWithCavities(_)) => {
                 unimplemented!("TODO(jbuckland): implement cropping.")
             }
 
             //
             // you can't hide something behind a segment or a point or a char. don't be daft.
-            (incoming, Obj::Ml(_) | Obj::Sg(_) | Obj::Pt(_) | Obj::Txt(_)) => {
+            (incoming, Obj::Multiline(_) | Obj::Segment(_) | Obj::Point(_) | Obj::Text(_)) => {
                 Ok(vec![(**incoming).clone()])
             }
         }
@@ -118,7 +118,7 @@ fn export_obj((sobj, style): (Obj, Style)) -> Result<Vec<(Obj, Style)>> {
             shading: Some(shade_config),
             ..
         } => match sobj {
-            Obj::Pg(pg) => {
+            Obj::Polygon(pg) => {
                 if shade_config.along_face {
                     // TODO(https://github.com/ambuc/plotz_rs/issues/2): apply shade config here.
                     Ok(vec![])

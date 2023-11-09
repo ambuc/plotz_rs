@@ -105,7 +105,7 @@ fn main() -> Result<()> {
                 .iter()
                 .map(|sg| {
                     (
-                        Obj::Sg(*sg),
+                        Obj::Segment(*sg),
                         Style {
                             color: shade.color,
                             ..Default::default()

@@ -103,7 +103,7 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj, Style
         Instr::StrapsOriginal(thickness) => {
             v.extend(apts.clone().straps.into_iter().map(|(girih, sg)| {
                 (
-                    Obj::Sg(sg),
+                    Obj::Segment(sg),
                     Style {
                         color: girih.color(),
                         thickness: *thickness,
@@ -117,7 +117,7 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj, Style
             v.extend(apts.clone().outlines.into_iter().map(|(_, pg)| {
                 // scale
                 (
-                    Obj::Pg(pg),
+                    Obj::Polygon(pg),
                     Style {
                         color: BLACK,
                         thickness: *thickness,
@@ -133,7 +133,7 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj, Style
                     .into_iter()
                     .map(|shade| {
                         (
-                            Obj::Sg(shade),
+                            Obj::Segment(shade),
                             Style {
                                 color: girih.color(),
                                 ..Default::default()

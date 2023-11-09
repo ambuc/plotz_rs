@@ -35,11 +35,11 @@ impl From<(i64, i64)> for Size {
 
 fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<()> {
     match &doi {
-        Obj::Pt(p) => {
+        Obj::Point(p) => {
             context.line_to(p.x, p.y);
             context.line_to(p.x + 1.0, p.y + 1.0);
         }
-        Obj::Pg(polygon) => {
+        Obj::Polygon(polygon) => {
             //
             for p in &polygon.pts {
                 context.line_to(p.x, p.y);
@@ -49,22 +49,22 @@ fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<()> {
         // TODO(ambuc): each element should probably implement write to cairo,
         // or maybe there's a foreign typestate pattern we can use here to avoid
         // depending on cairo from that crate.
-        Obj::Pgc(pgc) => {
-            write_doi_to_context(&Obj::Pg(pgc.outer.clone()), context)?;
+        Obj::PolygonWithCavities(pgc) => {
+            write_doi_to_context(&Obj::Polygon(pgc.outer.clone()), context)?;
             for i in &pgc.inner {
-                write_doi_to_context(&Obj::Pg(i.clone()), context)?;
+                write_doi_to_context(&Obj::Polygon(i.clone()), context)?;
             }
         }
-        Obj::Ml(ml) => {
+        Obj::Multiline(ml) => {
             for p in &ml.pts {
                 context.line_to(p.x, p.y);
             }
         }
-        Obj::Sg(segment) => {
+        Obj::Segment(segment) => {
             context.line_to(segment.i.x, segment.i.y);
             context.line_to(segment.f.x, segment.f.y);
         }
-        Obj::Txt(Text {
+        Obj::Text(Text {
             pt,
             inner: txt,
             font_size,
@@ -168,7 +168,7 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![&(
-                Obj::Pg(Polygon([(0, 0), (0, 1), (1, 0)])?),
+                Obj::Polygon(Polygon([(0, 0), (0, 1), (1, 0)])?),
                 Style::default(),
             )],
         )
@@ -195,11 +195,11 @@ mod test_super {
             path.to_str().unwrap(),
             vec![
                 &(
-                    Obj::Pg(Polygon([(0, 0), (0, 1), (1, 0)])?),
+                    Obj::Polygon(Polygon([(0, 0), (0, 1), (1, 0)])?),
                     Style::default(),
                 ),
                 &(
-                    Obj::Pg(Polygon([(5, 5), (5, 6), (6, 5)])?),
+                    Obj::Polygon(Polygon([(5, 5), (5, 6), (6, 5)])?),
                     Style::default(),
                 ),
             ],

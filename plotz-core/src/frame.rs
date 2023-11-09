@@ -17,7 +17,7 @@ pub fn make_frame_pg((w, h): (f64, f64), offset: impl Into<Point>) -> Result<Pol
 /// Makes a frame given (width, height) and (x,y) offset.
 pub fn make_frame(wh: (f64, f64), offset: impl Into<Point>) -> Result<(Obj, Style)> {
     Ok((
-        Obj::Pg(make_frame_pg(wh, offset)?),
+        Obj::Polygon(make_frame_pg(wh, offset)?),
         Style {
             thickness: 5.0,
             ..Default::default()

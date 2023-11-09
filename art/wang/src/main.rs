@@ -210,7 +210,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)
                 .iter()
                 .map(|sg| {
                     (
-                        Obj::Sg(*sg),
+                        Obj::Segment(*sg),
                         Style {
                             color: [
                                 ALICEBLUE,      // 1

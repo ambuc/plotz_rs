@@ -298,14 +298,14 @@ impl Map {
                     let crosshatchings: Vec<(Obj, Style)> = layers
                         .iter()
                         .filter_map(|(obj, style)| match &obj {
-                            Obj::Pg(p) => match shade_polygon(shade_config, p) {
+                            Obj::Polygon(p) => match shade_polygon(shade_config, p) {
                                 Err(_) => None,
                                 Ok(segments) => Some(
                                     segments
                                         .into_iter()
                                         .map(|s| {
                                             (
-                                                Obj::Sg(s),
+                                                Obj::Segment(s),
                                                 Style {
                                                     thickness: shade_config.thickness,
                                                     ..*style
@@ -383,7 +383,7 @@ impl Map {
                 .iter_mut()
                 .flat_map(|(obj, style)| {
                     match obj.clone() {
-                        Obj::Pg(pg) => pg.to_segments().into_iter().map(Obj::from).collect(),
+                        Obj::Polygon(pg) => pg.to_segments().into_iter().map(Obj::from).collect(),
                         x => vec![x],
                     }
                     .into_iter()
@@ -409,7 +409,7 @@ impl Map {
                 .unwrap();
             let mut hs = HashSet::<Segment>::new();
             for (obj, _style) in dos.iter() {
-                if let Obj::Sg(sg) = obj {
+                if let Obj::Segment(sg) = obj {
                     hs.insert(*sg);
                     // TODO(ambuc): really, deduplicate this way but then store and restore the original.
                 }
@@ -418,7 +418,7 @@ impl Map {
                 .into_iter()
                 .map(|sg| {
                     (
-                        Obj::Sg(sg),
+                        Obj::Segment(sg),
                         Style {
                             color,
                             ..Default::default()
@@ -560,7 +560,7 @@ mod tests {
             // shift negative
             ([(1, 1), (1, 2), (2, 1)], [(0, 0), (0, 1), (1, 0)]),
         ] {
-            let obj = Obj::Pg(Polygon(initial)?);
+            let obj = Obj::Polygon(Polygon(initial)?);
             let mut map = Map {
                 canvas: {
                     let mut canvas = Canvas::default();
@@ -582,7 +582,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].0, Obj::Pg(Polygon(expected)?));
+            assert_eq!(x.next().unwrap()[0].0, Obj::Polygon(Polygon(expected)?));
         }
         Ok(())
     }
@@ -613,7 +613,7 @@ mod tests {
                 [Point(0, 0), Point(0, 900), Point(900, 0)],
             ),
         ] {
-            let obj = Obj::Pg(Polygon(initial)?);
+            let obj = Obj::Polygon(Polygon(initial)?);
             let mut map = Map {
                 center: None,
                 canvas: {
@@ -635,7 +635,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].0, Obj::Pg(Polygon(expected)?));
+            assert_eq!(x.next().unwrap()[0].0, Obj::Polygon(Polygon(expected)?));
         }
         Ok(())
     }

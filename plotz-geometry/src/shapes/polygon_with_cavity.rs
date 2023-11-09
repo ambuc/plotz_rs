@@ -12,13 +12,16 @@ use anyhow::{anyhow, Result};
 use std::ops::*;
 
 #[derive(Debug, Clone)]
-pub struct Pgc {
+pub struct PolygonWithCavities {
     pub outer: Polygon,
     pub inner: Vec<Polygon>,
 }
 
 #[allow(non_snake_case)]
-pub fn Pgc(a: impl Into<Polygon>, b: impl IntoIterator<Item = impl Into<Polygon>>) -> Result<Pgc> {
+pub fn PolygonWithCavities(
+    a: impl Into<Polygon>,
+    b: impl IntoIterator<Item = impl Into<Polygon>>,
+) -> Result<PolygonWithCavities> {
     let inner: Vec<Polygon> = b.into_iter().map(|x| x.into()).collect();
     let outer: Polygon = a.into();
     for inner_pg in &inner {
@@ -28,26 +31,26 @@ pub fn Pgc(a: impl Into<Polygon>, b: impl IntoIterator<Item = impl Into<Polygon>
             }
         }
     }
-    Ok(Pgc { outer, inner })
+    Ok(PolygonWithCavities { outer, inner })
 }
 
-impl PartialEq for Pgc {
+impl PartialEq for PolygonWithCavities {
     fn eq(&self, _: &Self) -> bool {
         unimplemented!("TODO(jbuckland): implement partialeq. we should compare each polygon flexibly _and_ w/o respect for inner ordering");
     }
 }
 
-impl Bounded for Pgc {
+impl Bounded for PolygonWithCavities {
     fn bounds(&self) -> Result<Bounds> {
         self.outer.bounds()
     }
 }
 
-crate::ops_defaults_t!(Pgc, Point);
+crate::ops_defaults_t!(PolygonWithCavities, Point);
 
-impl Object for Pgc {
+impl Object for PolygonWithCavities {
     fn objtype(&self) -> ObjType2d {
-        ObjType2d::Polygon2dWithCavities
+        ObjType2d::PolygonWithCavities2d
     }
 
     fn iter(&self) -> Box<dyn Iterator<Item = &Point> + '_> {

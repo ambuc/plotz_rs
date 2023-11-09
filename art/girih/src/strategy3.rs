@@ -24,7 +24,7 @@ pub fn run() -> Result<Vec<(Obj, Style)>> {
     let apts = layout.to_annotated_placed_tiles()?;
     for (_girih, pg) in apts.outlines {
         //
-        result.push((Obj::Pg(pg), Style::default()));
+        result.push((Obj::Polygon(pg), Style::default()));
     }
 
     Ok(result)
