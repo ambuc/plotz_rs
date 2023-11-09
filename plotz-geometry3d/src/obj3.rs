@@ -68,12 +68,12 @@ impl Rotatable for Obj3 {
     }
 }
 
-impl Bounded3 for Obj3 {
-    fn bounds3(&self) -> Result<Bounds3> {
-        match self {
-            Obj3::Pg3(pg3) => pg3.bounds3(),
-            Obj3::Sg3(sg3) => sg3.bounds3(),
-            Obj3::Group3(g3) => g3.bounds3(),
-        }
-    }
-}
+// impl Bounded3 for Obj3 {
+// fn bounds3(&self) -> Result<Bounds3> {
+//     match self {
+//         Obj3::Pg3(pg3) => pg3.bounds3(),
+//         Obj3::Sg3(sg3) => sg3.bounds3(),
+//         Obj3::Group3(g3) => g3.bounds3(),
+//     }
+// }
+// }

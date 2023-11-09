@@ -4,12 +4,11 @@
 
 use crate::{
     obj3::{Obj3, ObjType},
-    shapes::{pg3::Pg3, pt3::Pt3, ry3::Ry3, sg3::Sg3},
+    shapes::{pt3::Pt3, ry3::Ry3},
 };
 use anyhow::Result;
 use bounded3::Bounded3;
 use enum_dispatch::enum_dispatch;
-use group3::Group3;
 use std::f64::consts::FRAC_PI_2;
 
 pub mod bounded3;

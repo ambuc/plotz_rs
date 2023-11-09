@@ -3,6 +3,7 @@ use crate::{
     shapes::{cuboid3d::Cuboid, pt3::Pt3},
 };
 use anyhow::{anyhow, Result};
+use enum_dispatch::enum_dispatch;
 use float_ord::FloatOrd;
 use std::cmp::{max, min};
 
@@ -60,6 +61,7 @@ impl Bounds3 {
     }
 }
 
+#[enum_dispatch(Obj3)]
 pub trait Bounded3 {
     fn bounds3(&self) -> Result<Bounds3>;
 }
