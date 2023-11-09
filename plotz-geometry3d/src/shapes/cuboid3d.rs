@@ -3,11 +3,11 @@
 use crate::{
     group3::Group3,
     obj3::Obj3,
-    shapes::{point3::Point3, polygon3::Pg3},
+    shapes::{point3::Point3, polygon3::Polygon3},
 };
 
-fn make_planar_face(origin: Point3, d1: Point3, d2: Point3) -> Pg3 {
-    Pg3([origin, origin + d1, origin + d1 + d2, origin + d2, origin])
+fn make_planar_face(origin: Point3, d1: Point3, d2: Point3) -> Polygon3 {
+    Polygon3([origin, origin + d1, origin + d1 + d2, origin + d2, origin])
 }
 
 // make a cube of faces (no edges)
@@ -28,11 +28,11 @@ where
     let dz: Point3 = Point3(0.0, 0.0, dz);
 
     Group3::<()>::new([
-        (Obj3::Pg3(make_planar_face(root, dx, dy)), ()),
-        (Obj3::Pg3(make_planar_face(root, dx, dz)), ()),
-        (Obj3::Pg3(make_planar_face(root, dy, dz)), ()),
-        (Obj3::Pg3(make_planar_face(root + dx, dy, dz)), ()),
-        (Obj3::Pg3(make_planar_face(root + dy, dx, dz)), ()),
-        (Obj3::Pg3(make_planar_face(root + dz, dx, dy)), ()),
+        (Obj3::Polygon3(make_planar_face(root, dx, dy)), ()),
+        (Obj3::Polygon3(make_planar_face(root, dx, dz)), ()),
+        (Obj3::Polygon3(make_planar_face(root, dy, dz)), ()),
+        (Obj3::Polygon3(make_planar_face(root + dx, dy, dz)), ()),
+        (Obj3::Polygon3(make_planar_face(root + dy, dx, dz)), ()),
+        (Obj3::Polygon3(make_planar_face(root + dz, dx, dy)), ()),
     ])
 }

@@ -14,18 +14,18 @@ use super::ray3::Ray3;
 
 // A multiline is a list of points rendered with connecting line segments.
 #[derive(Clone)]
-pub struct Pg3 {
+pub struct Polygon3 {
     pub pts: Vec<Point3>,
 }
 
-impl Debug for Pg3 {
+impl Debug for Polygon3 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Pg3 { pts } = self;
+        let Polygon3 { pts } = self;
         write!(f, "Polygon3d({:?})", pts)
     }
 }
 
-impl Pg3 {
+impl Polygon3 {
     // The average point of the polygon.
     pub fn average_pt(&self) -> Point3 {
         let num: f64 = self.pts.len() as f64;
@@ -62,39 +62,39 @@ impl Pg3 {
 // Constructor for multilines, which are by definition open. The first and last
 // points must not be the same.
 #[allow(non_snake_case)]
-pub fn Multiline3d(a: impl IntoIterator<Item = Point3>) -> Pg3 {
+pub fn Multiline3d(a: impl IntoIterator<Item = Point3>) -> Polygon3 {
     let pts: Vec<Point3> = a.into_iter().collect();
     assert_ne!(pts[0], pts[pts.len() - 1]);
-    Pg3 { pts }
+    Polygon3 { pts }
 }
 
 // Constructor for polygons which are closed. The first and last points must be the same.
 #[allow(non_snake_case)]
-pub fn Pg3(a: impl IntoIterator<Item = Point3>) -> Pg3 {
+pub fn Polygon3(a: impl IntoIterator<Item = Point3>) -> Polygon3 {
     let pts: Vec<Point3> = a.into_iter().collect();
     assert_eq!(pts[0], pts[pts.len() - 1]);
-    Pg3 { pts }
+    Polygon3 { pts }
 }
 
-plotz_geometry::ops_defaults_t!(Pg3, Point3);
+plotz_geometry::ops_defaults_t!(Polygon3, Point3);
 
-impl Rotatable for Pg3 {
+impl Rotatable for Polygon3 {
     fn rotate(&self, by: f64, about: Ray3) -> Result<Self> {
         let mut v = vec![];
         for p in self.pts.iter() {
             v.push(p.rotate(by, about)?);
         }
-        Ok(Pg3(v))
+        Ok(Polygon3(v))
     }
 }
 
-impl Bounded3 for Pg3 {
+impl Bounded3 for Polygon3 {
     fn bounds3(&self) -> Result<Bounds3> {
         streaming_bbox(self.pts.iter())
     }
 }
 
-impl Object for Pg3 {
+impl Object for Polygon3 {
     fn objtype(&self) -> ObjType3d {
         ObjType3d::Polygon3d
     }

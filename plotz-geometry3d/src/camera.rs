@@ -5,7 +5,7 @@ use plotz_geometry::{group::Group, style::Style};
 use crate::{
     group3::Group3,
     obj3::Obj3,
-    shapes::{point3::Point3, polygon3::Pg3, segment3::Segment3},
+    shapes::{point3::Point3, polygon3::Polygon3, segment3::Segment3},
 };
 use plotz_geometry::{
     obj::Obj,
@@ -53,7 +53,7 @@ impl Oblique {
     pub fn project_sg3(&self, sg3: &Segment3) -> Segment {
         Segment(self.project_pt3(&sg3.i), self.project_pt3(&sg3.f))
     }
-    pub fn project_pg3(&self, pg3: &Pg3) -> Polygon {
+    pub fn project_pg3(&self, pg3: &Polygon3) -> Polygon {
         Polygon(pg3.pts.iter().map(|pt3d| self.project_pt3(pt3d))).unwrap()
     }
     pub fn project_group3(&self, _: &Group3<()>) -> Group<Style> {
@@ -61,8 +61,8 @@ impl Oblique {
     }
     pub fn project_obj3(&self, obj3: &Obj3) -> Obj {
         match obj3 {
-            Obj3::Pg3(pg3d) => Obj::Polygon(self.project_pg3(pg3d)),
-            Obj3::Sg3(sg3d) => Obj::Segment(self.project_sg3(sg3d)),
+            Obj3::Polygon3(pg3d) => Obj::Polygon(self.project_pg3(pg3d)),
+            Obj3::Segment3(sg3d) => Obj::Segment(self.project_sg3(sg3d)),
             Obj3::Group3(g3d) => Obj::Group(self.project_group3(g3d)),
         }
     }
