@@ -4,7 +4,7 @@ use crate::{
     bounded3::{Bounded3, Bounds3},
     group3::Group3,
     shapes::{pg3::Pg3, pt3::Pt3, ry3::Ry3, sg3::Sg3},
-    Rotatable,
+    Object, Rotatable,
 };
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
@@ -53,40 +53,7 @@ impl Obj3 {
     }
 }
 
-impl<T> Add<T> for Obj3
-where
-    T: Into<Pt3>,
-{
-    type Output = Obj3;
-    fn add(self, rhs: T) -> Self::Output {
-        let rhs = rhs.into();
-        match self {
-            Obj3::Pg3(pg) => Obj3::Pg3(pg + rhs),
-            Obj3::Sg3(sg) => Obj3::Sg3(sg + rhs),
-            Obj3::Group3(g) => Obj3::Group3(g + rhs),
-        }
-    }
-}
-
-impl<T> AddAssign<T> for Obj3
-where
-    T: Into<Pt3>,
-{
-    fn add_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        match self {
-            Obj3::Pg3(p) => {
-                *p += rhs;
-            }
-            Obj3::Sg3(sg) => {
-                *sg += rhs;
-            }
-            Obj3::Group3(g) => {
-                *g += rhs;
-            }
-        }
-    }
-}
+plotz_geometry::ops_defaults_t!(Obj3, Pt3);
 
 impl Rotatable for Obj3 {
     fn rotate(&self, by: f64, about: Ry3) -> Result<Self> {
