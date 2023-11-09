@@ -29,27 +29,7 @@ impl<T: 'static> Group3<T> {
     }
 }
 
-impl<T: 'static, U> Add<U> for Group3<T>
-where
-    U: Into<Pt3>,
-{
-    type Output = Self;
-    fn add(self, r: U) -> Self::Output {
-        let rhs: Pt3 = r.into();
-        Self::new(self.0.into_iter().map(|(o, s)| (o + rhs, s)))
-    }
-}
-impl<T, U> AddAssign<U> for Group3<T>
-where
-    U: Into<Pt3>,
-{
-    fn add_assign(&mut self, r: U) {
-        let rhs: Pt3 = r.into();
-        self.0.iter_mut().for_each(|(o, _)| {
-            *o += rhs;
-        });
-    }
-}
+plotz_geometry::ops_generic_defaults_t!(Group3, Pt3);
 
 impl<T: 'static> Rotatable for Group3<T>
 where
