@@ -1,4 +1,6 @@
 //! A trait representing the bounds and bounding box for an object.
+#![allow(missing_docs)]
+
 use crate::{
     crop::PointLoc,
     shapes::{pg::Pg, pt::Pt},
@@ -7,78 +9,54 @@ use anyhow::{anyhow, Result};
 use enum_dispatch::enum_dispatch;
 use float_ord::FloatOrd;
 
-/// The bounds of a geometric object.
 #[derive(Debug, Copy, Clone)]
 pub struct Bounds {
-    /// Top bound.
-    pub top_bound: f64,
-    /// Bottom bound.
-    pub bottom_bound: f64,
-    /// Left bound.
-    pub left_bound: f64,
-    /// Right bound.
-    pub right_bound: f64,
+    pub y_max: f64,
+    pub y_min: f64,
+    pub x_min: f64,
+    pub x_max: f64,
 }
 
 impl Bounds {
-    /// Creates a frame, suitable for cropping.
     pub fn to_polygon(&self) -> Pg {
-        Pg([self.tl(), self.tr(), self.br(), self.bl(), self.tl()]).unwrap()
+        Pg([
+            self.x_min_y_max(),
+            self.x_max_y_max(),
+            self.x_max_y_min(),
+            self.x_min_y_min(),
+            self.x_min_y_max(),
+        ])
+        .unwrap()
     }
-    /// Whether or not bounds contain a point.
+
     pub fn contains_pt(&self, pt: Pt) -> Result<PointLoc> {
         self.to_polygon().contains_pt(&pt)
     }
-    /// The right bound of an object.
-    pub fn r(&self) -> f64 {
-        self.right_bound
+
+    pub fn x_span(&self) -> f64 {
+        self.x_max - self.x_min
     }
-    /// The left bound of an object.
-    pub fn l(&self) -> f64 {
-        self.left_bound
+    pub fn y_span(&self) -> f64 {
+        self.y_min - self.y_max
     }
-    /// The top bound of an object.
-    pub fn t(&self) -> f64 {
-        self.top_bound
+    pub fn x_min_y_max(&self) -> Pt {
+        Pt(self.x_min, self.y_max)
     }
-    /// The bottom bound of an object.
-    pub fn b(&self) -> f64 {
-        self.bottom_bound
+    pub fn x_max_y_max(&self) -> Pt {
+        Pt(self.x_max, self.y_max)
     }
-    /// The width of an object.
-    pub fn w(&self) -> f64 {
-        self.r() - self.l()
+    pub fn x_min_y_min(&self) -> Pt {
+        Pt(self.x_min, self.y_min)
     }
-    /// The height of an object.
-    pub fn h(&self) -> f64 {
-        self.b() - self.t()
-    }
-    /// The point at the top-left corner of an object's bounding box.
-    pub fn tl(&self) -> Pt {
-        Pt(self.l(), self.t())
-    }
-    /// The point at the top-right corner of an object's bounding box.
-    pub fn tr(&self) -> Pt {
-        Pt(self.r(), self.t())
-    }
-    /// The point at the bottom-left corner of an object's bounding box.
-    pub fn bl(&self) -> Pt {
-        Pt(self.l(), self.b())
-    }
-    /// The point at the bottom-right corner of an object's bounding box.
-    pub fn br(&self) -> Pt {
-        Pt(self.r(), self.b())
+    pub fn x_max_y_min(&self) -> Pt {
+        Pt(self.x_max, self.y_min)
     }
 
-    /// The center of the bounding box of an object.
     pub fn center(&self) -> Pt {
-        Pt(self.l() + (self.w() / 2.0), self.t() + (self.h() / 2.0))
-    }
-}
-
-impl Bounded for Bounds {
-    fn bounds(&self) -> Result<Bounds> {
-        Ok(*self)
+        Pt(
+            self.x_min + (self.x_span() / 2.0),
+            self.y_max + (self.y_span() / 2.0),
+        )
     }
 }
 
@@ -89,61 +67,40 @@ impl Bounded for Bounds {
 /// Unlike most graphics systems, we assume that (0,0) is in the bottom-left.
 #[enum_dispatch(Obj)]
 pub trait Bounded {
-    /// Internal use only.
     fn bounds(&self) -> Result<Bounds>;
 }
 
-/// A handy struct for collecting the outer bounds of a streaming iterator of
-/// polygons.
+#[derive(Default)]
 pub struct BoundsCollector {
-    bound_t: Option<FloatOrd<f64>>,
-    bound_b: Option<FloatOrd<f64>>,
-    bound_l: Option<FloatOrd<f64>>,
-    bound_r: Option<FloatOrd<f64>>,
+    y_max: Option<FloatOrd<f64>>,
+    y_min: Option<FloatOrd<f64>>,
+    x_min: Option<FloatOrd<f64>>,
+    x_max: Option<FloatOrd<f64>>,
     items_seen: usize,
 }
 
-impl Default for BoundsCollector {
-    /// A new bounds collector.
-    fn default() -> Self {
-        BoundsCollector {
-            bound_t: None,
-            bound_b: None,
-            bound_l: None,
-            bound_r: None,
-            items_seen: 0_usize,
-        }
-    }
-}
-
 impl BoundsCollector {
-    /// How many items has this seen?
     pub fn items_seen(&self) -> usize {
         self.items_seen
     }
 
-    /// Incorporate a new polygon to this bounds collector.
     pub fn incorporate(&mut self, b: &impl Bounded) -> Result<()> {
         let bounds = b.bounds()?;
-        // top
-        self.bound_t = Some(match self.bound_t {
-            None => FloatOrd(bounds.t()),
-            Some(existing) => std::cmp::max(existing, FloatOrd(bounds.t())),
+        self.y_max = Some(match self.y_max {
+            None => FloatOrd(bounds.y_max),
+            Some(existing) => std::cmp::max(existing, FloatOrd(bounds.y_max)),
         });
-        // bottom
-        self.bound_b = Some(match self.bound_b {
-            None => FloatOrd(bounds.b()),
-            Some(existing) => std::cmp::min(existing, FloatOrd(bounds.b())),
+        self.y_min = Some(match self.y_min {
+            None => FloatOrd(bounds.y_min),
+            Some(existing) => std::cmp::min(existing, FloatOrd(bounds.y_min)),
         });
-        // right
-        self.bound_r = Some(match self.bound_r {
-            None => FloatOrd(bounds.r()),
-            Some(existing) => std::cmp::max(existing, FloatOrd(bounds.r())),
+        self.x_max = Some(match self.x_max {
+            None => FloatOrd(bounds.x_max),
+            Some(existing) => std::cmp::max(existing, FloatOrd(bounds.x_max)),
         });
-        // left
-        self.bound_l = Some(match self.bound_l {
-            None => FloatOrd(bounds.l()),
-            Some(existing) => std::cmp::min(existing, FloatOrd(bounds.l())),
+        self.x_min = Some(match self.x_min {
+            None => FloatOrd(bounds.x_min),
+            Some(existing) => std::cmp::min(existing, FloatOrd(bounds.x_min)),
         });
         self.items_seen += 1;
         Ok(())
@@ -153,10 +110,10 @@ impl BoundsCollector {
 impl Bounded for BoundsCollector {
     fn bounds(&self) -> Result<Bounds> {
         Ok(Bounds {
-            top_bound: self.bound_t.ok_or(anyhow!("absent"))?.0,
-            bottom_bound: self.bound_b.ok_or(anyhow!("absent"))?.0,
-            left_bound: self.bound_l.ok_or(anyhow!("absent"))?.0,
-            right_bound: self.bound_r.ok_or(anyhow!("absent"))?.0,
+            y_max: self.y_max.ok_or(anyhow!("absent"))?.0,
+            y_min: self.y_min.ok_or(anyhow!("absent"))?.0,
+            x_min: self.x_min.ok_or(anyhow!("absent"))?.0,
+            x_max: self.x_max.ok_or(anyhow!("absent"))?.0,
         })
     }
 }
@@ -187,9 +144,9 @@ mod test_super {
             Pg([(0, 2), (1, 2), (1, 3)]).unwrap(),
         ];
         let bounds = streaming_bbox(&polygons).unwrap();
-        assert_eq!(bounds.bl(), Pt(0, 0));
-        assert_eq!(bounds.tl(), Pt(0, 3));
-        assert_eq!(bounds.tr(), Pt(3, 3));
-        assert_eq!(bounds.br(), Pt(3, 0));
+        assert_eq!(bounds.x_min_y_min(), Pt(0, 0));
+        assert_eq!(bounds.x_min_y_max(), Pt(0, 3));
+        assert_eq!(bounds.x_max_y_max(), Pt(3, 3));
+        assert_eq!(bounds.x_max_y_min(), Pt(3, 0));
     }
 }

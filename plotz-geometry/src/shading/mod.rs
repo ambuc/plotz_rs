@@ -26,19 +26,25 @@ pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Sg>> {
     let ynudge = Pt(-1, 1);
     let mut line = if config.slope > 0.0 {
         Sg(
-            bounds.tl() - xnudge,
-            bounds.tl() + (bounds.w(), bounds.w() * config.slope) + xnudge,
+            bounds.x_min_y_max() - xnudge,
+            bounds.x_min_y_max() + (bounds.x_span(), bounds.x_span() * config.slope) + xnudge,
         )
     } else {
         Sg(
-            bounds.tr() - ynudge,
-            bounds.tr() + (-1.0 * bounds.w(), -1.0 * bounds.w() * config.slope) + ynudge,
+            bounds.x_max_y_max() - ynudge,
+            bounds.x_max_y_max()
+                + (
+                    -1.0 * bounds.x_span(),
+                    -1.0 * bounds.x_span() * config.slope,
+                )
+                + ynudge,
         )
     };
 
     let step = compute_vertical_step(config.gap, config.slope);
 
-    while FloatOrd(line.i.y) > FloatOrd(bounds.b()) || FloatOrd(line.f.y) > FloatOrd(bounds.b()) {
+    while FloatOrd(line.i.y) > FloatOrd(bounds.y_min) || FloatOrd(line.f.y) > FloatOrd(bounds.y_min)
+    {
         let cropped_strokes = line.crop_to(polygon)?;
         segments.extend(cropped_strokes.iter());
         // segments.push(line);

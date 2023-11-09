@@ -24,24 +24,8 @@ impl Bounds3 {
             (self.x_span(), self.y_span(), self.z_span()),
         )
     }
-    pub fn x_min(&self) -> f64 {
-        self.x_min
-    }
-    pub fn y_min(&self) -> f64 {
-        self.y_min
-    }
-    pub fn z_min(&self) -> f64 {
-        self.z_min
-    }
-    pub fn x_max(&self) -> f64 {
-        self.x_max
-    }
-    pub fn y_max(&self) -> f64 {
-        self.y_max
-    }
-    pub fn z_max(&self) -> f64 {
-        self.z_max
-    }
+
+    // TODO(ambuc): contains_pt
 
     pub fn x_span(&self) -> f64 {
         self.x_max - self.x_min
@@ -52,6 +36,7 @@ impl Bounds3 {
     pub fn z_span(&self) -> f64 {
         self.z_max - self.z_min
     }
+
     pub fn center(&self) -> Pt3 {
         Pt3(
             self.x_min + (self.x_span()) / 2.0,

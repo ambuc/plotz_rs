@@ -243,10 +243,10 @@ impl Map {
     fn adjust_bl_shift(&mut self) -> Result<()> {
         let canvas_bounds = self.canvas.bounds()?;
         self.canvas.translate_all(|pt| {
-            *pt -= canvas_bounds.bl();
+            *pt -= canvas_bounds.x_min_y_min();
         });
         if let Some(center) = &mut self.center {
-            *center -= canvas_bounds.bl();
+            *center -= canvas_bounds.x_min_y_min();
         }
         Ok(())
     }
@@ -260,8 +260,8 @@ impl Map {
             None => {
                 let canvas_bounds = self.canvas.bounds()?;
                 Pt(
-                    (dest_size.width as f64 - canvas_bounds.r()) / 2.0,
-                    (dest_size.height as f64 - canvas_bounds.t()) / 2.0,
+                    (dest_size.width as f64 - canvas_bounds.x_max) / 2.0,
+                    (dest_size.height as f64 - canvas_bounds.y_max) / 2.0,
                 )
             }
         };
@@ -272,8 +272,8 @@ impl Map {
     fn adjust_scaling(&mut self, scale_factor: f64, dest_size: &Size) -> Result<()> {
         let canvas_bounds = self.canvas.bounds()?;
         let scaling_factor = std::cmp::max(
-            FloatOrd(dest_size.height as f64 / canvas_bounds.h().abs()),
-            FloatOrd(dest_size.width as f64 / canvas_bounds.w().abs()),
+            FloatOrd(dest_size.height as f64 / canvas_bounds.y_span().abs()),
+            FloatOrd(dest_size.width as f64 / canvas_bounds.x_span().abs()),
         )
         .0 * scale_factor;
         self.canvas.scale_all(|obj| {
@@ -546,10 +546,10 @@ mod tests {
             // |   |
             // +---3>
             let b = rolling_bbox.bounds()?;
-            assert_eq!(b.l(), 0.0);
-            assert_eq!(b.b(), 0.0);
-            assert_eq!(b.t(), 5.0);
-            assert_eq!(b.r(), 3.0);
+            assert_eq!(b.x_min, 0.0);
+            assert_eq!(b.y_min, 0.0);
+            assert_eq!(b.y_max, 5.0);
+            assert_eq!(b.x_max, 3.0);
         }
 
         let () = map.do_all_adjustments(0.9, &map_config.size).unwrap();
@@ -562,10 +562,10 @@ mod tests {
                 })
             });
             let b = rolling_bbox.bounds()?;
-            assert_float_eq!(b.l(), 51.200, abs <= 0.000_01);
-            assert_float_eq!(b.b(), -256.976635, abs <= 0.000_01);
-            assert_float_eq!(b.t(), 1280.976635, abs <= 0.000_01);
-            assert_float_eq!(b.r(), 972.8, abs <= 0.000_01);
+            assert_float_eq!(b.x_min, 51.200, abs <= 0.000_01);
+            assert_float_eq!(b.y_min, -256.976635, abs <= 0.000_01);
+            assert_float_eq!(b.y_max, 1280.976635, abs <= 0.000_01);
+            assert_float_eq!(b.x_max, 972.8, abs <= 0.000_01);
         }
 
         let () = map.render(&map_config).unwrap();

@@ -263,10 +263,10 @@ impl Pt {
 impl Bounded for Pt {
     fn bounds(&self) -> Result<Bounds> {
         Ok(Bounds {
-            top_bound: self.y,
-            bottom_bound: self.y,
-            left_bound: self.x,
-            right_bound: self.x,
+            y_max: self.y,
+            y_min: self.y,
+            x_min: self.x,
+            x_max: self.x,
         })
     }
 }

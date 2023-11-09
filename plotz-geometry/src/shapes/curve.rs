@@ -50,28 +50,28 @@ impl CurveArc {
 impl Bounded for CurveArc {
     fn bounds(&self) -> Result<Bounds> {
         Ok(Bounds {
-            top_bound: self.ctr.y
+            y_max: self.ctr.y
                 + self.radius
                     * if self.angle_range().contains(&FRAC_PI_2) {
                         1.0
                     } else {
                         max(FloatOrd(self.angle_i.sin()), FloatOrd(self.angle_f.sin())).0
                     },
-            bottom_bound: self.ctr.y
+            y_min: self.ctr.y
                 + self.radius
                     * if self.angle_range().contains(&(3.0 * FRAC_PI_2)) {
                         -1.0
                     } else {
                         min(FloatOrd(self.angle_i.sin()), FloatOrd(self.angle_f.sin())).0
                     },
-            left_bound: self.ctr.x
+            x_min: self.ctr.x
                 + self.radius
                     * if self.angle_range().contains(&PI) {
                         -1.0
                     } else {
                         min(FloatOrd(self.angle_i.cos()), FloatOrd(self.angle_f.cos())).0
                     },
-            right_bound: self.ctr.x
+            x_max: self.ctr.x
                 + self.radius
                     * if self.angle_range().contains(&TAU) {
                         1.0

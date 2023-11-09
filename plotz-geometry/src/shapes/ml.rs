@@ -143,28 +143,28 @@ crate::ops_defaults_t!(Ml, Pt);
 impl Bounded for Ml {
     fn bounds(&self) -> Result<Bounds> {
         Ok(Bounds {
-            top_bound: self
+            y_max: self
                 .pts
                 .iter()
                 .map(|p| FloatOrd(p.y))
                 .max()
                 .ok_or(anyhow!("not empty"))?
                 .0,
-            bottom_bound: self
+            y_min: self
                 .pts
                 .iter()
                 .map(|p| FloatOrd(p.y))
                 .min()
                 .ok_or(anyhow!("not empty"))?
                 .0,
-            left_bound: self
+            x_min: self
                 .pts
                 .iter()
                 .map(|p| FloatOrd(p.x))
                 .min()
                 .ok_or(anyhow!("not empty"))?
                 .0,
-            right_bound: self
+            x_max: self
                 .pts
                 .iter()
                 .map(|p| FloatOrd(p.x))

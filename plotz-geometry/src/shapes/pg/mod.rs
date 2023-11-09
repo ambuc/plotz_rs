@@ -368,28 +368,28 @@ crate::ops_defaults_t!(Pg, Pt);
 impl Bounded for Pg {
     fn bounds(&self) -> Result<Bounds> {
         Ok(Bounds {
-            top_bound: self
+            y_max: self
                 .pts
                 .iter()
                 .map(|p| FloatOrd(p.y))
                 .max()
                 .ok_or(anyhow!("not empty"))?
                 .0,
-            bottom_bound: self
+            y_min: self
                 .pts
                 .iter()
                 .map(|p| FloatOrd(p.y))
                 .min()
                 .ok_or(anyhow!("not empty"))?
                 .0,
-            left_bound: self
+            x_min: self
                 .pts
                 .iter()
                 .map(|p| FloatOrd(p.x))
                 .min()
                 .ok_or(anyhow!("not empty"))?
                 .0,
-            right_bound: self
+            x_max: self
                 .pts
                 .iter()
                 .map(|p| FloatOrd(p.x))
@@ -923,14 +923,14 @@ mod tests {
         let d = Pt(0, 1);
         let p = Pg([h, f, b, d])?;
         let bounds = p.bounds()?;
-        assert_eq!(bounds.t(), 2.0);
-        assert_eq!(bounds.b(), 0.0);
-        assert_eq!(bounds.l(), 0.0);
-        assert_eq!(bounds.r(), 2.0);
-        assert_eq!(bounds.tl(), Pt(0, 2));
-        assert_eq!(bounds.bl(), Pt(0, 0));
-        assert_eq!(bounds.tr(), Pt(2, 2));
-        assert_eq!(bounds.br(), Pt(2, 0));
+        assert_eq!(bounds.y_max, 2.0);
+        assert_eq!(bounds.y_min, 0.0);
+        assert_eq!(bounds.x_min, 0.0);
+        assert_eq!(bounds.x_max, 2.0);
+        assert_eq!(bounds.x_min_y_max(), Pt(0, 2));
+        assert_eq!(bounds.x_min_y_min(), Pt(0, 0));
+        assert_eq!(bounds.x_max_y_max(), Pt(2, 2));
+        assert_eq!(bounds.x_max_y_min(), Pt(2, 0));
         Ok(())
     }
 

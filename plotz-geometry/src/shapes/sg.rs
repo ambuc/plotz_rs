@@ -216,10 +216,10 @@ crate::ops_defaults_t!(Sg, Pt);
 impl Bounded for Sg {
     fn bounds(&self) -> Result<Bounds> {
         Ok(Bounds {
-            top_bound: std::cmp::max(FloatOrd(self.i.y), FloatOrd(self.f.y)).0,
-            bottom_bound: std::cmp::min(FloatOrd(self.i.y), FloatOrd(self.f.y)).0,
-            left_bound: std::cmp::min(FloatOrd(self.i.x), FloatOrd(self.f.x)).0,
-            right_bound: std::cmp::max(FloatOrd(self.i.x), FloatOrd(self.f.x)).0,
+            y_max: std::cmp::max(FloatOrd(self.i.y), FloatOrd(self.f.y)).0,
+            y_min: std::cmp::min(FloatOrd(self.i.y), FloatOrd(self.f.y)).0,
+            x_min: std::cmp::min(FloatOrd(self.i.x), FloatOrd(self.f.x)).0,
+            x_max: std::cmp::max(FloatOrd(self.i.x), FloatOrd(self.f.x)).0,
         })
     }
 }
@@ -682,14 +682,14 @@ mod tests {
     fn test_bounded_segment() -> Result<()> {
         let s = Sg((0, 1), (1, 2));
         let b = s.bounds()?;
-        assert_eq!(b.b(), 1.0);
-        assert_eq!(b.t(), 2.0);
-        assert_eq!(b.l(), 0.0);
-        assert_eq!(b.r(), 1.0);
-        assert_eq!(b.bl(), Pt(0, 1));
-        assert_eq!(b.tl(), Pt(0, 2));
-        assert_eq!(b.br(), Pt(1, 1));
-        assert_eq!(b.tr(), Pt(1, 2));
+        assert_eq!(b.y_min, 1.0);
+        assert_eq!(b.y_max, 2.0);
+        assert_eq!(b.x_min, 0.0);
+        assert_eq!(b.x_max, 1.0);
+        assert_eq!(b.x_min_y_min(), Pt(0, 1));
+        assert_eq!(b.x_min_y_max(), Pt(0, 2));
+        assert_eq!(b.x_max_y_min(), Pt(1, 1));
+        assert_eq!(b.x_max_y_max(), Pt(1, 2));
         Ok(())
     }
 }

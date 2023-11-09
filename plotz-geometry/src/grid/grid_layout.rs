@@ -77,10 +77,10 @@ impl GridLayout {
         let (x_init, y_init) = self.settings.init;
 
         Bounds {
-            top_bound: y_init as f64 + (j + 1) as f64 * cubby_height - object_margin_y as f64,
-            bottom_bound: y_init as f64 + j as f64 * cubby_height + object_margin_y as f64,
-            left_bound: x_init as f64 + i as f64 * cubby_width + object_margin_x as f64,
-            right_bound: x_init as f64 + (i + 1) as f64 * cubby_width - object_margin_x as f64,
+            y_max: y_init as f64 + (j + 1) as f64 * cubby_height - object_margin_y as f64,
+            y_min: y_init as f64 + j as f64 * cubby_height + object_margin_y as f64,
+            x_min: x_init as f64 + i as f64 * cubby_width + object_margin_x as f64,
+            x_max: x_init as f64 + (i + 1) as f64 * cubby_width - object_margin_x as f64,
         }
     }
 
@@ -124,8 +124,8 @@ impl GridLayout {
             let frame_bounds = self.get_cubby_bounds((i, j));
             let inner_bounds = obj.bounds()?;
 
-            let w_scale = frame_bounds.w() / inner_bounds.w();
-            let s_scale = frame_bounds.h() / inner_bounds.h();
+            let w_scale = frame_bounds.x_span() / inner_bounds.x_span();
+            let s_scale = frame_bounds.y_span() / inner_bounds.y_span();
             let scale = std::cmp::min(FloatOrd(w_scale), FloatOrd(s_scale)).0 * buffer;
 
             obj *= scale;
