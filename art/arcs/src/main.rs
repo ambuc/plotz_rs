@@ -11,7 +11,7 @@ use plotz_geometry::{
     crop::Croppable,
     grid::Grid,
     obj::Obj,
-    shapes::{curve::CurveArcs, polygon::Pg},
+    shapes::{curve::CurveArcs, polygon::Polygon},
     style::Style,
 };
 use rand::Rng;
@@ -37,7 +37,7 @@ fn main() -> Result<()> {
         /*offset=*/ (mgn, mgn),
     )?;
     {
-        let frame_polygon: Pg = frame.0.clone().try_into().unwrap();
+        let frame_polygon: Polygon = frame.0.clone().try_into().unwrap();
 
         let frame_ctr = frame.0.bounds()?.center();
 

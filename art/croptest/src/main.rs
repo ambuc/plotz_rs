@@ -14,7 +14,7 @@ use plotz_geometry::{
     obj::Obj,
     shapes::{
         point::Point,
-        polygon::{Pg, Rect},
+        polygon::{Polygon, Rect},
     },
     style::Style,
 };
@@ -97,7 +97,7 @@ fn main() -> Result<()> {
         };
 
         let subject_sq = (
-            Obj::Pg(Pg(pts)?) + offset,
+            Obj::Pg(Polygon(pts)?) + offset,
             Style {
                 color: RED,
                 ..Default::default()

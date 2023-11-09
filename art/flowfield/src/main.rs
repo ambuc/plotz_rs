@@ -10,7 +10,9 @@ use plotz_core::{
 use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
-    shapes::{curve::CurveArc, multiline::Multiline, point::Point, polygon::Pg, segment::Segment},
+    shapes::{
+        curve::CurveArc, multiline::Multiline, point::Point, polygon::Polygon, segment::Segment,
+    },
     style::Style,
 };
 use rand::{thread_rng, Rng};
@@ -135,7 +137,7 @@ fn main() -> Result<()> {
             .collect::<Vec<_>>(),
     );
 
-    let frame_pg: Pg = frame.0.clone().try_into().unwrap();
+    let frame_pg: Polygon = frame.0.clone().try_into().unwrap();
     Canvas::builder()
         .dos_by_bucket(canvas::to_canvas_map(
             dos.into_iter().flat_map(|(obj, style)| {

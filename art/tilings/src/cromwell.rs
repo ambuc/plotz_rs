@@ -8,7 +8,7 @@ use plotz_geometry::{
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
         point::{Point, PolarPt},
-        polygon::Pg,
+        polygon::Polygon,
     },
     style::Style,
 };
@@ -287,7 +287,7 @@ pub fn make() -> Vec<(Obj, Style)> {
         .into_iter()
         .flat_map(|tile| {
             let color = tile.color();
-            let mut p = Pg(tile.pts()).unwrap();
+            let mut p = Polygon(tile.pts()).unwrap();
             p *= (1, -1); // flip
             p *= 3500.0;
             p += (95, -300); // translate

@@ -5,7 +5,7 @@ use crate::{
     intersection::{Intersection, IntersectionResult, Pair, Which},
     shapes::{
         point::{is_colinear_n, Point},
-        polygon::Pg,
+        polygon::Polygon,
     },
 };
 use anyhow::{anyhow, Context, Result};
@@ -26,9 +26,9 @@ pub struct CropGraph<'a> {
     #[builder(default)]
     graph: DiGraphMap<Point, ()>,
 
-    a: &'a Pg,
+    a: &'a Polygon,
 
-    b: &'a Pg,
+    b: &'a Polygon,
 
     // why do we have a known_pts vector?
     //
@@ -44,7 +44,11 @@ pub struct CropGraph<'a> {
 }
 
 impl<'a> CropGraph<'a> {
-    pub fn run(a: &Pg, b: &Pg, crop_type: CropType) -> Result<(Vec<Pg>, DiGraphMap<Point, ()>)> {
+    pub fn run(
+        a: &Polygon,
+        b: &Polygon,
+        crop_type: CropType,
+    ) -> Result<(Vec<Polygon>, DiGraphMap<Point, ()>)> {
         let mut crop_graph = CropGraph::builder().a(a).b(b).build();
         crop_graph.build_from_polygons(crop_type);
         crop_graph.remove_nodes_outside_polygon(Which::A);
@@ -85,7 +89,7 @@ impl<'a> CropGraph<'a> {
         }
     }
 
-    fn get(&self, which: Which) -> &Pg {
+    fn get(&self, which: Which) -> &Polygon {
         Pair {
             a: &self.a,
             b: &self.b,
@@ -277,7 +281,7 @@ impl<'a> CropGraph<'a> {
     }
 
     // Returns a polygon, if possible. An error state here represents some vailed invariant.
-    fn extract_polygon(&mut self) -> Result<Option<Pg>> {
+    fn extract_polygon(&mut self) -> Result<Option<Polygon>> {
         let mut pts: Vec<Point> = vec![];
 
         if self.graph.node_count() == 0 {
@@ -367,7 +371,7 @@ impl<'a> CropGraph<'a> {
         }
 
         let dbg = format!("pts: {:?}", pts);
-        Ok(Some(Pg(pts).context(dbg)?))
+        Ok(Some(Polygon(pts).context(dbg)?))
     }
 
     #[allow(unused)]
@@ -379,7 +383,7 @@ impl<'a> CropGraph<'a> {
     }
 
     // NB: Destructive, walks and destroys graph.
-    fn trim_and_create_resultant_polygons(mut self) -> Result<Vec<Pg>> {
+    fn trim_and_create_resultant_polygons(mut self) -> Result<Vec<Polygon>> {
         let mut resultant = vec![];
 
         while let Some(pg) = self.extract_polygon().context("extract polygon")? {
@@ -399,7 +403,7 @@ mod test {
     use itertools::iproduct;
     use test_case::test_case;
 
-    fn u_shape() -> Pg {
+    fn u_shape() -> Polygon {
         let a = Point(60, 60);
         let b = Point(70, 60);
         let c = Point(80, 60);
@@ -408,10 +412,10 @@ mod test {
         let f = Point(80, 75);
         let g = Point(60, 90);
         let h = Point(90, 90);
-        Pg([a, b, e, f, c, d, h, g, a]).unwrap()
+        Polygon([a, b, e, f, c, d, h, g, a]).unwrap()
     }
 
-    fn h_shape() -> Pg {
+    fn h_shape() -> Polygon {
         let a = Point(60, 40);
         let b = Point(70, 40);
         let c = Point(70, 70);
@@ -424,14 +428,14 @@ mod test {
         let j = Point(70, 80);
         let k = Point(70, 110);
         let l = Point(60, 110);
-        Pg([a, b, c, d, e, f, g, h, i, j, k, l, a]).unwrap()
+        Polygon([a, b, c, d, e, f, g, h, i, j, k, l, a]).unwrap()
     }
 
     #[test_case(u_shape(), CropType::Exclusive; "u-shape, exclusive")]
     #[test_case(u_shape(), CropType::Inclusive; "u-shape, inclusive")]
     #[test_case(h_shape(), CropType::Exclusive; "h-shape, exclusive")]
     #[test_case(h_shape(), CropType::Inclusive; "h-shape, inclusive")]
-    fn test_all_crops(shape: Pg, crop_type: CropType) -> Result<()> {
+    fn test_all_crops(shape: Polygon, crop_type: CropType) -> Result<()> {
         let boundary = Rect((50, 50), (50, 50)).unwrap();
         let margin = 10.0;
         for (_idx, offset) in iproduct!(0..=5, 0..=4).map(|(i, j)| {
@@ -480,7 +484,7 @@ mod test {
 
     #[test]
     fn test_reproduce_error() -> Result<()> {
-        let a = Pg([
+        let a = Polygon([
             Point(0.19999999999999995559, -0.11299423149111920139),
             Point(0.19999999999999995559, 0.16984848098349947243),
             Point(0.50710678118654750612, 0.38700576850888046554),
@@ -492,7 +496,7 @@ mod test {
             Point(0.29289321881345276033, -0.17867965644035743722),
         ])?;
 
-        let b = Pg([
+        let b = Polygon([
             Point(0.80000000000000004441, -0.53725830020304798929),
             Point(0.19999999999999995559, -0.11299423149111920139),
             Point(0.19999999999999995559, 0.16984848098349947243),

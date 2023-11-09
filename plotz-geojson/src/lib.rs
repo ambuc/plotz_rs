@@ -6,7 +6,7 @@
 use anyhow::{anyhow, Result};
 use plotz_geometry::{
     obj::Obj,
-    shapes::{multiline::Multiline, point::Point, polygon::Pg},
+    shapes::{multiline::Multiline, point::Point, polygon::Polygon},
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -167,20 +167,22 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj>> {
         .ok_or(anyhow!("not array"))?
         .iter()
         .map(|points_list| {
-            Pg(points_list
-                .as_array()
-                .ok_or(anyhow!("not array"))?
-                .iter()
-                .map(|p| {
-                    Ok(Point(
-                        p[0].as_f64().ok_or(anyhow!("not f64"))?,
-                        p[1].as_f64().ok_or(anyhow!("not f64"))?,
-                    ))
-                })
-                .collect::<Result<Vec<_>>>()?)
+            Polygon(
+                points_list
+                    .as_array()
+                    .ok_or(anyhow!("not array"))?
+                    .iter()
+                    .map(|p| {
+                        Ok(Point(
+                            p[0].as_f64().ok_or(anyhow!("not f64"))?,
+                            p[1].as_f64().ok_or(anyhow!("not f64"))?,
+                        ))
+                    })
+                    .collect::<Result<Vec<_>>>()?,
+            )
         })
         .collect::<Result<_, _>>()?)
-    .map(|v: Vec<Pg>| v.into_iter().map(Obj::from).collect::<Vec<_>>())
+    .map(|v: Vec<Polygon>| v.into_iter().map(Obj::from).collect::<Vec<_>>())
 }
 
 fn parse_to_circle(_coords: &Value) -> Result<Vec<Obj>> {
@@ -220,7 +222,7 @@ mod tests {
         assert_eq!(
             parse_to_polygon(&geojson).unwrap(),
             vec![Obj::from(
-                Pg([
+                Polygon([
                     (-74.015_651_1, 40.721_544_6),
                     (-74.015_493_9, 40.721_526_2),
                     (-74.014_280_9, 40.721_384_4),
@@ -263,7 +265,7 @@ mod tests {
         assert_eq!(polygons.len(), 4);
         assert_eq!(
             polygons[0].0,
-            Obj::from(Pg([(0.0, 0.0), (1.0, 2.5), (2.0, 5.0)])?)
+            Obj::from(Polygon([(0.0, 0.0), (1.0, 2.5), (2.0, 5.0)])?)
         );
 
         // assert_symbol_tuple_list(
@@ -291,12 +293,12 @@ mod tests {
 
         assert_eq!(
             polygons[2].0,
-            Obj::from(Pg([(2.0, 2.0), (1.0, 2.5), (2.0, 5.0)])?)
+            Obj::from(Polygon([(2.0, 2.0), (1.0, 2.5), (2.0, 5.0)])?)
         );
 
         assert_eq!(
             polygons[3].0,
-            Obj::from(Pg([(3.0, 3.0), (1.0, 2.5), (2.0, 5.0)])?)
+            Obj::from(Polygon([(3.0, 3.0), (1.0, 2.5), (2.0, 5.0)])?)
         );
         Ok(())
     }

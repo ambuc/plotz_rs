@@ -5,7 +5,7 @@ use crate::{
     bounded::{streaming_bbox, Bounded, Bounds},
     crop::{CropType, Croppable},
     obj::{Obj, ObjType2d},
-    shapes::{point::Point, polygon::Pg},
+    shapes::{point::Point, polygon::Polygon},
     *,
 };
 use anyhow::Result;
@@ -42,7 +42,7 @@ where
     T: Clone,
 {
     type Output = Group<T>;
-    fn crop(&self, frame: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>> {
+    fn crop(&self, frame: &Polygon, crop_type: CropType) -> Result<Vec<Self::Output>> {
         Ok(vec![Group::new(
             self.0
                 .iter()
@@ -56,7 +56,7 @@ where
                 .collect::<Result<Vec<(Obj, T)>>>()?,
         )])
     }
-    fn crop_excluding(&self, _other: &Pg) -> Result<Vec<Self::Output>>
+    fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {

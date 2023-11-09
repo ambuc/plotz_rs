@@ -19,7 +19,7 @@ use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{point::Point, polygon::Pg, segment::Segment},
+    shapes::{point::Point, polygon::Polygon, segment::Segment},
     style::Style,
 };
 use rand::{thread_rng, Rng};
@@ -361,7 +361,7 @@ impl Map {
 
     /// Crop everything everywhere to the frame polygon. (Passed in here for
     /// Flexibility.)
-    pub fn crop_to_frame(&mut self, frame: &Pg) -> Result<()> {
+    pub fn crop_to_frame(&mut self, frame: &Polygon) -> Result<()> {
         trace!("Cropping all to frame.");
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             *dos = dos
@@ -452,7 +452,7 @@ impl Map {
                 ),
                 Point(margin, margin),
             )?;
-            let frame_pg: Pg = frame.0.clone().try_into().unwrap();
+            let frame_pg: Polygon = frame.0.clone().try_into().unwrap();
             self.canvas.frame = Some(frame);
             let () = self.crop_to_frame(&frame_pg)?;
         }
@@ -488,7 +488,7 @@ fn paths_to_files(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plotz_geometry::shapes::polygon::Pg;
+    use plotz_geometry::shapes::polygon::Polygon;
     use tempdir::TempDir;
 
     #[test]
@@ -560,7 +560,7 @@ mod tests {
             // shift negative
             ([(1, 1), (1, 2), (2, 1)], [(0, 0), (0, 1), (1, 0)]),
         ] {
-            let obj = Obj::Pg(Pg(initial)?);
+            let obj = Obj::Pg(Polygon(initial)?);
             let mut map = Map {
                 canvas: {
                     let mut canvas = Canvas::default();
@@ -582,7 +582,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].0, Obj::Pg(Pg(expected)?));
+            assert_eq!(x.next().unwrap()[0].0, Obj::Pg(Polygon(expected)?));
         }
         Ok(())
     }
@@ -613,7 +613,7 @@ mod tests {
                 [Point(0, 0), Point(0, 900), Point(900, 0)],
             ),
         ] {
-            let obj = Obj::Pg(Pg(initial)?);
+            let obj = Obj::Pg(Polygon(initial)?);
             let mut map = Map {
                 center: None,
                 canvas: {
@@ -635,7 +635,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].0, Obj::Pg(Pg(expected)?));
+            assert_eq!(x.next().unwrap()[0].0, Obj::Pg(Polygon(expected)?));
         }
         Ok(())
     }

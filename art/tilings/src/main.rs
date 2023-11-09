@@ -5,7 +5,7 @@ use plotz_core::{
     frame::make_frame,
     svg::Size,
 };
-use plotz_geometry::{crop::PointLoc, obj::Obj, shapes::polygon::Pg, style::Style, Object};
+use plotz_geometry::{crop::PointLoc, obj::Obj, shapes::polygon::Polygon, style::Style, Object};
 
 mod ab_rhomb;
 mod cromwell;
@@ -32,7 +32,7 @@ fn main() -> Result<()> {
     };
 
     let frame = make_frame((720.0, 720.0 * 1.3), /*offset=*/ (20, 20))?;
-    let frame_polygon: Pg = frame.0.clone().try_into().unwrap();
+    let frame_polygon: Polygon = frame.0.clone().try_into().unwrap();
 
     // drain things not in frame
     dos.retain(|(obj, _style)| {

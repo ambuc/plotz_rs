@@ -5,7 +5,7 @@ use std::cmp::{max, min};
 
 use crate::{
     crop::PointLoc,
-    shapes::{point::Point, polygon::Pg},
+    shapes::{point::Point, polygon::Polygon},
 };
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
@@ -29,8 +29,8 @@ impl Bounds {
         }
     }
 
-    pub fn to_polygon(&self) -> Pg {
-        Pg([
+    pub fn to_polygon(&self) -> Polygon {
+        Polygon([
             self.x_min_y_max(),
             self.x_max_y_max(),
             self.x_max_y_min(),
@@ -104,9 +104,9 @@ mod test_super {
     #[test]
     fn test_streaming_bbox() {
         let polygons = vec![
-            Pg([(0, 0), (1, 0), (1, 1)]).unwrap(),
-            Pg([(2, 0), (3, 0), (3, 1)]).unwrap(),
-            Pg([(0, 2), (1, 2), (1, 3)]).unwrap(),
+            Polygon([(0, 0), (1, 0), (1, 1)]).unwrap(),
+            Polygon([(2, 0), (3, 0), (3, 1)]).unwrap(),
+            Polygon([(0, 2), (1, 2), (1, 3)]).unwrap(),
         ];
         let bounds = streaming_bbox(&polygons).unwrap();
         assert_eq!(bounds.x_min_y_min(), Point(0, 0));

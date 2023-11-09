@@ -9,7 +9,7 @@ use plotz_core::{
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{point::Point, polygon::Pg},
+    shapes::{point::Point, polygon::Polygon},
     style::Style,
 };
 use rand::{prelude::SliceRandom, Rng};
@@ -87,10 +87,11 @@ fn main() -> Result<()> {
         .build()
         .ok_or(anyhow!("build voronoi"))?;
 
-    let polygons: Vec<Pg> = vornoi
+    let polygons: Vec<Polygon> = vornoi
         .iter_cells()
         .map(|cell| {
-            Pg(cell.iter_vertices().map(|vertex| (vertex.x, vertex.y))).unwrap() * DIM + (20, 20)
+            Polygon(cell.iter_vertices().map(|vertex| (vertex.x, vertex.y))).unwrap() * DIM
+                + (20, 20)
         })
         .collect();
 

@@ -1,7 +1,7 @@
 //! A 2D multiline.
 #![allow(missing_docs)]
 
-use super::{point::Point, polygon::Pg, segment::Segment};
+use super::{point::Point, polygon::Polygon, segment::Segment};
 use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable},
@@ -124,7 +124,7 @@ impl Multiline {
 impl Croppable for Multiline {
     type Output = Multiline;
 
-    fn crop(&self, _other: &Pg, _crop_type: CropType) -> Result<Vec<Self::Output>> {
+    fn crop(&self, _other: &Polygon, _crop_type: CropType) -> Result<Vec<Self::Output>> {
         todo!("https://github.com/ambuc/plotz_rs/issues/7")
     }
 }

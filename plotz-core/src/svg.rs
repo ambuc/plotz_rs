@@ -131,7 +131,7 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use plotz_geometry::{shapes::polygon::Pg, style::Style};
+    use plotz_geometry::{shapes::polygon::Polygon, style::Style};
     use tempdir::TempDir;
 
     #[test]
@@ -167,7 +167,10 @@ mod test_super {
                 height: 1024,
             },
             path.to_str().unwrap(),
-            vec![&(Obj::Pg(Pg([(0, 0), (0, 1), (1, 0)])?), Style::default())],
+            vec![&(
+                Obj::Pg(Polygon([(0, 0), (0, 1), (1, 0)])?),
+                Style::default(),
+            )],
         )
         .unwrap();
 
@@ -191,8 +194,14 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![
-                &(Obj::Pg(Pg([(0, 0), (0, 1), (1, 0)])?), Style::default()),
-                &(Obj::Pg(Pg([(5, 5), (5, 6), (6, 5)])?), Style::default()),
+                &(
+                    Obj::Pg(Polygon([(0, 0), (0, 1), (1, 0)])?),
+                    Style::default(),
+                ),
+                &(
+                    Obj::Pg(Polygon([(5, 5), (5, 6), (6, 5)])?),
+                    Style::default(),
+                ),
             ],
         )
         .unwrap();

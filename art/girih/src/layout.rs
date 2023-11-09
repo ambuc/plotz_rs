@@ -2,7 +2,7 @@ use crate::geom::*;
 use anyhow::{anyhow, Result};
 use indicatif::ProgressBar;
 use itertools::Itertools;
-use plotz_geometry::shapes::{point::Point, polygon::Pg, segment::Segment};
+use plotz_geometry::shapes::{point::Point, polygon::Polygon, segment::Segment};
 use rand::seq::SliceRandom;
 use std::f64::consts::TAU;
 
@@ -25,7 +25,7 @@ impl Settings {
 
 #[derive(Debug, Clone)]
 pub struct AnnotatedPlacedTiles {
-    pub outlines: Vec<(Girih, Pg)>,
+    pub outlines: Vec<(Girih, Polygon)>,
     pub straps: Vec<(Girih, Segment)>,
 }
 

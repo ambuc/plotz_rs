@@ -1,5 +1,5 @@
 //! Crop
-use crate::{bounded::Bounds, shapes::polygon::Pg};
+use crate::{bounded::Bounds, shapes::polygon::Polygon};
 use anyhow::Result;
 
 /// Whether a point lies outside, inside, or on a vertex or edge of a polygon.
@@ -34,7 +34,7 @@ pub trait Croppable {
     type Output;
 
     /// Crop self to an outer frame
-    fn crop_to(&self, other: &Pg) -> Result<Vec<Self::Output>>
+    fn crop_to(&self, other: &Polygon) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
@@ -42,7 +42,7 @@ pub trait Croppable {
     }
 
     /// Crop self so that the portion of self overlapping other is removed.
-    fn crop_excluding(&self, other: &Pg) -> Result<Vec<Self::Output>>
+    fn crop_excluding(&self, other: &Polygon) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
@@ -58,5 +58,5 @@ pub trait Croppable {
     }
 
     /// general crop -- could be either type.
-    fn crop(&self, other: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>>;
+    fn crop(&self, other: &Polygon, crop_type: CropType) -> Result<Vec<Self::Output>>;
 }

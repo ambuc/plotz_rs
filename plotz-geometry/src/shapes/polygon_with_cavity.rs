@@ -5,7 +5,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::PointLoc,
     obj::ObjType2d,
-    shapes::{point::Point, polygon::Pg},
+    shapes::{point::Point, polygon::Polygon},
     Object,
 };
 use anyhow::{anyhow, Result};
@@ -13,14 +13,14 @@ use std::ops::*;
 
 #[derive(Debug, Clone)]
 pub struct Pgc {
-    pub outer: Pg,
-    pub inner: Vec<Pg>,
+    pub outer: Polygon,
+    pub inner: Vec<Polygon>,
 }
 
 #[allow(non_snake_case)]
-pub fn Pgc(a: impl Into<Pg>, b: impl IntoIterator<Item = impl Into<Pg>>) -> Result<Pgc> {
-    let inner: Vec<Pg> = b.into_iter().map(|x| x.into()).collect();
-    let outer: Pg = a.into();
+pub fn Pgc(a: impl Into<Polygon>, b: impl IntoIterator<Item = impl Into<Polygon>>) -> Result<Pgc> {
+    let inner: Vec<Polygon> = b.into_iter().map(|x| x.into()).collect();
+    let outer: Polygon = a.into();
     for inner_pg in &inner {
         for pt in &inner_pg.pts {
             if outer.contains_pt(pt)? == PointLoc::Outside {

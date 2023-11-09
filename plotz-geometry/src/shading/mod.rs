@@ -6,7 +6,7 @@ use crate::{
     bounded::Bounded,
     crop::Croppable,
     shading::shade_config::ShadeConfig,
-    shapes::{point::Point, polygon::Pg, segment::Segment},
+    shapes::{point::Point, polygon::Polygon, segment::Segment},
 };
 use anyhow::Result;
 use float_ord::FloatOrd;
@@ -18,7 +18,7 @@ fn compute_vertical_step(gap: f64, slope: f64) -> f64 {
 /// Gap controls how far to step between crosshatched lines
 /// Slope controls the angle of the lines.
 // TODO(jbuckland): shade Pgc?
-pub fn shade_polygon(config: &ShadeConfig, polygon: &Pg) -> Result<Vec<Segment>> {
+pub fn shade_polygon(config: &ShadeConfig, polygon: &Polygon) -> Result<Vec<Segment>> {
     let bounds = polygon.bounds()?;
     let mut segments: Vec<Segment> = vec![];
 

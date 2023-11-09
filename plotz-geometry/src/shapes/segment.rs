@@ -8,7 +8,7 @@ use crate::{
     interpolate::interpolate_2d_checked,
     intersection::{Intersection, IntersectionResult, MultipleIntersections},
     obj::ObjType2d,
-    shapes::{point::Point, polygon::Pg, ray::Ray},
+    shapes::{point::Point, polygon::Polygon, ray::Ray},
     Object,
 };
 use anyhow::{anyhow, Result};
@@ -227,7 +227,7 @@ impl Bounded for Segment {
 impl Croppable for Segment {
     type Output = Segment;
 
-    fn crop(&self, frame: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>>
+    fn crop(&self, frame: &Polygon, crop_type: CropType) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
@@ -299,7 +299,7 @@ impl Croppable for Segment {
         Ok(resultants)
     }
 
-    fn crop_excluding(&self, _other: &Pg) -> Result<Vec<Self::Output>>
+    fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {

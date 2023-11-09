@@ -6,7 +6,7 @@ use plotz_geometry::{
     intersection::{Intersection, IntersectionResult},
     shapes::{
         point::{Point, PolarPt},
-        polygon::Pg,
+        polygon::Polygon,
         ray::Ray,
         segment::Segment,
     },
@@ -96,7 +96,7 @@ impl Tile {
 
     // what's naive about this? SO glad you asked bestie. it's the right shape
     // but that's it. you have to place this somewhere sensible upon usage.
-    pub fn to_naive_pg(&self) -> Pg {
+    pub fn to_naive_pg(&self) -> Polygon {
         let vertex_turn_angles: &[f64] = &self.angles_deg();
         let mut cursor_position = Point(0, 0);
         let mut cursor_angle_rad = 0.0;
@@ -113,7 +113,7 @@ impl Tile {
         // we are constructing a closed polygon -- so we techincally don't need that
         // very last point, Pg() automatically closes it for us.
         accumulated.pop();
-        let mut pg = Pg(accumulated).unwrap();
+        let mut pg = Polygon(accumulated).unwrap();
         pg.rotate(&Point(0, 0), 0.00001);
         pg
     }
@@ -154,7 +154,7 @@ pub struct Constraint<'a> {
 
 #[derive(Debug)]
 pub struct PlacedTile {
-    pub pg: Pg,
+    pub pg: Polygon,
     pub tile: Tile,
 }
 
@@ -300,7 +300,7 @@ impl PlacedTile {
 
 pub struct AnnotatedPlacedTile {
     pub girih: Girih,
-    pub outline: Pg,
+    pub outline: Polygon,
     pub straps: Vec<Segment>,
 }
 

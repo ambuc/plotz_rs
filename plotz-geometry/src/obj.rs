@@ -6,8 +6,8 @@ use crate::{
     crop::{CropType, Croppable, PointLoc},
     group::Group,
     shapes::{
-        curve::CurveArc, multiline::Multiline, point::Point, polygon::Pg, polygon_with_cavity::Pgc,
-        segment::Segment, text::Txt,
+        curve::CurveArc, multiline::Multiline, point::Point, polygon::Polygon,
+        polygon_with_cavity::Pgc, segment::Segment, text::Txt,
     },
     style::Style,
     Object,
@@ -33,7 +33,7 @@ pub enum ObjType2d {
 #[enum_dispatch]
 pub enum Obj {
     Pt(Point),           // A point.
-    Pg(Pg),              // A polygon.
+    Pg(Polygon),         // A polygon.
     Pgc(Pgc),            // A polygon with cavities.
     Sg(Segment),         // A segment.
     Ml(Multiline),       // A multiline.
@@ -46,7 +46,7 @@ crate::ops_defaults_t!(Obj, Point);
 
 impl Croppable for Obj {
     type Output = Obj;
-    fn crop(&self, frame: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>> {
+    fn crop(&self, frame: &Polygon, crop_type: CropType) -> Result<Vec<Self::Output>> {
         Ok(match &self {
             Obj::Pt(pt) => {
                 assert_eq!(crop_type, CropType::Inclusive);
@@ -97,7 +97,7 @@ impl Croppable for Obj {
         })
     }
 
-    fn crop_excluding(&self, other: &Pg) -> Result<Vec<Self::Output>>
+    fn crop_excluding(&self, other: &Polygon) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {

@@ -8,7 +8,7 @@ use crate::{
     obj::ObjType2d,
     shapes::{
         point::{Point, PolarPt},
-        polygon::{abp, Pg},
+        polygon::{abp, Polygon},
         segment::Segment,
     },
     *,
@@ -417,7 +417,7 @@ fn intersections_of_line_and_curvearc(
 
 impl Croppable for CurveArc {
     type Output = CurveArc;
-    fn crop(&self, frame: &Pg, crop_type: CropType) -> Result<Vec<Self::Output>>
+    fn crop(&self, frame: &Polygon, crop_type: CropType) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
@@ -483,7 +483,7 @@ impl Croppable for CurveArc {
 
         Ok(r)
     }
-    fn crop_excluding(&self, _other: &Pg) -> Result<Vec<Self::Output>>
+    fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
@@ -511,7 +511,7 @@ impl Object for CurveArc {
 mod test {
     use super::*;
     use crate::shapes::{
-        polygon::{Pg, Rect},
+        polygon::{Polygon, Rect},
         segment::Segment,
     };
     use assert_matches::assert_matches;
@@ -691,7 +691,7 @@ mod test {
         "four intersections, all passthrough"
     )]
     fn test_curvearc_crop(
-        rect: Pg,
+        rect: Polygon,
         curvearc: CurveArc,
         expected_curvearcs: Vec<CurveArc>,
     ) -> Result<()> {

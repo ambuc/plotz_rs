@@ -3,13 +3,13 @@
 use anyhow::Result;
 use plotz_geometry::{
     obj::Obj,
-    shapes::{point::Point, polygon::Pg},
+    shapes::{point::Point, polygon::Polygon},
     style::Style,
 };
 
 /// Makes a frame given (width, height) and (x,y) offset.
-pub fn make_frame_pg((w, h): (f64, f64), offset: impl Into<Point>) -> Result<Pg> {
-    let mut p = Pg([(0.0, 0.0), (0.0, w), (h, w), (h, 0.0)])? + offset;
+pub fn make_frame_pg((w, h): (f64, f64), offset: impl Into<Point>) -> Result<Polygon> {
+    let mut p = Polygon([(0.0, 0.0), (0.0, w), (h, w), (h, 0.0)])? + offset;
     p.orient_curve_positively();
     Ok(p)
 }

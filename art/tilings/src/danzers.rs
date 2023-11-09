@@ -8,7 +8,7 @@ use plotz_geometry::{
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
         point::{Point, PolarPt},
-        polygon::Pg,
+        polygon::Polygon,
     },
     style::Style,
 };
@@ -251,7 +251,7 @@ pub fn make() -> Vec<(Obj, Style)> {
         .flat_map(|tile| {
             let color = tile.kind.color();
 
-            let p = Pg(tile.pts).unwrap();
+            let p = Polygon(tile.pts).unwrap();
 
             let config = ShadeConfig::builder()
                 .gap(1.0)

@@ -11,7 +11,7 @@ use plotz_core::{
 use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
-    shapes::{curve::CurveArc, multiline::Multiline, point::Point, polygon::Pg},
+    shapes::{curve::CurveArc, multiline::Multiline, point::Point, polygon::Polygon},
     style::Style,
 };
 use plotz_physics::{framework, particle::*};
@@ -139,7 +139,7 @@ fn main() -> Result<()> {
         ));
     }
 
-    let frame_pg: Pg = frame.0.clone().try_into().unwrap();
+    let frame_pg: Polygon = frame.0.clone().try_into().unwrap();
     Canvas::builder()
         .dos_by_bucket(canvas::to_canvas_map(
             os.into_iter().flat_map(|(obj, style)| {

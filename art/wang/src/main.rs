@@ -9,7 +9,7 @@ use plotz_core::{
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{multiline::Multiline, point::Point, polygon::Pg},
+    shapes::{multiline::Multiline, point::Point, polygon::Polygon},
     style::Style,
 };
 use rand::prelude::SliceRandom;
@@ -199,7 +199,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)
             )
         });
         ret.extend({
-            let mut pg: Pg = Pg([(0.1, 0.1), (0.5, 0.5), (0.9, 0.1)]).unwrap();
+            let mut pg: Polygon = Polygon([(0.1, 0.1), (0.5, 0.5), (0.9, 0.1)]).unwrap();
 
             pg *= 2.0;
             pg.rotate(&Point(1, 1), rot);
