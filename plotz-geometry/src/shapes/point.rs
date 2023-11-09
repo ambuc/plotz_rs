@@ -102,6 +102,23 @@ where
         y: r * theta.sin(),
     }
 }
+macro_rules! ops_trait {
+    ($trait:ident, $fn:ident) => {
+        impl<T> $trait<T> for Point
+        where
+            T: Into<Point>,
+        {
+            type Output = Self;
+            fn $fn(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into();
+                Point(self.x.$fn(rhs.x), self.y.$fn(rhs.y))
+            }
+        }
+    };
+}
+
+ops_trait!(Add, add);
+ops_trait!(Sub, sub);
 
 impl Rem<(f64, f64)> for Point {
     type Output = Self;
@@ -111,16 +128,6 @@ impl Rem<(f64, f64)> for Point {
     }
 }
 
-impl<T> Add<T> for Point
-where
-    T: Into<Point>,
-{
-    type Output = Self;
-    fn add(self, rhs: T) -> Self::Output {
-        let rhs = rhs.into();
-        Point(self.x + rhs.x, self.y + rhs.y)
-    }
-}
 impl<T> AddAssign<T> for Point
 where
     T: Into<Point>,
@@ -181,16 +188,6 @@ where
         let rhs = rhs.into();
         self.x = self.x.rem_euclid(rhs.x);
         self.y = self.y.rem_euclid(rhs.y);
-    }
-}
-impl<T> Sub<T> for Point
-where
-    T: Into<Point>,
-{
-    type Output = Self;
-    fn sub(self, rhs: T) -> Self::Output {
-        let rhs = rhs.into();
-        Point(self.x - rhs.x, self.y - rhs.y)
     }
 }
 impl<T> SubAssign<T> for Point
