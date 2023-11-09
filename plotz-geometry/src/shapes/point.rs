@@ -65,8 +65,8 @@ where
     f64: From<T2>,
 {
     Pt {
-        x: x.into(),
         y: y.into(),
+        x: x.into(),
     }
 }
 
