@@ -51,55 +51,41 @@ pub trait Bounded3 {
     fn bounds3(&self) -> Result<Bounds3>;
 }
 
-#[derive(Default)]
 pub struct Bounds3Collector {
-    min_x: Option<FloatOrd<f64>>,
-    min_y: Option<FloatOrd<f64>>,
-    min_z: Option<FloatOrd<f64>>,
-    max_x: Option<FloatOrd<f64>>,
-    max_y: Option<FloatOrd<f64>>,
-    max_z: Option<FloatOrd<f64>>,
+    x_min: FloatOrd<f64>,
+    y_min: FloatOrd<f64>,
+    z_min: FloatOrd<f64>,
+    x_max: FloatOrd<f64>,
+    y_max: FloatOrd<f64>,
+    z_max: FloatOrd<f64>,
     items_seen: usize,
+}
+
+impl Default for Bounds3Collector {
+    fn default() -> Self {
+        Bounds3Collector {
+            x_max: FloatOrd(f64::MIN),
+            x_min: FloatOrd(f64::MAX),
+            y_max: FloatOrd(f64::MIN),
+            y_min: FloatOrd(f64::MAX),
+            z_max: FloatOrd(f64::MIN),
+            z_min: FloatOrd(f64::MAX),
+            items_seen: 0,
+        }
+    }
 }
 
 impl Bounds3Collector {
     pub fn items_seen(&self) -> usize {
         self.items_seen
     }
-    pub fn incorporate(&mut self, b: &Bounds3) -> Result<()> {
-        let Bounds3 {
-            x_min,
-            x_max,
-            y_min,
-            y_max,
-            z_min,
-            z_max,
-        } = b;
-
-        self.min_x = Some(match self.min_x {
-            None => FloatOrd(*x_min),
-            Some(e) => min(e, FloatOrd(*x_min)),
-        });
-        self.min_y = Some(match self.min_y {
-            None => FloatOrd(*y_min),
-            Some(e) => min(e, FloatOrd(*y_min)),
-        });
-        self.min_z = Some(match self.min_z {
-            None => FloatOrd(*z_min),
-            Some(e) => min(e, FloatOrd(*z_min)),
-        });
-        self.max_x = Some(match self.max_x {
-            None => FloatOrd(*x_max),
-            Some(e) => max(e, FloatOrd(*x_max)),
-        });
-        self.max_y = Some(match self.max_y {
-            None => FloatOrd(*y_max),
-            Some(e) => max(e, FloatOrd(*y_max)),
-        });
-        self.max_z = Some(match self.max_z {
-            None => FloatOrd(*z_max),
-            Some(e) => max(e, FloatOrd(*z_max)),
-        });
+    pub fn incorporate(&mut self, bounds: &Bounds3) -> Result<()> {
+        self.x_max = max(self.x_max, FloatOrd(bounds.x_max));
+        self.x_min = min(self.x_min, FloatOrd(bounds.x_min));
+        self.y_max = max(self.y_max, FloatOrd(bounds.y_max));
+        self.y_min = min(self.y_min, FloatOrd(bounds.y_min));
+        self.z_max = max(self.z_max, FloatOrd(bounds.z_max));
+        self.z_min = min(self.z_min, FloatOrd(bounds.z_min));
         self.items_seen += 1;
 
         Ok(())
@@ -109,12 +95,12 @@ impl Bounds3Collector {
 impl Bounded3 for Bounds3Collector {
     fn bounds3(&self) -> Result<Bounds3> {
         Ok(Bounds3 {
-            x_min: self.min_x.ok_or(anyhow!("x_min is absent"))?.0,
-            x_max: self.max_x.ok_or(anyhow!("x_max is absent"))?.0,
-            y_min: self.min_y.ok_or(anyhow!("y_min is absent"))?.0,
-            y_max: self.max_y.ok_or(anyhow!("y_max is absent"))?.0,
-            z_min: self.min_z.ok_or(anyhow!("z_min is absent"))?.0,
-            z_max: self.max_z.ok_or(anyhow!("z_max is absent"))?.0,
+            x_min: self.x_min.0,
+            x_max: self.x_max.0,
+            y_min: self.y_min.0,
+            y_max: self.y_max.0,
+            z_min: self.z_min.0,
+            z_max: self.z_max.0,
         })
     }
 }

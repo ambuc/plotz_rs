@@ -1,6 +1,8 @@
 //! A trait representing the bounds and bounding box for an object.
 #![allow(missing_docs)]
 
+use std::cmp::{max, min};
+
 use crate::{
     crop::PointLoc,
     shapes::{pg::Pg, pt::Pt},
@@ -97,10 +99,10 @@ impl BoundsCollector {
 
     pub fn incorporate(&mut self, b: &impl Bounded) -> Result<()> {
         let bounds = b.bounds()?;
-        self.x_max = std::cmp::max(self.x_max, FloatOrd(bounds.x_max));
-        self.x_min = std::cmp::min(self.x_min, FloatOrd(bounds.x_min));
-        self.y_max = std::cmp::max(self.y_max, FloatOrd(bounds.y_max));
-        self.y_min = std::cmp::min(self.y_min, FloatOrd(bounds.y_min));
+        self.x_max = max(self.x_max, FloatOrd(bounds.x_max));
+        self.x_min = min(self.x_min, FloatOrd(bounds.x_min));
+        self.y_max = max(self.y_max, FloatOrd(bounds.y_max));
+        self.y_min = min(self.y_min, FloatOrd(bounds.y_min));
         self.items_seen += 1;
         Ok(())
     }
