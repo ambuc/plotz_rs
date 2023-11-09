@@ -6,7 +6,7 @@ use anyhow::Result;
 use crate::{
     bounded3::{streaming_bbox, Bounded3, Bounds3},
     obj3::{Obj3, ObjType3d},
-    shapes::{point3::Pt3, ray3::Ry3},
+    shapes::{point3::Pt3, ray3::Ray3},
     Object, Rotatable, RotatableBounds,
 };
 use std::ops::*;
@@ -35,7 +35,7 @@ impl<T: 'static> Rotatable for Group3<T>
 where
     T: Clone,
 {
-    fn rotate(&self, by: f64, about: Ry3) -> Result<Self> {
+    fn rotate(&self, by: f64, about: Ray3) -> Result<Self> {
         let mut v: Vec<(Obj3, T)> = vec![];
         for (obj3, style) in self.iter_objects() {
             //

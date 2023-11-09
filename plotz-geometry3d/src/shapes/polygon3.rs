@@ -10,7 +10,7 @@ use anyhow::Result;
 use float_ord::FloatOrd;
 use std::{fmt::Debug, ops::*};
 
-use super::ray3::Ry3;
+use super::ray3::Ray3;
 
 // A multiline is a list of points rendered with connecting line segments.
 #[derive(Clone)]
@@ -79,7 +79,7 @@ pub fn Pg3(a: impl IntoIterator<Item = Pt3>) -> Pg3 {
 plotz_geometry::ops_defaults_t!(Pg3, Pt3);
 
 impl Rotatable for Pg3 {
-    fn rotate(&self, by: f64, about: Ry3) -> Result<Self> {
+    fn rotate(&self, by: f64, about: Ray3) -> Result<Self> {
         let mut v = vec![];
         for p in self.pts.iter() {
             v.push(p.rotate(by, about)?);

@@ -3,7 +3,7 @@
 use crate::{
     bounded3::{Bounded3, Bounds3},
     group3::Group3,
-    shapes::{point3::Pt3, polygon3::Pg3, ray3::Ry3, segment3::Sg3},
+    shapes::{point3::Pt3, polygon3::Pg3, ray3::Ray3, segment3::Sg3},
     Object, Rotatable,
 };
 use anyhow::Result;
@@ -56,7 +56,7 @@ impl Obj3 {
 plotz_geometry::ops_defaults_t!(Obj3, Pt3);
 
 impl Rotatable for Obj3 {
-    fn rotate(&self, by: f64, about: Ry3) -> Result<Self> {
+    fn rotate(&self, by: f64, about: Ray3) -> Result<Self> {
         match self {
             Obj3::Pg3(pg3) => Ok(pg3.rotate(by, about)?.into()),
             Obj3::Sg3(_) => {

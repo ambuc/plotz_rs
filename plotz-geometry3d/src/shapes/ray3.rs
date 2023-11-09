@@ -8,7 +8,7 @@ use super::point3::PolarPt3;
 
 /// A ray (3d) which emits from a Pt3 and goes in a direction (3d).
 #[derive(Copy, Clone, Debug)]
-pub struct Ry3 {
+pub struct Ray3 {
     pt3: Pt3,
 
     // theta and phi are "the mathematics convention" https://en.wikipedia.org/wiki/Spherical_coordinate_system.
@@ -23,7 +23,7 @@ pub struct Ry3 {
 }
 
 #[allow(non_snake_case)]
-pub fn Ry3(pt3: Pt3, theta_rad: f64, phi_rad: f64) -> Result<Ry3> {
+pub fn Ray3(pt3: Pt3, theta_rad: f64, phi_rad: f64) -> Result<Ray3> {
     if !(0.0..=TAU).contains(&theta_rad) {
         return Err(anyhow!(format!(
             "theta_rad ({:?}) must be in range 0..=2PI",
@@ -36,14 +36,14 @@ pub fn Ry3(pt3: Pt3, theta_rad: f64, phi_rad: f64) -> Result<Ry3> {
             phi_rad
         )));
     }
-    Ok(Ry3 {
+    Ok(Ray3 {
         pt3,
         theta_rad,
         phi_rad,
     })
 }
 
-impl Ry3 {
+impl Ray3 {
     pub fn to_sg3_with_len(&self, len: f64) -> Result<Sg3> {
         Ok(Sg3 {
             i: self.pt3,

@@ -4,7 +4,7 @@
 
 use crate::{
     obj3::{Obj3, ObjType3d},
-    shapes::{point3::Pt3, ray3::Ry3},
+    shapes::{point3::Pt3, ray3::Ray3},
 };
 use anyhow::Result;
 use bounded3::Bounded3;
@@ -22,21 +22,21 @@ pub trait Rotatable
 where
     Self: Sized,
 {
-    fn rotate(&self, by: f64, about: Ry3) -> Result<Self>;
+    fn rotate(&self, by: f64, about: Ray3) -> Result<Self>;
 }
 
 pub trait RotatableBounds: Bounded3 + Rotatable {
     fn rotate_about_center_x_axis(&self, by: f64) -> Result<Self> {
         // theta_rad 0, phi_rad PI/2, along x axis
-        self.rotate(by, Ry3(self.bounds3()?.center(), 0.0, FRAC_PI_2)?)
+        self.rotate(by, Ray3(self.bounds3()?.center(), 0.0, FRAC_PI_2)?)
     }
     fn rotate_about_center_y_axis(&self, by: f64) -> Result<Self> {
         // theta_rad PI/2, phi_rad PI/2, along y axis
-        self.rotate(by, Ry3(self.bounds3()?.center(), FRAC_PI_2, FRAC_PI_2)?)
+        self.rotate(by, Ray3(self.bounds3()?.center(), FRAC_PI_2, FRAC_PI_2)?)
     }
     fn rotate_about_center_z_axis(&self, by: f64) -> Result<Self> {
         // theta_rad 0, phi_rad 0, straight up about z-axis;
-        self.rotate(by, Ry3(self.bounds3()?.center(), 0.0, 0.0)?)
+        self.rotate(by, Ray3(self.bounds3()?.center(), 0.0, 0.0)?)
     }
 }
 

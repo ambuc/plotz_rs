@@ -1,6 +1,6 @@
 //! A 3D point.
 //!
-use super::ray3::Ry3;
+use super::ray3::Ray3;
 use crate::{
     bounded3::{Bounded3, Bounds3},
     shapes::segment3::Sg3,
@@ -220,7 +220,7 @@ pub fn PolarPt3(r: f64, theta_rad: f64, phi_rad: f64) -> Result<Pt3> {
 }
 
 impl Rotatable for Pt3 {
-    fn rotate(&self, by_rad: f64, about: Ry3) -> Result<Pt3> {
+    fn rotate(&self, by_rad: f64, about: Ray3) -> Result<Pt3> {
         // https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
         // R = [ ux ux (1 - cos t) +    cos t  ,  ux uy (1 - cos t) - uz sin t   ,  ux uz (1 - cos t) + uy sin t  ]
         // .   [ uy ux (1 - cos t) + uz sin t  ,  uy uy (1 - cos t) +    cos t   ,  uy uz (1 - cos t) - ux sin t  ]
@@ -294,7 +294,7 @@ mod test {
     #[test_case(Pt3(1,0,0), 3.5*FRAC_PI_2, Pt3(FRAC_1_SQRT_2,-1.0*FRAC_1_SQRT_2,0))]
     #[test_case(Pt3(1,0,0), 4.0*FRAC_PI_2, Pt3(1,0,0))]
     fn test_rotate_z_axis(input: Pt3, by: f64, output: Pt3) -> Result<()> {
-        let z_axis = Ry3(Origin(), 0.0, 0.0)?;
+        let z_axis = Ray3(Origin(), 0.0, 0.0)?;
         assert_eq!(input.rotate(by, z_axis)?, output);
         Ok(())
     }
@@ -305,7 +305,7 @@ mod test {
     #[test_case(Pt3(0,1,0), 3.0*FRAC_PI_2, Pt3(0,0,-1))]
     #[test_case(Pt3(0,1,0), 4.0*FRAC_PI_2, Pt3(0,1,0))]
     fn test_rotate_x_axis(input: Pt3, by: f64, output: Pt3) -> Result<()> {
-        let x_axis = Ry3(Origin(), 0.0, FRAC_PI_2)?;
+        let x_axis = Ray3(Origin(), 0.0, FRAC_PI_2)?;
         assert_eq!(input.rotate(by, x_axis)?, output);
         Ok(())
     }
