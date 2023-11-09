@@ -4,7 +4,7 @@
 use crate::{
     bounded::{Bounded, Bounds},
     crop::PointLoc,
-    obj::ObjType2d,
+    obj2::ObjType2d,
     shapes::{point::Point, polygon::Polygon},
     Object,
 };

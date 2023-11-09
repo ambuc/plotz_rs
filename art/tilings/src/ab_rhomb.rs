@@ -1,6 +1,6 @@
 // https://tilings.math.uni-bielefeld.de/substitution/ammann-beenker-rhomb-triangle/
 
-use plotz_geometry::{obj::Obj2, shapes::polygon::Polygon, style::Style};
+use plotz_geometry::{obj2::Obj2, shapes::polygon::Polygon, style::Style};
 
 use plotz_color::*;
 use plotz_geometry::{

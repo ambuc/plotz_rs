@@ -8,7 +8,7 @@ use crate::{
     shapes::{point3::Point3, polygon3::Polygon3, segment3::Segment3},
 };
 use plotz_geometry::{
-    obj::Obj2,
+    obj2::Obj2,
     shapes::{point::Point, polygon::Polygon, segment::Segment},
 };
 

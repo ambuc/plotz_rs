@@ -5,7 +5,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLoc},
     interpolate::interpolate_2d_checked,
-    obj::ObjType2d,
+    obj2::ObjType2d,
     shapes::{
         point::{Point, PolarPt},
         polygon::{abp, Polygon},

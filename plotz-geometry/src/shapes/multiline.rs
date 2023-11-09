@@ -6,7 +6,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable},
     intersection::IntersectionResult,
-    obj::ObjType2d,
+    obj2::ObjType2d,
     Object,
 };
 use anyhow::{anyhow, Result};

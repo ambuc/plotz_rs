@@ -8,7 +8,7 @@ use plotz_core::{
     svg::Size,
 };
 use plotz_geometry::{
-    obj::Obj2,
+    obj2::Obj2,
     shapes::{curve::CurveArc, point::Point, segment::Segment},
 };
 use rand::{distributions::Standard, prelude::Distribution, Rng};

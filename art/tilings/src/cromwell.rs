@@ -4,7 +4,7 @@ use plotz_color::*;
 use plotz_geometry::{
     group::Group,
     interpolate::extrapolate_2d as extrapolate,
-    obj::Obj2,
+    obj2::Obj2,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
         point::{Point, PolarPt},

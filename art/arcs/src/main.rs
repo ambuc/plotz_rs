@@ -10,7 +10,7 @@ use plotz_geometry::{
     bounded::Bounded,
     crop::Croppable,
     grid::Grid,
-    obj::Obj2,
+    obj2::Obj2,
     shapes::{curve::CurveArcs, polygon::Polygon},
     style::Style,
 };

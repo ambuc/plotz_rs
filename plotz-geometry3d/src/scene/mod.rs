@@ -13,7 +13,7 @@ use anyhow::*;
 use float_ord::FloatOrd;
 use itertools::Itertools;
 use plotz_color::ColorRGB;
-use plotz_geometry::{obj::Obj2, style::Style, *};
+use plotz_geometry::{obj2::Obj2, style::Style, *};
 use std::fmt::Debug;
 use tracing::*;
 use typed_builder::TypedBuilder;

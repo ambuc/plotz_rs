@@ -5,7 +5,7 @@ use plotz_core::{
     frame::make_frame,
     svg::Size,
 };
-use plotz_geometry::{crop::PointLoc, obj::Obj2, shapes::polygon::Polygon, style::Style, Object};
+use plotz_geometry::{crop::PointLoc, obj2::Obj2, shapes::polygon::Polygon, style::Style, Object};
 
 mod ab_rhomb;
 mod cromwell;

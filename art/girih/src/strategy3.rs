@@ -3,7 +3,7 @@ use crate::{
     layout::{Layout, Settings},
 };
 use anyhow::Result;
-use plotz_geometry::{obj::Obj2, style::Style};
+use plotz_geometry::{obj2::Obj2, style::Style};
 
 pub fn run() -> Result<Vec<(Obj2, Style)>> {
     let girih = all_girih_tiles_in_random_order()[0];

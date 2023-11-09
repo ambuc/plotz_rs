@@ -11,7 +11,7 @@ use plotz_geometry::{
     crop::Croppable,
     grid::grid_layout::{GridLayout, GridLayoutSettings},
     group::Group,
-    obj::Obj2,
+    obj2::Obj2,
     shapes::{
         point::Point,
         polygon::{Polygon, Rect},

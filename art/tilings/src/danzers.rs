@@ -4,7 +4,7 @@ use float_cmp::assert_approx_eq;
 use lazy_static::lazy_static;
 use plotz_color::*;
 use plotz_geometry::{
-    obj::Obj2,
+    obj2::Obj2,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
         point::{Point, PolarPt},

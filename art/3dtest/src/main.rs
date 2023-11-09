@@ -163,7 +163,7 @@ fn main() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plotz_geometry::obj::Obj2;
+    use plotz_geometry::obj2::Obj2;
     use test_case::*;
 
     #[test_matrix(1..=3, 1..=3, 1..=3, 1..=10)]

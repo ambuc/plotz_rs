@@ -3,7 +3,7 @@
 use crate::{
     bounded::{Bounded, Bounds},
     crop::Croppable,
-    obj::Obj2,
+    obj2::Obj2,
     shapes::point::Point,
     style::Style,
 };

@@ -5,7 +5,7 @@
 
 use anyhow::{anyhow, Result};
 use plotz_geometry::{
-    obj::Obj2,
+    obj2::Obj2,
     shapes::{multiline::Multiline, point::Point, polygon::Polygon},
 };
 use serde_json::Value;

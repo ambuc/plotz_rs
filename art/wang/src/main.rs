@@ -7,7 +7,7 @@ use plotz_core::{
     svg::Size,
 };
 use plotz_geometry::{
-    obj::Obj2,
+    obj2::Obj2,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{multiline::Multiline, point::Point, polygon::Polygon},
     style::Style,

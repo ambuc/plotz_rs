@@ -17,7 +17,7 @@ use plotz_color::{subway::*, *};
 use plotz_geometry::{
     bounded::Bounded,
     crop::Croppable,
-    obj::Obj2,
+    obj2::Obj2,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{point::Point, polygon::Polygon, segment::Segment},
     style::Style,

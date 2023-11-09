@@ -3,7 +3,7 @@
 pub mod grid_layout;
 
 use crate::{
-    obj::Obj2,
+    obj2::Obj2,
     shapes::{point::Point, segment::Segment},
     style::Style,
 };

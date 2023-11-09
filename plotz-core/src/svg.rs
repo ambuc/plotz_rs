@@ -2,7 +2,7 @@
 //!
 use anyhow::Result;
 use plotz_color::BLACK;
-use plotz_geometry::{obj::Obj2, shapes::text::Text, style::Style, *};
+use plotz_geometry::{obj2::Obj2, shapes::text::Text, style::Style, *};
 use std::fmt::Debug;
 
 /// The size of a canvas.

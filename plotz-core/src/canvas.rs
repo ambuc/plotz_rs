@@ -12,7 +12,7 @@ use indicatif::*;
 use itertools::Itertools;
 use plotz_geometry::{
     bounded::{streaming_bbox, Bounded, Bounds},
-    obj::Obj2,
+    obj2::Obj2,
     shapes::point::Point,
     style::Style,
     *,

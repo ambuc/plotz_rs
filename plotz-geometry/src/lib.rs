@@ -8,7 +8,7 @@ pub mod grid;
 pub mod group;
 pub mod interpolate;
 pub mod intersection;
-pub mod obj;
+pub mod obj2;
 pub mod shading;
 pub mod shapes;
 pub mod style;
@@ -16,9 +16,9 @@ pub mod style;
 #[macro_use]
 pub mod macros;
 
-use crate::{obj::Obj2, shapes::point::Point, style::Style};
+use crate::{obj2::Obj2, shapes::point::Point, style::Style};
 use enum_dispatch::enum_dispatch;
-use obj::ObjType2d;
+use obj2::ObjType2d;
 use shapes::text::Text;
 use std::ops::*;
 use typed_builder::TypedBuilder;

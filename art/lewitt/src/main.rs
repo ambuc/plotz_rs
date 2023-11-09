@@ -9,7 +9,7 @@ use plotz_core::{
 use plotz_geometry::{
     crop::PointLoc,
     grid::grid_layout::{GridLayout, GridLayoutSettings},
-    obj::Obj2,
+    obj2::Obj2,
     shapes::{curve::CurveArc, point::Point},
     style::Style,
 };

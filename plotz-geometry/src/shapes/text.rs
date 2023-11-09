@@ -3,7 +3,7 @@
 
 use crate::{
     bounded::{Bounded, Bounds},
-    obj::ObjType2d,
+    obj2::ObjType2d,
     shapes::point::Point,
     *,
 };

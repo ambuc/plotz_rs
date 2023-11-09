@@ -2,7 +2,7 @@
 
 use anyhow::*;
 use itertools::Itertools;
-use plotz_geometry::{crop::Croppable, obj::Obj2, shading::shade_polygon, style::Style};
+use plotz_geometry::{crop::Croppable, obj2::Obj2, shading::shade_polygon, style::Style};
 use tracing::*;
 use typed_builder::TypedBuilder;
 
