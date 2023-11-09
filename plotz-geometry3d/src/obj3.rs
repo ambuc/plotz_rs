@@ -4,11 +4,18 @@ use crate::{
     bounded3::{Bounded3, Bounds3},
     group3::Group3,
     shapes::{pg3::Pg3, pt3::Pt3, ry3::Ry3, sg3::Sg3},
-    Rotatable,
+    Object, Rotatable,
 };
 use anyhow::Result;
 use derive_more::From;
 use std::ops::*;
+
+pub enum ObjType {
+    Point,
+    Segment,
+    Polygon,
+    Group,
+}
 
 #[derive(Debug, Clone, From)]
 pub enum Obj3 {

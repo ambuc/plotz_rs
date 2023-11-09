@@ -2,7 +2,9 @@
 
 use crate::{
     bounded3::{Bounded3, Bounds3, Bounds3Collector},
+    obj3::ObjType,
     shapes::pt3::Pt3,
+    Object,
 };
 use anyhow::Result;
 use float_ord::FloatOrd;
@@ -58,13 +60,6 @@ impl Sg3 {
             .unwrap()
             .0
     }
-
-    pub fn iter(&self) -> impl Iterator<Item = &Pt3> {
-        std::iter::once(&self.i).chain(std::iter::once(&self.f))
-    }
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Pt3> {
-        std::iter::once(&mut self.i).chain(std::iter::once(&mut self.f))
-    }
 }
 
 plotz_geometry::ops_defaults_t!(Sg3, Pt3);
@@ -75,5 +70,19 @@ impl Bounded3 for Sg3 {
         bc.incorporate(&self.i.bounds3()?)?;
         bc.incorporate(&self.f.bounds3()?)?;
         bc.bounds3()
+    }
+}
+
+impl Object for Sg3 {
+    fn objtype(&self) -> ObjType {
+        ObjType::Segment
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt3> + '_> {
+        Box::new(std::iter::once(&self.i).chain(std::iter::once(&self.f)))
+    }
+
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt3> + '_> {
+        Box::new(std::iter::once(&mut self.i).chain(std::iter::once(&mut self.f)))
     }
 }

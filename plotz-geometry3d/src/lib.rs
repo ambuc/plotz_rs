@@ -6,7 +6,9 @@ use std::f64::consts::FRAC_PI_2;
 
 use anyhow::Result;
 use bounded3::Bounded3;
-use shapes::ry3::Ry3;
+use enum_dispatch::enum_dispatch;
+use obj3::ObjType;
+use shapes::{pt3::Pt3, ry3::Ry3};
 
 pub mod bounded3;
 pub mod camera;
@@ -35,4 +37,22 @@ pub trait RotatableBounds: Bounded3 + Rotatable {
         // theta_rad 0, phi_rad 0, straight up about z-axis;
         self.rotate(by, Ry3(self.bounds3()?.center(), 0.0, 0.0)?)
     }
+}
+
+/// A 2d object.
+#[enum_dispatch(Obj)]
+pub trait Object {
+    /// Is it empty?
+    fn is_empty(&self) -> bool {
+        self.iter().count() == 0
+    }
+
+    /// What type of object is this?
+    fn objtype(&self) -> ObjType;
+
+    /// Iterator
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt3> + '_>;
+
+    /// Mutable iterator
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt3> + '_>;
 }

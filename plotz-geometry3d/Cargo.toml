@@ -10,6 +10,7 @@ plotz-color = { path = "../plotz-color" }
 plotz-geometry = { path = "../plotz-geometry" }
 float-ord = "*"
 float-cmp = "*"
+enum_dispatch = "*"
 itertools = "*"
 anyhow = "*"
 derive_more = "*"
