@@ -16,6 +16,8 @@ pub mod style;
 #[macro_use]
 pub mod macros;
 
+mod utils;
+
 use crate::{obj2::Obj2, shapes::point::Point, style::Style};
 use enum_dispatch::enum_dispatch;
 use obj2::ObjType2d;

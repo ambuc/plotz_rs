@@ -2,11 +2,12 @@
 
 use crate::{
     crop::{CropType, PointLocation},
-    intersection::{Intersection, IntersectionResult, Pair, Which},
+    intersection::{Intersection, IntersectionResult},
     shapes::{
         point::{is_colinear_n, Point},
         polygon::Polygon,
     },
+    utils::{Pair, Which},
 };
 use anyhow::{anyhow, Context, Result};
 use approx::*;

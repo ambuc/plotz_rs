@@ -1,75 +1,11 @@
 //! An intefield2section between two segments.
 
-use crate::shapes::point::Point;
-use float_cmp::approx_eq;
+use crate::{
+    shapes::point::Point,
+    utils::{Percent, Which},
+};
 use float_ord::FloatOrd;
 use std::fmt::Debug;
-
-#[derive(Debug, PartialEq, Copy, Clone)]
-/// Guaranteed to be 0.0 <= f <= 1.0. Witness type.
-enum Percent {
-    /// Zero.
-    Zero,
-    /// Another value.
-    Val(f64),
-    /// One.
-    One,
-}
-impl Percent {
-    /// new percent.
-    pub fn new(f: f64) -> Option<Percent> {
-        match f {
-            f if approx_eq!(f64, f, 0.0) => Some(Percent::Zero),
-            f if approx_eq!(f64, f, 1.0) => Some(Percent::One),
-            f if (0.0..=1.0).contains(&f) => Some(Percent::Val(f)),
-            _ => None,
-        }
-    }
-    /// as an f64.
-    pub fn as_f64(&self) -> f64 {
-        match self {
-            Percent::Zero => 0.0,
-            Percent::Val(f) => *f,
-            Percent::One => 1.0,
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone)]
-/// Which one?
-pub enum Which {
-    /// A?
-    A,
-    /// or B?
-    B,
-}
-impl Which {
-    /// Flip it.
-    pub fn flip(&self) -> Which {
-        match self {
-            Which::A => Which::B,
-            Which::B => Which::A,
-        }
-    }
-}
-
-/// two things, keyed by A / B
-pub struct Pair<'a, T> {
-    /// a
-    pub a: &'a T,
-    /// b
-    pub b: &'a T,
-}
-
-impl<'a, T> Pair<'a, T> {
-    /// get one.
-    pub fn get(&'a self, which: Which) -> &'a T {
-        match which {
-            Which::A => self.a,
-            Which::B => self.b,
-        }
-    }
-}
 
 /// A struct representing an intersection between two line segments.
 /// Two values:
