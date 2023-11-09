@@ -12,7 +12,7 @@ use std::ops::*;
 
 #[derive(Debug, PartialEq, Clone)]
 /// A character laid out at a point.
-pub struct Txt {
+pub struct Text {
     /// the point.
     pub pt: Point,
     /// the text.
@@ -21,15 +21,15 @@ pub struct Txt {
     pub font_size: f64,
 }
 
-impl Bounded for Txt {
+impl Bounded for Text {
     fn bounds(&self) -> Result<Bounds> {
         self.pt.bounds()
     }
 }
 
-crate::ops_defaults_t!(Txt, Point);
+crate::ops_defaults_t!(Text, Point);
 
-impl Object for Txt {
+impl Object for Text {
     fn objtype(&self) -> ObjType2d {
         ObjType2d::Point2d
     }

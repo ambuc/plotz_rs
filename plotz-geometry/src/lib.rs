@@ -19,7 +19,7 @@ pub mod macros;
 use crate::{obj::Obj, shapes::point::Point, style::Style};
 use enum_dispatch::enum_dispatch;
 use obj::ObjType2d;
-use shapes::text::Txt;
+use shapes::text::Text;
 use std::ops::*;
 use typed_builder::TypedBuilder;
 
@@ -56,7 +56,7 @@ pub trait Object {
             let x = format!("{:.1$}", pt.x, precision);
             let y = format!("{:.1$}", pt.y, precision);
             a.push((
-                Txt {
+                Text {
                     pt: *pt,
                     inner: format!("({}, {})", x, y),
                     font_size: *font_size,

@@ -2,7 +2,7 @@
 //!
 use anyhow::Result;
 use plotz_color::BLACK;
-use plotz_geometry::{obj::Obj, shapes::text::Txt, style::Style, *};
+use plotz_geometry::{obj::Obj, shapes::text::Text, style::Style, *};
 use std::fmt::Debug;
 
 /// The size of a canvas.
@@ -64,7 +64,7 @@ fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<()> {
             context.line_to(segment.i.x, segment.i.y);
             context.line_to(segment.f.x, segment.f.y);
         }
-        Obj::Txt(Txt {
+        Obj::Txt(Text {
             pt,
             inner: txt,
             font_size,

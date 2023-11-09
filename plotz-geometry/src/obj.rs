@@ -7,7 +7,7 @@ use crate::{
     group::Group,
     shapes::{
         curve::CurveArc, multiline::Multiline, point::Point, polygon::Polygon,
-        polygon_with_cavity::Pgc, segment::Segment, text::Txt,
+        polygon_with_cavity::Pgc, segment::Segment, text::Text,
     },
     style::Style,
     Object,
@@ -38,7 +38,7 @@ pub enum Obj {
     Sg(Segment),         // A segment.
     Ml(Multiline),       // A multiline.
     CurveArc(CurveArc),  // An arc.
-    Txt(Txt),            // A character to be printed in SVG, at a point.
+    Txt(Text),           // A character to be printed in SVG, at a point.
     Group(Group<Style>), // A group of other objects.
 }
 
