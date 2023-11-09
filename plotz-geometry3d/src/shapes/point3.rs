@@ -82,101 +82,57 @@ where
     }
 }
 
-impl Add<Point3> for Point3 {
-    type Output = Self;
-    fn add(self, rhs: Point3) -> Self::Output {
-        Point3(self.x.0 + rhs.x.0, self.y.0 + rhs.y.0, self.z.0 + rhs.z.0)
-    }
-}
-impl AddAssign<Point3> for Point3 {
-    fn add_assign(&mut self, other: Self) {
-        *self = Self {
-            x: FloatOrd(self.x.0 + other.x.0),
-            y: FloatOrd(self.y.0 + other.y.0),
-            z: FloatOrd(self.z.0 + other.z.0),
-        };
+impl From<f64> for Point3 {
+    fn from(n: f64) -> Self {
+        (n, n, n).into()
     }
 }
 
-impl Div<Point3> for Point3 {
-    type Output = Self;
-    fn div(self, rhs: Point3) -> Self::Output {
-        Point3(self.x.0 / rhs.x.0, self.y.0 / rhs.y.0, self.z.0 / rhs.z.0)
-    }
-}
-impl Div<f64> for Point3 {
-    type Output = Self;
-    fn div(self, rhs: f64) -> Self::Output {
-        Point3(self.x.0 / rhs, self.y.0 / rhs, self.z.0 / rhs)
-    }
-}
-impl DivAssign<Point3> for Point3 {
-    fn div_assign(&mut self, rhs: Point3) {
-        self.x.0 /= rhs.x.0;
-        self.y.0 /= rhs.y.0;
-        self.z.0 /= rhs.z.0;
-    }
-}
-impl DivAssign<f64> for Point3 {
-    fn div_assign(&mut self, rhs: f64) {
-        self.x.0 /= rhs;
-        self.y.0 /= rhs;
-        self.z.0 /= rhs;
-    }
-}
-impl Mul<Point3> for Point3 {
-    type Output = Self;
-    fn mul(self, rhs: Point3) -> Self::Output {
-        Point3(self.x.0 * rhs.x.0, self.y.0 * rhs.y.0, self.z.0 * rhs.z.0)
-    }
-}
-impl Mul<f64> for Point3 {
-    type Output = Self;
-    fn mul(self, rhs: f64) -> Self::Output {
-        Point3(self.x.0 * rhs, self.y.0 * rhs, self.z.0 * rhs)
-    }
-}
-impl MulAssign<Point3> for Point3 {
-    fn mul_assign(&mut self, rhs: Point3) {
-        self.x.0 *= rhs.x.0;
-        self.y.0 *= rhs.y.0;
-        self.z.0 *= rhs.z.0;
-    }
-}
-impl MulAssign<f64> for Point3 {
-    fn mul_assign(&mut self, rhs: f64) {
-        self.x.0 *= rhs;
-        self.y.0 *= rhs;
-        self.z.0 *= rhs;
-    }
-}
-impl Sub<Point3> for Point3 {
-    type Output = Self;
-    fn sub(self, rhs: Point3) -> Self::Output {
-        Point3(self.x.0 - rhs.x.0, self.y.0 - rhs.y.0, self.z.0 - rhs.z.0)
-    }
-}
-impl SubAssign<Point3> for Point3 {
-    fn sub_assign(&mut self, other: Self) {
-        *self = Self {
-            x: FloatOrd(self.x.0 - other.x.0),
-            y: FloatOrd(self.y.0 - other.y.0),
-            z: FloatOrd(self.z.0 - other.z.0),
-        };
-    }
+macro_rules! ops_trait {
+    ($trait:ident, $fn:ident) => {
+        impl<T> $trait<T> for Point3
+        where
+            T: Into<Point3>,
+        {
+            type Output = Self;
+            fn $fn(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into();
+                Point3(
+                    self.x.0.$fn(rhs.x.0),
+                    self.y.0.$fn(rhs.y.0),
+                    self.z.0.$fn(rhs.z.0),
+                )
+            }
+        }
+    };
 }
 
-impl<T> RemAssign<T> for Point3
-where
-    T: Into<Point3>,
-{
-    fn rem_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        self.x = FloatOrd(self.x.0.rem_euclid(rhs.x.0));
-        self.y = FloatOrd(self.y.0.rem_euclid(rhs.y.0));
-        self.z = FloatOrd(self.z.0.rem_euclid(rhs.z.0));
-    }
+macro_rules! ops_mut_trait {
+    ($trait:ident, $fn:ident) => {
+        impl<T> $trait<T> for Point3
+        where
+            T: Into<Point3>,
+        {
+            fn $fn(&mut self, rhs: T) {
+                let rhs = rhs.into();
+                self.x.0.$fn(rhs.x.0);
+                self.y.0.$fn(rhs.y.0);
+                self.z.0.$fn(rhs.z.0);
+            }
+        }
+    };
 }
+
+ops_mut_trait!(AddAssign, add_assign);
+ops_mut_trait!(DivAssign, div_assign);
+ops_mut_trait!(MulAssign, mul_assign);
+ops_mut_trait!(RemAssign, rem_assign);
+ops_mut_trait!(SubAssign, sub_assign);
+ops_trait!(Add, add);
+ops_trait!(Div, div);
+ops_trait!(Mul, mul);
+ops_trait!(Rem, rem);
+ops_trait!(Sub, sub);
 
 impl Point3 {
     // https://en.wikipedia.org/wiki/Dot_product
