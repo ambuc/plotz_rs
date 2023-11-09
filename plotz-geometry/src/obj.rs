@@ -47,240 +47,79 @@ pub enum Obj {
     Group(Group<Style>),
 }
 
-impl<T> RemAssign<T> for Obj
-where
-    T: Into<Pt>,
-{
-    fn rem_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        match self {
-            Obj::Pt(p) => {
-                *p %= rhs;
-            }
-            Obj::Ml(ml) => {
-                *ml %= rhs;
-            }
-            Obj::Txt(ch) => {
-                *ch %= rhs;
-            }
-            Obj::CurveArc(ca) => {
-                *ca %= rhs;
-            }
-            Obj::Group(g) => {
-                *g %= rhs;
-            }
-            Obj::Pg(pg) => {
-                *pg %= rhs;
-            }
-            Obj::Pgc(pgc) => {
-                *pgc %= rhs;
-            }
-            Obj::Sg(sg) => {
-                *sg %= rhs;
+macro_rules! impl_ops_assign {
+    ($trait:ident, $fn:ident, $rhs:ident) => {
+        impl<T> $trait<T> for Obj
+        where
+            T: Into<$rhs>,
+        {
+            fn $fn(&mut self, rhs: T) {
+                let rhs = rhs.into();
+                match self {
+                    Obj::Pt(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Ml(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Txt(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::CurveArc(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Group(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Pg(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Pgc(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Sg(x) => {
+                        x.$fn(rhs);
+                    }
+                }
             }
         }
-    }
+    };
 }
 
-impl<T> Add<T> for Obj
-where
-    T: Into<Pt>,
-{
-    type Output = Obj;
-    fn add(self, rhs: T) -> Self::Output {
-        let rhs = rhs.into();
-        match self {
-            Obj::Pt(p) => Obj::from(p + rhs),
-            Obj::Ml(ml) => Obj::from(ml + rhs),
-            Obj::Txt(ch) => Obj::from(ch + rhs),
-            Obj::CurveArc(ca) => Obj::from(ca + rhs),
-            Obj::Group(g) => Obj::from(g + rhs),
-            Obj::Pg(pg) => Obj::from(pg + rhs),
-            Obj::Pgc(pgc) => Obj::from(pgc + rhs),
-            Obj::Sg(sg) => Obj::from(sg + rhs),
+impl_ops_assign!(AddAssign, add_assign, Pt);
+impl_ops_assign!(DivAssign, div_assign, f64);
+impl_ops_assign!(MulAssign, mul_assign, f64);
+impl_ops_assign!(RemAssign, rem_assign, Pt);
+impl_ops_assign!(SubAssign, sub_assign, Pt);
+
+macro_rules! impl_ops {
+    ($trait:ident, $fn:ident, $rhs:ident) => {
+        impl<T> $trait<T> for Obj
+        where
+            T: Into<$rhs>,
+        {
+            type Output = Obj;
+            fn $fn(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into();
+                match self {
+                    Obj::Ml(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Pt(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Txt(x) => Obj::from(x.$fn(rhs)),
+                    Obj::CurveArc(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Group(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Pg(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Pgc(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Sg(x) => Obj::from(x.$fn(rhs)),
+                }
+            }
         }
-    }
+    };
 }
 
-impl<T> Sub<T> for Obj
-where
-    T: Into<Pt>,
-{
-    type Output = Obj;
-    fn sub(self, rhs: T) -> Self::Output {
-        let rhs = rhs.into();
-        match self {
-            Obj::Pt(p) => Obj::from(p - rhs),
-            Obj::Ml(ml) => Obj::from(ml - rhs),
-            Obj::Txt(ch) => Obj::from(ch - rhs),
-            Obj::CurveArc(ca) => Obj::from(ca - rhs),
-            Obj::Group(g) => Obj::from(g - rhs),
-            Obj::Pg(pg) => Obj::from(pg - rhs),
-            Obj::Pgc(pgc) => Obj::from(pgc - rhs),
-            Obj::Sg(sg) => Obj::from(sg - rhs),
-        }
-    }
-}
-impl Mul<f64> for Obj {
-    type Output = Obj;
-    fn mul(self, rhs: f64) -> Self::Output {
-        match self {
-            Obj::Ml(ml) => Obj::from(ml * rhs),
-            Obj::Pt(p) => Obj::from(p * rhs),
-            Obj::Txt(ch) => Obj::from(ch * rhs),
-            Obj::CurveArc(ca) => Obj::from(ca * rhs),
-            Obj::Group(g) => Obj::from(g * rhs),
-            Obj::Pg(pg) => Obj::from(pg * rhs),
-            Obj::Pgc(pgc) => Obj::from(pgc * rhs),
-            Obj::Sg(sg) => Obj::from(sg * rhs),
-        }
-    }
-}
-impl Div<f64> for Obj {
-    type Output = Obj;
-    fn div(self, rhs: f64) -> Self::Output {
-        match self {
-            Obj::Ml(ml) => Obj::from(ml / rhs),
-            Obj::Pt(p) => Obj::from(p / rhs),
-            Obj::Txt(ch) => Obj::from(ch / rhs),
-            Obj::CurveArc(ca) => Obj::from(ca / rhs),
-            Obj::Group(g) => Obj::from(g / rhs),
-            Obj::Pg(pg) => Obj::from(pg / rhs),
-            Obj::Pgc(pgc) => Obj::from(pgc / rhs),
-            Obj::Sg(sg) => Obj::from(sg / rhs),
-        }
-    }
-}
-impl<T> AddAssign<T> for Obj
-where
-    T: Into<Pt>,
-{
-    fn add_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        match self {
-            Obj::Ml(ml) => {
-                *ml += rhs;
-            }
-            Obj::Pt(p) => {
-                *p += rhs;
-            }
-            Obj::Txt(ch) => {
-                *ch += rhs;
-            }
-            Obj::CurveArc(ca) => {
-                *ca += rhs;
-            }
-            Obj::Group(g) => {
-                *g += rhs;
-            }
-            Obj::Pg(pg) => {
-                *pg += rhs;
-            }
-            Obj::Pgc(pgc) => {
-                *pgc += rhs;
-            }
-            Obj::Sg(sg) => {
-                *sg += rhs;
-            }
-        }
-    }
-}
-impl<T> SubAssign<T> for Obj
-where
-    T: Into<Pt>,
-{
-    fn sub_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        match self {
-            Obj::Pt(p) => {
-                *p -= rhs;
-            }
-            Obj::Txt(ch) => {
-                *ch -= rhs;
-            }
-            Obj::CurveArc(ca) => {
-                *ca -= rhs;
-            }
-            Obj::Group(g) => {
-                *g -= rhs;
-            }
-            Obj::Pg(pg) => {
-                *pg -= rhs;
-            }
-            Obj::Pgc(pgc) => {
-                *pgc -= rhs;
-            }
-            Obj::Ml(ml) => {
-                *ml -= rhs;
-            }
-            Obj::Sg(sg) => {
-                *sg -= rhs;
-            }
-        }
-    }
-}
-
-impl MulAssign<f64> for Obj {
-    fn mul_assign(&mut self, rhs: f64) {
-        match self {
-            Obj::Pt(p) => {
-                *p *= rhs;
-            }
-            Obj::Txt(ch) => {
-                *ch *= rhs;
-            }
-            Obj::CurveArc(ca) => {
-                *ca *= rhs;
-            }
-            Obj::Group(g) => {
-                *g *= rhs;
-            }
-            Obj::Pg(pg) => {
-                *pg *= rhs;
-            }
-            Obj::Pgc(pgc) => {
-                *pgc *= rhs;
-            }
-            Obj::Sg(sg) => {
-                *sg *= rhs;
-            }
-            Obj::Ml(ml) => {
-                *ml *= rhs;
-            }
-        }
-    }
-}
-
-impl DivAssign<f64> for Obj {
-    fn div_assign(&mut self, rhs: f64) {
-        match self {
-            Obj::Ml(ml) => {
-                *ml /= rhs;
-            }
-            Obj::Pt(p) => {
-                *p /= rhs;
-            }
-            Obj::Txt(ch) => {
-                *ch /= rhs;
-            }
-            Obj::CurveArc(ca) => {
-                *ca /= rhs;
-            }
-            Obj::Group(g) => {
-                *g /= rhs;
-            }
-            Obj::Pg(pg) => {
-                *pg /= rhs;
-            }
-            Obj::Pgc(pgc) => {
-                *pgc /= rhs;
-            }
-            Obj::Sg(sg) => {
-                *sg /= rhs;
-            }
-        }
-    }
-}
+impl_ops!(Add, add, Pt);
+impl_ops!(Sub, sub, Pt);
+impl_ops!(Mul, mul, f64);
+impl_ops!(Div, div, f64);
 
 impl Croppable for Obj {
     type Output = Obj;
