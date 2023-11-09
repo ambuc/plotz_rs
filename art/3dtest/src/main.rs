@@ -16,7 +16,7 @@ use plotz_geometry3d::{
         occluder::{Occluder, OccluderConfig},
         Scene,
     },
-    shapes::{cube3d::Cube, cuboid3d::Cuboid, point3::Pt3},
+    shapes::{cube3d::Cube, cuboid3d::Cuboid, point3::Point3},
     RotatableBounds,
 };
 use std::{f64::consts::*, iter::zip};
@@ -57,7 +57,7 @@ fn cubes(cc: CubesConfig) -> Vec<(Obj3, Style)> {
             ..Default::default()
         };
         objects.extend(
-            Cube(Pt3(i as f64, j as f64, k as f64), cc.width)
+            Cube(Point3(i as f64, j as f64, k as f64), cc.width)
                 .into_iter_objects()
                 .map(|(o, _)| (o, style)),
         );

@@ -4,7 +4,7 @@
 
 use crate::{
     obj3::{Obj3, ObjType3d},
-    shapes::{point3::Pt3, ray3::Ray3},
+    shapes::{point3::Point3, ray3::Ray3},
 };
 use anyhow::Result;
 use bounded3::Bounded3;
@@ -52,8 +52,8 @@ pub trait Object {
     fn objtype(&self) -> ObjType3d;
 
     /// Iterator
-    fn iter(&self) -> Box<dyn Iterator<Item = &Pt3> + '_>;
+    fn iter(&self) -> Box<dyn Iterator<Item = &Point3> + '_>;
 
     /// Mutable iterator
-    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt3> + '_>;
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Point3> + '_>;
 }

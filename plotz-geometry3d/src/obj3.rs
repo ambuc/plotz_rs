@@ -3,7 +3,7 @@
 use crate::{
     bounded3::{Bounded3, Bounds3},
     group3::Group3,
-    shapes::{point3::Pt3, polygon3::Pg3, ray3::Ray3, segment3::Sg3},
+    shapes::{point3::Point3, polygon3::Pg3, ray3::Ray3, segment3::Sg3},
     Object, Rotatable,
 };
 use anyhow::Result;
@@ -28,7 +28,7 @@ pub enum Obj3 {
 
 impl Obj3 {
     // The center of the object, projected along the view vector.
-    pub fn dist_along(&self, view_vector: &Pt3) -> f64 {
+    pub fn dist_along(&self, view_vector: &Point3) -> f64 {
         match self {
             Obj3::Pg3(pg3d) => pg3d.dist_along(view_vector),
             Obj3::Sg3(sg3d) => sg3d.dist_along(view_vector),
@@ -36,7 +36,7 @@ impl Obj3 {
         }
     }
     // The maximum distance of the object, projected along the view vector.
-    pub fn max_dist_along(&self, view_vector: &Pt3) -> f64 {
+    pub fn max_dist_along(&self, view_vector: &Point3) -> f64 {
         match self {
             Obj3::Pg3(pg3d) => pg3d.max_dist_along(view_vector),
             Obj3::Sg3(sg3d) => sg3d.max_dist_along(view_vector),
@@ -44,7 +44,7 @@ impl Obj3 {
         }
     }
     // The minimum distance of the object, projected along the view vector.
-    pub fn min_dist_along(&self, view_vector: &Pt3) -> f64 {
+    pub fn min_dist_along(&self, view_vector: &Point3) -> f64 {
         match self {
             Obj3::Pg3(pg3d) => pg3d.min_dist_along(view_vector),
             Obj3::Sg3(sg3d) => sg3d.min_dist_along(view_vector),
@@ -53,7 +53,7 @@ impl Obj3 {
     }
 }
 
-plotz_geometry::ops_defaults_t!(Obj3, Pt3);
+plotz_geometry::ops_defaults_t!(Obj3, Point3);
 
 impl Rotatable for Obj3 {
     fn rotate(&self, by: f64, about: Ray3) -> Result<Self> {

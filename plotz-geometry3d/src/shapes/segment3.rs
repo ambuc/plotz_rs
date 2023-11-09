@@ -3,7 +3,7 @@
 use crate::{
     bounded3::{streaming_bbox, Bounded3, Bounds3},
     obj3::ObjType3d,
-    shapes::point3::Pt3,
+    shapes::point3::Point3,
     Object,
 };
 use anyhow::Result;
@@ -13,12 +13,12 @@ use std::{fmt::Debug, ops::*};
 // A segment in 3d space, with initial and final points.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Sg3 {
-    pub i: Pt3,
-    pub f: Pt3,
+    pub i: Point3,
+    pub f: Point3,
 }
 
 #[allow(non_snake_case)]
-pub fn Sg3(i: Pt3, f: Pt3) -> Sg3 {
+pub fn Sg3(i: Point3, f: Point3) -> Sg3 {
     Sg3 { i, f }
 }
 
@@ -34,16 +34,16 @@ impl Sg3 {
     }
 
     // The average point of the polygon.
-    pub fn average_pt(&self) -> Pt3 {
+    pub fn average_pt(&self) -> Point3 {
         self.i.avg(&self.f)
     }
 
     // The center of the object, projected along the view vector.
-    pub fn dist_along(&self, view_vector: &Pt3) -> f64 {
+    pub fn dist_along(&self, view_vector: &Point3) -> f64 {
         self.average_pt().dot(view_vector)
     }
     // the maximum distance along a vector.
-    pub fn max_dist_along(&self, view_vector: &Pt3) -> f64 {
+    pub fn max_dist_along(&self, view_vector: &Point3) -> f64 {
         [self.i, self.f]
             .iter()
             .map(|pt| FloatOrd(view_vector.dot(pt)))
@@ -52,7 +52,7 @@ impl Sg3 {
             .0
     }
     // the minimum distance along a vector.
-    pub fn min_dist_along(&self, view_vector: &Pt3) -> f64 {
+    pub fn min_dist_along(&self, view_vector: &Point3) -> f64 {
         [self.i, self.f]
             .iter()
             .map(|pt| FloatOrd(view_vector.dot(pt)))
@@ -62,7 +62,7 @@ impl Sg3 {
     }
 }
 
-plotz_geometry::ops_defaults_t!(Sg3, Pt3);
+plotz_geometry::ops_defaults_t!(Sg3, Point3);
 
 impl Bounded3 for Sg3 {
     fn bounds3(&self) -> Result<Bounds3> {
@@ -75,11 +75,11 @@ impl Object for Sg3 {
         ObjType3d::Segment3d
     }
 
-    fn iter(&self) -> Box<dyn Iterator<Item = &Pt3> + '_> {
+    fn iter(&self) -> Box<dyn Iterator<Item = &Point3> + '_> {
         Box::new(std::iter::once(&self.i).chain(std::iter::once(&self.f)))
     }
 
-    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt3> + '_> {
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Point3> + '_> {
         Box::new(std::iter::once(&mut self.i).chain(std::iter::once(&mut self.f)))
     }
 }

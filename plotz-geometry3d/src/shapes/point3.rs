@@ -18,25 +18,25 @@ use std::{
 };
 
 #[derive(Hash, Copy, Clone, PartialOrd, Ord)]
-pub struct Pt3 {
+pub struct Point3 {
     pub x: FloatOrd<f64>,
     pub y: FloatOrd<f64>,
     pub z: FloatOrd<f64>,
 }
 
 #[allow(non_snake_case)]
-pub fn Origin() -> Pt3 {
+pub fn Origin() -> Point3 {
     (0, 0, 0).into()
 }
 
-impl Debug for Pt3 {
+impl Debug for Point3 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Pt3 { x, y, z } = self;
+        let Point3 { x, y, z } = self;
         write!(f, "Pt3({:.1},{:.1},{:.1})", x.0, y.0, z.0)
     }
 }
 
-impl PartialEq for Pt3 {
+impl PartialEq for Point3 {
     fn eq(&self, other: &Self) -> bool {
         let e = 0.0000001;
         approx_eq!(f64, self.x.0, other.x.0, epsilon = e)
@@ -45,50 +45,50 @@ impl PartialEq for Pt3 {
     }
 }
 
-impl Eq for Pt3 {}
+impl Eq for Point3 {}
 
 // An alternate constructor for points.
 #[allow(non_snake_case)]
-pub fn Pt3<T1, T2, T3>(x: T1, y: T2, z: T3) -> Pt3
+pub fn Point3<T1, T2, T3>(x: T1, y: T2, z: T3) -> Point3
 where
     f64: From<T1>,
     f64: From<T2>,
     f64: From<T3>,
 {
-    Pt3 {
+    Point3 {
         x: FloatOrd(x.into()),
         y: FloatOrd(y.into()),
         z: FloatOrd(z.into()),
     }
 }
 
-impl<T1, T2, T3> From<(T1, T2, T3)> for Pt3
+impl<T1, T2, T3> From<(T1, T2, T3)> for Point3
 where
     f64: From<T1>,
     f64: From<T2>,
     f64: From<T3>,
 {
-    fn from((x, y, z): (T1, T2, T3)) -> Pt3 {
-        Pt3(x, y, z)
+    fn from((x, y, z): (T1, T2, T3)) -> Point3 {
+        Point3(x, y, z)
     }
 }
 
-impl<T> From<Pt3> for (T, T, T)
+impl<T> From<Point3> for (T, T, T)
 where
     T: From<f64>,
 {
-    fn from(val: Pt3) -> Self {
+    fn from(val: Point3) -> Self {
         (val.x.0.into(), val.y.0.into(), val.z.0.into())
     }
 }
 
-impl Add<Pt3> for Pt3 {
+impl Add<Point3> for Point3 {
     type Output = Self;
-    fn add(self, rhs: Pt3) -> Self::Output {
-        Pt3(self.x.0 + rhs.x.0, self.y.0 + rhs.y.0, self.z.0 + rhs.z.0)
+    fn add(self, rhs: Point3) -> Self::Output {
+        Point3(self.x.0 + rhs.x.0, self.y.0 + rhs.y.0, self.z.0 + rhs.z.0)
     }
 }
-impl AddAssign<Pt3> for Pt3 {
+impl AddAssign<Point3> for Point3 {
     fn add_assign(&mut self, other: Self) {
         *self = Self {
             x: FloatOrd(self.x.0 + other.x.0),
@@ -98,65 +98,65 @@ impl AddAssign<Pt3> for Pt3 {
     }
 }
 
-impl Div<Pt3> for Pt3 {
+impl Div<Point3> for Point3 {
     type Output = Self;
-    fn div(self, rhs: Pt3) -> Self::Output {
-        Pt3(self.x.0 / rhs.x.0, self.y.0 / rhs.y.0, self.z.0 / rhs.z.0)
+    fn div(self, rhs: Point3) -> Self::Output {
+        Point3(self.x.0 / rhs.x.0, self.y.0 / rhs.y.0, self.z.0 / rhs.z.0)
     }
 }
-impl Div<f64> for Pt3 {
+impl Div<f64> for Point3 {
     type Output = Self;
     fn div(self, rhs: f64) -> Self::Output {
-        Pt3(self.x.0 / rhs, self.y.0 / rhs, self.z.0 / rhs)
+        Point3(self.x.0 / rhs, self.y.0 / rhs, self.z.0 / rhs)
     }
 }
-impl DivAssign<Pt3> for Pt3 {
-    fn div_assign(&mut self, rhs: Pt3) {
+impl DivAssign<Point3> for Point3 {
+    fn div_assign(&mut self, rhs: Point3) {
         self.x.0 /= rhs.x.0;
         self.y.0 /= rhs.y.0;
         self.z.0 /= rhs.z.0;
     }
 }
-impl DivAssign<f64> for Pt3 {
+impl DivAssign<f64> for Point3 {
     fn div_assign(&mut self, rhs: f64) {
         self.x.0 /= rhs;
         self.y.0 /= rhs;
         self.z.0 /= rhs;
     }
 }
-impl Mul<Pt3> for Pt3 {
+impl Mul<Point3> for Point3 {
     type Output = Self;
-    fn mul(self, rhs: Pt3) -> Self::Output {
-        Pt3(self.x.0 * rhs.x.0, self.y.0 * rhs.y.0, self.z.0 * rhs.z.0)
+    fn mul(self, rhs: Point3) -> Self::Output {
+        Point3(self.x.0 * rhs.x.0, self.y.0 * rhs.y.0, self.z.0 * rhs.z.0)
     }
 }
-impl Mul<f64> for Pt3 {
+impl Mul<f64> for Point3 {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
-        Pt3(self.x.0 * rhs, self.y.0 * rhs, self.z.0 * rhs)
+        Point3(self.x.0 * rhs, self.y.0 * rhs, self.z.0 * rhs)
     }
 }
-impl MulAssign<Pt3> for Pt3 {
-    fn mul_assign(&mut self, rhs: Pt3) {
+impl MulAssign<Point3> for Point3 {
+    fn mul_assign(&mut self, rhs: Point3) {
         self.x.0 *= rhs.x.0;
         self.y.0 *= rhs.y.0;
         self.z.0 *= rhs.z.0;
     }
 }
-impl MulAssign<f64> for Pt3 {
+impl MulAssign<f64> for Point3 {
     fn mul_assign(&mut self, rhs: f64) {
         self.x.0 *= rhs;
         self.y.0 *= rhs;
         self.z.0 *= rhs;
     }
 }
-impl Sub<Pt3> for Pt3 {
+impl Sub<Point3> for Point3 {
     type Output = Self;
-    fn sub(self, rhs: Pt3) -> Self::Output {
-        Pt3(self.x.0 - rhs.x.0, self.y.0 - rhs.y.0, self.z.0 - rhs.z.0)
+    fn sub(self, rhs: Point3) -> Self::Output {
+        Point3(self.x.0 - rhs.x.0, self.y.0 - rhs.y.0, self.z.0 - rhs.z.0)
     }
 }
-impl SubAssign<Pt3> for Pt3 {
+impl SubAssign<Point3> for Point3 {
     fn sub_assign(&mut self, other: Self) {
         *self = Self {
             x: FloatOrd(self.x.0 - other.x.0),
@@ -166,9 +166,9 @@ impl SubAssign<Pt3> for Pt3 {
     }
 }
 
-impl<T> RemAssign<T> for Pt3
+impl<T> RemAssign<T> for Point3
 where
-    T: Into<Pt3>,
+    T: Into<Point3>,
 {
     fn rem_assign(&mut self, rhs: T) {
         let rhs = rhs.into();
@@ -178,27 +178,27 @@ where
     }
 }
 
-impl Pt3 {
+impl Point3 {
     // https://en.wikipedia.org/wiki/Dot_product
-    pub fn dot(&self, other: &Pt3) -> f64 {
+    pub fn dot(&self, other: &Point3) -> f64 {
         (self.x.0 * other.x.0) + (self.y.0 * other.y.0) + (self.z.0 * other.z.0)
     }
     // average of two points.
-    pub fn avg(&self, other: &Pt3) -> Pt3 {
+    pub fn avg(&self, other: &Point3) -> Point3 {
         let avg_x = (self.x.0 + other.x.0) / 2.0;
         let avg_y = (self.y.0 + other.y.0) / 2.0;
         let avg_z = (self.z.0 + other.z.0) / 2.0;
-        Pt3(avg_x, avg_y, avg_z)
+        Point3(avg_x, avg_y, avg_z)
     }
 
     /// Distance between two points.
-    pub fn dist(&self, other: &Pt3) -> f64 {
+    pub fn dist(&self, other: &Point3) -> f64 {
         Sg3(*self, *other).abs()
     }
 }
 
 #[allow(non_snake_case)]
-pub fn PolarPt3(r: f64, theta_rad: f64, phi_rad: f64) -> Result<Pt3> {
+pub fn PolarPoint3(r: f64, theta_rad: f64, phi_rad: f64) -> Result<Point3> {
     if !(0.0..=TAU).contains(&theta_rad) {
         return Err(anyhow!(format!(
             "theta_rad ({:?}) must be in range 0..=2PI",
@@ -212,15 +212,15 @@ pub fn PolarPt3(r: f64, theta_rad: f64, phi_rad: f64) -> Result<Pt3> {
         )));
     }
 
-    Ok(Pt3(
+    Ok(Point3(
         r * phi_rad.sin() * theta_rad.cos(),
         r * phi_rad.sin() * theta_rad.sin(),
         r * phi_rad.cos(),
     ))
 }
 
-impl Rotatable for Pt3 {
-    fn rotate(&self, by_rad: f64, about: Ray3) -> Result<Pt3> {
+impl Rotatable for Point3 {
+    fn rotate(&self, by_rad: f64, about: Ray3) -> Result<Point3> {
         // https://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
         // R = [ ux ux (1 - cos t) +    cos t  ,  ux uy (1 - cos t) - uz sin t   ,  ux uz (1 - cos t) + uy sin t  ]
         // .   [ uy ux (1 - cos t) + uz sin t  ,  uy uy (1 - cos t) +    cos t   ,  uy uz (1 - cos t) - ux sin t  ]
@@ -256,7 +256,7 @@ impl Rotatable for Pt3 {
 
         let (a0, a1, a2): (f64, f64, f64) = (*self - sg3.f).into();
 
-        Ok(Pt3(
+        Ok(Point3(
             /*b0=*/ r00 * a0 + r10 * a1 + r20 * a2,
             /*b1=*/ r01 * a0 + r11 * a1 + r21 * a2,
             /*b2=*/ r02 * a0 + r12 * a1 + r22 * a2,
@@ -265,7 +265,7 @@ impl Rotatable for Pt3 {
     // foo
 }
 
-impl Bounded3 for Pt3 {
+impl Bounded3 for Point3 {
     fn bounds3(&self) -> Result<Bounds3> {
         Ok(Bounds3 {
             x_min: self.x.0,
@@ -284,27 +284,27 @@ mod test {
     use std::{f32::consts::FRAC_1_SQRT_2, f64::consts::FRAC_PI_2};
     use test_case::test_case;
 
-    #[test_case(Pt3(1,0,0), 0.0*FRAC_PI_2, Pt3(1,0,0))]
-    #[test_case(Pt3(1,0,0), 0.5*FRAC_PI_2, Pt3(FRAC_1_SQRT_2,FRAC_1_SQRT_2,0))]
-    #[test_case(Pt3(1,0,0), 1.0*FRAC_PI_2, Pt3(0,1,0))]
-    #[test_case(Pt3(1,0,0), 1.5*FRAC_PI_2, Pt3(-1.0*FRAC_1_SQRT_2,FRAC_1_SQRT_2,0))]
-    #[test_case(Pt3(1,0,0), 2.0*FRAC_PI_2, Pt3(-1,0,0))]
-    #[test_case(Pt3(1,0,0), 2.5*FRAC_PI_2, Pt3(-1.0*FRAC_1_SQRT_2,-1.0*FRAC_1_SQRT_2,0))]
-    #[test_case(Pt3(1,0,0), 3.0*FRAC_PI_2, Pt3(0,-1,0))]
-    #[test_case(Pt3(1,0,0), 3.5*FRAC_PI_2, Pt3(FRAC_1_SQRT_2,-1.0*FRAC_1_SQRT_2,0))]
-    #[test_case(Pt3(1,0,0), 4.0*FRAC_PI_2, Pt3(1,0,0))]
-    fn test_rotate_z_axis(input: Pt3, by: f64, output: Pt3) -> Result<()> {
+    #[test_case(Point3(1,0,0), 0.0*FRAC_PI_2, Point3(1,0,0))]
+    #[test_case(Point3(1,0,0), 0.5*FRAC_PI_2, Point3(FRAC_1_SQRT_2,FRAC_1_SQRT_2,0))]
+    #[test_case(Point3(1,0,0), 1.0*FRAC_PI_2, Point3(0,1,0))]
+    #[test_case(Point3(1,0,0), 1.5*FRAC_PI_2, Point3(-1.0*FRAC_1_SQRT_2,FRAC_1_SQRT_2,0))]
+    #[test_case(Point3(1,0,0), 2.0*FRAC_PI_2, Point3(-1,0,0))]
+    #[test_case(Point3(1,0,0), 2.5*FRAC_PI_2, Point3(-1.0*FRAC_1_SQRT_2,-1.0*FRAC_1_SQRT_2,0))]
+    #[test_case(Point3(1,0,0), 3.0*FRAC_PI_2, Point3(0,-1,0))]
+    #[test_case(Point3(1,0,0), 3.5*FRAC_PI_2, Point3(FRAC_1_SQRT_2,-1.0*FRAC_1_SQRT_2,0))]
+    #[test_case(Point3(1,0,0), 4.0*FRAC_PI_2, Point3(1,0,0))]
+    fn test_rotate_z_axis(input: Point3, by: f64, output: Point3) -> Result<()> {
         let z_axis = Ray3(Origin(), 0.0, 0.0)?;
         assert_eq!(input.rotate(by, z_axis)?, output);
         Ok(())
     }
 
-    #[test_case(Pt3(0,1,0), 0.0*FRAC_PI_2, Pt3(0,1,0))]
-    #[test_case(Pt3(0,1,0), 1.0*FRAC_PI_2, Pt3(0,0,1))]
-    #[test_case(Pt3(0,1,0), 2.0*FRAC_PI_2, Pt3(0,-1,0))]
-    #[test_case(Pt3(0,1,0), 3.0*FRAC_PI_2, Pt3(0,0,-1))]
-    #[test_case(Pt3(0,1,0), 4.0*FRAC_PI_2, Pt3(0,1,0))]
-    fn test_rotate_x_axis(input: Pt3, by: f64, output: Pt3) -> Result<()> {
+    #[test_case(Point3(0,1,0), 0.0*FRAC_PI_2, Point3(0,1,0))]
+    #[test_case(Point3(0,1,0), 1.0*FRAC_PI_2, Point3(0,0,1))]
+    #[test_case(Point3(0,1,0), 2.0*FRAC_PI_2, Point3(0,-1,0))]
+    #[test_case(Point3(0,1,0), 3.0*FRAC_PI_2, Point3(0,0,-1))]
+    #[test_case(Point3(0,1,0), 4.0*FRAC_PI_2, Point3(0,1,0))]
+    fn test_rotate_x_axis(input: Point3, by: f64, output: Point3) -> Result<()> {
         let x_axis = Ray3(Origin(), 0.0, FRAC_PI_2)?;
         assert_eq!(input.rotate(by, x_axis)?, output);
         Ok(())

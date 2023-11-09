@@ -5,7 +5,7 @@ use plotz_geometry::{group::Group, style::Style};
 use crate::{
     group3::Group3,
     obj3::Obj3,
-    shapes::{point3::Pt3, polygon3::Pg3, segment3::Sg3},
+    shapes::{point3::Point3, polygon3::Pg3, segment3::Sg3},
 };
 use plotz_geometry::{
     obj::Obj,
@@ -15,9 +15,9 @@ use plotz_geometry::{
 // Any oblique projection.  https://en.wikipedia.org/wiki/3D_projection#Oblique_projection
 #[derive(Debug, Clone)]
 pub struct Oblique {
-    u_src: Pt3,
-    v_src: Pt3,
-    w_src: Pt3,
+    u_src: Point3,
+    v_src: Point3,
+    w_src: Point3,
     u_dst: Point,
     v_dst: Point,
     w_dst: Point,
@@ -30,9 +30,9 @@ impl Default for Oblique {
     fn default() -> Self {
         let spread = 1.0 / 2.0_f64.sqrt(); // 0.7071...
         Oblique {
-            u_src: Pt3(1, 0, 0),
-            v_src: Pt3(0, 1, 0),
-            w_src: Pt3(0, 0, 1),
+            u_src: Point3(1, 0, 0),
+            v_src: Point3(0, 1, 0),
+            w_src: Point3(0, 0, 1),
             u_dst: Point(-1, spread),
             v_dst: Point(1, spread),
             w_dst: Point(0, -1),
@@ -41,11 +41,11 @@ impl Default for Oblique {
 }
 
 impl Oblique {
-    pub fn view_vector(&self) -> Pt3 {
-        Pt3(0, 0, 0) - self.u_src - self.v_src - self.w_src
+    pub fn view_vector(&self) -> Point3 {
+        Point3(0, 0, 0) - self.u_src - self.v_src - self.w_src
     }
 
-    pub fn project_pt3(&self, pt3d: &Pt3) -> Point {
+    pub fn project_pt3(&self, pt3d: &Point3) -> Point {
         (self.u_dst * pt3d.dot(&self.u_src))
             + (self.v_dst * pt3d.dot(&self.v_src))
             + (self.w_dst * pt3d.dot(&self.w_src))

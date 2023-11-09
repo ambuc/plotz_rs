@@ -6,7 +6,7 @@ use anyhow::Result;
 use crate::{
     bounded3::{streaming_bbox, Bounded3, Bounds3},
     obj3::{Obj3, ObjType3d},
-    shapes::{point3::Pt3, ray3::Ray3},
+    shapes::{point3::Point3, ray3::Ray3},
     Object, Rotatable, RotatableBounds,
 };
 use std::ops::*;
@@ -29,7 +29,7 @@ impl<T: 'static> Group3<T> {
     }
 }
 
-plotz_geometry::ops_generic_defaults_t!(Group3, Pt3);
+plotz_geometry::ops_generic_defaults_t!(Group3, Point3);
 
 impl<T: 'static> Rotatable for Group3<T>
 where
@@ -63,11 +63,11 @@ impl<T> Object for Group3<T> {
         ObjType3d::Group3d
     }
 
-    fn iter(&self) -> Box<dyn Iterator<Item = &Pt3> + '_> {
+    fn iter(&self) -> Box<dyn Iterator<Item = &Point3> + '_> {
         Box::new(self.0.iter().flat_map(|(x, _)| x.iter()))
     }
 
-    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt3> + '_> {
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Point3> + '_> {
         Box::new(self.0.iter_mut().flat_map(|(x, _)| x.iter_mut()))
     }
 }

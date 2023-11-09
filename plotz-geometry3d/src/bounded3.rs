@@ -1,6 +1,6 @@
 use crate::{
     group3::Group3,
-    shapes::{cuboid3d::Cuboid, point3::Pt3},
+    shapes::{cuboid3d::Cuboid, point3::Point3},
 };
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
@@ -48,8 +48,8 @@ impl Bounds3 {
         self.z_max - self.z_min
     }
 
-    pub fn center(&self) -> Pt3 {
-        Pt3(
+    pub fn center(&self) -> Point3 {
+        Point3(
             self.x_min + (self.x_span()) / 2.0,
             self.y_min + (self.y_span()) / 2.0,
             self.z_min + (self.z_span()) / 2.0,
