@@ -70,13 +70,24 @@ pub trait Bounded {
     fn bounds(&self) -> Result<Bounds>;
 }
 
-#[derive(Default)]
 pub struct BoundsCollector {
-    y_max: Option<FloatOrd<f64>>,
-    y_min: Option<FloatOrd<f64>>,
-    x_min: Option<FloatOrd<f64>>,
-    x_max: Option<FloatOrd<f64>>,
+    x_max: FloatOrd<f64>,
+    x_min: FloatOrd<f64>,
+    y_max: FloatOrd<f64>,
+    y_min: FloatOrd<f64>,
     items_seen: usize,
+}
+
+impl Default for BoundsCollector {
+    fn default() -> Self {
+        BoundsCollector {
+            x_max: FloatOrd(f64::MIN),
+            x_min: FloatOrd(f64::MAX),
+            y_max: FloatOrd(f64::MIN),
+            y_min: FloatOrd(f64::MAX),
+            items_seen: 0,
+        }
+    }
 }
 
 impl BoundsCollector {
@@ -86,22 +97,10 @@ impl BoundsCollector {
 
     pub fn incorporate(&mut self, b: &impl Bounded) -> Result<()> {
         let bounds = b.bounds()?;
-        self.y_max = Some(match self.y_max {
-            None => FloatOrd(bounds.y_max),
-            Some(existing) => std::cmp::max(existing, FloatOrd(bounds.y_max)),
-        });
-        self.y_min = Some(match self.y_min {
-            None => FloatOrd(bounds.y_min),
-            Some(existing) => std::cmp::min(existing, FloatOrd(bounds.y_min)),
-        });
-        self.x_max = Some(match self.x_max {
-            None => FloatOrd(bounds.x_max),
-            Some(existing) => std::cmp::max(existing, FloatOrd(bounds.x_max)),
-        });
-        self.x_min = Some(match self.x_min {
-            None => FloatOrd(bounds.x_min),
-            Some(existing) => std::cmp::min(existing, FloatOrd(bounds.x_min)),
-        });
+        self.x_max = std::cmp::max(self.x_max, FloatOrd(bounds.x_max));
+        self.x_min = std::cmp::min(self.x_min, FloatOrd(bounds.x_min));
+        self.y_max = std::cmp::max(self.y_max, FloatOrd(bounds.y_max));
+        self.y_min = std::cmp::min(self.y_min, FloatOrd(bounds.y_min));
         self.items_seen += 1;
         Ok(())
     }
@@ -109,11 +108,14 @@ impl BoundsCollector {
 
 impl Bounded for BoundsCollector {
     fn bounds(&self) -> Result<Bounds> {
+        if self.items_seen == 0 {
+            return Err(anyhow!("empty!"));
+        }
         Ok(Bounds {
-            y_max: self.y_max.ok_or(anyhow!("absent"))?.0,
-            y_min: self.y_min.ok_or(anyhow!("absent"))?.0,
-            x_min: self.x_min.ok_or(anyhow!("absent"))?.0,
-            x_max: self.x_max.ok_or(anyhow!("absent"))?.0,
+            x_max: self.x_max.0,
+            x_min: self.x_min.0,
+            y_max: self.y_max.0,
+            y_min: self.y_min.0,
         })
     }
 }
