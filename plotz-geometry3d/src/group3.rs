@@ -5,9 +5,9 @@ use anyhow::Result;
 
 use crate::{
     bounded3::{Bounded3, Bounds3, Bounds3Collector},
-    obj3::Obj3,
+    obj3::{Obj3, ObjType},
     shapes::{pt3::Pt3, ry3::Ry3},
-    Rotatable, RotatableBounds,
+    Object, Rotatable, RotatableBounds,
 };
 use std::ops::*;
 
@@ -26,10 +26,6 @@ impl<T: 'static> Group3<T> {
     }
     pub fn into_iter_objects(self) -> Box<dyn Iterator<Item = (Obj3, T)>> {
         Box::new(self.0.into_iter())
-    }
-
-    pub fn iter(&self) -> impl Iterator<Item = &Pt3> {
-        self.0.iter().flat_map(|(x, _)| x.iter())
     }
 }
 
@@ -83,5 +79,19 @@ impl<T: 'static> Bounded3 for Group3<T> {
             bc.incorporate(&i.bounds3()?)?;
         }
         bc.bounds3()
+    }
+}
+
+impl<T> Object for Group3<T> {
+    fn objtype(&self) -> ObjType {
+        ObjType::Group
+    }
+
+    fn iter(&self) -> Box<dyn Iterator<Item = &Pt3> + '_> {
+        Box::new(self.0.iter().flat_map(|(x, _)| x.iter()))
+    }
+
+    fn iter_mut(&mut self) -> Box<dyn Iterator<Item = &mut Pt3> + '_> {
+        Box::new(self.0.iter_mut().flat_map(|(x, _)| x.iter_mut()))
     }
 }
