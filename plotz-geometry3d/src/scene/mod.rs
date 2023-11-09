@@ -13,7 +13,7 @@ use anyhow::*;
 use float_ord::FloatOrd;
 use itertools::Itertools;
 use plotz_color::ColorRGB;
-use plotz_geometry::{obj::Obj, style::Style, *};
+use plotz_geometry::{obj::Obj2, style::Style, *};
 use std::fmt::Debug;
 use tracing::*;
 use typed_builder::TypedBuilder;
@@ -37,7 +37,7 @@ pub struct Scene {
 
 impl Scene {
     #[instrument(skip(self))]
-    pub fn project(self) -> Result<Vec<(Obj, Style)>> {
+    pub fn project(self) -> Result<Vec<(Obj2, Style)>> {
         match (self.projection, self.occluder) {
             (Projection::Oblique(obl), None) => Ok(self
                 .objects
@@ -46,7 +46,7 @@ impl Scene {
                 .collect()),
 
             (Projection::Oblique(obl), Some(mut occluder)) => {
-                let mut resultant: Vec<(Obj, Style)> = vec![];
+                let mut resultant: Vec<(Obj2, Style)> = vec![];
 
                 // add objects to the occluder in distance order.
                 // start at the front (so that the objects in the front can

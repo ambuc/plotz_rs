@@ -4,7 +4,7 @@
 use crate::{
     bounded::{streaming_bbox, Bounded, Bounds},
     crop::{CropType, Croppable},
-    obj::{Obj, ObjType2d},
+    obj::{Obj2, ObjType2d},
     shapes::{point::Point, polygon::Polygon},
     *,
 };
@@ -14,17 +14,17 @@ use std::ops::*;
 
 #[derive(Debug, PartialEq, Clone)]
 /// A group of objects.
-pub struct Group<T>(Vec<(Obj, T)>);
+pub struct Group<T>(Vec<(Obj2, T)>);
 
 impl<T> Group<T> {
     /// Creates a new group.
-    pub fn new(objs: impl IntoIterator<Item = (Obj, T)>) -> Group<T> {
+    pub fn new(objs: impl IntoIterator<Item = (Obj2, T)>) -> Group<T> {
         Group(objs.into_iter().collect::<Vec<_>>())
     }
 
     /// Returns a boxed iterator of immutable Object2dInners, the members of this
     /// group.
-    pub fn iter_objects(&self) -> Box<dyn Iterator<Item = &(Obj, T)> + '_> {
+    pub fn iter_objects(&self) -> Box<dyn Iterator<Item = &(Obj2, T)> + '_> {
         Box::new(self.0.iter())
     }
 }
@@ -53,7 +53,7 @@ where
                         .map(|o| (o, s.clone())))
                 })
                 .flatten_ok()
-                .collect::<Result<Vec<(Obj, T)>>>()?,
+                .collect::<Result<Vec<(Obj2, T)>>>()?,
         )])
     }
     fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>>

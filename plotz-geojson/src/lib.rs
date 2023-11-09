@@ -5,7 +5,7 @@
 
 use anyhow::{anyhow, Result};
 use plotz_geometry::{
-    obj::Obj,
+    obj::Obj2,
     shapes::{multiline::Multiline, point::Point, polygon::Polygon},
 };
 use serde_json::Value;
@@ -48,13 +48,13 @@ fn add_tags(value: &Value, tagslist: &mut TagsList) {
 }
 
 /// Parses aGeoJSON file and returns a list of tagged polygons.
-pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>> {
+pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj2, TagsList)>> {
     let features = geo_json["features"]
         .as_array()
         .ok_or(anyhow!("expected array"))?;
 
     info!("Parsing geojson file with {:?} features.", features.len());
-    let mut lines: Vec<(Obj, TagsList)> = vec![];
+    let mut lines: Vec<(Obj2, TagsList)> = vec![];
 
     let mut stats = HashMap::<GeomType, usize>::new();
 
@@ -73,7 +73,7 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>> {
 
         let coords = &feature["geometry"]["coordinates"];
 
-        let result: Result<Vec<Obj>> = match geom_type {
+        let result: Result<Vec<Obj2>> = match geom_type {
             "LineString" => parse_to_linestring(coords).map(|v| {
                 stats
                     .entry(GeomType::LineString)
@@ -128,7 +128,7 @@ pub fn parse_geojson(geo_json: Value) -> Result<Vec<(Obj, TagsList)>> {
     Ok(lines)
 }
 
-fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj>> {
+fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj2>> {
     Ok(vec![Multiline(
         coordinates
             .as_array()
@@ -145,15 +145,15 @@ fn parse_to_linestring(coordinates: &Value) -> Result<Vec<Obj>> {
     .into()])
 }
 
-fn parse_to_multilinestring(coordinates: &Value) -> Result<Vec<Obj>> {
-    let mut lines: Vec<Obj> = vec![];
+fn parse_to_multilinestring(coordinates: &Value) -> Result<Vec<Obj2>> {
+    let mut lines: Vec<Obj2> = vec![];
     for linestring in coordinates.as_array().ok_or(anyhow!("not array"))?.iter() {
         lines.append(&mut parse_to_linestring(linestring)?);
     }
     Ok(lines)
 }
 
-fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<Obj>> {
+fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<Obj2>> {
     let mut lines: Vec<_> = vec![];
     for coordinates in coordinates.as_array().ok_or(anyhow!("not array"))? {
         lines.extend(parse_to_polygon(coordinates)?);
@@ -161,7 +161,7 @@ fn parse_to_multipolygon(coordinates: &Value) -> Result<Vec<Obj>> {
     Ok(lines)
 }
 
-fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj>> {
+fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj2>> {
     Ok(coordinates
         .as_array()
         .ok_or(anyhow!("not array"))?
@@ -182,10 +182,10 @@ fn parse_to_polygon(coordinates: &Value) -> Result<Vec<Obj>> {
             )
         })
         .collect::<Result<_, _>>()?)
-    .map(|v: Vec<Polygon>| v.into_iter().map(Obj::from).collect::<Vec<_>>())
+    .map(|v: Vec<Polygon>| v.into_iter().map(Obj2::from).collect::<Vec<_>>())
 }
 
-fn parse_to_circle(_coords: &Value) -> Result<Vec<Obj>> {
+fn parse_to_circle(_coords: &Value) -> Result<Vec<Obj2>> {
     // For now, don't print circles at all.
     Ok(vec![])
 }
@@ -221,7 +221,7 @@ mod tests {
         ]]);
         assert_eq!(
             parse_to_polygon(&geojson).unwrap(),
-            vec![Obj::from(
+            vec![Obj2::from(
                 Polygon([
                     (-74.015_651_1, 40.721_544_6),
                     (-74.015_493_9, 40.721_526_2),
@@ -245,7 +245,7 @@ mod tests {
         ]);
         assert_eq!(
             parse_to_linestring(&geojson).unwrap(),
-            vec![Obj::from(Multiline(vec![
+            vec![Obj2::from(Multiline(vec![
                 (-74.015_651_1, 40.721_544_6),
                 (-74.015_493_9, 40.721_526_2),
                 (-74.014_280_9, 40.721_384_4),
@@ -265,7 +265,7 @@ mod tests {
         assert_eq!(polygons.len(), 4);
         assert_eq!(
             polygons[0].0,
-            Obj::from(Polygon([(0.0, 0.0), (1.0, 2.5), (2.0, 5.0)])?)
+            Obj2::from(Polygon([(0.0, 0.0), (1.0, 2.5), (2.0, 5.0)])?)
         );
 
         // assert_symbol_tuple_list(
@@ -293,12 +293,12 @@ mod tests {
 
         assert_eq!(
             polygons[2].0,
-            Obj::from(Polygon([(2.0, 2.0), (1.0, 2.5), (2.0, 5.0)])?)
+            Obj2::from(Polygon([(2.0, 2.0), (1.0, 2.5), (2.0, 5.0)])?)
         );
 
         assert_eq!(
             polygons[3].0,
-            Obj::from(Polygon([(3.0, 3.0), (1.0, 2.5), (2.0, 5.0)])?)
+            Obj2::from(Polygon([(3.0, 3.0), (1.0, 2.5), (2.0, 5.0)])?)
         );
         Ok(())
     }

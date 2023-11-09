@@ -9,7 +9,7 @@ use plotz_core::{
 use plotz_geometry::{
     crop::PointLoc,
     grid::grid_layout::{GridLayout, GridLayoutSettings},
-    obj::Obj,
+    obj::Obj2,
     shapes::{curve::CurveArc, point::Point},
     style::Style,
 };
@@ -73,7 +73,7 @@ fn main() -> Result<()> {
                             .insert_and_crop_to_cubby(
                                 cubby,
                                 (
-                                    Obj::CurveArc(CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64)),
+                                    Obj2::CurveArc(CurveArc(curve_arc_ctr, 0.0..=TAU, r as f64)),
                                     Style {
                                         thickness: 1.0,
                                         color: *color,

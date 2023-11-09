@@ -3,7 +3,7 @@
 use crate::{
     bounded::{Bounded, Bounds},
     crop::Croppable,
-    obj::Obj,
+    obj::Obj2,
     shapes::point::Point,
     style::Style,
 };
@@ -31,7 +31,7 @@ pub struct GridLayout {
     /// the settings. See above.
     settings: GridLayoutSettings,
     /// A vector of objects. By default these will be empty vectors.
-    objs: Vec<Vec<Vec<(Obj, Style)>>>,
+    objs: Vec<Vec<Vec<(Obj2, Style)>>>,
 }
 
 impl GridLayout {
@@ -90,7 +90,7 @@ impl GridLayout {
     }
 
     /// Returns a list of all inner objects.
-    pub fn to_object2ds(&self) -> Vec<(Obj, Style)> {
+    pub fn to_object2ds(&self) -> Vec<(Obj2, Style)> {
         self.objs
             .clone()
             .into_iter()
@@ -104,7 +104,7 @@ impl GridLayout {
     pub fn insert_and_crop_to_cubby(
         &mut self,
         (i, j): (usize, usize),
-        (obj, style): (Obj, Style),
+        (obj, style): (Obj2, Style),
     ) -> Result<()> {
         let cropped = obj.crop_to_bounds(self.get_cubby_bounds((i, j)))?;
 
@@ -116,7 +116,7 @@ impl GridLayout {
     pub fn insert_and_rescale_to_cubby(
         &mut self,
         (i, j): (usize, usize),
-        (obj, style): (Obj, Style),
+        (obj, style): (Obj2, Style),
         buffer: f64,
     ) -> Result<()> {
         let mut obj = obj;

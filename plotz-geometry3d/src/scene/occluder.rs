@@ -2,7 +2,7 @@
 
 use anyhow::*;
 use itertools::Itertools;
-use plotz_geometry::{crop::Croppable, obj::Obj, shading::shade_polygon, style::Style};
+use plotz_geometry::{crop::Croppable, obj::Obj2, shading::shade_polygon, style::Style};
 use tracing::*;
 use typed_builder::TypedBuilder;
 
@@ -18,54 +18,54 @@ pub struct Occluder {
     pub config: OccluderConfig,
 
     #[builder(default)]
-    pub objects: Vec<(Obj, Style)>,
+    pub objects: Vec<(Obj2, Style)>,
 }
 
 // Despite the name, this really only layers A atop B atop C and computes their
 // crops. Maybe a better name would be |Obscurer|. Anyway.
 impl Occluder {
-    fn hide_a_behind_b(incoming: &Obj, existing: &Obj) -> Result<Vec<Obj>> {
+    fn hide_a_behind_b(incoming: &Obj2, existing: &Obj2) -> Result<Vec<Obj2>> {
         // TODO(https://github.com/ambuc/plotz_rs/issues/3): use quadtrees here to make this MUCH faster please!!!!
 
         match (&incoming, &existing) {
             // points can/should be occluded, not handled yet.
-            (Obj::Point(_), _) => {
+            (Obj2::Point(_), _) => {
                 unimplemented!("no support for points yet")
             }
             // chars are points, see above.
-            (Obj::Text(_), _) => {
+            (Obj2::Text(_), _) => {
                 unimplemented!("no support for chars yet")
             }
             // groups are not handled yet.
-            (Obj::Group(_), _) | (_, Obj::Group(_)) => {
+            (Obj2::Group(_), _) | (_, Obj2::Group(_)) => {
                 unimplemented!("no support for groups yet")
             }
             // curvearcs are not handled yet.
-            (Obj::CurveArc(_), _) | (_, Obj::CurveArc(_)) => {
+            (Obj2::CurveArc(_), _) | (_, Obj2::CurveArc(_)) => {
                 unimplemented!("no support for curvearcs yet")
             }
 
-            (Obj::Multiline(_), _) => {
+            (Obj2::Multiline(_), _) => {
                 unimplemented!("no support for multilines yet")
             }
 
-            (Obj::Polygon(a), Obj::Polygon(b)) => Ok(a
+            (Obj2::Polygon(a), Obj2::Polygon(b)) => Ok(a
                 .crop_excluding(b)
                 .context(format!("crop excluding: \na\n\t{:?}\n\nb\n\t{:?}", a, b))?
                 .into_iter()
-                .map(Obj::from)
+                .map(Obj2::from)
                 .collect()),
-            (Obj::Segment(_sg), Obj::Polygon(_pg)) => {
+            (Obj2::Segment(_sg), Obj2::Polygon(_pg)) => {
                 unimplemented!("no support for pg x sg yet");
             }
 
-            (Obj::PolygonWithCavities(_), _) | (_, Obj::PolygonWithCavities(_)) => {
+            (Obj2::PolygonWithCavities(_), _) | (_, Obj2::PolygonWithCavities(_)) => {
                 unimplemented!("TODO(jbuckland): implement cropping.")
             }
 
             //
             // you can't hide something behind a segment or a point or a char. don't be daft.
-            (incoming, Obj::Multiline(_) | Obj::Segment(_) | Obj::Point(_) | Obj::Text(_)) => {
+            (incoming, Obj2::Multiline(_) | Obj2::Segment(_) | Obj2::Point(_) | Obj2::Text(_)) => {
                 Ok(vec![(**incoming).clone()])
             }
         }
@@ -73,8 +73,8 @@ impl Occluder {
 
     // Incorporates an object
     #[instrument(skip(self, incoming2))]
-    pub fn add(&mut self, incoming2: (Obj, Style)) -> Result<()> {
-        let mut incoming_os: Vec<(Obj, Style)> = vec![incoming2.clone()];
+    pub fn add(&mut self, incoming2: (Obj2, Style)) -> Result<()> {
+        let mut incoming_os: Vec<(Obj2, Style)> = vec![incoming2.clone()];
         for (existing_o, _) in &self.objects {
             incoming_os = incoming_os
                 .iter()
@@ -95,7 +95,7 @@ impl Occluder {
 
     // Exports the occluded 2d objects.
     #[instrument(skip(self))]
-    pub fn export(mut self) -> Result<Vec<(Obj, Style)>> {
+    pub fn export(mut self) -> Result<Vec<(Obj2, Style)>> {
         // we store them front-to-back, but we want to render them to svg back-to-front.
         self.objects.reverse();
         let x: Vec<_> = self
@@ -111,14 +111,14 @@ impl Occluder {
 }
 
 #[instrument]
-fn export_obj((sobj, style): (Obj, Style)) -> Result<Vec<(Obj, Style)>> {
+fn export_obj((sobj, style): (Obj2, Style)) -> Result<Vec<(Obj2, Style)>> {
     match style {
         Style { shading: None, .. } => Ok(vec![(sobj, style)]),
         style @ Style {
             shading: Some(shade_config),
             ..
         } => match sobj {
-            Obj::Polygon(pg) => {
+            Obj2::Polygon(pg) => {
                 if shade_config.along_face {
                     // TODO(https://github.com/ambuc/plotz_rs/issues/2): apply shade config here.
                     Ok(vec![])

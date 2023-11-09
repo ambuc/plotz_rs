@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 use plotz_geometry::{
-    obj::Obj,
+    obj::Obj2,
     shapes::{point::Point, polygon::Polygon},
     style::Style,
 };
@@ -15,9 +15,9 @@ pub fn make_frame_pg((w, h): (f64, f64), offset: impl Into<Point>) -> Result<Pol
 }
 
 /// Makes a frame given (width, height) and (x,y) offset.
-pub fn make_frame(wh: (f64, f64), offset: impl Into<Point>) -> Result<(Obj, Style)> {
+pub fn make_frame(wh: (f64, f64), offset: impl Into<Point>) -> Result<(Obj2, Style)> {
     Ok((
-        Obj::Polygon(make_frame_pg(wh, offset)?),
+        Obj2::Polygon(make_frame_pg(wh, offset)?),
         Style {
             thickness: 5.0,
             ..Default::default()
@@ -26,6 +26,6 @@ pub fn make_frame(wh: (f64, f64), offset: impl Into<Point>) -> Result<(Obj, Styl
 }
 
 /// Makes a frame at (0,0) with dims (w,h) which is set in on all faces by |margin|.
-pub fn make_frame_with_margin((w, h): (f64, f64), margin: f64) -> Result<(Obj, Style)> {
+pub fn make_frame_with_margin((w, h): (f64, f64), margin: f64) -> Result<(Obj2, Style)> {
     make_frame((w - 2.0 * margin, h - 2.0 * margin), Point(margin, margin))
 }

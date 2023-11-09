@@ -7,7 +7,7 @@ use plotz_core::{
     svg::Size,
 };
 use plotz_geometry::{
-    obj::Obj,
+    obj::Obj2,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{point::Point, polygon::Polygon},
     style::Style,
@@ -105,7 +105,7 @@ fn main() -> Result<()> {
                 .iter()
                 .map(|sg| {
                     (
-                        Obj::Segment(*sg),
+                        Obj2::Segment(*sg),
                         Style {
                             color: shade.color,
                             ..Default::default()

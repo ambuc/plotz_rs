@@ -10,7 +10,7 @@ use plotz_geometry::{
     bounded::Bounded,
     crop::Croppable,
     grid::Grid,
-    obj::Obj,
+    obj::Obj2,
     shapes::{curve::CurveArcs, polygon::Polygon},
     style::Style,
 };
@@ -57,9 +57,9 @@ fn main() -> Result<()> {
             dos.extend(
                 cas.iter()
                     .flat_map(|ca| ca.crop_to(&frame_polygon).unwrap())
-                    .map(|ca| -> (Obj, Style) {
+                    .map(|ca| -> (Obj2, Style) {
                         (
-                            Obj::CurveArc(ca),
+                            Obj2::CurveArc(ca),
                             Style {
                                 color: GREEN,
                                 thickness: 0.30,

@@ -2,7 +2,7 @@
 //!
 use anyhow::Result;
 use plotz_color::BLACK;
-use plotz_geometry::{obj::Obj, shapes::text::Text, style::Style, *};
+use plotz_geometry::{obj::Obj2, shapes::text::Text, style::Style, *};
 use std::fmt::Debug;
 
 /// The size of a canvas.
@@ -33,13 +33,13 @@ impl From<(i64, i64)> for Size {
     }
 }
 
-fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<()> {
+fn write_doi_to_context(doi: &Obj2, context: &mut cairo::Context) -> Result<()> {
     match &doi {
-        Obj::Point(p) => {
+        Obj2::Point(p) => {
             context.line_to(p.x, p.y);
             context.line_to(p.x + 1.0, p.y + 1.0);
         }
-        Obj::Polygon(polygon) => {
+        Obj2::Polygon(polygon) => {
             //
             for p in &polygon.pts {
                 context.line_to(p.x, p.y);
@@ -49,22 +49,22 @@ fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<()> {
         // TODO(ambuc): each element should probably implement write to cairo,
         // or maybe there's a foreign typestate pattern we can use here to avoid
         // depending on cairo from that crate.
-        Obj::PolygonWithCavities(pgc) => {
-            write_doi_to_context(&Obj::Polygon(pgc.outer.clone()), context)?;
+        Obj2::PolygonWithCavities(pgc) => {
+            write_doi_to_context(&Obj2::Polygon(pgc.outer.clone()), context)?;
             for i in &pgc.inner {
-                write_doi_to_context(&Obj::Polygon(i.clone()), context)?;
+                write_doi_to_context(&Obj2::Polygon(i.clone()), context)?;
             }
         }
-        Obj::Multiline(ml) => {
+        Obj2::Multiline(ml) => {
             for p in &ml.pts {
                 context.line_to(p.x, p.y);
             }
         }
-        Obj::Segment(segment) => {
+        Obj2::Segment(segment) => {
             context.line_to(segment.i.x, segment.i.y);
             context.line_to(segment.f.x, segment.f.y);
         }
-        Obj::Text(Text {
+        Obj2::Text(Text {
             pt,
             inner: txt,
             font_size,
@@ -75,19 +75,19 @@ fn write_doi_to_context(doi: &Obj, context: &mut cairo::Context) -> Result<()> {
             context.move_to(pt.x, pt.y);
             context.show_text(txt)?;
         }
-        Obj::Group(group) => {
+        Obj2::Group(group) => {
             for s in group.iter_objects() {
                 write_obj_to_context(s, context)?;
             }
         }
-        Obj::CurveArc(arc) => {
+        Obj2::CurveArc(arc) => {
             context.arc(arc.ctr.x, arc.ctr.y, arc.radius, arc.angle_i, arc.angle_f);
         }
     }
     Ok(())
 }
 
-fn write_obj_to_context((obj, style): &(Obj, Style), context: &mut cairo::Context) -> Result<()> {
+fn write_obj_to_context((obj, style): &(Obj2, Style), context: &mut cairo::Context) -> Result<()> {
     if obj.is_empty() {
         return Ok(());
     }
@@ -105,7 +105,7 @@ fn write_obj_to_context((obj, style): &(Obj, Style), context: &mut cairo::Contex
 pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     path: P,
-    polygons: impl IntoIterator<Item = &'a (Obj, Style)>,
+    polygons: impl IntoIterator<Item = &'a (Obj2, Style)>,
 ) -> Result<usize> {
     let svg_surface = cairo::SvgSurface::new(size.width as f64, size.height as f64, Some(path))?;
     let mut ctx = cairo::Context::new(&svg_surface)?;
@@ -120,7 +120,7 @@ pub fn write_layer_to_svg<'a, P: Debug + AsRef<std::path::Path>>(
 fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
     size: Size,
     paths: impl IntoIterator<Item = P>,
-    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a (Obj, Style)>>,
+    polygon_layers: impl IntoIterator<Item = impl IntoIterator<Item = &'a (Obj2, Style)>>,
 ) -> Result<()> {
     for (path, polygons) in paths.into_iter().zip(polygon_layers.into_iter()) {
         write_layer_to_svg(size, path, polygons)?;
@@ -168,7 +168,7 @@ mod test_super {
             },
             path.to_str().unwrap(),
             vec![&(
-                Obj::Polygon(Polygon([(0, 0), (0, 1), (1, 0)])?),
+                Obj2::Polygon(Polygon([(0, 0), (0, 1), (1, 0)])?),
                 Style::default(),
             )],
         )
@@ -195,11 +195,11 @@ mod test_super {
             path.to_str().unwrap(),
             vec![
                 &(
-                    Obj::Polygon(Polygon([(0, 0), (0, 1), (1, 0)])?),
+                    Obj2::Polygon(Polygon([(0, 0), (0, 1), (1, 0)])?),
                     Style::default(),
                 ),
                 &(
-                    Obj::Polygon(Polygon([(5, 5), (5, 6), (6, 5)])?),
+                    Obj2::Polygon(Polygon([(5, 5), (5, 6), (6, 5)])?),
                     Style::default(),
                 ),
             ],

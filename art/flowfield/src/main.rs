@@ -9,7 +9,7 @@ use plotz_core::{
 };
 use plotz_geometry::{
     crop::Croppable,
-    obj::Obj,
+    obj::Obj2,
     shapes::{
         curve::CurveArc, multiline::Multiline, point::Point, polygon::Polygon, segment::Segment,
     },
@@ -42,7 +42,7 @@ fn main() -> Result<()> {
 
     let args: Args = argh::from_env();
 
-    let mut dos: Vec<(Obj, Style)> = vec![];
+    let mut dos: Vec<(Obj2, Style)> = vec![];
     let mgn = 25.0;
 
     let frame = make_frame(

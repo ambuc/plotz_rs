@@ -8,7 +8,7 @@ use plotz_core::{
     svg::Size,
 };
 use plotz_geometry::{
-    obj::Obj,
+    obj::Obj2,
     shapes::{curve::CurveArc, point::Point, segment::Segment},
 };
 use rand::{distributions::Standard, prelude::Distribution, Rng};
@@ -46,7 +46,7 @@ enum Tile {
     Clover2,
 }
 impl Tile {
-    fn to_dos(&self) -> Vec<(Obj, Style)> {
+    fn to_dos(&self) -> Vec<(Obj2, Style)> {
         self.to_dois()
             .into_iter()
             .map(|obj| {
@@ -62,7 +62,7 @@ impl Tile {
     }
 
     // scaled to a unit square.
-    fn to_dois(&self) -> Vec<Obj> {
+    fn to_dois(&self) -> Vec<Obj2> {
         let _a = Point(0, 0);
         let _b = Point(0.25, 0);
         let c = Point(0.5, 0);
@@ -162,7 +162,7 @@ fn main() -> Result<()> {
     let image_width: f64 = 500.0;
     let margin = 10.0;
 
-    let mut obj_vec: Vec<(Obj, Style)> = vec![];
+    let mut obj_vec: Vec<(Obj2, Style)> = vec![];
 
     let width = 10;
     let height = 10;

@@ -11,7 +11,7 @@ use plotz_geometry::{
     crop::Croppable,
     grid::grid_layout::{GridLayout, GridLayoutSettings},
     group::Group,
-    obj::Obj,
+    obj::Obj2,
     shapes::{
         point::Point,
         polygon::{Polygon, Rect},
@@ -56,12 +56,12 @@ fn main() -> Result<()> {
         .map(|(i, j)| ((i, j), Point((i as f64 - 3.0) * f, (j as f64 - 3.0) * f)))
     // .filter(|(idx, _)| *idx == (1, 2))
     {
-        let mut v: Vec<(Obj, Style)> = vec![];
+        let mut v: Vec<(Obj2, Style)> = vec![];
 
         let r = Rect((50, 50), (50, 50)).unwrap();
 
         let base_sq = (
-            Obj::Polygon(r.clone()),
+            Obj2::Polygon(r.clone()),
             Style {
                 thickness: 2.0,
                 ..Default::default()
@@ -97,7 +97,7 @@ fn main() -> Result<()> {
         };
 
         let subject_sq = (
-            Obj::Polygon(Polygon(pts)?) + offset,
+            Obj2::Polygon(Polygon(pts)?) + offset,
             Style {
                 color: RED,
                 ..Default::default()
@@ -137,7 +137,7 @@ fn main() -> Result<()> {
 
         gl.insert_and_rescale_to_cubby(
             idx,
-            (Obj::Group(Group::new(v.into_iter())), Style::default()),
+            (Obj2::Group(Group::new(v.into_iter())), Style::default()),
             1.00,
         )?;
     }

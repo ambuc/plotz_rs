@@ -3,9 +3,9 @@ use crate::{
     layout::{Layout, Settings},
 };
 use anyhow::Result;
-use plotz_geometry::{obj::Obj, style::Style};
+use plotz_geometry::{obj::Obj2, style::Style};
 
-pub fn run() -> Result<Vec<(Obj, Style)>> {
+pub fn run() -> Result<Vec<(Obj2, Style)>> {
     let girih = all_girih_tiles_in_random_order()[0];
     let tile = Tile::new(girih);
     let pg = tile.to_naive_pg();
@@ -24,7 +24,7 @@ pub fn run() -> Result<Vec<(Obj, Style)>> {
     let apts = layout.to_annotated_placed_tiles()?;
     for (_girih, pg) in apts.outlines {
         //
-        result.push((Obj::Polygon(pg), Style::default()));
+        result.push((Obj2::Polygon(pg), Style::default()));
     }
 
     Ok(result)

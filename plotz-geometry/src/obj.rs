@@ -31,7 +31,7 @@ pub enum ObjType2d {
 /// Either a polygon or a segment.
 #[derive(Debug, PartialEq, Clone)]
 #[enum_dispatch]
-pub enum Obj {
+pub enum Obj2 {
     Point(Point),                             // A point.
     Polygon(Polygon),                         // A polygon.
     PolygonWithCavities(PolygonWithCavities), // A polygon with cavities.
@@ -42,13 +42,13 @@ pub enum Obj {
     Group(Group<Style>),                      // A group of other objects.
 }
 
-crate::ops_defaults_t!(Obj, Point);
+crate::ops_defaults_t!(Obj2, Point);
 
-impl Croppable for Obj {
-    type Output = Obj;
+impl Croppable for Obj2 {
+    type Output = Obj2;
     fn crop(&self, frame: &Polygon, crop_type: CropType) -> Result<Vec<Self::Output>> {
         Ok(match &self {
-            Obj::Point(pt) => {
+            Obj2::Point(pt) => {
                 assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(pt), Ok(PointLoc::Outside)) {
                     vec![self.clone()]
@@ -56,32 +56,32 @@ impl Croppable for Obj {
                     vec![]
                 }
             }
-            Obj::Multiline(ml) => ml
+            Obj2::Multiline(ml) => ml
                 .to_segments()
                 .into_iter()
                 .map(|sg| sg.crop(frame, crop_type))
                 .flatten_ok()
                 .collect::<Result<Vec<_>>>()?
                 .into_iter()
-                .map(Obj::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>(),
-            Obj::Polygon(pg) => pg
+            Obj2::Polygon(pg) => pg
                 .crop(frame, crop_type)?
                 .into_iter()
-                .map(Obj::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>(),
-            Obj::PolygonWithCavities(_) => unimplemented!("TODO: implement cropping for Pgc."),
-            Obj::Segment(sg) => sg
+            Obj2::PolygonWithCavities(_) => unimplemented!("TODO: implement cropping for Pgc."),
+            Obj2::Segment(sg) => sg
                 .crop(frame, crop_type)?
                 .into_iter()
-                .map(Obj::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>(),
-            Obj::CurveArc(ca) => ca
+            Obj2::CurveArc(ca) => ca
                 .crop(frame, crop_type)?
                 .into_iter()
-                .map(Obj::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>(),
-            Obj::Text(ch) => {
+            Obj2::Text(ch) => {
                 assert_eq!(crop_type, CropType::Inclusive);
                 if !matches!(frame.contains_pt(&ch.pt), Ok(PointLoc::Outside)) {
                     vec![self.clone()]
@@ -89,10 +89,10 @@ impl Croppable for Obj {
                     vec![]
                 }
             }
-            Obj::Group(g) => g
+            Obj2::Group(g) => g
                 .crop(frame, crop_type)?
                 .into_iter()
-                .map(Obj::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>(),
         })
     }
@@ -102,49 +102,49 @@ impl Croppable for Obj {
         Self: Sized,
     {
         match &self {
-            Obj::Point(pt) => {
+            Obj2::Point(pt) => {
                 if matches!(other.contains_pt(pt), Ok(PointLoc::Outside)) {
                     Ok(vec![])
                 } else {
                     Ok(vec![self.clone()])
                 }
             }
-            Obj::Multiline(ml) => Ok(ml
+            Obj2::Multiline(ml) => Ok(ml
                 .to_segments()
                 .into_iter()
                 .map(|sg| sg.crop_excluding(other))
                 .flatten_ok()
                 .collect::<Result<Vec<_>>>()?
                 .into_iter()
-                .map(Obj::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>()),
-            Obj::Polygon(pg) => Ok(pg
+            Obj2::Polygon(pg) => Ok(pg
                 .crop_excluding(other)?
                 .into_iter()
-                .map(Obj::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>()),
-            Obj::PolygonWithCavities(_) => unimplemented!("TODO: implement cropping for Pgc."),
-            Obj::Segment(sg) => Ok(sg
+            Obj2::PolygonWithCavities(_) => unimplemented!("TODO: implement cropping for Pgc."),
+            Obj2::Segment(sg) => Ok(sg
                 .crop_excluding(other)?
                 .into_iter()
-                .map(Obj::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>()),
-            Obj::CurveArc(ca) => Ok(ca
+            Obj2::CurveArc(ca) => Ok(ca
                 .crop_excluding(other)?
                 .into_iter()
-                .map(Obj::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>()),
-            Obj::Text(ch) => {
+            Obj2::Text(ch) => {
                 if matches!(other.contains_pt(&ch.pt), Ok(PointLoc::Outside)) {
                     Ok(vec![])
                 } else {
                     Ok(vec![self.clone()])
                 }
             }
-            Obj::Group(g) => Ok(g
+            Obj2::Group(g) => Ok(g
                 .crop_excluding(other)?
                 .into_iter()
-                .map(Obj::from)
+                .map(Obj2::from)
                 .collect::<Vec<_>>()),
         }
     }

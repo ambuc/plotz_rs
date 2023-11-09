@@ -163,7 +163,7 @@ fn main() -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plotz_geometry::obj::Obj;
+    use plotz_geometry::obj::Obj2;
     use test_case::*;
 
     #[test_matrix(1..=3, 1..=3, 1..=3, 1..=10)]
@@ -173,7 +173,7 @@ mod tests {
         }
         let width: f64 = (w as f64) / 10.0;
         assert!(0.0 <= width && width <= 1.0);
-        let _: Vec<Vec<(Obj, Style)>> = Scene::builder()
+        let _: Vec<Vec<(Obj2, Style)>> = Scene::builder()
             .objects(cubes(CubesConfig { i, j, k, width }))
             .build()
             .project()

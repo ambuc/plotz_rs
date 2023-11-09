@@ -76,7 +76,7 @@ impl Bounds {
 /// center of that object.
 ///
 /// Unlike most graphics systems, we assume that (0,0) is in the bottom-left.
-#[enum_dispatch(Obj)]
+#[enum_dispatch(Obj2)]
 pub trait Bounded {
     fn bounds(&self) -> Result<Bounds>;
 }

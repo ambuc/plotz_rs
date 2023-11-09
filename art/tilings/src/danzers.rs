@@ -4,7 +4,7 @@ use float_cmp::assert_approx_eq;
 use lazy_static::lazy_static;
 use plotz_color::*;
 use plotz_geometry::{
-    obj::Obj,
+    obj::Obj2,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
         point::{Point, PolarPt},
@@ -186,7 +186,7 @@ fn expand_tile(tile: &Tile) -> Vec<Tile> {
     }
 }
 
-pub fn make() -> Vec<(Obj, Style)> {
+pub fn make() -> Vec<(Obj2, Style)> {
     let origin = Point(0.1, 0.1);
 
     let t0 = Tile(
@@ -246,7 +246,7 @@ pub fn make() -> Vec<(Obj, Style)> {
         }
     }
 
-    let dos: Vec<(Obj, Style)> = all_tiles
+    let dos: Vec<(Obj2, Style)> = all_tiles
         .into_iter()
         .flat_map(|tile| {
             let color = tile.kind.color();
@@ -260,11 +260,11 @@ pub fn make() -> Vec<(Obj, Style)> {
                 .build();
             let segments = shade_polygon(&config, &p).unwrap();
 
-            let mut ret: Vec<(Obj, Style)> = vec![];
-            ret.push((Obj::Polygon(p), Style::default()));
+            let mut ret: Vec<(Obj2, Style)> = vec![];
+            ret.push((Obj2::Polygon(p), Style::default()));
             ret.extend(segments.into_iter().map(|s| {
                 (
-                    Obj::Segment(s),
+                    Obj2::Segment(s),
                     Style {
                         color: *color,
                         ..Default::default()

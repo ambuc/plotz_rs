@@ -12,7 +12,7 @@ use indicatif::*;
 use itertools::Itertools;
 use plotz_geometry::{
     bounded::{streaming_bbox, Bounded, Bounds},
-    obj::Obj,
+    obj::Obj2,
     shapes::point::Point,
     style::Style,
     *,
@@ -22,9 +22,12 @@ use std::collections::HashMap;
 use tracing::*;
 use typed_builder::TypedBuilder;
 
-type CanvasMap = HashMap<Option<Bucket>, Vec<(Obj, Style)>>;
+type CanvasMap = HashMap<Option<Bucket>, Vec<(Obj2, Style)>>;
 
-pub fn to_canvas_map<O: IntoIterator<Item = (Obj, Style)>>(objs: O, autobucket: bool) -> CanvasMap {
+pub fn to_canvas_map<O: IntoIterator<Item = (Obj2, Style)>>(
+    objs: O,
+    autobucket: bool,
+) -> CanvasMap {
     let mut cm = CanvasMap::new();
 
     if autobucket {
@@ -45,7 +48,7 @@ pub struct Canvas {
     pub dos_by_bucket: CanvasMap,
 
     #[builder(default, setter(strip_option))]
-    pub frame: Option<(Obj, Style)>,
+    pub frame: Option<(Obj2, Style)>,
 }
 
 impl Canvas {
@@ -58,7 +61,7 @@ impl Canvas {
     }
 
     /// Returns an iterator of mutable Object2dInner.
-    pub fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut Obj> {
+    pub fn objs_iter_mut(&mut self) -> impl Iterator<Item = &mut Obj2> {
         self.dos_by_bucket
             .iter_mut()
             .flat_map(|(_bucket, dos)| dos)
@@ -122,14 +125,14 @@ impl Canvas {
         {
             trace!("Writing to all.");
             let name = format!("{}_all.svg", prefix);
-            let mut all: Vec<(Obj, Style)> = vec![];
+            let mut all: Vec<(Obj2, Style)> = vec![];
             if let Some(frame) = self.frame.clone() {
                 all.push(frame);
             }
             for dos in self.dos_by_bucket.values() {
                 all.extend(dos.clone());
             }
-            let pgs: Vec<(Obj, Style)> = all.into_iter().collect::<Vec<_>>();
+            let pgs: Vec<(Obj2, Style)> = all.into_iter().collect::<Vec<_>>();
             write_layer_to_svg(size, name, &pgs)?;
         }
 

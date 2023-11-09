@@ -1,6 +1,6 @@
 // https://tilings.math.uni-bielefeld.de/substitution/ammann-beenker-rhomb-triangle/
 
-use plotz_geometry::{obj::Obj, shapes::polygon::Polygon, style::Style};
+use plotz_geometry::{obj::Obj2, shapes::polygon::Polygon, style::Style};
 
 use plotz_color::*;
 use plotz_geometry::{
@@ -108,7 +108,7 @@ trait Tile {
     fn slope(&self) -> f64;
 }
 
-pub fn make() -> Vec<(Obj, Style)> {
+pub fn make() -> Vec<(Obj2, Style)> {
     let origin = Point(0.1, 0.1);
 
     let sq2: f64 = 2.0_f64.sqrt();
@@ -152,7 +152,7 @@ pub fn make() -> Vec<(Obj, Style)> {
 
             std::iter::empty().chain(segments.into_iter().map(|s| {
                 (
-                    Obj::Segment(s),
+                    Obj2::Segment(s),
                     Style {
                         color: *color,
                         ..Default::default()

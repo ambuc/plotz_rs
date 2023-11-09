@@ -8,7 +8,7 @@ use crate::{
     shapes::{point3::Point3, polygon3::Polygon3, segment3::Segment3},
 };
 use plotz_geometry::{
-    obj::Obj,
+    obj::Obj2,
     shapes::{point::Point, polygon::Polygon, segment::Segment},
 };
 
@@ -59,14 +59,14 @@ impl Oblique {
     pub fn project_group3(&self, _: &Group3<()>) -> Group<Style> {
         todo!("https://github.com/ambuc/plotz_rs/issues/6")
     }
-    pub fn project_obj3(&self, obj3: &Obj3) -> Obj {
+    pub fn project_obj3(&self, obj3: &Obj3) -> Obj2 {
         match obj3 {
-            Obj3::Polygon3(pg3d) => Obj::Polygon(self.project_pg3(pg3d)),
-            Obj3::Segment3(sg3d) => Obj::Segment(self.project_sg3(sg3d)),
-            Obj3::Group3(g3d) => Obj::Group(self.project_group3(g3d)),
+            Obj3::Polygon3(pg3d) => Obj2::Polygon(self.project_pg3(pg3d)),
+            Obj3::Segment3(sg3d) => Obj2::Segment(self.project_sg3(sg3d)),
+            Obj3::Group3(g3d) => Obj2::Group(self.project_group3(g3d)),
         }
     }
-    pub fn project_styled_obj3(&self, (obj3, style): &(Obj3, Style)) -> (Obj, Style) {
+    pub fn project_styled_obj3(&self, (obj3, style): &(Obj3, Style)) -> (Obj2, Style) {
         (self.project_obj3(obj3), *style)
     }
 }

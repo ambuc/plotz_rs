@@ -17,7 +17,7 @@ use plotz_color::{subway::*, *};
 use plotz_geometry::{
     bounded::Bounded,
     crop::Croppable,
-    obj::Obj,
+    obj::Obj2,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{point::Point, polygon::Polygon, segment::Segment},
     style::Style,
@@ -36,14 +36,14 @@ use typed_builder::TypedBuilder;
 #[derive(Debug)]
 /// A polygon with some annotations (bucket, color, tags, etc.).
 pub struct AnnotatedObject2d {
-    obj: Obj,
+    obj: Obj2,
     style: Style,
     bucket: Bucket,
     _tags: Vec<(String, String)>,
 }
 impl AnnotatedObject2d {
     /// Consumes an AnnotatedPolygon and casts down to a ColoredPolygon.
-    pub fn to_object2d(self) -> (Obj, Style) {
+    pub fn to_object2d(self) -> (Obj2, Style) {
         (self.obj, self.style)
     }
 }
@@ -293,19 +293,19 @@ impl Map {
                 if let Some((shade_and_outline, ref shade_config)) =
                     map_bucket_to_shadeconfig(bucket)
                 {
-                    let mut v: Vec<(Obj, Style)> = vec![];
+                    let mut v: Vec<(Obj2, Style)> = vec![];
                     // keep the frame, add the crosshatchings.
-                    let crosshatchings: Vec<(Obj, Style)> = layers
+                    let crosshatchings: Vec<(Obj2, Style)> = layers
                         .iter()
                         .filter_map(|(obj, style)| match &obj {
-                            Obj::Polygon(p) => match shade_polygon(shade_config, p) {
+                            Obj2::Polygon(p) => match shade_polygon(shade_config, p) {
                                 Err(_) => None,
                                 Ok(segments) => Some(
                                     segments
                                         .into_iter()
                                         .map(|s| {
                                             (
-                                                Obj::Segment(s),
+                                                Obj2::Segment(s),
                                                 Style {
                                                     thickness: shade_config.thickness,
                                                     ..*style
@@ -349,7 +349,7 @@ impl Map {
     pub fn randomize_circles(&mut self) {
         for (_bucket, dos) in self.canvas.dos_by_bucket.iter_mut() {
             for (ref mut obj, _style) in dos.iter_mut() {
-                if let Obj::CurveArc(mut ca) = &obj {
+                if let Obj2::CurveArc(mut ca) = &obj {
                     ca.ctr += (
                         thread_rng().gen_range(-2.0..=2.0),
                         thread_rng().gen_range(-2.0..=2.0),
@@ -383,7 +383,7 @@ impl Map {
                 .iter_mut()
                 .flat_map(|(obj, style)| {
                     match obj.clone() {
-                        Obj::Polygon(pg) => pg.to_segments().into_iter().map(Obj::from).collect(),
+                        Obj2::Polygon(pg) => pg.to_segments().into_iter().map(Obj2::from).collect(),
                         x => vec![x],
                     }
                     .into_iter()
@@ -409,7 +409,7 @@ impl Map {
                 .unwrap();
             let mut hs = HashSet::<Segment>::new();
             for (obj, _style) in dos.iter() {
-                if let Obj::Segment(sg) = obj {
+                if let Obj2::Segment(sg) = obj {
                     hs.insert(*sg);
                     // TODO(ambuc): really, deduplicate this way but then store and restore the original.
                 }
@@ -418,7 +418,7 @@ impl Map {
                 .into_iter()
                 .map(|sg| {
                     (
-                        Obj::Segment(sg),
+                        Obj2::Segment(sg),
                         Style {
                             color,
                             ..Default::default()
@@ -560,7 +560,7 @@ mod tests {
             // shift negative
             ([(1, 1), (1, 2), (2, 1)], [(0, 0), (0, 1), (1, 0)]),
         ] {
-            let obj = Obj::Polygon(Polygon(initial)?);
+            let obj = Obj2::Polygon(Polygon(initial)?);
             let mut map = Map {
                 canvas: {
                     let mut canvas = Canvas::default();
@@ -582,7 +582,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].0, Obj::Polygon(Polygon(expected)?));
+            assert_eq!(x.next().unwrap()[0].0, Obj2::Polygon(Polygon(expected)?));
         }
         Ok(())
     }
@@ -613,7 +613,7 @@ mod tests {
                 [Point(0, 0), Point(0, 900), Point(900, 0)],
             ),
         ] {
-            let obj = Obj::Polygon(Polygon(initial)?);
+            let obj = Obj2::Polygon(Polygon(initial)?);
             let mut map = Map {
                 center: None,
                 canvas: {
@@ -635,7 +635,7 @@ mod tests {
 
             let mut x = map.canvas.dos_by_bucket.values();
 
-            assert_eq!(x.next().unwrap()[0].0, Obj::Polygon(Polygon(expected)?));
+            assert_eq!(x.next().unwrap()[0].0, Obj2::Polygon(Polygon(expected)?));
         }
         Ok(())
     }

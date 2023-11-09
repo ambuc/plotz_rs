@@ -3,7 +3,7 @@
 pub mod grid_layout;
 
 use crate::{
-    obj::Obj,
+    obj::Obj2,
     shapes::{point::Point, segment::Segment},
     style::Style,
 };
@@ -43,7 +43,7 @@ pub struct Grid {
 
 impl Grid {
     /// Renders the grid to a set of object2ds for plotting.
-    pub fn to_segments(&self) -> Vec<(Obj, Style)> {
+    pub fn to_segments(&self) -> Vec<(Obj2, Style)> {
         let h = self.height as f64;
         let w = self.width as f64;
 

@@ -10,7 +10,7 @@ use plotz_core::{
 };
 use plotz_geometry::{
     crop::Croppable,
-    obj::Obj,
+    obj::Obj2,
     shapes::{curve::CurveArc, multiline::Multiline, point::Point, polygon::Polygon},
     style::Style,
 };
@@ -43,7 +43,7 @@ struct Metadata {
 
 fn main() -> Result<()> {
     let args: Args = argh::from_env();
-    let mut os: Vec<(Obj, Style)> = vec![];
+    let mut os: Vec<(Obj2, Style)> = vec![];
     let margin = 25.0;
 
     let size = Size {

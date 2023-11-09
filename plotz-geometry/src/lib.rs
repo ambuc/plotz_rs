@@ -16,7 +16,7 @@ pub mod style;
 #[macro_use]
 pub mod macros;
 
-use crate::{obj::Obj, shapes::point::Point, style::Style};
+use crate::{obj::Obj2, shapes::point::Point, style::Style};
 use enum_dispatch::enum_dispatch;
 use obj::ObjType2d;
 use shapes::text::Text;
@@ -42,10 +42,10 @@ impl Default for AnnotationSettings {
 }
 
 /// A 2d object.
-#[enum_dispatch(Obj)]
+#[enum_dispatch(Obj2)]
 pub trait Object {
     /// Return the labelled points and segments.
-    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj, Style)> {
+    fn annotate(&self, settings: &AnnotationSettings) -> Vec<(Obj2, Style)> {
         let mut a = vec![];
 
         let AnnotationSettings {

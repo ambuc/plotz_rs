@@ -9,7 +9,7 @@ use indicatif::ProgressBar;
 use itertools::Itertools;
 use plotz_color::BLACK;
 use plotz_geometry::{
-    obj::Obj,
+    obj::Obj2,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{multiline::Multiline, point::Point, polygon::Polygon, segment::Segment},
     style::Style,
@@ -35,11 +35,11 @@ fn vals_eq_within(a: f64, b: f64, epsilon: f64) -> bool {
     (a - b).abs() < epsilon
 }
 
-fn chase(apts: &AnnotatedPlacedTiles) -> Vec<(Obj, Style)> {
+fn chase(apts: &AnnotatedPlacedTiles) -> Vec<(Obj2, Style)> {
     // first of all, we're guaranteed that every element in so2s is a strap. nothing else.
     let mut inputs: Vec<Segment> = apts.straps.iter().map(|(_, sg)| *sg).collect();
 
-    let mut outputs: Vec<(Obj, Style)> = vec![];
+    let mut outputs: Vec<(Obj2, Style)> = vec![];
     let epsilon = 0.001;
 
     // collect links in the chain. implicitly going sg.i -> sg.f.
@@ -96,14 +96,14 @@ fn chase(apts: &AnnotatedPlacedTiles) -> Vec<(Obj, Style)> {
     outputs
 }
 
-fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj, Style)> {
-    let mut v: Vec<(Obj, Style)> = vec![];
+fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj2, Style)> {
+    let mut v: Vec<(Obj2, Style)> = vec![];
 
     display.0.iter().for_each(|inst| match inst {
         Instr::StrapsOriginal(thickness) => {
             v.extend(apts.clone().straps.into_iter().map(|(girih, sg)| {
                 (
-                    Obj::Segment(sg),
+                    Obj2::Segment(sg),
                     Style {
                         color: girih.color(),
                         thickness: *thickness,
@@ -117,7 +117,7 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj, Style
             v.extend(apts.clone().outlines.into_iter().map(|(_, pg)| {
                 // scale
                 (
-                    Obj::Polygon(pg),
+                    Obj2::Polygon(pg),
                     Style {
                         color: BLACK,
                         thickness: *thickness,
@@ -133,7 +133,7 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj, Style
                     .into_iter()
                     .map(|shade| {
                         (
-                            Obj::Segment(shade),
+                            Obj2::Segment(shade),
                             Style {
                                 color: girih.color(),
                                 ..Default::default()
@@ -147,7 +147,7 @@ fn postprocess(display: &Display, apts: AnnotatedPlacedTiles) -> Vec<(Obj, Style
     v
 }
 
-pub fn run() -> Result<Vec<(Obj, Style)>> {
+pub fn run() -> Result<Vec<(Obj2, Style)>> {
     let d = Display(vec![
         // Instr::StrapsOriginal(2.0),
         Instr::TilesOutline { thickness: 1.0 },

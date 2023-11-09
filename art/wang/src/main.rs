@@ -7,7 +7,7 @@ use plotz_core::{
     svg::Size,
 };
 use plotz_geometry::{
-    obj::Obj,
+    obj::Obj2,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{multiline::Multiline, point::Point, polygon::Polygon},
     style::Style,
@@ -154,7 +154,7 @@ fn fill_grid(x: usize, y: usize) -> Vec<Vec<Tile>> {
         .collect()
 }
 
-fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)> {
+fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj2, Style)> {
     [
         (cell.id(), cell.n(), 0.0 * FRAC_PI_2),
         (cell.id(), cell.w(), -1.0 * FRAC_PI_2),
@@ -210,7 +210,7 @@ fn draw_tile(cell: Tile, (row_idx, col_idx): (usize, usize)) -> Vec<(Obj, Style)
                 .iter()
                 .map(|sg| {
                     (
-                        Obj::Segment(*sg),
+                        Obj2::Segment(*sg),
                         Style {
                             color: [
                                 ALICEBLUE,      // 1
@@ -245,7 +245,7 @@ fn main() -> Result<()> {
 
     let grid: Vec<Vec<Tile>> = fill_grid(grid_cardinality, grid_cardinality);
 
-    let mut obj_vec: Vec<(Obj, Style)> = vec![];
+    let mut obj_vec: Vec<(Obj2, Style)> = vec![];
 
     for (row_idx, row) in grid.iter().enumerate() {
         for (col_idx, cell) in row.iter().enumerate() {

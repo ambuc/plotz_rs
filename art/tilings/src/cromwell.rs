@@ -4,7 +4,7 @@ use plotz_color::*;
 use plotz_geometry::{
     group::Group,
     interpolate::extrapolate_2d as extrapolate,
-    obj::Obj,
+    obj::Obj2,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
         point::{Point, PolarPt},
@@ -232,7 +232,7 @@ trait Tile {
     fn pts_iter_mut(&mut self) -> Box<dyn Iterator<Item = &'_ mut Point> + '_>;
 }
 
-pub fn make() -> Vec<(Obj, Style)> {
+pub fn make() -> Vec<(Obj2, Style)> {
     let ell: f64 = (5.0_f64.sqrt() - 1.0) / 2.0;
 
     let t1 = {
@@ -301,16 +301,16 @@ pub fn make() -> Vec<(Obj, Style)> {
 
             // std::iter::empty() //
             std::iter::once((
-                Obj::Polygon(p),
+                Obj2::Polygon(p),
                 Style {
                     color: *color,
                     ..Default::default()
                 },
             ))
             .chain([(
-                Obj::Group(Group::new(segments.into_iter().map(|s| {
+                Obj2::Group(Group::new(segments.into_iter().map(|s| {
                     (
-                        Obj::Segment(s),
+                        Obj2::Segment(s),
                         Style {
                             color: *color,
                             ..Default::default()
