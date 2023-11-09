@@ -102,6 +102,7 @@ where
         y: r * theta.sin(),
     }
 }
+
 macro_rules! ops_trait {
     ($trait:ident, $fn:ident) => {
         impl<T> $trait<T> for Point
@@ -117,91 +118,31 @@ macro_rules! ops_trait {
     };
 }
 
+macro_rules! ops_mut_trait {
+    ($trait:ident, $fn:ident) => {
+        impl<T> $trait<T> for Point
+        where
+            T: Into<Point>,
+        {
+            fn $fn(&mut self, rhs: T) {
+                let rhs = rhs.into();
+                self.x.$fn(rhs.x);
+                self.y.$fn(rhs.y);
+            }
+        }
+    };
+}
+
+ops_mut_trait!(AddAssign, add_assign);
+ops_mut_trait!(DivAssign, div_assign);
+ops_mut_trait!(MulAssign, mul_assign);
+ops_mut_trait!(RemAssign, rem_assign);
+ops_mut_trait!(SubAssign, sub_assign);
 ops_trait!(Add, add);
+ops_trait!(Div, div);
+ops_trait!(Mul, mul);
+ops_trait!(Rem, rem);
 ops_trait!(Sub, sub);
-
-impl Rem<(f64, f64)> for Point {
-    type Output = Self;
-
-    fn rem(self, modulus: (f64, f64)) -> Self::Output {
-        Point(self.x % modulus.0, self.y % modulus.1)
-    }
-}
-
-impl<T> AddAssign<T> for Point
-where
-    T: Into<Point>,
-{
-    fn add_assign(&mut self, other: T) {
-        let other = other.into();
-        *self = Self {
-            x: self.x + other.x,
-            y: self.y + other.y,
-        };
-    }
-}
-impl<T> Div<T> for Point
-where
-    T: Into<Point>,
-{
-    type Output = Self;
-    fn div(self, rhs: T) -> Self::Output {
-        let rhs = rhs.into();
-        Point(self.x / rhs.x, self.y / rhs.y)
-    }
-}
-impl<T> DivAssign<T> for Point
-where
-    T: Into<Point>,
-{
-    fn div_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        self.x /= rhs.x;
-        self.y /= rhs.y;
-    }
-}
-impl<T> Mul<T> for Point
-where
-    T: Into<Point>,
-{
-    type Output = Self;
-    fn mul(self, rhs: T) -> Self::Output {
-        let rhs = rhs.into();
-        Point(self.x * rhs.x, self.y * rhs.y)
-    }
-}
-impl<T> MulAssign<T> for Point
-where
-    T: Into<Point>,
-{
-    fn mul_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        self.x *= rhs.x;
-        self.y *= rhs.y;
-    }
-}
-impl<T> RemAssign<T> for Point
-where
-    T: Into<Point>,
-{
-    fn rem_assign(&mut self, rhs: T) {
-        let rhs = rhs.into();
-        self.x = self.x.rem_euclid(rhs.x);
-        self.y = self.y.rem_euclid(rhs.y);
-    }
-}
-impl<T> SubAssign<T> for Point
-where
-    T: Into<Point>,
-{
-    fn sub_assign(&mut self, other: T) {
-        let other = other.into();
-        *self = Self {
-            x: self.x - other.x,
-            y: self.y - other.y,
-        };
-    }
-}
 
 impl Point {
     /// A rotation operation, for rotating one point about another. Accepts a |by|
