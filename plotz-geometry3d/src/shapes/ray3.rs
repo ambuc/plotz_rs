@@ -1,6 +1,6 @@
 //! A 3D ray.
 
-use crate::shapes::{point3::Point3, segment3::Sg3};
+use crate::shapes::{point3::Point3, segment3::Segment3};
 use anyhow::{anyhow, Result};
 use std::f64::consts::{PI, TAU};
 
@@ -44,8 +44,8 @@ pub fn Ray3(pt3: Point3, theta_rad: f64, phi_rad: f64) -> Result<Ray3> {
 }
 
 impl Ray3 {
-    pub fn to_sg3_with_len(&self, len: f64) -> Result<Sg3> {
-        Ok(Sg3 {
+    pub fn to_sg3_with_len(&self, len: f64) -> Result<Segment3> {
+        Ok(Segment3 {
             i: self.pt3,
             f: self.pt3 + PolarPoint3(len, self.theta_rad, self.phi_rad)?,
         })

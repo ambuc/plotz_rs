@@ -12,17 +12,17 @@ use std::{fmt::Debug, ops::*};
 
 // A segment in 3d space, with initial and final points.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
-pub struct Sg3 {
+pub struct Segment3 {
     pub i: Point3,
     pub f: Point3,
 }
 
 #[allow(non_snake_case)]
-pub fn Sg3(i: Point3, f: Point3) -> Sg3 {
-    Sg3 { i, f }
+pub fn Segment3(i: Point3, f: Point3) -> Segment3 {
+    Segment3 { i, f }
 }
 
-impl Sg3 {
+impl Segment3 {
     // Returns the absolute value of the length of this segment.
     pub fn abs(&self) -> f64 {
         let two = 2_f64;
@@ -62,15 +62,15 @@ impl Sg3 {
     }
 }
 
-plotz_geometry::ops_defaults_t!(Sg3, Point3);
+plotz_geometry::ops_defaults_t!(Segment3, Point3);
 
-impl Bounded3 for Sg3 {
+impl Bounded3 for Segment3 {
     fn bounds3(&self) -> Result<Bounds3> {
         streaming_bbox(self.iter())
     }
 }
 
-impl Object for Sg3 {
+impl Object for Segment3 {
     fn objtype(&self) -> ObjType3d {
         ObjType3d::Segment3d
     }

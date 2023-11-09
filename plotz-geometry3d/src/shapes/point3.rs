@@ -3,7 +3,7 @@
 use super::ray3::Ray3;
 use crate::{
     bounded3::{Bounded3, Bounds3},
-    shapes::segment3::Sg3,
+    shapes::segment3::Segment3,
     Rotatable,
 };
 use anyhow::{anyhow, Result};
@@ -193,7 +193,7 @@ impl Point3 {
 
     /// Distance between two points.
     pub fn dist(&self, other: &Point3) -> f64 {
-        Sg3(*self, *other).abs()
+        Segment3(*self, *other).abs()
     }
 }
 

@@ -3,7 +3,7 @@
 use crate::{
     bounded3::{Bounded3, Bounds3},
     group3::Group3,
-    shapes::{point3::Point3, polygon3::Pg3, ray3::Ray3, segment3::Sg3},
+    shapes::{point3::Point3, polygon3::Pg3, ray3::Ray3, segment3::Segment3},
     Object, Rotatable,
 };
 use anyhow::Result;
@@ -21,7 +21,7 @@ pub enum ObjType3d {
 #[enum_dispatch]
 pub enum Obj3 {
     Pg3(Pg3),
-    Sg3(Sg3),
+    Sg3(Segment3),
     Group3(Group3<()>),
     // others?
 }

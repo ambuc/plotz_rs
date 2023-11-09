@@ -5,7 +5,7 @@ use plotz_geometry::{group::Group, style::Style};
 use crate::{
     group3::Group3,
     obj3::Obj3,
-    shapes::{point3::Point3, polygon3::Pg3, segment3::Sg3},
+    shapes::{point3::Point3, polygon3::Pg3, segment3::Segment3},
 };
 use plotz_geometry::{
     obj::Obj,
@@ -50,7 +50,7 @@ impl Oblique {
             + (self.v_dst * pt3d.dot(&self.v_src))
             + (self.w_dst * pt3d.dot(&self.w_src))
     }
-    pub fn project_sg3(&self, sg3: &Sg3) -> Segment {
+    pub fn project_sg3(&self, sg3: &Segment3) -> Segment {
         Segment(self.project_pt3(&sg3.i), self.project_pt3(&sg3.f))
     }
     pub fn project_pg3(&self, pg3: &Pg3) -> Polygon {
