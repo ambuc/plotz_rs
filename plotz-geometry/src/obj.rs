@@ -56,19 +56,13 @@ macro_rules! impl_ops_assign {
             fn $fn(&mut self, rhs: T) {
                 let rhs = rhs.into();
                 match self {
-                    Obj::Pt(x) => {
-                        x.$fn(rhs);
-                    }
-                    Obj::Ml(x) => {
-                        x.$fn(rhs);
-                    }
-                    Obj::Txt(x) => {
-                        x.$fn(rhs);
-                    }
                     Obj::CurveArc(x) => {
                         x.$fn(rhs);
                     }
                     Obj::Group(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Ml(x) => {
                         x.$fn(rhs);
                     }
                     Obj::Pg(x) => {
@@ -77,7 +71,13 @@ macro_rules! impl_ops_assign {
                     Obj::Pgc(x) => {
                         x.$fn(rhs);
                     }
+                    Obj::Pt(x) => {
+                        x.$fn(rhs);
+                    }
                     Obj::Sg(x) => {
+                        x.$fn(rhs);
+                    }
+                    Obj::Txt(x) => {
                         x.$fn(rhs);
                     }
                 }
@@ -102,14 +102,14 @@ macro_rules! impl_ops {
             fn $fn(self, rhs: T) -> Self::Output {
                 let rhs = rhs.into();
                 match self {
-                    Obj::Ml(x) => Obj::from(x.$fn(rhs)),
-                    Obj::Pt(x) => Obj::from(x.$fn(rhs)),
-                    Obj::Txt(x) => Obj::from(x.$fn(rhs)),
                     Obj::CurveArc(x) => Obj::from(x.$fn(rhs)),
                     Obj::Group(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Ml(x) => Obj::from(x.$fn(rhs)),
                     Obj::Pg(x) => Obj::from(x.$fn(rhs)),
                     Obj::Pgc(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Pt(x) => Obj::from(x.$fn(rhs)),
                     Obj::Sg(x) => Obj::from(x.$fn(rhs)),
+                    Obj::Txt(x) => Obj::from(x.$fn(rhs)),
                 }
             }
         }
