@@ -1,4 +1,5 @@
 //! An intefield2section between two segments.
+#![allow(missing_docs)]
 
 use crate::{
     shapes::point::Point,
@@ -60,8 +61,7 @@ impl Intersection {
     /// Returns true if the intersection occurs at the head or tail of either
     /// intersecting segment.
     pub fn on_points_of_either(&self) -> bool {
-        matches!(self.a_pct, Percent::Zero | Percent::One)
-            || matches!(self.b_pct, Percent::Zero | Percent::One)
+        self.a_pct.is_at_boundary() || self.b_pct.is_at_boundary()
     }
 
     /// for whatever reason, some callers need to flip these.
@@ -87,32 +87,11 @@ impl Debug for Intersection {
     }
 }
 
-/// An enum representing two intersections.
-#[derive(Debug, PartialEq, Eq, Copy, Clone)]
-pub enum MultipleIntersections {
-    /// Two line segments intersect because they are the same.
-    LineSegmentsAreTheSame,
-    /// Two line segments intersect because they are the same but reversed.
-    LineSegmentsAreTheSameButReversed,
-    /// Two line segments intersect at multiple points because they are colinear,
-    /// but they are not the same.
-    LineSegmentsAreColinear,
-}
-
 /// An enum representing whether an intersection occurred and where.
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub enum IntersectionResult {
-    /// Two line segments intersect at many points.
-    MultipleIntersections(MultipleIntersections),
-    /// Two line segments intersect at one point, defined by |Intersection|.
-    OneIntersection(Intersection),
-}
-
-impl Debug for IntersectionResult {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            IntersectionResult::MultipleIntersections(_) => write!(f, "multiple intersections."),
-            IntersectionResult::OneIntersection(isxn) => write!(f, "one: {:?}", isxn),
-        }
-    }
+    Ok(Intersection),
+    ErrSegmentsAreTheSame,
+    ErrSegmentsAreTheSameButReversed,
+    ErrSegmentsAreColinear,
 }

@@ -186,7 +186,7 @@ impl PlacedTile {
 
             let a_ray: Ray = Ray(edge1.midpoint(), a_ray_angle);
 
-            if let Some(IntersectionResult::OneIntersection(_)) = a_ray.intersects_sg(edgeb) {
+            if let Some(IntersectionResult::Ok(_)) = a_ray.intersects_sg(edgeb) {
                 strapwork.push(Segment(edge1.midpoint(), edgeb.midpoint()));
             } else {
                 // imagine a bridge from a_mdpt to b_mdpt.
@@ -197,8 +197,8 @@ impl PlacedTile {
 
                 // ztex lies at the intersection of a_ray and the tower.
                 let ztex = match (tower_a.intersects(&a_ray), tower_b.intersects(&a_ray)) {
-                    (Some(IntersectionResult::OneIntersection(Intersection { pt, .. })), _) => pt,
-                    (_, Some(IntersectionResult::OneIntersection(Intersection { pt, .. }))) => pt,
+                    (Some(IntersectionResult::Ok(Intersection { pt, .. })), _) => pt,
+                    (_, Some(IntersectionResult::Ok(Intersection { pt, .. }))) => pt,
                     _ => panic!("oh"),
                 };
 
@@ -242,10 +242,10 @@ impl PlacedTile {
                     };
 
                     match (perp_ray_1.intersects_sg(&s), perp_ray_2.intersects_sg(&s)) {
-                        (Some(IntersectionResult::OneIntersection(Intersection { pt, .. })), _) => {
+                        (Some(IntersectionResult::Ok(Intersection { pt, .. })), _) => {
                             s_ver.push(Segment(pt_inside, pt));
                         }
-                        (_, Some(IntersectionResult::OneIntersection(Intersection { pt, .. }))) => {
+                        (_, Some(IntersectionResult::Ok(Intersection { pt, .. }))) => {
                             s_ver.push(Segment(pt_inside, pt));
                         }
                         _ => panic!("OH"),

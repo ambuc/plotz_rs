@@ -6,7 +6,7 @@ use crate::{
     crop::{CropType, Croppable, PointLocation},
     interpolate,
     interpolate::interpolate_2d_checked,
-    intersection::{Intersection, IntersectionResult, MultipleIntersections},
+    intersection::{Intersection, IntersectionResult},
     obj2::ObjType2d,
     shapes::{point::Point, polygon::Polygon, ray::Ray},
     Object,
@@ -121,26 +121,20 @@ impl Segment {
     /// If two line segments are the same, returns false.
     pub fn intersects(&self, other: &Segment) -> Option<IntersectionResult> {
         if self == other {
-            Some(IntersectionResult::MultipleIntersections(
-                MultipleIntersections::LineSegmentsAreTheSame,
-            ))
+            Some(IntersectionResult::ErrSegmentsAreTheSame)
         } else if *self == Segment(other.f, other.i) {
-            Some(IntersectionResult::MultipleIntersections(
-                MultipleIntersections::LineSegmentsAreTheSameButReversed,
-            ))
+            Some(IntersectionResult::ErrSegmentsAreTheSameButReversed)
         } else if self.slope() == other.slope()
             && (self.f == other.i || other.f == self.i || self.i == other.i || self.f == other.f)
         {
-            Some(IntersectionResult::MultipleIntersections(
-                MultipleIntersections::LineSegmentsAreColinear,
-            ))
+            Some(IntersectionResult::ErrSegmentsAreColinear)
         } else if let Some(pt) = self.get_line_intersection_inner(
             (self.i.x, self.i.y),
             (self.f.x, self.f.y),
             (other.i.x, other.i.y),
             (other.f.x, other.f.y),
         ) {
-            Some(IntersectionResult::OneIntersection(Intersection::new(
+            Some(IntersectionResult::Ok(Intersection::new(
                 pt,
                 interpolate_2d_checked(self.i, self.f, pt).ok()?,
                 interpolate_2d_checked(other.i, other.f, pt).ok()?,
@@ -253,7 +247,7 @@ impl Croppable for Segment {
                 .iter()
                 .filter_map(|f| self.intersects(f))
                 .filter_map(|isxn_outcome| match isxn_outcome {
-                    IntersectionResult::OneIntersection(isxn) => Some(isxn),
+                    IntersectionResult::Ok(isxn) => Some(isxn),
                     _ => None,
                 })
                 .collect::<Vec<Intersection>>();
@@ -487,64 +481,52 @@ mod tests {
         // colinear
         assert_eq!(
             Segment(a, c).intersects(&Segment(a, c)),
-            Some(IntersectionResult::MultipleIntersections(
-                MultipleIntersections::LineSegmentsAreTheSame
-            ))
+            Some(IntersectionResult::ErrSegmentsAreTheSame)
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(c, a)),
-            Some(IntersectionResult::MultipleIntersections(
-                MultipleIntersections::LineSegmentsAreTheSameButReversed
-            ))
+            Some(IntersectionResult::ErrSegmentsAreTheSameButReversed)
         );
         // induce colinear
         assert_eq!(
             Segment(a, b).intersects(&Segment(b, c)),
-            Some(IntersectionResult::MultipleIntersections(
-                MultipleIntersections::LineSegmentsAreColinear
-            ))
+            Some(IntersectionResult::ErrSegmentsAreColinear)
         );
         assert_eq!(
             Segment(a, b).intersects(&Segment(c, b)),
-            Some(IntersectionResult::MultipleIntersections(
-                MultipleIntersections::LineSegmentsAreColinear
-            ))
+            Some(IntersectionResult::ErrSegmentsAreColinear)
         );
         assert_eq!(
             Segment(b, a).intersects(&Segment(b, c)),
-            Some(IntersectionResult::MultipleIntersections(
-                MultipleIntersections::LineSegmentsAreColinear
-            ))
+            Some(IntersectionResult::ErrSegmentsAreColinear)
         );
         assert_eq!(
             Segment(b, a).intersects(&Segment(c, b)),
-            Some(IntersectionResult::MultipleIntersections(
-                MultipleIntersections::LineSegmentsAreColinear
-            ))
+            Some(IntersectionResult::ErrSegmentsAreColinear)
         );
 
         // (s,w), (e,w), (w,s), (w,e)
         assert_eq!(
             Segment(e, i).intersects(&Segment(c, g)),
-            Some(IntersectionResult::OneIntersection(
+            Some(IntersectionResult::Ok(
                 Intersection::new(e, 0.0, 0.5).unwrap()
             ))
         );
         assert_eq!(
             Segment(a, e).intersects(&Segment(c, g)),
-            Some(IntersectionResult::OneIntersection(
+            Some(IntersectionResult::Ok(
                 Intersection::new(e, 1.0, 0.5).unwrap()
             ))
         );
         assert_eq!(
             Segment(c, g).intersects(&Segment(e, i)),
-            Some(IntersectionResult::OneIntersection(
+            Some(IntersectionResult::Ok(
                 Intersection::new(e, 0.5, 0.0).unwrap()
             ))
         );
         assert_eq!(
             Segment(c, g).intersects(&Segment(a, e)),
-            Some(IntersectionResult::OneIntersection(
+            Some(IntersectionResult::Ok(
                 Intersection::new(e, 0.5, 1.0).unwrap()
             ))
         );
@@ -552,25 +534,25 @@ mod tests {
         // // (s,s), (s,e), (e,s), (e,e)
         assert_eq!(
             Segment(a, c).intersects(&Segment(c, i)),
-            Some(IntersectionResult::OneIntersection(
+            Some(IntersectionResult::Ok(
                 Intersection::new(c, 1.0, -0.0).unwrap()
             ))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(i, c)),
-            Some(IntersectionResult::OneIntersection(
+            Some(IntersectionResult::Ok(
                 Intersection::new(c, 1.0, 1.0).unwrap()
             ))
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(g, a)),
-            Some(IntersectionResult::OneIntersection(
+            Some(IntersectionResult::Ok(
                 Intersection::new(a, 0.0, 1.0).unwrap()
             )),
         );
         assert_eq!(
             Segment(a, c).intersects(&Segment(a, g)),
-            Some(IntersectionResult::OneIntersection(
+            Some(IntersectionResult::Ok(
                 Intersection::new(a, 0.0, -0.0).unwrap()
             ))
         );
@@ -578,7 +560,7 @@ mod tests {
         // // (w,w)
         assert_eq!(
             Segment(a, i).intersects(&Segment(c, g)),
-            Some(IntersectionResult::OneIntersection(
+            Some(IntersectionResult::Ok(
                 Intersection::new(e, 0.5, 0.5).unwrap()
             ))
         );

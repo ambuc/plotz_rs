@@ -113,8 +113,8 @@ impl<'a> CropGraph<'a> {
                     .intersects_segment_detailed(&sg)
                     .into_iter()
                     .filter_map(|isxn| match isxn {
-                        IntersectionResult::MultipleIntersections(_) => None,
-                        IntersectionResult::OneIntersection(isxn) => Some(isxn),
+                        IntersectionResult::Ok(isxn) => Some(isxn),
+                        _ => None,
                     })
                     .map(|isxn| match which {
                         // ugh... this one is stupid. when we call

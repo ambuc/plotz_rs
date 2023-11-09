@@ -53,4 +53,11 @@ impl Percent {
             Percent::One => 1.0,
         }
     }
+
+    pub fn is_at_boundary(&self) -> bool {
+        match self {
+            Percent::Zero | Percent::One => true,
+            Percent::Val(_) => false,
+        }
+    }
 }
