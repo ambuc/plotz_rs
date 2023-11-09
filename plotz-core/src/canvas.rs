@@ -70,20 +70,6 @@ impl Canvas {
         self.objs_iter_mut().for_each(|o| o.iter_mut().for_each(&f))
     }
 
-    /// Translates every object in the canvas according to some |f|.
-    pub fn translate_all(&mut self, f: impl Fn(&mut dyn TranslatableAssign)) {
-        self.objs_iter_mut().for_each(|obj| {
-            f(obj);
-        });
-    }
-
-    /// Scales every object in the canvas according to some |f|.
-    pub fn scale_all(&mut self, f: impl Fn(&mut dyn ScalableAssign)) {
-        self.objs_iter_mut().for_each(|obj| {
-            f(obj);
-        });
-    }
-
     /// returns true on success
     pub fn scale_to_fit_frame(mut self) -> Result<Self> {
         {

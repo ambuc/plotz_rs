@@ -242,7 +242,7 @@ impl Map {
 
     fn adjust_bl_shift(&mut self) -> Result<()> {
         let canvas_bounds = self.canvas.bounds()?;
-        self.canvas.translate_all(|pt| {
+        self.canvas.mutate_all(|pt| {
             *pt -= canvas_bounds.x_min_y_min();
         });
         if let Some(center) = &mut self.center {
@@ -265,7 +265,7 @@ impl Map {
                 )
             }
         };
-        self.canvas.translate_all(|pt| *pt += shift);
+        self.canvas.mutate_all(|pt| *pt += shift);
         Ok(())
     }
 
@@ -276,7 +276,7 @@ impl Map {
             FloatOrd(dest_size.width as f64 / canvas_bounds.x_span().abs()),
         )
         .0 * scale_factor;
-        self.canvas.scale_all(|obj| {
+        self.canvas.mutate_all(|obj| {
             *obj *= scaling_factor;
         });
 

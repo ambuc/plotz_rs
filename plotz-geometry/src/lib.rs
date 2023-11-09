@@ -23,14 +23,6 @@ use shapes::txt::Txt;
 use std::ops::*;
 use typed_builder::TypedBuilder;
 
-/// The same as |Translatable|, but in-place. (See add vs. add_assign.)
-#[enum_dispatch(Obj)]
-pub trait TranslatableAssign: AddAssign<Pt> + SubAssign<Pt> {}
-
-/// The same as |Scalable|, but in-place. (See add vs. add_assign.)
-#[enum_dispatch(Obj)]
-pub trait ScalableAssign: MulAssign<f64> + DivAssign<f64> {}
-
 /// A geometric figure made of points with floating-point xy components which
 /// can be modified in-place to snap to the nearest interval.
 pub trait Roundable {
