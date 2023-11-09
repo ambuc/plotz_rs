@@ -3,7 +3,7 @@
 use crate::{
     bounded3::{streaming_bbox, Bounded3, Bounds3},
     obj3::ObjType3d,
-    shapes::pt3::Pt3,
+    shapes::point3::Pt3,
     Object,
 };
 use anyhow::Result;

@@ -11,7 +11,7 @@ use plotz_color::BLACK;
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{ml::Ml, pg::Pg, pt::Pt, sg::Sg},
+    shapes::{multiline::Ml, point::Pt, polygon::Pg, segment::Sg},
     style::Style,
 };
 use rand::seq::SliceRandom;

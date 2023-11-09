@@ -16,10 +16,10 @@ pub mod style;
 #[macro_use]
 pub mod macros;
 
-use crate::{obj::Obj, shapes::pt::Pt, style::Style};
+use crate::{obj::Obj, shapes::point::Pt, style::Style};
 use enum_dispatch::enum_dispatch;
 use obj::ObjType2d;
-use shapes::txt::Txt;
+use shapes::text::Txt;
 use std::ops::*;
 use typed_builder::TypedBuilder;
 

@@ -6,7 +6,7 @@ use crate::{
     bounded::Bounded,
     crop::Croppable,
     shading::shade_config::ShadeConfig,
-    shapes::{pg::Pg, pt::Pt, sg::Sg},
+    shapes::{point::Pt, polygon::Pg, segment::Sg},
 };
 use anyhow::Result;
 use float_ord::FloatOrd;

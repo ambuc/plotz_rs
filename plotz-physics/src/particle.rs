@@ -1,4 +1,4 @@
-use plotz_geometry::shapes::pt::Pt;
+use plotz_geometry::shapes::point::Pt;
 use typed_builder::TypedBuilder;
 
 pub enum Mobility {

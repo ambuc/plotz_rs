@@ -3,7 +3,7 @@
 use crate::{
     bounded3::{Bounded3, Bounds3},
     group3::Group3,
-    shapes::{pg3::Pg3, pt3::Pt3, ry3::Ry3, sg3::Sg3},
+    shapes::{point3::Pt3, polygon3::Pg3, ray3::Ry3, segment3::Sg3},
     Object, Rotatable,
 };
 use anyhow::Result;

@@ -7,9 +7,9 @@ use crate::{
     interpolate::interpolate_2d_checked,
     obj::ObjType2d,
     shapes::{
-        pg::{abp, Pg},
-        pt::{PolarPt, Pt},
-        sg::Sg,
+        point::{PolarPt, Pt},
+        polygon::{abp, Pg},
+        segment::Sg,
     },
     *,
 };
@@ -511,8 +511,8 @@ impl Object for CurveArc {
 mod test {
     use super::*;
     use crate::shapes::{
-        pg::{Pg, Rect},
-        sg::Sg,
+        polygon::{Pg, Rect},
+        segment::Sg,
     };
     use assert_matches::assert_matches;
     use float_cmp::assert_approx_eq;

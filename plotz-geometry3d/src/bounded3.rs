@@ -1,6 +1,6 @@
 use crate::{
     group3::Group3,
-    shapes::{cuboid3d::Cuboid, pt3::Pt3},
+    shapes::{cuboid3d::Cuboid, point3::Pt3},
 };
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;

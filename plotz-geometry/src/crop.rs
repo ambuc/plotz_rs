@@ -1,5 +1,5 @@
 //! Crop
-use crate::{bounded::Bounds, shapes::pg::Pg};
+use crate::{bounded::Bounds, shapes::polygon::Pg};
 use anyhow::Result;
 
 /// Whether a point lies outside, inside, or on a vertex or edge of a polygon.

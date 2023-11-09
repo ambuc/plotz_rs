@@ -11,8 +11,8 @@ use crate::{
     intersection::IntersectionResult,
     obj::ObjType2d,
     shapes::{
-        pt::Pt,
-        sg::{Contains, Sg},
+        point::Pt,
+        segment::{Contains, Sg},
     },
     *,
 };

@@ -7,8 +7,8 @@ use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
     shapes::{
-        pg::Pg,
-        pt::{PolarPt, Pt},
+        point::{PolarPt, Pt},
+        polygon::Pg,
     },
     style::Style,
 };

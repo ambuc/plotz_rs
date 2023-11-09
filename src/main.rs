@@ -9,7 +9,7 @@ use plotz_core::{
     map::{Map, MapConfig},
     svg::Size,
 };
-use plotz_geometry::shapes::pt::Pt;
+use plotz_geometry::shapes::point::Pt;
 
 #[derive(FromArgs, Debug)]
 #[argh(description = "...")]

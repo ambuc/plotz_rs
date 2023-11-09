@@ -1,5 +1,5 @@
 //! General 1D and 2D interpolation and extrapolation algorithms.
-use crate::shapes::pt::Pt;
+use crate::shapes::point::Pt;
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
 

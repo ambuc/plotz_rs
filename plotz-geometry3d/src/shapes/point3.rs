@@ -1,9 +1,9 @@
 //! A 3D point.
 //!
-use super::ry3::Ry3;
+use super::ray3::Ry3;
 use crate::{
     bounded3::{Bounded3, Bounds3},
-    shapes::sg3::Sg3,
+    shapes::segment3::Sg3,
     Rotatable,
 };
 use anyhow::{anyhow, Result};

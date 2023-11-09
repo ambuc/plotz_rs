@@ -1,7 +1,7 @@
 //! A 2D multiline.
 #![allow(missing_docs)]
 
-use super::{pg::Pg, pt::Pt, sg::Sg};
+use super::{point::Pt, polygon::Pg, segment::Sg};
 use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable},

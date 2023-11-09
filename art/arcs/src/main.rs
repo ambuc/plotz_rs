@@ -11,7 +11,7 @@ use plotz_geometry::{
     crop::Croppable,
     grid::Grid,
     obj::Obj,
-    shapes::{curve::CurveArcs, pg::Pg},
+    shapes::{curve::CurveArcs, polygon::Pg},
     style::Style,
 };
 use rand::Rng;

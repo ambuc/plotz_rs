@@ -5,7 +5,10 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLoc},
     group::Group,
-    shapes::{curve::CurveArc, ml::Ml, pg::Pg, pgc::Pgc, pt::Pt, sg::Sg, txt::Txt},
+    shapes::{
+        curve::CurveArc, multiline::Ml, point::Pt, polygon::Pg, polygon_with_cavity::Pgc,
+        segment::Sg, text::Txt,
+    },
     style::Style,
     Object,
 };

@@ -13,8 +13,8 @@ use plotz_geometry::{
     group::Group,
     obj::Obj,
     shapes::{
-        pg::{Pg, Rect},
-        pt::Pt,
+        point::Pt,
+        polygon::{Pg, Rect},
     },
     style::Style,
 };

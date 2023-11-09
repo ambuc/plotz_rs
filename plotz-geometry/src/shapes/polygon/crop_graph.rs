@@ -4,8 +4,8 @@ use crate::{
     crop::{CropType, PointLoc},
     intersection::{Intersection, IntersectionResult, Pair, Which},
     shapes::{
-        pg::Pg,
-        pt::{is_colinear_n, Pt},
+        point::{is_colinear_n, Pt},
+        polygon::Pg,
     },
 };
 use anyhow::{anyhow, Context, Result};
@@ -395,7 +395,7 @@ impl<'a> CropGraph<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::{crop::Croppable, interpolate::extrapolate_2d, shapes::pg::Rect};
+    use crate::{crop::Croppable, interpolate::extrapolate_2d, shapes::polygon::Rect};
     use itertools::iproduct;
     use test_case::test_case;
 

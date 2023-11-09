@@ -9,7 +9,7 @@ use plotz_core::{
 use plotz_geometry::{
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{ml::Ml, pg::Pg, pt::Pt},
+    shapes::{multiline::Ml, point::Pt, polygon::Pg},
     style::Style,
 };
 use rand::prelude::SliceRandom;

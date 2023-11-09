@@ -5,7 +5,7 @@ use std::cmp::{max, min};
 
 use crate::{
     crop::PointLoc,
-    shapes::{pg::Pg, pt::Pt},
+    shapes::{point::Pt, polygon::Pg},
 };
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
@@ -99,7 +99,7 @@ pub fn streaming_bbox<'a>(it: impl IntoIterator<Item = &'a (impl Bounded + 'a)>)
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use crate::shapes::pt::Pt;
+    use crate::shapes::point::Pt;
 
     #[test]
     fn test_streaming_bbox() {

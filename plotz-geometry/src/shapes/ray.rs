@@ -3,8 +3,8 @@
 use crate::{
     intersection::IntersectionResult,
     shapes::{
-        pt::{PolarPt, Pt},
-        sg::Sg,
+        point::{PolarPt, Pt},
+        segment::Sg,
     },
 };
 use std::f64::consts::TAU;

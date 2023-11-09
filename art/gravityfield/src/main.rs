@@ -11,7 +11,7 @@ use plotz_core::{
 use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
-    shapes::{curve::CurveArc, ml::Ml, pg::Pg, pt::Pt},
+    shapes::{curve::CurveArc, multiline::Ml, point::Pt, polygon::Pg},
     style::Style,
 };
 use plotz_physics::{framework, particle::*};

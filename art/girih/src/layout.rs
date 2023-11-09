@@ -2,7 +2,7 @@ use crate::geom::*;
 use anyhow::{anyhow, Result};
 use indicatif::ProgressBar;
 use itertools::Itertools;
-use plotz_geometry::shapes::{pg::Pg, pt::Pt, sg::Sg};
+use plotz_geometry::shapes::{point::Pt, polygon::Pg, segment::Sg};
 use rand::seq::SliceRandom;
 use std::f64::consts::TAU;
 

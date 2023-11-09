@@ -1,6 +1,6 @@
 //! An intefield2section between two segments.
 
-use crate::shapes::pt::Pt;
+use crate::shapes::point::Pt;
 use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::fmt::Debug;

@@ -2,7 +2,7 @@
 //!
 use anyhow::Result;
 use plotz_color::BLACK;
-use plotz_geometry::{obj::Obj, shapes::txt::Txt, style::Style, *};
+use plotz_geometry::{obj::Obj, shapes::text::Txt, style::Style, *};
 use std::fmt::Debug;
 
 /// The size of a canvas.
@@ -131,7 +131,7 @@ fn _write_layers_to_svgs<'a, P: Debug + AsRef<std::path::Path>>(
 #[cfg(test)]
 mod test_super {
     use super::*;
-    use plotz_geometry::{shapes::pg::Pg, style::Style};
+    use plotz_geometry::{shapes::polygon::Pg, style::Style};
     use tempdir::TempDir;
 
     #[test]

@@ -3,7 +3,7 @@
 use crate::{
     group3::Group3,
     obj3::Obj3,
-    shapes::{pg3::Pg3, pt3::Pt3},
+    shapes::{point3::Pt3, polygon3::Pg3},
 };
 
 fn make_planar_face(origin: Pt3, d1: Pt3, d2: Pt3) -> Pg3 {

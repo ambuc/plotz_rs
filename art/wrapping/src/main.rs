@@ -9,7 +9,7 @@ use plotz_core::{
 };
 use plotz_geometry::{
     obj::Obj,
-    shapes::{curve::CurveArc, pt::Pt, sg::Sg},
+    shapes::{curve::CurveArc, point::Pt, segment::Sg},
 };
 use rand::{distributions::Standard, prelude::Distribution, Rng};
 use std::f64::consts::*;

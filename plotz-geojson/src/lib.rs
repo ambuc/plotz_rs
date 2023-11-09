@@ -6,7 +6,7 @@
 use anyhow::{anyhow, Result};
 use plotz_geometry::{
     obj::Obj,
-    shapes::{ml::Ml, pg::Pg, pt::Pt},
+    shapes::{multiline::Ml, point::Pt, polygon::Pg},
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -189,7 +189,7 @@ fn parse_to_circle(_coords: &Value) -> Result<Vec<Obj>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plotz_geometry::shapes::ml::Ml;
+    use plotz_geometry::shapes::multiline::Ml;
     use serde_json::json;
 
     // fn assert_symbol_tuple_list<'a>(

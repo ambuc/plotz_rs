@@ -4,7 +4,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::Croppable,
     obj::Obj,
-    shapes::pt::Pt,
+    shapes::point::Pt,
     style::Style,
 };
 use anyhow::Result;

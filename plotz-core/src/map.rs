@@ -19,7 +19,7 @@ use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::{pg::Pg, pt::Pt, sg::Sg},
+    shapes::{point::Pt, polygon::Pg, segment::Sg},
     style::Style,
 };
 use rand::{thread_rng, Rng};
@@ -488,7 +488,7 @@ fn paths_to_files(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use plotz_geometry::shapes::pg::Pg;
+    use plotz_geometry::shapes::polygon::Pg;
     use tempdir::TempDir;
 
     #[test]

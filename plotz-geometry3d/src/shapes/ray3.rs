@@ -1,10 +1,10 @@
 //! A 3D ray.
 
-use crate::shapes::{pt3::Pt3, sg3::Sg3};
+use crate::shapes::{point3::Pt3, segment3::Sg3};
 use anyhow::{anyhow, Result};
 use std::f64::consts::{PI, TAU};
 
-use super::pt3::PolarPt3;
+use super::point3::PolarPt3;
 
 /// A ray (3d) which emits from a Pt3 and goes in a direction (3d).
 #[derive(Copy, Clone, Debug)]

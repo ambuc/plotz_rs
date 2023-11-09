@@ -5,11 +5,11 @@ use plotz_geometry::{group::Group, style::Style};
 use crate::{
     group3::Group3,
     obj3::Obj3,
-    shapes::{pg3::Pg3, pt3::Pt3, sg3::Sg3},
+    shapes::{point3::Pt3, polygon3::Pg3, segment3::Sg3},
 };
 use plotz_geometry::{
     obj::Obj,
-    shapes::{pg::Pg, pt::Pt, sg::Sg},
+    shapes::{point::Pt, polygon::Pg, segment::Sg},
 };
 
 // Any oblique projection.  https://en.wikipedia.org/wiki/3D_projection#Oblique_projection

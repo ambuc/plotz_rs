@@ -10,7 +10,7 @@ use plotz_geometry::{
     crop::PointLoc,
     grid::grid_layout::{GridLayout, GridLayoutSettings},
     obj::Obj,
-    shapes::{curve::CurveArc, pt::Pt},
+    shapes::{curve::CurveArc, point::Pt},
     style::Style,
 };
 use rand::{seq::SliceRandom, thread_rng, Rng};

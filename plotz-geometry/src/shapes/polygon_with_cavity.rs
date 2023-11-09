@@ -5,7 +5,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::PointLoc,
     obj::ObjType2d,
-    shapes::{pg::Pg, pt::Pt},
+    shapes::{point::Pt, polygon::Pg},
     Object,
 };
 use anyhow::{anyhow, Result};

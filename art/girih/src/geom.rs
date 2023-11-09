@@ -5,10 +5,10 @@ use plotz_geometry::{
     crop::PointLoc,
     intersection::{Intersection, IntersectionResult},
     shapes::{
-        pg::Pg,
-        pt::{PolarPt, Pt},
-        ry::Ry,
-        sg::Sg,
+        point::{PolarPt, Pt},
+        polygon::Pg,
+        ray::Ry,
+        segment::Sg,
     },
 };
 use rand::seq::SliceRandom;

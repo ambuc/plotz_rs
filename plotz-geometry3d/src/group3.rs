@@ -6,7 +6,7 @@ use anyhow::Result;
 use crate::{
     bounded3::{streaming_bbox, Bounded3, Bounds3},
     obj3::{Obj3, ObjType3d},
-    shapes::{pt3::Pt3, ry3::Ry3},
+    shapes::{point3::Pt3, ray3::Ry3},
     Object, Rotatable, RotatableBounds,
 };
 use std::ops::*;

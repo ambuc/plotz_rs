@@ -1,6 +1,6 @@
 use crate::particle::*;
 
-use plotz_geometry::shapes::pt::Pt;
+use plotz_geometry::shapes::point::Pt;
 use std::collections::HashMap;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;

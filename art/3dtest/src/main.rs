@@ -16,7 +16,7 @@ use plotz_geometry3d::{
         occluder::{Occluder, OccluderConfig},
         Scene,
     },
-    shapes::{cube3d::Cube, cuboid3d::Cuboid, pt3::Pt3},
+    shapes::{cube3d::Cube, cuboid3d::Cuboid, point3::Pt3},
     RotatableBounds,
 };
 use std::{f64::consts::*, iter::zip};

@@ -13,7 +13,7 @@ use itertools::Itertools;
 use plotz_geometry::{
     bounded::{streaming_bbox, Bounded, Bounds},
     obj::Obj,
-    shapes::pt::Pt,
+    shapes::point::Pt,
     style::Style,
     *,
 };

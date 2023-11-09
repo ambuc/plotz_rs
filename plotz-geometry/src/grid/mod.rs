@@ -4,7 +4,7 @@ pub mod grid_layout;
 
 use crate::{
     obj::Obj,
-    shapes::{pt::Pt, sg::Sg},
+    shapes::{point::Pt, segment::Sg},
     style::Style,
 };
 use num::range_step;

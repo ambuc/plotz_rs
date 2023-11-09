@@ -10,7 +10,7 @@ use plotz_core::{
 use plotz_geometry::{
     crop::Croppable,
     obj::Obj,
-    shapes::{curve::CurveArc, ml::Ml, pg::Pg, pt::Pt, sg::Sg},
+    shapes::{curve::CurveArc, multiline::Ml, point::Pt, polygon::Pg, segment::Sg},
     style::Style,
 };
 use rand::{thread_rng, Rng};

@@ -2,7 +2,7 @@
 
 use crate::{
     group3::Group3,
-    shapes::{cuboid3d::Cuboid, pt3::Pt3},
+    shapes::{cuboid3d::Cuboid, point3::Pt3},
 };
 
 // make a cube of faces (no edges)

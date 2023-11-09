@@ -4,7 +4,7 @@
 use crate::{
     bounded::{Bounded, Bounds},
     obj::ObjType2d,
-    shapes::{pg::abp, sg::Sg},
+    shapes::{polygon::abp, segment::Sg},
     *,
 };
 use anyhow::Result;

@@ -3,7 +3,7 @@
 use anyhow::Result;
 use plotz_geometry::{
     obj::Obj,
-    shapes::{pg::Pg, pt::Pt},
+    shapes::{point::Pt, polygon::Pg},
     style::Style,
 };
 

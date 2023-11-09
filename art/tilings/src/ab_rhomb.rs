@@ -1,11 +1,11 @@
 // https://tilings.math.uni-bielefeld.de/substitution/ammann-beenker-rhomb-triangle/
 
-use plotz_geometry::{obj::Obj, shapes::pg::Pg, style::Style};
+use plotz_geometry::{obj::Obj, shapes::polygon::Pg, style::Style};
 
 use plotz_color::*;
 use plotz_geometry::{
     shading::{shade_config::ShadeConfig, shade_polygon},
-    shapes::pt::Pt,
+    shapes::point::Pt,
 };
 
 struct T1([Pt; 3]);

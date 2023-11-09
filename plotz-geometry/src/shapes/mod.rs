@@ -1,10 +1,10 @@
 //! Shapes.
 
 pub mod curve; // curve
-pub mod ml; // multiline
-pub mod pg; // polygon
-pub mod pgc; // polygon with cavities
-pub mod pt; // point
-pub mod ry; // ray
-pub mod sg; // segment
-pub mod txt; // text
+pub mod multiline; // multiline
+pub mod point; // point
+pub mod polygon; // polygon
+pub mod polygon_with_cavity; // polygon with cavities
+pub mod ray; // ray
+pub mod segment; // segment
+pub mod text; // text

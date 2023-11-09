@@ -3,14 +3,14 @@
 use crate::{
     bounded3::{streaming_bbox, Bounded3, Bounds3},
     obj3::ObjType3d,
-    shapes::pt3::Pt3,
+    shapes::point3::Pt3,
     Object, Rotatable,
 };
 use anyhow::Result;
 use float_ord::FloatOrd;
 use std::{fmt::Debug, ops::*};
 
-use super::ry3::Ry3;
+use super::ray3::Ry3;
 
 // A multiline is a list of points rendered with connecting line segments.
 #[derive(Clone)]

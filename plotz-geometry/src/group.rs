@@ -5,7 +5,7 @@ use crate::{
     bounded::{streaming_bbox, Bounded, Bounds},
     crop::{CropType, Croppable},
     obj::{Obj, ObjType2d},
-    shapes::{pg::Pg, pt::Pt},
+    shapes::{point::Pt, polygon::Pg},
     *,
 };
 use anyhow::Result;

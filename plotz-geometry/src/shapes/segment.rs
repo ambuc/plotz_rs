@@ -8,7 +8,7 @@ use crate::{
     interpolate::interpolate_2d_checked,
     intersection::{Intersection, IntersectionResult, MultipleIntersections},
     obj::ObjType2d,
-    shapes::{pg::Pg, pt::Pt, ry::Ry},
+    shapes::{point::Pt, polygon::Pg, ray::Ry},
     Object,
 };
 use anyhow::{anyhow, Result};
