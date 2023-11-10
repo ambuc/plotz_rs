@@ -113,7 +113,6 @@ pub fn intersects_sg_sg(sa: &Segment, sb: &Segment) -> Result<Isxn> {
     let sbi_in_sa = matches!(intersects_sg_pt(sa, &sb.i)?, Isxn::Some(_, _));
     let sbf_in_sa = matches!(intersects_sg_pt(sa, &sb.f)?, Isxn::Some(_, _));
 
-    dbg!(sa.slope(), sb.slope());
     if (sa.slope() == sb.slope() || sa.slope() == sb.flip().slope())
         && ((sai_in_sb && saf_in_sb)
             || (sbi_in_sa && sbf_in_sa)
