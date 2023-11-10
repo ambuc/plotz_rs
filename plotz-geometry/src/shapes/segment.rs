@@ -30,7 +30,7 @@ enum _Orientation {
 
 /// Whether a line segment contains a point, and if so where.
 #[derive(Debug, PartialEq, Eq)]
-pub enum Contains {
+pub enum SegmentContainsPoint {
     /// A line segment contains a point along it.
     Within,
     /// A line segment contains a point at its head.
@@ -92,17 +92,18 @@ impl Segment {
     }
 
     /// Returns true if this line segment has point |other| along it.
-    pub fn line_segment_contains_pt(&self, other: &Point) -> Option<Contains> {
+    pub fn contains_point(&self, other: &Point) -> Option<SegmentContainsPoint> {
         if *other == self.i {
-            return Some(Contains::AtStart);
+            return Some(SegmentContainsPoint::AtStart);
         }
         if *other == self.f {
-            return Some(Contains::AtEnd);
+            return Some(SegmentContainsPoint::AtEnd);
         }
+        // if the len of the (i -> f) is the same as the len of (i -> pt -> f), then pt is on i->f.
         let d1: f64 = self.abs();
         let d2: f64 = Segment(self.i, *other).abs() + Segment(self.f, *other).abs();
         if approx_eq!(f64, d1, d2) {
-            return Some(Contains::Within);
+            return Some(SegmentContainsPoint::Within);
         }
         None
     }
@@ -588,8 +589,8 @@ mod tests {
         let c = Point(2, 2);
 
         assert_eq!(
-            Segment(a, c).line_segment_contains_pt(&a).unwrap(),
-            Contains::AtStart
+            Segment(a, c).contains_point(&a).unwrap(),
+            SegmentContainsPoint::AtStart
         );
     }
     #[test]

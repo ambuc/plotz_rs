@@ -12,7 +12,7 @@ use crate::{
     obj2::ObjType2d,
     shapes::{
         point::Point,
-        segment::{Contains, Segment},
+        segment::{Segment, SegmentContainsPoint},
     },
     *,
 };
@@ -83,7 +83,7 @@ pub fn Polygon(a: impl IntoIterator<Item = impl Into<Point>>) -> Result<Polygon>
     }
 
     let mut p = Polygon { pts };
-    if p.get_curve_orientation() == Some(CurveOrientation::Negative) {
+    if p.get_curve_orientation() == Some(PointListOrientation::Clockwise) {
         p.orient_curve_positively();
     }
     Ok(p)
@@ -102,14 +102,10 @@ where
     Polygon([tl, tl + (w, 0), tl + (w, h), tl + (0, h)])
 }
 
-/// Whether a curve is positively or negatively oriented (whether its points are
-/// listed in clockwise or counter-clockwise order).
 #[derive(Debug, PartialEq, Eq)]
-pub enum CurveOrientation {
-    /// Negatively oriented, i.e. points listed in clockwise order.
-    Negative,
-    /// Positively oriented, i.e. points listed in counter-clockwise order.
-    Positive,
+pub enum PointListOrientation {
+    Clockwise,
+    CounterClockwise,
 }
 
 impl Polygon {
@@ -180,11 +176,11 @@ impl Polygon {
             }
         }
         for (idx, seg) in self.to_segments().iter().enumerate() {
-            match seg.line_segment_contains_pt(other) {
-                Some(Contains::Within) => {
+            match seg.contains_point(other) {
+                Some(SegmentContainsPoint::Within) => {
                     return Ok(PointLocation::OnSegment(idx));
                 }
-                Some(Contains::AtStart | Contains::AtEnd) => {
+                Some(SegmentContainsPoint::AtStart | SegmentContainsPoint::AtEnd) => {
                     return Err(anyhow!("not sure what is going on here"));
                 }
                 _ => {}
@@ -225,7 +221,7 @@ impl Polygon {
     /// counterclockwise order.
     ///
     /// If there is no internal area, returns None.
-    pub fn get_curve_orientation(&self) -> Option<CurveOrientation> {
+    pub fn get_curve_orientation(&self) -> Option<PointListOrientation> {
         let o = self
             .to_segments()
             .iter()
@@ -234,14 +230,14 @@ impl Polygon {
 
         match o {
             o if approx_eq!(f64, o, 0.0) => None,
-            o if o >= 0_f64 => Some(CurveOrientation::Negative),
-            _ => Some(CurveOrientation::Positive),
+            o if o >= 0_f64 => Some(PointListOrientation::Clockwise),
+            _ => Some(PointListOrientation::CounterClockwise),
         }
     }
 
     /// Orients a polygon in-place such that it has a positive orientation.
     pub fn orient_curve_positively(&mut self) {
-        if let Some(CurveOrientation::Negative) = self.get_curve_orientation() {
+        if let Some(PointListOrientation::Clockwise) = self.get_curve_orientation() {
             self.pts.reverse();
         }
     }
@@ -856,11 +852,11 @@ mod tests {
 
         assert_eq!(
             Polygon([a, c, i, g])?.get_curve_orientation(),
-            Some(CurveOrientation::Positive)
+            Some(PointListOrientation::CounterClockwise)
         );
         assert_eq!(
             Polygon([a, g, i, c])?.get_curve_orientation(),
-            Some(CurveOrientation::Positive)
+            Some(PointListOrientation::CounterClockwise)
         );
         Ok(())
     }
@@ -881,9 +877,15 @@ mod tests {
         let g = Point(0, 0);
         let i = Point(2, 0);
         let mut p = Polygon([a, g, i, c])?;
-        assert_eq!(p.get_curve_orientation(), Some(CurveOrientation::Positive));
+        assert_eq!(
+            p.get_curve_orientation(),
+            Some(PointListOrientation::CounterClockwise)
+        );
         p.orient_curve_positively();
-        assert_eq!(p.get_curve_orientation(), Some(CurveOrientation::Negative));
+        assert_eq!(
+            p.get_curve_orientation(),
+            Some(PointListOrientation::Clockwise)
+        );
         Ok(())
     }
 

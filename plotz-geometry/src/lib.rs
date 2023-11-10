@@ -8,6 +8,7 @@ pub mod grid;
 pub mod group;
 pub mod interpolate;
 pub mod intersection;
+pub mod intersects;
 pub mod obj2;
 pub mod shading;
 pub mod shapes;
