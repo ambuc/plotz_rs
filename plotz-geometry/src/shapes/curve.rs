@@ -11,6 +11,7 @@ use crate::{
         polygon::{abp, Polygon},
         segment::Segment,
     },
+    utils::Percent,
     *,
 };
 use anyhow::{anyhow, Result};
@@ -206,56 +207,11 @@ impl RemAssign<Point> for CurveArc {
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
-enum SegmentLoc {
-    I,
-    M(f64), // percentage of the way along
-    F,
-}
-impl SegmentLoc {
-    #[cfg(test)]
-    fn as_f64(&self) -> f64 {
-        match self {
-            SegmentLoc::I => 0.0,
-            SegmentLoc::M(f) => *f,
-            SegmentLoc::F => 1.0,
-        }
-    }
-    fn from_f64(f: f64) -> Option<SegmentLoc> {
-        match f {
-            f if approx_eq!(f64, f, 0.0) => Some(SegmentLoc::I),
-            f if approx_eq!(f64, f, 1.0) => Some(SegmentLoc::F),
-            f if !(0.0..=1.0).contains(&f) || f.is_nan() || f.is_infinite() => None,
-            f => Some(SegmentLoc::M(f)),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Copy, Clone, PartialOrd)]
-enum CurveLoc {
-    I,
-    M(f64), // percentage of the way along
-    F,
-}
-impl CurveLoc {
-    fn as_f64(&self) -> f64 {
-        match self {
-            CurveLoc::I => 0.0,
-            CurveLoc::M(f) => *f,
-            CurveLoc::F => 1.0,
-        }
-    }
-    fn from_f64(f: f64) -> Option<CurveLoc> {
-        match f {
-            f if approx_eq!(f64, f, 0.0) => Some(CurveLoc::I),
-            f if approx_eq!(f64, f, 1.0) => Some(CurveLoc::F),
-            f if !(0.0..=1.0).contains(&f) || f.is_nan() || f.is_infinite() => None,
-            f => Some(CurveLoc::M(f)),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Copy, Clone)]
-struct PtLoc(Point, SegmentLoc, CurveLoc);
+struct PtLoc(
+    Point,
+    /*SegmentLoc*/ Percent,
+    /*CurveLoc*/ Percent,
+);
 
 #[derive(Debug, PartialEq)]
 enum IntersectionResult {
@@ -285,14 +241,12 @@ fn intersections_of_line_and_curvearc(
             let isxn =
                 curve_arc.ctr + PolarPt(curve_arc.radius, segment.slope().atan() + FRAC_PI_2);
 
-            if let Ok(f) = interpolate_2d_checked(segment.i, segment.f, isxn) {
-                if let Some(segment_loc) = SegmentLoc::from_f64(f) {
-                    if let Some(curve_loc) = CurveLoc::from_f64(
-                        abp(&curve_arc.ctr, &isxn, &curve_arc.pt_i())
-                            / abp(&curve_arc.ctr, &curve_arc.pt_f(), &curve_arc.pt_i()),
-                    ) {
-                        return Ok(IntersectionResult::One(PtLoc(isxn, segment_loc, curve_loc)));
-                    }
+            if let Ok(segment_loc) = interpolate_2d_checked(segment.i, segment.f, isxn) {
+                if let Ok(curve_loc) = Percent::new(
+                    abp(&curve_arc.ctr, &isxn, &curve_arc.pt_i())
+                        / abp(&curve_arc.ctr, &curve_arc.pt_f(), &curve_arc.pt_i()),
+                ) {
+                    return Ok(IntersectionResult::One(PtLoc(isxn, segment_loc, curve_loc)));
                 }
             }
             Ok(IntersectionResult::None)
@@ -382,33 +336,25 @@ fn intersections_of_line_and_curvearc(
             // here pac == percent along curve, and pas == percent along segment.
             let full_curve_angle = curve_arc.angle_f - curve_arc.angle_i;
 
-            let sl1 = interpolate_2d_checked(segment.i, segment.f, isxn_1)
-                .ok()
-                .and_then(SegmentLoc::from_f64);
-            let cl1 = CurveLoc::from_f64(
+            let sl1 = interpolate_2d_checked(segment.i, segment.f, isxn_1);
+            let cl1 = Percent::new(
                 ((abp(&curve_arc.ctr, &curve_arc.pt_i(), &isxn_1) + TAU) % TAU) / full_curve_angle,
             );
-            let sl2 = interpolate_2d_checked(segment.i, segment.f, isxn_2)
-                .ok()
-                .and_then(SegmentLoc::from_f64);
-            let cl2 = CurveLoc::from_f64(
+            let sl2 = interpolate_2d_checked(segment.i, segment.f, isxn_2);
+            let cl2 = Percent::new(
                 ((abp(&curve_arc.ctr, &curve_arc.pt_i(), &isxn_2) + TAU) % TAU) / full_curve_angle,
             );
 
             match (sl1, cl1, sl2, cl2) {
-                (Some(sl1), Some(cl1), Some(sl2), Some(cl2)) if sl1 == sl2 && cl1 == cl2 => {
+                (Ok(sl1), Ok(cl1), Ok(sl2), Ok(cl2)) if sl1 == sl2 && cl1 == cl2 => {
                     Ok(IntersectionResult::One(PtLoc(isxn_1, sl1, cl1)))
                 }
-                (Some(sl1), Some(cl1), Some(sl2), Some(cl2)) => Ok(IntersectionResult::Two(
+                (Ok(sl1), Ok(cl1), Ok(sl2), Ok(cl2)) => Ok(IntersectionResult::Two(
                     PtLoc(isxn_1, sl1, cl1),
                     PtLoc(isxn_2, sl2, cl2),
                 )),
-                (Some(sl1), Some(cl1), _, _) => {
-                    Ok(IntersectionResult::One(PtLoc(isxn_1, sl1, cl1)))
-                }
-                (_, _, Some(sl2), Some(cl2)) => {
-                    Ok(IntersectionResult::One(PtLoc(isxn_2, sl2, cl2)))
-                }
+                (Ok(sl1), Ok(cl1), _, _) => Ok(IntersectionResult::One(PtLoc(isxn_1, sl1, cl1))),
+                (_, _, Ok(sl2), Ok(cl2)) => Ok(IntersectionResult::One(PtLoc(isxn_2, sl2, cl2))),
                 _ => Err(anyhow!("is this right?")),
             }
         }
@@ -531,45 +477,45 @@ mod test {
     }
 
     #[test_case(
-        CurveArc(Point(1, 1), 0.0..=PI, 1.0), SegmentLoc::M(0.5),
-        CurveLoc::M(0.5); "segment m, curve m"
+        CurveArc(Point(1, 1), 0.0..=PI, 1.0), Percent::Val(0.5),
+        Percent::Val(0.5); "segment m, curve m"
     )]
     #[test_case(
-        CurveArc(Point(1, 1), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), SegmentLoc::M(0.5),
-        CurveLoc::F; "segment m, curve f"
+        CurveArc(Point(1, 1), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), Percent::Val(0.5),
+        Percent::One; "segment m, curve f"
     )]
     #[test_case(
-        CurveArc(Point(1, 1), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), SegmentLoc::M(0.5),
-        CurveLoc::I; "segment m, curve i"
+        CurveArc(Point(1, 1), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), Percent::Val(0.5),
+        Percent::Zero; "segment m, curve i"
     )]
     #[test_case(
-        CurveArc(Point(0, 1), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), SegmentLoc::I,
-        CurveLoc::F; "segment i, curve f"
+        CurveArc(Point(0, 1), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), Percent::Zero,
+        Percent::One; "segment i, curve f"
     )]
     #[test_case(
-        CurveArc(Point(0, 1), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), SegmentLoc::I,
-        CurveLoc::I; "segment i, curve i"
+        CurveArc(Point(0, 1), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), Percent::Zero,
+        Percent::Zero; "segment i, curve i"
     )]
     #[test_case(
-        CurveArc(Point(0, 1), 0.0..=PI, 1.0), SegmentLoc::I,
-        CurveLoc::M(0.5); "segment i, curve m"
+        CurveArc(Point(0, 1), 0.0..=PI, 1.0), Percent::Zero,
+        Percent::Val(0.5); "segment i, curve m"
     )]
     #[test_case(
-        CurveArc(Point(2, 1), 0.0..=PI, 1.0), SegmentLoc::F,
-        CurveLoc::M(0.5); "segment f, curve m"
+        CurveArc(Point(2, 1), 0.0..=PI, 1.0), Percent::One,
+        Percent::Val(0.5); "segment f, curve m"
     )]
     #[test_case(
-        CurveArc(Point(2, 1), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), SegmentLoc::F,
-        CurveLoc::I; "segment f, curve i"
+        CurveArc(Point(2, 1), FRAC_PI_2..=3.0 * FRAC_PI_2, 1.0), Percent::One,
+        Percent::Zero; "segment f, curve i"
     )]
     #[test_case(
-        CurveArc(Point(2, 1), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), SegmentLoc::F,
-        CurveLoc::F; "segment f, curve f"
+        CurveArc(Point(2, 1), -1.0 * FRAC_PI_2..=FRAC_PI_2, 1.0), Percent::One,
+        Percent::One; "segment f, curve f"
     )]
     fn test_curve_one_intersection_tangent(
         curve_arc: CurveArc,
-        expected_segment_loc: SegmentLoc,
-        expected_curve_loc: CurveLoc,
+        expected_segment_loc: Percent,
+        expected_curve_loc: Percent,
     ) -> Result<()> {
         let segment = Segment((0, 0), (2, 0));
 
@@ -585,23 +531,19 @@ mod test {
     #[test_case(
         Segment((0, 0), (2, 0)),
         CurveArc(Point(1, 0), FRAC_PI_2..=3.0 * FRAC_PI_2, 0.5),
-        (Point(0.50, 0), SegmentLoc::M(0.25), CurveLoc::M(0.5));
+        (Point(0.50, 0), Percent::Val(0.25), Percent::Val(0.5));
         "intersection 1"
     )]
     #[test_case(
         Segment((2, 0), (2, 2)),
         CurveArc(Point(2, 0), 0.0..=3.0 * FRAC_PI_2, 1.0),
-        (Point(2, 1), SegmentLoc::M(0.5), CurveLoc::M(1.0 / 3.0));
+        (Point(2, 1), Percent::Val(0.5), Percent::Val(1.0 / 3.0));
         "intersection 2"
     )]
     fn test_curve_one_intersection_crossing(
         segment: Segment,
         curve_arc: CurveArc,
-        (expected_point_loc, expected_segment_loc, expected_curve_loc): (
-            Point,
-            SegmentLoc,
-            CurveLoc,
-        ),
+        (expected_point_loc, expected_segment_loc, expected_curve_loc): (Point, Percent, Percent),
     ) -> Result<()> {
         let (pl, sl, cl) = assert_matches!(
             intersections_of_line_and_curvearc(&segment, &curve_arc)?,
@@ -616,15 +558,15 @@ mod test {
     #[test_case(
         Segment((0., 0.), (3., 0.)),
         CurveArc(Point(1.5, 0), 0.0..=PI, 0.5),
-        PtLoc(Point(1, 0), SegmentLoc::M(1.0 / 3.0), CurveLoc::F),
-        PtLoc(Point(2, 0), SegmentLoc::M(2.0 / 3.0), CurveLoc::I);
+        PtLoc(Point(1, 0), Percent::Val(1.0 / 3.0), Percent::One),
+        PtLoc(Point(2, 0), Percent::Val(2.0 / 3.0), Percent::Zero);
         "segment m curve i, segment m curve f"
     )]
     #[test_case(
         Segment((0, 2), (0, 0.18)),
         CurveArc(Point(1, 1), 0.0..=TAU, 1.1),
-        PtLoc(Point(0, 0.5417424305044158), SegmentLoc::M(0.8012404227997715), CurveLoc::M(0.5683888259129364)),
-        PtLoc(Point(0, 1.4582575694955842), SegmentLoc::M(0.29766067610132735), CurveLoc::M(0.4316111740870635));
+        PtLoc(Point(0, 0.5417424305044158), Percent::Val(0.8012404227997715), Percent::Val(0.5683888259129364)),
+        PtLoc(Point(0, 1.4582575694955842), Percent::Val(0.29766067610132735), Percent::Val(0.4316111740870635));
         "vertical")
     ]
     fn test_curve_two_intersections(

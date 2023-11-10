@@ -1,5 +1,5 @@
 //! General 1D and 2D interpolation and extrapolation algorithms.
-use crate::shapes::point::Point;
+use crate::{shapes::point::Point, utils::Percent};
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
 
@@ -18,24 +18,24 @@ fn interpolate_checked(a: f64, b: f64, i: f64) -> Result<f64> {
 
 /// Given the line |ab| defined by points |a| and |b|, and another point |i|
 /// which lies along it, return the percent along |ab| which |i| lies.
-pub fn interpolate_2d_checked(a: Point, b: Point, i: Point) -> Result<f64> {
+pub fn interpolate_2d_checked(a: Point, b: Point, i: Point) -> Result<Percent> {
     let x_same = approx_eq!(f64, a.x, b.x);
     let y_same = approx_eq!(f64, a.y, b.y);
     match (x_same, y_same) {
         (true, true) => Err(anyhow!("points are the same")),
         (false, true) => {
             let v_x = interpolate_checked(a.x, b.x, i.x)?;
-            Ok(v_x)
+            Ok(Percent::new(v_x)?)
         }
         (true, false) => {
             let v_y = interpolate_checked(a.y, b.y, i.y)?;
-            Ok(v_y)
+            Ok(Percent::new(v_y)?)
         }
         (false, false) => {
             let v_x = interpolate_checked(a.x, b.x, i.x)?;
             let v_y = interpolate_checked(a.y, b.y, i.y)?;
             match approx_eq!(f64, v_x, v_y, epsilon = 0.0003) {
-                true => Ok(v_x),
+                true => Ok(Percent::new(v_x)?),
                 false => Err(anyhow!("point not on line")),
             }
         }
@@ -67,15 +67,15 @@ mod tests {
         assert!(interpolate_2d_checked(Point(0, 0), Point(1, 1), Point(-0.1, -0.1)).is_err());
         assert_eq!(
             interpolate_2d_checked(Point(0, 0), Point(1, 1), Point(0, 0))?,
-            0.0
+            Percent::Zero,
         );
         assert_eq!(
             interpolate_2d_checked(Point(0, 0), Point(1, 1), Point(0.5, 0.5))?,
-            0.5
+            Percent::Val(0.5),
         );
         assert_eq!(
             interpolate_2d_checked(Point(0, 0), Point(1, 1), Point(1, 1))?,
-            1.0
+            Percent::One,
         );
         assert!(interpolate_2d_checked(Point(0, 0), Point(1, 1), Point(1.1, 1.1)).is_err());
 

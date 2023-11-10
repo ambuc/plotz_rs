@@ -77,7 +77,7 @@ pub fn intersects_sg_pt(s: &Segment, p: &Point) -> Result<Isxn> {
         Segment(s.i, *p).abs() + Segment(*p, s.f).abs()
     ) {
         Ok(Isxn::Some(
-            Opinion::Segment(Percent::Val(interpolate_2d_checked(s.i, s.f, *p)?)),
+            Opinion::Segment(interpolate_2d_checked(s.i, s.f, *p)?),
             Opinion::Point,
         ))
     } else {
@@ -126,8 +126,8 @@ pub fn intersects_sg_sg(sa: &Segment, sb: &Segment) -> Result<Isxn> {
     if (0_f64..=1_f64).contains(&s) && (0_f64..=1_f64).contains(&t) {
         let pt = Point(p0_x + (t * s1_x), p0_y + (t * s1_y));
         return Ok(Isxn::Some(
-            Opinion::Segment(Percent::new(interpolate_2d_checked(sa.i, sa.f, pt)?)?),
-            Opinion::Segment(Percent::new(interpolate_2d_checked(sb.i, sb.f, pt)?)?),
+            Opinion::Segment(interpolate_2d_checked(sa.i, sa.f, pt)?),
+            Opinion::Segment(interpolate_2d_checked(sb.i, sb.f, pt)?),
         ));
     }
 

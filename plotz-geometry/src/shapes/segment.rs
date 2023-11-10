@@ -119,8 +119,8 @@ impl Segment {
         ) {
             Some(IntersectionResult::Ok(Intersection::new(
                 pt,
-                interpolate_2d_checked(self.i, self.f, pt).ok()?,
-                interpolate_2d_checked(other.i, other.f, pt).ok()?,
+                interpolate_2d_checked(self.i, self.f, pt).ok()?.as_f64(),
+                interpolate_2d_checked(other.i, other.f, pt).ok()?.as_f64(),
             )?))
         } else {
             None
@@ -237,14 +237,14 @@ impl Croppable for Segment {
             isxns.sort_by_key(|i| i.percent_along_a());
             let (_, vs) = isxns.into_iter().partition(|i| {
                 i.percent_along_a().0
-                    <= interpolate::interpolate_2d_checked(self.i, self.f, curr_pt).unwrap_or_else(
-                        |_| {
+                    <= interpolate::interpolate_2d_checked(self.i, self.f, curr_pt)
+                        .unwrap_or_else(|_| {
                             panic!(
                                 "interpolate failed: a: {:?}, b: {:?}, i: {:?}",
                                 self.i, self.f, curr_pt,
                             )
-                        },
-                    )
+                        })
+                        .as_f64()
             });
             isxns = vs;
 
