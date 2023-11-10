@@ -6,7 +6,7 @@ use crate::{
     crop::{CropType, Croppable, PointLocation},
     interpolate,
     intersection::{Intersection, IntersectionResult},
-    intersects::{intersects_sg_sg, Isxn, Opinion, SpecialCase},
+    intersects::{intersects_sg_sg, Isxn, IsxnSC, Opinion, SegmentsSC},
     obj2::ObjType2d,
     shapes::{point::Point, polygon::Polygon, ray::Ray},
     Object,
@@ -103,16 +103,12 @@ impl Segment {
         match intersects_sg_sg(self, other) {
             Err(_) => None,
             Ok(Isxn::None) => None,
-            Ok(Isxn::SpecialCase(SpecialCase::LineSegmentsAreColinear)) => {
-                Some(IntersectionResult::ErrSegmentsAreColinear)
-            }
-            Ok(Isxn::SpecialCase(SpecialCase::LineSegmentsAreTheSame)) => {
-                Some(IntersectionResult::ErrSegmentsAreTheSame)
-            }
-            Ok(Isxn::SpecialCase(SpecialCase::LineSegmentsAreTheSameButReversed)) => {
-                Some(IntersectionResult::ErrSegmentsAreTheSameButReversed)
-            }
-            Ok(Isxn::SpecialCase(_)) => None,
+            Ok(Isxn::SpecialCase(IsxnSC::Segments(case))) => Some(match case {
+                SegmentsSC::Same => IntersectionResult::ErrSegmentsAreTheSame,
+                SegmentsSC::SameButReversed => IntersectionResult::ErrSegmentsAreTheSameButReversed,
+                SegmentsSC::Colinear => IntersectionResult::ErrSegmentsAreColinear,
+            }),
+            Ok(Isxn::SpecialCase(_)) => panic!("?"),
             Ok(Isxn::Some(Opinion::Segment(pt, a_pct), Opinion::Segment(_, b_pct))) => {
                 Some(IntersectionResult::Ok(Intersection { pt, a_pct, b_pct }))
             }

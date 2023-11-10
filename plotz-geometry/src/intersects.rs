@@ -10,8 +10,16 @@ use anyhow::Result;
 use float_cmp::approx_eq;
 
 pub enum PolygonIntersectionResult {
-    AtPointWithIndex(usize),
-    AlongSegmentWithIndex(usize, Percent),
+    AtPoint(
+        // The index at which it occurred.
+        usize,
+    ),
+    AlongSegment(
+        // The index at which it occurred.
+        usize,
+        // The percentage of the way along this segment at which it occurred.
+        Percent,
+    ),
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
@@ -27,16 +35,26 @@ pub enum Opinion {
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
-pub enum SpecialCase {
-    PointsAreTheSame,
-    LineSegmentsAreTheSame,
-    LineSegmentsAreTheSameButReversed,
-    LineSegmentsAreColinear,
+pub enum PointsSC {
+    Same,
+}
+
+#[derive(PartialEq, Copy, Clone, Debug)]
+pub enum SegmentsSC {
+    Same,
+    SameButReversed,
+    Colinear,
+}
+
+#[derive(PartialEq, Copy, Clone, Debug)]
+pub enum IsxnSC {
+    Points(PointsSC),
+    Segments(SegmentsSC),
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum Isxn {
-    SpecialCase(SpecialCase),
+    SpecialCase(IsxnSC),
     // respects order of intersects() argument.
     Some(Opinion, Opinion),
     None,
@@ -66,7 +84,7 @@ pub fn intersects(a: &Obj2, b: &Obj2) -> Result<Isxn> {
 
 pub fn intersects_pt_pt(a: &Point, b: &Point) -> Result<Isxn> {
     if a == b {
-        Ok(Isxn::SpecialCase(SpecialCase::PointsAreTheSame))
+        Ok(Isxn::SpecialCase(IsxnSC::Points(PointsSC::Same)))
     } else {
         Ok(Isxn::None)
     }
@@ -99,13 +117,13 @@ pub fn intersects_sg_pt(s: &Segment, p: &Point) -> Result<Isxn> {
 
 pub fn intersects_sg_sg(sa: &Segment, sb: &Segment) -> Result<Isxn> {
     if sa == sb {
-        return Ok(Isxn::SpecialCase(SpecialCase::LineSegmentsAreTheSame));
+        return Ok(Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::Same)));
     }
 
     if *sa == sb.flip() {
-        return Ok(Isxn::SpecialCase(
-            SpecialCase::LineSegmentsAreTheSameButReversed,
-        ));
+        return Ok(Isxn::SpecialCase(IsxnSC::Segments(
+            SegmentsSC::SameButReversed,
+        )));
     }
 
     let sai_in_sb = matches!(intersects_sg_pt(sb, &sa.i)?, Isxn::Some(_, _));
@@ -118,7 +136,7 @@ pub fn intersects_sg_sg(sa: &Segment, sb: &Segment) -> Result<Isxn> {
             || (sbi_in_sa && sbf_in_sa)
             || ((sai_in_sb || saf_in_sb) && (sbi_in_sa || sbf_in_sa)))
     {
-        return Ok(Isxn::SpecialCase(SpecialCase::LineSegmentsAreColinear));
+        return Ok(Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::Colinear)));
     }
 
     let (p0_x, p0_y): (f64, f64) = sa.i.into();
@@ -178,7 +196,7 @@ mod tests {
             for i in &[*A, *B, *C] {
                 assert_eq!(
                     intersects_pt_pt(i, i)?,
-                    Isxn::SpecialCase(SpecialCase::PointsAreTheSame)
+                    Isxn::SpecialCase(IsxnSC::Points(PointsSC::Same))
                 );
             }
             Ok(())
@@ -232,7 +250,7 @@ mod tests {
                 for j in &[*D, *E, *F] {
                     assert_eq!(
                         intersects_sg_sg(&Segment(*i, *j), &Segment(*i, *j))?,
-                        Isxn::SpecialCase(SpecialCase::LineSegmentsAreTheSame)
+                        Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::Same))
                     );
                 }
             }
@@ -245,7 +263,7 @@ mod tests {
                 for j in &[*D, *E, *F] {
                     assert_eq!(
                         intersects_sg_sg(&Segment(*i, *j), &Segment(*j, *i))?,
-                        Isxn::SpecialCase(SpecialCase::LineSegmentsAreTheSameButReversed)
+                        Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::SameButReversed))
                     );
                 }
             }
@@ -269,7 +287,7 @@ mod tests {
                     ] {
                         assert_eq!(
                             intersects_sg_sg(sa, sb)?,
-                            Isxn::SpecialCase(SpecialCase::LineSegmentsAreColinear)
+                            Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::Colinear))
                         );
                     }
                 }
