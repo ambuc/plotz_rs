@@ -86,6 +86,16 @@ where
     }
 }
 
+impl<T1, T2> From<Point> for (T1, T2)
+where
+    T1: From<f64>,
+    T2: From<f64>,
+{
+    fn from(value: Point) -> Self {
+        (value.x.into(), value.y.into())
+    }
+}
+
 /// An alternate constructor for points which accepts an angle in radians.
 #[allow(non_snake_case)]
 pub fn PolarPt<T>(r: T, theta: T) -> Point
