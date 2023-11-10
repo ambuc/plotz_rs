@@ -28,8 +28,8 @@ impl Intersection {
     pub fn new(pt: Point, a: f64, b: f64) -> Option<Intersection> {
         Some(Intersection {
             pt,
-            a_pct: Percent::new(a)?,
-            b_pct: Percent::new(b)?,
+            a_pct: Percent::new(a).ok()?,
+            b_pct: Percent::new(b).ok()?,
         })
     }
 

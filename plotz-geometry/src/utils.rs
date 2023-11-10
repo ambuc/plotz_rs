@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
 
 #[derive(Debug, Copy, Clone)]
@@ -37,12 +38,12 @@ pub enum Percent {
     One,
 }
 impl Percent {
-    pub fn new(f: f64) -> Option<Percent> {
+    pub fn new(f: f64) -> Result<Percent> {
         match f {
-            f if approx_eq!(f64, f, 0.0) => Some(Percent::Zero),
-            f if approx_eq!(f64, f, 1.0) => Some(Percent::One),
-            f if (0.0..=1.0).contains(&f) => Some(Percent::Val(f)),
-            _ => None,
+            f if approx_eq!(f64, f, 0.0) => Ok(Percent::Zero),
+            f if approx_eq!(f64, f, 1.0) => Ok(Percent::One),
+            f if (0.0..=1.0).contains(&f) => Ok(Percent::Val(f)),
+            _ => Err(anyhow!("f not in 0.0..=1.0")),
         }
     }
 

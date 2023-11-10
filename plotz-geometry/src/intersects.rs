@@ -6,7 +6,7 @@ use crate::{
     shapes::{point::Point, segment::Segment},
     utils::Percent,
 };
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use float_cmp::approx_eq;
 
 pub enum PolygonIntersectionResult {
@@ -126,14 +126,8 @@ pub fn intersects_sg_sg(sa: &Segment, sb: &Segment) -> Result<Isxn> {
     if (0_f64..=1_f64).contains(&s) && (0_f64..=1_f64).contains(&t) {
         let pt = Point(p0_x + (t * s1_x), p0_y + (t * s1_y));
         return Ok(Isxn::Some(
-            Opinion::Segment(
-                Percent::new(interpolate_2d_checked(sa.i, sa.f, pt)?)
-                    .ok_or(anyhow!("pct_a not in [0,1]?"))?,
-            ),
-            Opinion::Segment(
-                Percent::new(interpolate_2d_checked(sb.i, sb.f, pt)?)
-                    .ok_or(anyhow!("pct_a not in [0,1]?"))?,
-            ),
+            Opinion::Segment(Percent::new(interpolate_2d_checked(sa.i, sa.f, pt)?)?),
+            Opinion::Segment(Percent::new(interpolate_2d_checked(sb.i, sb.f, pt)?)?),
         ));
     }
 
