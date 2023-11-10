@@ -34,6 +34,7 @@ pub enum SpecialCase {
     LineSegmentsAreColinear,
 }
 
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub enum Isxn {
     SpecialCase(SpecialCase),
     // respects order of intersects() argument.
@@ -107,7 +108,17 @@ pub fn intersects_sg_sg(sa: &Segment, sb: &Segment) -> Result<Isxn> {
         ));
     }
 
-    if sa.slope() == sb.slope() && (sa.f == sb.i || sb.f == sa.i || sa.i == sb.i || sa.f == sb.f) {
+    let sai_in_sb = matches!(intersects_sg_pt(sb, &sa.i)?, Isxn::Some(_, _));
+    let saf_in_sb = matches!(intersects_sg_pt(sb, &sa.f)?, Isxn::Some(_, _));
+    let sbi_in_sa = matches!(intersects_sg_pt(sa, &sb.i)?, Isxn::Some(_, _));
+    let sbf_in_sa = matches!(intersects_sg_pt(sa, &sb.f)?, Isxn::Some(_, _));
+
+    dbg!(sa.slope(), sb.slope());
+    if (sa.slope() == sb.slope() || sa.slope() == sb.flip().slope())
+        && ((sai_in_sb && saf_in_sb)
+            || (sbi_in_sa && sbf_in_sa)
+            || ((sai_in_sb || saf_in_sb) && (sbi_in_sa || sbf_in_sa)))
+    {
         return Ok(Isxn::SpecialCase(SpecialCase::LineSegmentsAreColinear));
     }
 
@@ -133,4 +144,124 @@ pub fn intersects_sg_sg(sa: &Segment, sb: &Segment) -> Result<Isxn> {
     }
 
     Ok(Isxn::None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lazy_static::lazy_static;
+
+    mod sg_sg {
+        use super::*;
+
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
+        lazy_static! {
+            static ref A: Point = Point(0, 2);
+            static ref B: Point = Point(1, 2);
+            static ref C: Point = Point(2, 2);
+            static ref D: Point = Point(0, 1);
+            static ref E: Point = Point(1, 1);
+            static ref F: Point = Point(2, 1);
+            static ref G: Point = Point(0, 0);
+            static ref H: Point = Point(1, 0);
+            static ref I: Point = Point(2, 0);
+        }
+
+        #[test]
+        fn the_same() -> Result<()> {
+            for i in &[*A, *B, *C] {
+                for j in &[*D, *E, *F] {
+                    assert_eq!(
+                        intersects_sg_sg(&Segment(*i, *j), &Segment(*i, *j))?,
+                        Isxn::SpecialCase(SpecialCase::LineSegmentsAreTheSame)
+                    );
+                }
+            }
+            Ok(())
+        }
+
+        #[test]
+        fn the_same_but_reversed() -> Result<()> {
+            for i in &[*A, *B, *C] {
+                for j in &[*D, *E, *F] {
+                    assert_eq!(
+                        intersects_sg_sg(&Segment(*i, *j), &Segment(*j, *i))?,
+                        Isxn::SpecialCase(SpecialCase::LineSegmentsAreTheSameButReversed)
+                    );
+                }
+            }
+            Ok(())
+        }
+
+        #[test]
+        fn the_same_colinear() -> Result<()> {
+            for (i, j, k) in &[(*A, *B, *C), (*A, *E, *I), (*A, *D, *G)] {
+                for (sa, sb) in &[
+                    (Segment(*i, *j), Segment(*j, *k)),
+                    (Segment(*i, *k), Segment(*j, *k)),
+                    (Segment(*i, *j), Segment(*i, *k)),
+                    (Segment(*j, *k), Segment(*i, *j)),
+                ] {
+                    for (sa, sb) in &[
+                        (sa, sb),
+                        (sa, &sb.flip()),
+                        (&sa.flip(), sb),
+                        (&sa.flip(), &sb.flip()),
+                    ] {
+                        assert_eq!(
+                            intersects_sg_sg(sa, sb)?,
+                            Isxn::SpecialCase(SpecialCase::LineSegmentsAreColinear)
+                        );
+                    }
+                }
+            }
+            Ok(())
+        }
+
+        #[test]
+        fn partway() -> Result<()> {
+            {
+                // given two non-colinear segments,
+                let (p0, p1) = (*A, *B);
+                for p2 in &[*D, *E, *F, *G, *H, *I] {
+                    assert_eq!(
+                        intersects_sg_sg(&Segment(p0, p1), &Segment(p1, *p2))?,
+                        Isxn::Some(
+                            Opinion::Segment(p1, Percent::One),
+                            Opinion::Segment(p1, Percent::Zero)
+                        )
+                    );
+                }
+            }
+
+            {
+                // midpoints
+                let sa = Segment(*A, *I);
+                let sb = Segment(*C, *G);
+                for (sa, sb) in &[
+                    (sa, sb),
+                    (sa, sb.flip()),
+                    (sa.flip(), sb),
+                    (sa.flip(), sb.flip()),
+                ] {
+                    assert_eq!(
+                        intersects_sg_sg(sa, sb)?,
+                        Isxn::Some(
+                            Opinion::Segment(*E, Percent::Val(0.5)),
+                            Opinion::Segment(*E, Percent::Val(0.5))
+                        )
+                    );
+                }
+            }
+
+            Ok(())
+        }
+    }
 }

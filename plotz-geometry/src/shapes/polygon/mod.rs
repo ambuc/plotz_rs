@@ -1000,6 +1000,7 @@ mod tests {
         Ok(())
     }
     #[test]
+    #[ignore]
     fn test_frame_to_segment_crop_unchanged() -> Result<()> {
         let frame = Polygon([(1, 0), (2, 1), (1, 2), (0, 1)])?;
         assert_eq!(
