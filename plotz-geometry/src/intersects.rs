@@ -150,28 +150,81 @@ mod tests {
     use super::*;
     use lazy_static::lazy_static;
 
-    mod sg_sg {
+    //   ^
+    //   |
+    //   A  B  C
+    //   |
+    //   D  E  F
+    //   |
+    // --G--H--I->
+    //   |
+    lazy_static! {
+        static ref A: Point = Point(0, 2);
+        static ref B: Point = Point(1, 2);
+        static ref C: Point = Point(2, 2);
+        static ref D: Point = Point(0, 1);
+        static ref E: Point = Point(1, 1);
+        static ref F: Point = Point(2, 1);
+        static ref G: Point = Point(0, 0);
+        static ref H: Point = Point(1, 0);
+        static ref I: Point = Point(2, 0);
+    }
+
+    mod pt_pt {
         use super::*;
 
-        //   ^
-        //   |
-        //   A  B  C
-        //   |
-        //   D  E  F
-        //   |
-        // --G--H--I->
-        //   |
-        lazy_static! {
-            static ref A: Point = Point(0, 2);
-            static ref B: Point = Point(1, 2);
-            static ref C: Point = Point(2, 2);
-            static ref D: Point = Point(0, 1);
-            static ref E: Point = Point(1, 1);
-            static ref F: Point = Point(2, 1);
-            static ref G: Point = Point(0, 0);
-            static ref H: Point = Point(1, 0);
-            static ref I: Point = Point(2, 0);
+        #[test]
+        fn the_same() -> Result<()> {
+            for i in &[*A, *B, *C] {
+                assert_eq!(
+                    intersects_pt_pt(i, i)?,
+                    Isxn::SpecialCase(SpecialCase::PointsAreTheSame)
+                );
+            }
+            Ok(())
         }
+
+        #[test]
+        fn not_the_same() -> Result<()> {
+            for i in &[*A, *B, *C] {
+                assert_eq!(intersects_pt_pt(i, &D)?, Isxn::None,);
+            }
+            Ok(())
+        }
+    }
+
+    mod sg_pt {
+        use super::*;
+
+        #[test]
+        fn at_start_or_end() -> Result<()> {
+            for (i, f) in &[(*A, *B), (*A, *E), (*A, *G)] {
+                assert_eq!(
+                    intersects_sg_pt(&Segment(*i, *f), i)?,
+                    Isxn::Some(Opinion::Segment(*i, Percent::Zero), Opinion::Point)
+                );
+                assert_eq!(
+                    intersects_sg_pt(&Segment(*i, *f), f)?,
+                    Isxn::Some(Opinion::Segment(*f, Percent::One), Opinion::Point)
+                );
+            }
+            Ok(())
+        }
+
+        #[test]
+        fn halfway_along() -> Result<()> {
+            for (i, m, f) in &[(*A, *B, *C), (*A, *E, *I), (*A, *D, *G)] {
+                assert_eq!(
+                    intersects_sg_pt(&Segment(*i, *f), m)?,
+                    Isxn::Some(Opinion::Segment(*m, Percent::Val(0.5)), Opinion::Point)
+                );
+            }
+            Ok(())
+        }
+    }
+
+    mod sg_sg {
+        use super::*;
 
         #[test]
         fn the_same() -> Result<()> {
