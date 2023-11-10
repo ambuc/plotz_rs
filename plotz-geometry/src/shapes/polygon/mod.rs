@@ -177,7 +177,7 @@ impl Polygon {
         for (idx, seg) in self.to_segments().iter().enumerate() {
             match intersects_sg_pt(seg, other)? {
                 Isxn::None => {}
-                Isxn::Some(Opinion::Segment(Percent::Val(_)), Opinion::Point) => {
+                Isxn::Some(Opinion::Segment(_, Percent::Val(_)), Opinion::Point) => {
                     return Ok(PointLocation::OnSegment(idx))
                 }
                 _ => return Err(anyhow!("not sure what is going on here?")),

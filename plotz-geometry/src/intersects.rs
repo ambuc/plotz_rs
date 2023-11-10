@@ -17,7 +17,12 @@ pub enum PolygonIntersectionResult {
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum Opinion {
     Point,
-    Segment(Percent),
+    Segment(
+        // The point at which it occurred.
+        Point,
+        // The percentage of the way along this segment which it occurred.
+        Percent,
+    ),
     Polygon(),
 }
 
@@ -68,16 +73,22 @@ pub fn intersects_pt_pt(a: &Point, b: &Point) -> Result<Isxn> {
 
 pub fn intersects_sg_pt(s: &Segment, p: &Point) -> Result<Isxn> {
     if s.i == *p {
-        Ok(Isxn::Some(Opinion::Segment(Percent::Zero), Opinion::Point))
+        Ok(Isxn::Some(
+            Opinion::Segment(*p, Percent::Zero),
+            Opinion::Point,
+        ))
     } else if s.f == *p {
-        Ok(Isxn::Some(Opinion::Segment(Percent::One), Opinion::Point))
+        Ok(Isxn::Some(
+            Opinion::Segment(*p, Percent::One),
+            Opinion::Point,
+        ))
     } else if approx_eq!(
         f64,
         s.abs(),
         Segment(s.i, *p).abs() + Segment(*p, s.f).abs()
     ) {
         Ok(Isxn::Some(
-            Opinion::Segment(interpolate_2d_checked(s.i, s.f, *p)?),
+            Opinion::Segment(*p, interpolate_2d_checked(s.i, s.f, *p)?),
             Opinion::Point,
         ))
     } else {
@@ -96,17 +107,7 @@ pub fn intersects_sg_sg(sa: &Segment, sb: &Segment) -> Result<Isxn> {
         ));
     }
 
-    let sai_in_sb = matches!(intersects_sg_pt(sb, &sa.i)?, Isxn::Some(_, _));
-    let saf_in_sb = matches!(intersects_sg_pt(sb, &sa.f)?, Isxn::Some(_, _));
-    let sbi_in_sa = matches!(intersects_sg_pt(sa, &sb.i)?, Isxn::Some(_, _));
-    let sbf_in_sa = matches!(intersects_sg_pt(sa, &sb.f)?, Isxn::Some(_, _));
-
-    #[allow(clippy::nonminimal_bool)]
-    if (sai_in_sb && saf_in_sb)
-        || (sbi_in_sa && sbf_in_sa)
-        || (saf_in_sb && sbi_in_sa)
-        || (sbf_in_sa && saf_in_sb)
-    {
+    if sa.slope() == sb.slope() && (sa.f == sb.i || sb.f == sa.i || sa.i == sb.i || sa.f == sb.f) {
         return Ok(Isxn::SpecialCase(SpecialCase::LineSegmentsAreColinear));
     }
 
@@ -126,8 +127,8 @@ pub fn intersects_sg_sg(sa: &Segment, sb: &Segment) -> Result<Isxn> {
     if (0_f64..=1_f64).contains(&s) && (0_f64..=1_f64).contains(&t) {
         let pt = Point(p0_x + (t * s1_x), p0_y + (t * s1_y));
         return Ok(Isxn::Some(
-            Opinion::Segment(interpolate_2d_checked(sa.i, sa.f, pt)?),
-            Opinion::Segment(interpolate_2d_checked(sb.i, sb.f, pt)?),
+            Opinion::Segment(pt, interpolate_2d_checked(sa.i, sa.f, pt)?),
+            Opinion::Segment(pt, interpolate_2d_checked(sb.i, sb.f, pt)?),
         ));
     }
 

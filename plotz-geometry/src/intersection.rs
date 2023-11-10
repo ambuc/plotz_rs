@@ -19,8 +19,8 @@ use std::fmt::Debug;
 #[derive(PartialEq, Copy, Clone)]
 pub struct Intersection {
     pub pt: Point,
-    a_pct: Percent,
-    b_pct: Percent,
+    pub a_pct: Percent,
+    pub b_pct: Percent,
 }
 
 impl Intersection {

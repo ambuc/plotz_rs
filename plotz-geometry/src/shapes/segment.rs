@@ -5,8 +5,8 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLocation},
     interpolate,
-    interpolate::interpolate_2d_checked,
     intersection::{Intersection, IntersectionResult},
+    intersects::{intersects_sg_sg, Isxn, Opinion, SpecialCase},
     obj2::ObjType2d,
     shapes::{point::Point, polygon::Polygon, ray::Ray},
     Object,
@@ -99,57 +99,25 @@ impl Segment {
     }
 
     /// Returns true if one line segment intersects another.
-    /// If two line segments share a point, returns false.
-    /// If two line segments are parallel and overlapping, returns false.
-    /// If two line segments are the same, returns false.
     pub fn intersects(&self, other: &Segment) -> Option<IntersectionResult> {
-        if self == other {
-            Some(IntersectionResult::ErrSegmentsAreTheSame)
-        } else if *self == Segment(other.f, other.i) {
-            Some(IntersectionResult::ErrSegmentsAreTheSameButReversed)
-        } else if self.slope() == other.slope()
-            && (self.f == other.i || other.f == self.i || self.i == other.i || self.f == other.f)
-        {
-            Some(IntersectionResult::ErrSegmentsAreColinear)
-        } else if let Some(pt) = self.get_line_intersection_inner(
-            (self.i.x, self.i.y),
-            (self.f.x, self.f.y),
-            (other.i.x, other.i.y),
-            (other.f.x, other.f.y),
-        ) {
-            Some(IntersectionResult::Ok(Intersection::new(
-                pt,
-                interpolate_2d_checked(self.i, self.f, pt).ok()?.as_f64(),
-                interpolate_2d_checked(other.i, other.f, pt).ok()?.as_f64(),
-            )?))
-        } else {
-            None
+        match intersects_sg_sg(self, other) {
+            Err(_) => None,
+            Ok(Isxn::None) => None,
+            Ok(Isxn::SpecialCase(SpecialCase::LineSegmentsAreColinear)) => {
+                Some(IntersectionResult::ErrSegmentsAreColinear)
+            }
+            Ok(Isxn::SpecialCase(SpecialCase::LineSegmentsAreTheSame)) => {
+                Some(IntersectionResult::ErrSegmentsAreTheSame)
+            }
+            Ok(Isxn::SpecialCase(SpecialCase::LineSegmentsAreTheSameButReversed)) => {
+                Some(IntersectionResult::ErrSegmentsAreTheSameButReversed)
+            }
+            Ok(Isxn::SpecialCase(_)) => None,
+            Ok(Isxn::Some(Opinion::Segment(pt, a_pct), Opinion::Segment(_, b_pct))) => {
+                Some(IntersectionResult::Ok(Intersection { pt, a_pct, b_pct }))
+            }
+            _ => None,
         }
-    }
-
-    /// If two line segments are parallel and overlapping, returns None.
-    /// If two line segments are the same, returns None.
-    fn get_line_intersection_inner(
-        &self,
-        (p0_x, p0_y): (f64, f64),
-        (p1_x, p1_y): (f64, f64),
-        (p2_x, p2_y): (f64, f64),
-        (p3_x, p3_y): (f64, f64),
-    ) -> Option<Point> {
-        let s1_x = p1_x - p0_x;
-        let s1_y = p1_y - p0_y;
-        let s2_x = p3_x - p2_x;
-        let s2_y = p3_y - p2_y;
-
-        let s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x * s2_y);
-        let t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y);
-
-        if (0_f64..=1_f64).contains(&s) && (0_f64..=1_f64).contains(&t) {
-            let i_x = p0_x + (t * s1_x);
-            let i_y = p0_y + (t * s1_y);
-            return Some(Point(i_x, i_y));
-        }
-        None
     }
 
     /// Returns the absolute value of the length of this segment.
