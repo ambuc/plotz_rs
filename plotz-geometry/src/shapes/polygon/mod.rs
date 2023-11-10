@@ -9,11 +9,10 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLocation},
     intersection::IntersectionResult,
+    intersects::{intersects_sg_pt, Isxn, Opinion},
     obj2::ObjType2d,
-    shapes::{
-        point::Point,
-        segment::{Segment, SegmentContainsPoint},
-    },
+    shapes::{point::Point, segment::Segment},
+    utils::Percent,
     *,
 };
 use anyhow::{anyhow, Context, Result};
@@ -176,14 +175,12 @@ impl Polygon {
             }
         }
         for (idx, seg) in self.to_segments().iter().enumerate() {
-            match seg.contains_point(other) {
-                Some(SegmentContainsPoint::Within) => {
-                    return Ok(PointLocation::OnSegment(idx));
+            match intersects_sg_pt(seg, other)? {
+                Isxn::None => {}
+                Isxn::Some(Opinion::Segment(Percent::Val(_)), Opinion::Point) => {
+                    return Ok(PointLocation::OnSegment(idx))
                 }
-                Some(SegmentContainsPoint::AtStart | SegmentContainsPoint::AtEnd) => {
-                    return Err(anyhow!("not sure what is going on here"));
-                }
-                _ => {}
+                _ => return Err(anyhow!("not sure what is going on here?")),
             }
         }
 

@@ -29,64 +29,56 @@ pub enum SpecialCase {
     LineSegmentsAreColinear,
 }
 
-pub enum IntersectionResult {
+pub enum Isxn {
     SpecialCase(SpecialCase),
     // respects order of intersects() argument.
     Some(Opinion, Opinion),
     None,
 }
 
-impl IntersectionResult {
-    fn flip(self) -> IntersectionResult {
+impl Isxn {
+    fn flip(self) -> Isxn {
         match self {
-            IntersectionResult::Some(a, b) => IntersectionResult::Some(b, a),
+            Isxn::Some(a, b) => Isxn::Some(b, a),
             _ => self,
         }
     }
 }
 
-pub fn intersects(a: &Obj2, b: &Obj2) -> Result<IntersectionResult> {
+pub fn intersects(a: &Obj2, b: &Obj2) -> Result<Isxn> {
     match (a, b) {
         (Obj2::Point(pa), Obj2::Point(pb)) => intersects_pt_pt(pa, pb),
 
         (Obj2::Segment(s), Obj2::Point(p)) => intersects_sg_pt(s, p),
-        (Obj2::Point(p), Obj2::Segment(s)) => intersects_sg_pt(s, p).map(IntersectionResult::flip),
+        (Obj2::Point(p), Obj2::Segment(s)) => intersects_sg_pt(s, p).map(Isxn::flip),
 
         _ => unimplemented!(),
     }
 }
 
-fn intersects_pt_pt(a: &Point, b: &Point) -> Result<IntersectionResult> {
+pub fn intersects_pt_pt(a: &Point, b: &Point) -> Result<Isxn> {
     if a == b {
-        Ok(IntersectionResult::SpecialCase(
-            SpecialCase::PointsAreTheSame,
-        ))
+        Ok(Isxn::SpecialCase(SpecialCase::PointsAreTheSame))
     } else {
-        Ok(IntersectionResult::None)
+        Ok(Isxn::None)
     }
 }
 
-fn intersects_sg_pt(s: &Segment, p: &Point) -> Result<IntersectionResult> {
+pub fn intersects_sg_pt(s: &Segment, p: &Point) -> Result<Isxn> {
     if s.i == *p {
-        Ok(IntersectionResult::Some(
-            Opinion::Segment(Percent::Zero),
-            Opinion::Point,
-        ))
+        Ok(Isxn::Some(Opinion::Segment(Percent::Zero), Opinion::Point))
     } else if s.f == *p {
-        Ok(IntersectionResult::Some(
-            Opinion::Segment(Percent::One),
-            Opinion::Point,
-        ))
+        Ok(Isxn::Some(Opinion::Segment(Percent::One), Opinion::Point))
     } else if approx_eq!(
         f64,
         s.abs(),
         Segment(s.i, *p).abs() + Segment(*p, s.f).abs()
     ) {
-        Ok(IntersectionResult::Some(
+        Ok(Isxn::Some(
             Opinion::Segment(Percent::Val(interpolate_2d_checked(s.i, s.f, *p)?)),
             Opinion::Point,
         ))
     } else {
-        Ok(IntersectionResult::None)
+        Ok(Isxn::None)
     }
 }

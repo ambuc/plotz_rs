@@ -12,7 +12,6 @@ use crate::{
     Object,
 };
 use anyhow::{anyhow, Result};
-use float_cmp::approx_eq;
 use float_ord::FloatOrd;
 use std::{
     cmp::PartialOrd,
@@ -89,23 +88,6 @@ impl Segment {
     pub fn rotate(&mut self, about: &Point, by: f64) {
         self.i.rotate_inplace(about, by);
         self.f.rotate_inplace(about, by);
-    }
-
-    /// Returns true if this line segment has point |other| along it.
-    pub fn contains_point(&self, other: &Point) -> Option<SegmentContainsPoint> {
-        if *other == self.i {
-            return Some(SegmentContainsPoint::AtStart);
-        }
-        if *other == self.f {
-            return Some(SegmentContainsPoint::AtEnd);
-        }
-        // if the len of the (i -> f) is the same as the len of (i -> pt -> f), then pt is on i->f.
-        let d1: f64 = self.abs();
-        let d2: f64 = Segment(self.i, *other).abs() + Segment(self.f, *other).abs();
-        if approx_eq!(f64, d1, d2) {
-            return Some(SegmentContainsPoint::Within);
-        }
-        None
     }
 
     /// sometimes you just have to flip it.
@@ -573,25 +555,6 @@ mod tests {
         assert_eq!(Segment((0, 0), (1, 1)).abs(), 2.0_f64.sqrt());
         assert_eq!(Segment((1, 1), (1, 1)).abs(), 0.0);
         assert_eq!(Segment((-1, -1), (1, 1)).abs(), 2.0 * 2.0_f64.sqrt());
-    }
-
-    #[test]
-    fn test_line_segment_contains_pt() {
-        //   ^
-        //   |
-        //   A  B  C
-        //   |
-        //   D  E  F
-        //   |
-        // --G--H--I->
-        //   |
-        let a = Point(0, 2);
-        let c = Point(2, 2);
-
-        assert_eq!(
-            Segment(a, c).contains_point(&a).unwrap(),
-            SegmentContainsPoint::AtStart
-        );
     }
     #[test]
     fn test_segment() {
