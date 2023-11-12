@@ -47,6 +47,14 @@ impl Isxn {
 }
 
 pub fn obj_intersects_obj(a: &Obj2, b: &Obj2) -> Result<Isxn> {
+    //
+    //           || pt | sg | ml |
+    // ==========++====+====+====+==
+    //     point || ✔️  | \  | \  |
+    //   segment || ✔️  | ✔️  | \  |
+    // multiline || ✔️  | ~  |    |
+    // ==========++====+====+====+==
+    //
     match (a, b) {
         (Obj2::Point(pa), Obj2::Point(pb)) => point_intersects_point(pa, pb),
 
@@ -54,6 +62,16 @@ pub fn obj_intersects_obj(a: &Obj2, b: &Obj2) -> Result<Isxn> {
         (Obj2::Point(p), Obj2::Segment(s)) => segment_intersects_point(s, p).map(Isxn::flip),
 
         (Obj2::Segment(sa), Obj2::Segment(sb)) => segment_intersects_segment(sa, sb),
+
+        (Obj2::Multiline(ml), Obj2::Point(p)) => multiline_intersects_point(ml, p),
+        (Obj2::Point(p), Obj2::Multiline(ml)) => multiline_intersects_point(ml, p).map(Isxn::flip),
+
+        (Obj2::Multiline(ml), Obj2::Segment(sg)) => multiline_intersects_segment(ml, sg),
+        (Obj2::Segment(sg), Obj2::Multiline(ml)) => {
+            multiline_intersects_segment(ml, sg).map(Isxn::flip)
+        }
+
+        (Obj2::Multiline(ml1), Obj2::Multiline(ml2)) => multiline_intersects_multiline(ml1, ml2),
 
         _ => unimplemented!(),
     }
@@ -187,6 +205,16 @@ pub fn multiline_intersects_point(ml: &Multiline, p: &Point) -> Result<Isxn> {
         [] => Ok(Isxn::None),
         _ => Ok(Isxn::Some(Opinion::Multiline(sg_ops), Opinion::Point)),
     }
+}
+
+pub fn multiline_intersects_segment(_: &Multiline, _: &Segment) -> Result<Isxn> {
+    unimplemented!()
+    //
+}
+
+pub fn multiline_intersects_multiline(_: &Multiline, _: &Multiline) -> Result<Isxn> {
+    unimplemented!()
+    //
 }
 
 #[cfg(test)]
