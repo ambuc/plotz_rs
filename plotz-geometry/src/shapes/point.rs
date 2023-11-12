@@ -178,7 +178,7 @@ impl Point {
 
     /// Distance between two points.
     pub fn dist(&self, other: &Point) -> f64 {
-        Segment(*self, *other).abs()
+        Segment(*self, *other).length()
     }
 
     /// Average of two points.

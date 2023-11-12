@@ -103,8 +103,8 @@ pub fn intersects_sg_pt(s: &Segment, p: &Point) -> Result<Isxn> {
         ))
     } else if approx_eq!(
         f64,
-        s.abs(),
-        Segment(s.i, *p).abs() + Segment(*p, s.f).abs()
+        s.length(),
+        Segment(s.i, *p).length() + Segment(*p, s.f).length()
     ) {
         Ok(Isxn::Some(
             Opinion::Segment(*p, interpolate_2d_checked(s.i, s.f, *p)?),

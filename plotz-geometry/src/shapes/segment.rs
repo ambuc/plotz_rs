@@ -105,7 +105,7 @@ impl Segment {
         }
     }
 
-    pub fn abs(&self) -> f64 {
+    pub fn length(&self) -> f64 {
         let two = 2_f64;
         ((self.f.y - self.i.y).powf(two) + (self.f.x - self.i.x).powf(two)).sqrt()
     }
@@ -397,10 +397,10 @@ mod tests {
 
     #[test]
     fn test_abs() {
-        assert_eq!(Segment((0, 0), (0, 1)).abs(), 1.0);
-        assert_eq!(Segment((0, 0), (1, 1)).abs(), 2.0_f64.sqrt());
-        assert_eq!(Segment((1, 1), (1, 1)).abs(), 0.0);
-        assert_eq!(Segment((-1, -1), (1, 1)).abs(), 2.0 * 2.0_f64.sqrt());
+        assert_eq!(Segment((0, 0), (0, 1)).length(), 1.0);
+        assert_eq!(Segment((0, 0), (1, 1)).length(), 2.0_f64.sqrt());
+        assert_eq!(Segment((1, 1), (1, 1)).length(), 0.0);
+        assert_eq!(Segment((-1, -1), (1, 1)).length(), 2.0 * 2.0_f64.sqrt());
     }
     #[test]
     fn test_segment() {

@@ -61,7 +61,7 @@ impl Layout {
             for segment in placed_tile.pg.to_segments() {
                 // both rays which emit from the midpoint.
                 let (ray_a, ray_b) = segment.rays_perpendicular_both();
-                let offset = segment.abs() * 0.1;
+                let offset = segment.length() * 0.1;
                 // if there is any point adjacent to the segment (a tiny offset away)
                 for pt in [ray_a.to_sg(offset).f, ray_b.to_sg(offset).f] {
                     // for which it is outside of _ALL_ known placed tiles
