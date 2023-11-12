@@ -208,8 +208,17 @@ pub fn multiline_intersects_point(ml: &Multiline, p: &Point) -> Result<Isxn> {
 }
 
 pub fn multiline_intersects_segment(_: &Multiline, _: &Segment) -> Result<Isxn> {
+    // let mut sg_ops: Vec<MultilineOpinion> = vec![];
+
+    // for sg in ml.to_segments().enumerate() {
+
+    // }
+    // sg_ops.dedup();
+    // match sg_ops[..] {
+    //     [] => Ok(Isxn::None),
+    //     _ => Ok(Isxn::Some(Opinion::Multiline(sg_ops), Opinion::Segment)),
+    // }
     unimplemented!()
-    //
 }
 
 pub fn multiline_intersects_multiline(_: &Multiline, _: &Multiline) -> Result<Isxn> {
@@ -474,6 +483,49 @@ mod tests {
                 assert_eq!(multiline_intersects_point(&ml, unrelated)?, Isxn::None);
             }
 
+            Ok(())
+        }
+    }
+
+    mod ml_sg {
+        use super::*;
+
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
+
+        #[test]
+        fn no_intersections() -> Result<()> {
+            // let ml = Multiline([*A, *C, *I]);
+            // let sg = Segment(*G, *H);
+            // assert_eq!(multiline_intersects_segment(&ml, &sg)?, Isxn::None);
+            Ok(())
+        }
+
+        #[test]
+        fn one_intersection_at_segment_start() -> Result<()> {
+            Ok(())
+        }
+        #[test]
+        fn one_intersection_at_segment_midpoint() -> Result<()> {
+            Ok(())
+        }
+        #[test]
+        fn one_intersection_at_segment_end() -> Result<()> {
+            Ok(())
+        }
+        #[test]
+        fn two_intersections_at_segment_bookends() -> Result<()> {
+            Ok(())
+        }
+
+        #[test]
+        fn two_intersections_along_segment() -> Result<()> {
             Ok(())
         }
     }

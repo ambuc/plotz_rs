@@ -16,6 +16,7 @@ pub enum MultilineOpinion {
 #[derive(PartialEq, Clone, Debug)]
 pub enum Opinion {
     Point,
+    // TODO(ambuc): extract into SegmentOpinion; vectorize.
     Segment {
         at_point: Point,
         percent_along: Percent,
