@@ -159,7 +159,7 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
 
 pub fn multiline_intersects_point(ml: &Multiline, p: &Point) -> Result<Isxn> {
     let mut sg_ops: Vec<MultilineOpinion> = vec![];
-    for (idx, sg) in ml.to_segments().iter().enumerate() {
+    for (index, sg) in ml.to_segments().iter().enumerate() {
         if let Isxn::Some(
             Opinion::Segment {
                 at_point,
@@ -168,13 +168,21 @@ pub fn multiline_intersects_point(ml: &Multiline, p: &Point) -> Result<Isxn> {
             _,
         ) = segment_intersects_point(sg, p)?
         {
-            sg_ops.push(MultilineOpinion::AlongSharedSegment {
-                index: idx,
-                at_point,
-                percent_along,
+            sg_ops.push(match percent_along {
+                Percent::Zero => MultilineOpinion::AtPoint { index, at_point },
+                Percent::Val(_) => MultilineOpinion::AlongSharedSegment {
+                    index,
+                    at_point,
+                    percent_along,
+                },
+                Percent::One => MultilineOpinion::AtPoint {
+                    index: index + 1,
+                    at_point,
+                },
             });
         }
     }
+    sg_ops.dedup();
     match sg_ops[..] {
         [] => Ok(Isxn::None),
         _ => Ok(Isxn::Some(Opinion::Multiline(sg_ops), Opinion::Point)),
@@ -384,6 +392,61 @@ mod tests {
     }
 
     mod ml_pt {
-        // TODO(ambuc): write tests for multiline_intersects_point.
+        use super::*;
+
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
+        #[test]
+        fn test_along_two_segment_multiline() -> Result<()> {
+            for ((start, midpoint1, pivot, midpoint2, end), unrelated) in &[
+                ((*G, *H, *I, *F, *C), *A),
+                ((*G, *D, *A, *B, *C), *I),
+                ((*C, *B, *A, *D, *G), *I),
+                ((*G, *E, *C, *B, *A), *D),
+            ] {
+                let ml = Multiline([*start, *pivot, *end]);
+
+                // check points
+
+                for (pt, idx) in [(start, 0), (pivot, 1), (end, 2)] {
+                    assert_eq!(
+                        multiline_intersects_point(&ml, &pt)?,
+                        Isxn::Some(
+                            Opinion::Multiline(vec![MultilineOpinion::AtPoint {
+                                index: idx,
+                                at_point: *pt
+                            }]),
+                            Opinion::Point
+                        )
+                    );
+                }
+
+                // check segments
+
+                for (pt, idx) in [(midpoint1, 0), (midpoint2, 1)] {
+                    assert_eq!(
+                        multiline_intersects_point(&ml, &pt)?,
+                        Isxn::Some(
+                            Opinion::Multiline(vec![MultilineOpinion::AlongSharedSegment {
+                                index: idx,
+                                at_point: *pt,
+                                percent_along: Percent::Val(0.5)
+                            }]),
+                            Opinion::Point
+                        ),
+                    );
+                }
+
+                assert_eq!(multiline_intersects_point(&ml, unrelated)?, Isxn::None);
+            }
+
+            Ok(())
+        }
     }
 }
