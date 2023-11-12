@@ -5,7 +5,7 @@ pub mod specialcase;
 
 use self::{
     opinion::Opinion,
-    specialcase::{IsxnSC, PointsSC, SegmentsSC},
+    specialcase::{General, TwoPoints, TwoSegments},
 };
 use crate::{
     interpolate::interpolate_2d_checked,
@@ -31,7 +31,7 @@ pub enum PolygonIntersectionResult {
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Isxn {
-    SpecialCase(IsxnSC),
+    SpecialCase(General),
     // respects order of intersects() argument.
     Some(Opinion, Opinion),
     None,
@@ -61,7 +61,7 @@ pub fn obj_intersects_obj(a: &Obj2, b: &Obj2) -> Result<Isxn> {
 
 pub fn point_intersects_point(a: &Point, b: &Point) -> Result<Isxn> {
     if a == b {
-        Ok(Isxn::SpecialCase(IsxnSC::Points(PointsSC::Same)))
+        Ok(Isxn::SpecialCase(General::TwoPoints(TwoPoints::Same)))
     } else {
         Ok(Isxn::None)
     }
@@ -94,12 +94,12 @@ pub fn segment_intersects_point(s: &Segment, p: &Point) -> Result<Isxn> {
 
 pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
     if sa == sb {
-        return Ok(Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::Same)));
+        return Ok(Isxn::SpecialCase(General::TwoSegments(TwoSegments::Same)));
     }
 
     if *sa == sb.flip() {
-        return Ok(Isxn::SpecialCase(IsxnSC::Segments(
-            SegmentsSC::SameButReversed,
+        return Ok(Isxn::SpecialCase(General::TwoSegments(
+            TwoSegments::SameButReversed,
         )));
     }
 
@@ -113,7 +113,9 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
             || (sbi_in_sa && sbf_in_sa)
             || ((sai_in_sb || saf_in_sb) && (sbi_in_sa || sbf_in_sa)))
     {
-        return Ok(Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::Colinear)));
+        return Ok(Isxn::SpecialCase(General::TwoSegments(
+            TwoSegments::Colinear,
+        )));
     }
 
     let (p0_x, p0_y): (f64, f64) = sa.i.into();
@@ -192,7 +194,7 @@ mod tests {
             for i in &[*A, *B, *C] {
                 assert_eq!(
                     point_intersects_point(i, i)?,
-                    Isxn::SpecialCase(IsxnSC::Points(PointsSC::Same))
+                    Isxn::SpecialCase(General::TwoPoints(TwoPoints::Same))
                 );
             }
             Ok(())
@@ -246,7 +248,7 @@ mod tests {
                 for j in &[*D, *E, *F] {
                     assert_eq!(
                         segment_intersects_segment(&Segment(*i, *j), &Segment(*i, *j))?,
-                        Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::Same))
+                        Isxn::SpecialCase(General::TwoSegments(TwoSegments::Same))
                     );
                 }
             }
@@ -259,7 +261,7 @@ mod tests {
                 for j in &[*D, *E, *F] {
                     assert_eq!(
                         segment_intersects_segment(&Segment(*i, *j), &Segment(*j, *i))?,
-                        Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::SameButReversed))
+                        Isxn::SpecialCase(General::TwoSegments(TwoSegments::SameButReversed))
                     );
                 }
             }
@@ -283,7 +285,7 @@ mod tests {
                     ] {
                         assert_eq!(
                             segment_intersects_segment(sa, sb)?,
-                            Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::Colinear))
+                            Isxn::SpecialCase(General::TwoSegments(TwoSegments::Colinear))
                         );
                     }
                 }

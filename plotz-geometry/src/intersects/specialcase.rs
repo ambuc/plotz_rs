@@ -1,17 +1,17 @@
 #[derive(PartialEq, Clone, Debug)]
-pub enum PointsSC {
+pub enum TwoPoints {
     Same,
 }
 
 #[derive(PartialEq, Clone, Debug)]
-pub enum SegmentsSC {
+pub enum TwoSegments {
     Same,
     SameButReversed,
     Colinear,
 }
 
 #[derive(PartialEq, Clone, Debug)]
-pub enum IsxnSC {
-    Points(PointsSC),
-    Segments(SegmentsSC),
+pub enum General {
+    TwoPoints(TwoPoints),
+    TwoSegments(TwoSegments),
 }

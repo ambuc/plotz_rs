@@ -9,7 +9,7 @@ use crate::{
     intersects::{
         opinion::Opinion,
         segment_intersects_segment,
-        specialcase::{IsxnSC, SegmentsSC},
+        specialcase::{General, TwoSegments},
         Isxn,
     },
     obj2::ObjType2d,
@@ -81,10 +81,12 @@ impl Segment {
         match segment_intersects_segment(self, other) {
             Err(_) => None,
             Ok(Isxn::None) => None,
-            Ok(Isxn::SpecialCase(IsxnSC::Segments(case))) => Some(match case {
-                SegmentsSC::Same => IntersectionResult::ErrSegmentsAreTheSame,
-                SegmentsSC::SameButReversed => IntersectionResult::ErrSegmentsAreTheSameButReversed,
-                SegmentsSC::Colinear => IntersectionResult::ErrSegmentsAreColinear,
+            Ok(Isxn::SpecialCase(General::TwoSegments(case))) => Some(match case {
+                TwoSegments::Same => IntersectionResult::ErrSegmentsAreTheSame,
+                TwoSegments::SameButReversed => {
+                    IntersectionResult::ErrSegmentsAreTheSameButReversed
+                }
+                TwoSegments::Colinear => IntersectionResult::ErrSegmentsAreColinear,
             }),
             Ok(Isxn::SpecialCase(_)) => panic!("?"),
             Ok(Isxn::Some(Opinion::Segment(pt, a_pct), Opinion::Segment(_, b_pct))) => {
