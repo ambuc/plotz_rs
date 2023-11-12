@@ -3,7 +3,7 @@
 use crate::{
     interpolate::interpolate_2d_checked,
     obj2::Obj2,
-    shapes::{point::Point, segment::Segment},
+    shapes::{multiline::Multiline, point::Point, segment::Segment},
     utils::Percent,
 };
 use anyhow::Result;
@@ -22,7 +22,7 @@ pub enum PolygonIntersectionResult {
     ),
 }
 
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Opinion {
     Point,
     Segment(
@@ -31,28 +31,34 @@ pub enum Opinion {
         // The percentage of the way along this segment which it occurred.
         Percent,
     ),
+    Multiline(
+        // A list of possible collisions --
+        // The index of the segment, and
+        // The segment collision details themselves.
+        Vec<(usize, Opinion)>,
+    ),
     Polygon(),
 }
 
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum PointsSC {
     Same,
 }
 
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum SegmentsSC {
     Same,
     SameButReversed,
     Colinear,
 }
 
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum IsxnSC {
     Points(PointsSC),
     Segments(SegmentsSC),
 }
 
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum Isxn {
     SpecialCase(IsxnSC),
     // respects order of intersects() argument.
@@ -161,6 +167,25 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
     }
 
     Ok(Isxn::None)
+}
+
+pub fn multiline_intersects_point(ml: &Multiline, p: &Point) -> Result<Isxn> {
+    let mut sg_ops: Vec<(usize, Opinion)> = vec![];
+    for (idx, sg) in ml.to_segments().iter().enumerate() {
+        match segment_intersects_point(sg, p)? {
+            Isxn::SpecialCase(_) => panic!("This sort of thing isn't possible."),
+            Isxn::Some(sg_op, _pt_op) => {
+                sg_ops.push((idx, sg_op));
+            }
+            Isxn::None => {
+                // do nothing
+            }
+        }
+    }
+    if sg_ops.is_empty() {
+        return Ok(Isxn::None);
+    }
+    Ok(Isxn::Some(Opinion::Multiline(sg_ops), Opinion::Point))
 }
 
 #[cfg(test)]
