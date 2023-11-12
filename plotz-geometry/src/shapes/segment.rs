@@ -6,7 +6,7 @@ use crate::{
     crop::{CropType, Croppable, PointLocation},
     interpolate,
     intersection::{Intersection, IntersectionResult},
-    intersects::{intersects_sg_sg, Isxn, IsxnSC, Opinion, SegmentsSC},
+    intersects::{segment_intersects_segment, Isxn, IsxnSC, Opinion, SegmentsSC},
     obj2::ObjType2d,
     shapes::{point::Point, polygon::Polygon, ray::Ray},
     Object,
@@ -73,7 +73,7 @@ impl Segment {
 
     pub fn intersects(&self, other: &Segment) -> Option<IntersectionResult> {
         // TODO(ambuc): remove Segment::intersects entirely.
-        match intersects_sg_sg(self, other) {
+        match segment_intersects_segment(self, other) {
             Err(_) => None,
             Ok(Isxn::None) => None,
             Ok(Isxn::SpecialCase(IsxnSC::Segments(case))) => Some(match case {

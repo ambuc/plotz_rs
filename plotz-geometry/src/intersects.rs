@@ -69,20 +69,20 @@ impl Isxn {
     }
 }
 
-pub fn intersects(a: &Obj2, b: &Obj2) -> Result<Isxn> {
+pub fn obj_intersects_obj(a: &Obj2, b: &Obj2) -> Result<Isxn> {
     match (a, b) {
-        (Obj2::Point(pa), Obj2::Point(pb)) => intersects_pt_pt(pa, pb),
+        (Obj2::Point(pa), Obj2::Point(pb)) => point_intersects_point(pa, pb),
 
-        (Obj2::Segment(s), Obj2::Point(p)) => intersects_sg_pt(s, p),
-        (Obj2::Point(p), Obj2::Segment(s)) => intersects_sg_pt(s, p).map(Isxn::flip),
+        (Obj2::Segment(s), Obj2::Point(p)) => segment_intersects_point(s, p),
+        (Obj2::Point(p), Obj2::Segment(s)) => segment_intersects_point(s, p).map(Isxn::flip),
 
-        (Obj2::Segment(sa), Obj2::Segment(sb)) => intersects_sg_sg(sa, sb),
+        (Obj2::Segment(sa), Obj2::Segment(sb)) => segment_intersects_segment(sa, sb),
 
         _ => unimplemented!(),
     }
 }
 
-pub fn intersects_pt_pt(a: &Point, b: &Point) -> Result<Isxn> {
+pub fn point_intersects_point(a: &Point, b: &Point) -> Result<Isxn> {
     if a == b {
         Ok(Isxn::SpecialCase(IsxnSC::Points(PointsSC::Same)))
     } else {
@@ -90,7 +90,7 @@ pub fn intersects_pt_pt(a: &Point, b: &Point) -> Result<Isxn> {
     }
 }
 
-pub fn intersects_sg_pt(s: &Segment, p: &Point) -> Result<Isxn> {
+pub fn segment_intersects_point(s: &Segment, p: &Point) -> Result<Isxn> {
     if s.i == *p {
         Ok(Isxn::Some(
             Opinion::Segment(*p, Percent::Zero),
@@ -115,7 +115,7 @@ pub fn intersects_sg_pt(s: &Segment, p: &Point) -> Result<Isxn> {
     }
 }
 
-pub fn intersects_sg_sg(sa: &Segment, sb: &Segment) -> Result<Isxn> {
+pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
     if sa == sb {
         return Ok(Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::Same)));
     }
@@ -126,10 +126,10 @@ pub fn intersects_sg_sg(sa: &Segment, sb: &Segment) -> Result<Isxn> {
         )));
     }
 
-    let sai_in_sb = matches!(intersects_sg_pt(sb, &sa.i)?, Isxn::Some(_, _));
-    let saf_in_sb = matches!(intersects_sg_pt(sb, &sa.f)?, Isxn::Some(_, _));
-    let sbi_in_sa = matches!(intersects_sg_pt(sa, &sb.i)?, Isxn::Some(_, _));
-    let sbf_in_sa = matches!(intersects_sg_pt(sa, &sb.f)?, Isxn::Some(_, _));
+    let sai_in_sb = matches!(segment_intersects_point(sb, &sa.i)?, Isxn::Some(_, _));
+    let saf_in_sb = matches!(segment_intersects_point(sb, &sa.f)?, Isxn::Some(_, _));
+    let sbi_in_sa = matches!(segment_intersects_point(sa, &sb.i)?, Isxn::Some(_, _));
+    let sbf_in_sa = matches!(segment_intersects_point(sa, &sb.f)?, Isxn::Some(_, _));
 
     if (sa.slope() == sb.slope() || sa.slope() == sb.flip().slope())
         && ((sai_in_sb && saf_in_sb)
@@ -195,7 +195,7 @@ mod tests {
         fn the_same() -> Result<()> {
             for i in &[*A, *B, *C] {
                 assert_eq!(
-                    intersects_pt_pt(i, i)?,
+                    point_intersects_point(i, i)?,
                     Isxn::SpecialCase(IsxnSC::Points(PointsSC::Same))
                 );
             }
@@ -205,7 +205,7 @@ mod tests {
         #[test]
         fn not_the_same() -> Result<()> {
             for i in &[*A, *B, *C] {
-                assert_eq!(intersects_pt_pt(i, &D)?, Isxn::None,);
+                assert_eq!(point_intersects_point(i, &D)?, Isxn::None,);
             }
             Ok(())
         }
@@ -218,11 +218,11 @@ mod tests {
         fn at_start_or_end() -> Result<()> {
             for (i, f) in &[(*A, *B), (*A, *E), (*A, *G)] {
                 assert_eq!(
-                    intersects_sg_pt(&Segment(*i, *f), i)?,
+                    segment_intersects_point(&Segment(*i, *f), i)?,
                     Isxn::Some(Opinion::Segment(*i, Percent::Zero), Opinion::Point)
                 );
                 assert_eq!(
-                    intersects_sg_pt(&Segment(*i, *f), f)?,
+                    segment_intersects_point(&Segment(*i, *f), f)?,
                     Isxn::Some(Opinion::Segment(*f, Percent::One), Opinion::Point)
                 );
             }
@@ -233,7 +233,7 @@ mod tests {
         fn halfway_along() -> Result<()> {
             for (i, m, f) in &[(*A, *B, *C), (*A, *E, *I), (*A, *D, *G)] {
                 assert_eq!(
-                    intersects_sg_pt(&Segment(*i, *f), m)?,
+                    segment_intersects_point(&Segment(*i, *f), m)?,
                     Isxn::Some(Opinion::Segment(*m, Percent::Val(0.5)), Opinion::Point)
                 );
             }
@@ -249,7 +249,7 @@ mod tests {
             for i in &[*A, *B, *C] {
                 for j in &[*D, *E, *F] {
                     assert_eq!(
-                        intersects_sg_sg(&Segment(*i, *j), &Segment(*i, *j))?,
+                        segment_intersects_segment(&Segment(*i, *j), &Segment(*i, *j))?,
                         Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::Same))
                     );
                 }
@@ -262,7 +262,7 @@ mod tests {
             for i in &[*A, *B, *C] {
                 for j in &[*D, *E, *F] {
                     assert_eq!(
-                        intersects_sg_sg(&Segment(*i, *j), &Segment(*j, *i))?,
+                        segment_intersects_segment(&Segment(*i, *j), &Segment(*j, *i))?,
                         Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::SameButReversed))
                     );
                 }
@@ -286,7 +286,7 @@ mod tests {
                         (&sa.flip(), &sb.flip()),
                     ] {
                         assert_eq!(
-                            intersects_sg_sg(sa, sb)?,
+                            segment_intersects_segment(sa, sb)?,
                             Isxn::SpecialCase(IsxnSC::Segments(SegmentsSC::Colinear))
                         );
                     }
@@ -302,7 +302,7 @@ mod tests {
                 let (p0, p1) = (*A, *B);
                 for p2 in &[*D, *E, *F, *G, *H, *I] {
                     assert_eq!(
-                        intersects_sg_sg(&Segment(p0, p1), &Segment(p1, *p2))?,
+                        segment_intersects_segment(&Segment(p0, p1), &Segment(p1, *p2))?,
                         Isxn::Some(
                             Opinion::Segment(p1, Percent::One),
                             Opinion::Segment(p1, Percent::Zero)
@@ -322,7 +322,7 @@ mod tests {
                     (sa.flip(), sb.flip()),
                 ] {
                     assert_eq!(
-                        intersects_sg_sg(sa, sb)?,
+                        segment_intersects_segment(sa, sb)?,
                         Isxn::Some(
                             Opinion::Segment(*E, Percent::Val(0.5)),
                             Opinion::Segment(*E, Percent::Val(0.5))

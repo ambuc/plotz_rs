@@ -9,7 +9,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLocation},
     intersection::IntersectionResult,
-    intersects::{intersects_sg_pt, Isxn, Opinion},
+    intersects::{segment_intersects_point, Isxn, Opinion},
     obj2::ObjType2d,
     shapes::{point::Point, segment::Segment},
     utils::Percent,
@@ -175,7 +175,7 @@ impl Polygon {
             }
         }
         for (idx, seg) in self.to_segments().iter().enumerate() {
-            match intersects_sg_pt(seg, other)? {
+            match segment_intersects_point(seg, other)? {
                 Isxn::None => {}
                 Isxn::Some(Opinion::Segment(_, Percent::Val(_)), Opinion::Point) => {
                     return Ok(PointLocation::OnSegment(idx))
