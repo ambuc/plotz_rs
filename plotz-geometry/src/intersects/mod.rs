@@ -5,7 +5,7 @@ pub mod specialcase;
 
 use self::{
     opinion::{MultilineOpinion, Opinion, SegmentOpinion},
-    specialcase::{General, TwoPoints, TwoSegments},
+    specialcase::{General, MultilineAndSegment, TwoPoints, TwoSegments},
 };
 use crate::{
     interpolate::interpolate_2d_checked,
@@ -13,7 +13,7 @@ use crate::{
     shapes::{multiline::Multiline, point::Point, segment::Segment},
     utils::Percent,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
 use nonempty::{nonempty, NonEmpty};
 
@@ -209,18 +209,62 @@ pub fn multiline_intersects_point(ml: &Multiline, p: &Point) -> Result<Isxn> {
     }
 }
 
-pub fn multiline_intersects_segment(_: &Multiline, _: &Segment) -> Result<Isxn> {
-    // let mut sg_ops: Vec<MultilineOpinion> = vec![];
+pub fn multiline_intersects_segment(ml: &Multiline, sg: &Segment) -> Result<Isxn> {
+    let mut total_ml_ops: Vec<MultilineOpinion> = vec![];
+    let mut total_sg_ops: Vec<SegmentOpinion> = vec![];
 
-    // for sg in ml.to_segments().enumerate() {
+    for (ml_sg_idx, ml_sg) in ml.to_segments().iter().enumerate() {
+        match segment_intersects_segment(ml_sg, sg)? {
+            // Handle Isxn::SpecialCase(_),
+            Isxn::SpecialCase(General::TwoSegments(sc)) => {
+                // return early. not guaranteed to find _all_ unusual
+                // special-case intersections.
+                return Ok(Isxn::SpecialCase(General::MultilineAndSegment(
+                    MultilineAndSegment::SegmentInMultiline {
+                        sc,
+                        index: ml_sg_idx,
+                    },
+                )));
+            }
+            Isxn::SpecialCase(_) => {
+                return Err(anyhow!("segment_intersects_segment should not have returned any SpecialCase besides General::TwoSegments(_)."));
+            }
 
-    // }
-    // sg_ops.dedup();
-    // match sg_ops[..] {
-    //     [] => Ok(Isxn::None),
-    //     _ => Ok(Isxn::Some(Opinion::Multiline(sg_ops), Opinion::Segment)),
-    // }
-    unimplemented!()
+            // then Isxn::Some(_),
+            Isxn::Some(Opinion::Segment(ml_sg_ops), Opinion::Segment(sg_ops)) => {
+                assert_eq!(ml_sg_ops.len(), 1);
+                assert_eq!(sg_ops.len(), 1);
+
+                total_ml_ops.push(MultilineOpinion::from_segment_opinion(
+                    ml_sg_idx,
+                    ml_sg_ops.head,
+                ));
+                total_sg_ops.push(sg_ops.head);
+            }
+            Isxn::Some(_, _) => {
+                return Err(anyhow!("segment_intersects_segment should not have returned anything besides Opinion::Segment(_)."));
+            }
+
+            // finally Isxn::None.
+            Isxn::None => {
+                // nothing to do.
+            }
+        }
+    }
+
+    total_ml_ops.dedup();
+    total_sg_ops.dedup();
+
+    match (
+        NonEmpty::from_vec(total_ml_ops),
+        NonEmpty::from_vec(total_sg_ops),
+    ) {
+        (Some(total_ml_ops), Some(total_sg_ops)) => Ok(Isxn::Some(
+            Opinion::Multiline(total_ml_ops),
+            Opinion::Segment(total_sg_ops),
+        )),
+        _ => Ok(Isxn::None),
+    }
 }
 
 pub fn multiline_intersects_multiline(_: &Multiline, _: &Multiline) -> Result<Isxn> {
