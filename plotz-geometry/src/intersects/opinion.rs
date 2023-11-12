@@ -1,4 +1,5 @@
 use crate::{shapes::point::Point, utils::Percent};
+use nonempty::NonEmpty;
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum SegmentOpinion {
@@ -24,7 +25,7 @@ pub enum MultilineOpinion {
 #[derive(PartialEq, Clone, Debug)]
 pub enum Opinion {
     Point,
-    Segment(Vec<SegmentOpinion>),
-    Multiline(Vec<MultilineOpinion>),
+    Segment(NonEmpty<SegmentOpinion>),
+    Multiline(NonEmpty<MultilineOpinion>),
     Polygon(),
 }

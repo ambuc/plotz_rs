@@ -90,22 +90,20 @@ impl Segment {
             }),
             Ok(Isxn::SpecialCase(_)) => panic!("?"),
             Ok(Isxn::Some(Opinion::Segment(sg_ops_a), Opinion::Segment(sg_ops_b))) => {
-                match (&sg_ops_a[..], &sg_ops_b[..]) {
+                assert_eq!(sg_ops_a.len(), 1);
+                assert_eq!(sg_ops_b.len(), 1);
+
+                match (sg_ops_a.head, sg_ops_b.head) {
                     (
-                        [SegmentOpinion::AlongSegment {
+                        SegmentOpinion::AlongSegment {
                             at_point: pt,
                             percent_along: a_pct,
-                        }],
-                        [SegmentOpinion::AlongSegment {
-                            at_point: _,
+                        },
+                        SegmentOpinion::AlongSegment {
                             percent_along: b_pct,
-                        }],
-                    ) => Some(IntersectionResult::Ok(Intersection {
-                        pt: *pt,
-                        a_pct: *a_pct,
-                        b_pct: *b_pct,
-                    })),
-                    _ => None,
+                            ..
+                        },
+                    ) => Some(IntersectionResult::Ok(Intersection { pt, a_pct, b_pct })),
                 }
             }
             _ => None,
