@@ -4,7 +4,7 @@ pub mod opinion;
 pub mod specialcase;
 
 use self::{
-    opinion::Opinion,
+    opinion::{MultilineOpinion, Opinion},
     specialcase::{General, TwoPoints, TwoSegments},
 };
 use crate::{
@@ -158,10 +158,21 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
 }
 
 pub fn multiline_intersects_point(ml: &Multiline, p: &Point) -> Result<Isxn> {
-    let mut sg_ops: Vec<(usize, Opinion)> = vec![];
+    let mut sg_ops: Vec<MultilineOpinion> = vec![];
     for (idx, sg) in ml.to_segments().iter().enumerate() {
-        if let Isxn::Some(sg_op, _) = segment_intersects_point(sg, p)? {
-            sg_ops.push((idx, sg_op));
+        if let Isxn::Some(
+            Opinion::Segment {
+                at_point,
+                percent_along,
+            },
+            _,
+        ) = segment_intersects_point(sg, p)?
+        {
+            sg_ops.push(MultilineOpinion::AlongSharedSegment {
+                index: idx,
+                at_point,
+                percent_along,
+            });
         }
     }
     match sg_ops[..] {
