@@ -9,7 +9,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLocation},
     intersection::IntersectionResult,
-    intersects::{segment_intersects_point, Isxn, Opinion},
+    intersects::{opinion::Opinion, segment_intersects_point, Isxn},
     obj2::ObjType2d,
     shapes::{point::Point, segment::Segment},
     utils::Percent,

@@ -1,5 +1,12 @@
 #![allow(missing_docs)]
 
+pub mod opinion;
+pub mod specialcase;
+
+use self::{
+    opinion::Opinion,
+    specialcase::{IsxnSC, PointsSC, SegmentsSC},
+};
 use crate::{
     interpolate::interpolate_2d_checked,
     obj2::Obj2,
@@ -20,42 +27,6 @@ pub enum PolygonIntersectionResult {
         // The percentage of the way along this segment at which it occurred.
         Percent,
     ),
-}
-
-#[derive(PartialEq, Clone, Debug)]
-pub enum Opinion {
-    Point,
-    Segment(
-        // The point at which it occurred.
-        Point,
-        // The percentage of the way along this segment which it occurred.
-        Percent,
-    ),
-    Multiline(
-        // A list of possible collisions --
-        // The index of the segment, and
-        // The segment collision details themselves.
-        Vec<(usize, Opinion)>,
-    ),
-    Polygon(),
-}
-
-#[derive(PartialEq, Clone, Debug)]
-pub enum PointsSC {
-    Same,
-}
-
-#[derive(PartialEq, Clone, Debug)]
-pub enum SegmentsSC {
-    Same,
-    SameButReversed,
-    Colinear,
-}
-
-#[derive(PartialEq, Clone, Debug)]
-pub enum IsxnSC {
-    Points(PointsSC),
-    Segments(SegmentsSC),
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -358,5 +329,9 @@ mod tests {
 
             Ok(())
         }
+    }
+
+    mod ml_pt {
+        // TODO(ambuc): write tests for multiline_intersects_point.
     }
 }

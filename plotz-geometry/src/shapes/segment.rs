@@ -6,7 +6,12 @@ use crate::{
     crop::{CropType, Croppable, PointLocation},
     interpolate,
     intersection::{Intersection, IntersectionResult},
-    intersects::{segment_intersects_segment, Isxn, IsxnSC, Opinion, SegmentsSC},
+    intersects::{
+        opinion::Opinion,
+        segment_intersects_segment,
+        specialcase::{IsxnSC, SegmentsSC},
+        Isxn,
+    },
     obj2::ObjType2d,
     shapes::{point::Point, polygon::Polygon, ray::Ray},
     Object,
