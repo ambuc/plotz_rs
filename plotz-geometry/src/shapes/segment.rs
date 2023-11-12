@@ -27,26 +27,18 @@ enum _Orientation {
     _CounterClockwise,
 }
 
-/// Whether a line segment contains a point, and if so where.
 #[derive(Debug, PartialEq, Eq)]
 pub enum SegmentContainsPoint {
-    /// A line segment contains a point along it.
     Within,
-    /// A line segment contains a point at its head.
     AtStart,
-    /// A line segment contains a point at its tail.
     AtEnd,
 }
-/// A segment in 2D space, with initial and final points.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Segment {
-    /// The initial point of the segment.
     pub i: Point,
-    /// The final point of the segment.
     pub f: Point,
 }
 
-/// An alternate constructor for segments.
 #[allow(non_snake_case)]
 pub fn Segment(i: impl Into<Point>, f: impl Into<Point>) -> Segment {
     Segment {
@@ -83,14 +75,11 @@ impl Segment {
         self.i.angle_to(&self.f)
     }
 
-    /// A rotation operation, for rotating a line segment about a point. Accepts
-    /// a |by| argument in radians.
     pub fn rotate(&mut self, about: &Point, by: f64) {
         self.i.rotate_inplace(about, by);
         self.f.rotate_inplace(about, by);
     }
 
-    /// sometimes you just have to flip it.
     pub fn flip(&self) -> Segment {
         Segment {
             i: self.f,
@@ -98,8 +87,8 @@ impl Segment {
         }
     }
 
-    /// Returns true if one line segment intersects another.
     pub fn intersects(&self, other: &Segment) -> Option<IntersectionResult> {
+        // TODO(ambuc): remove Segment::intersects entirely.
         match intersects_sg_sg(self, other) {
             Err(_) => None,
             Ok(Isxn::None) => None,
@@ -116,7 +105,6 @@ impl Segment {
         }
     }
 
-    /// Returns the absolute value of the length of this segment.
     pub fn abs(&self) -> f64 {
         let two = 2_f64;
         ((self.f.y - self.i.y).powf(two) + (self.f.x - self.i.x).powf(two)).sqrt()
@@ -133,7 +121,6 @@ impl Segment {
         (x1 * y2) - (x2 * y1)
     }
 
-    /// Midpoint of a segment.
     pub fn midpoint(&self) -> Point {
         (self.i + self.f) / 2.0
     }
