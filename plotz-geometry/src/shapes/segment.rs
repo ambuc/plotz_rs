@@ -11,10 +11,9 @@ use crate::{
     shapes::{point::Point, polygon::Polygon, ray::Ray},
     Object,
 };
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use float_ord::FloatOrd;
 use std::{
-    cmp::PartialOrd,
     f64::consts::{FRAC_PI_2, PI},
     fmt::Debug,
     ops::*,
@@ -48,21 +47,6 @@ pub fn Segment(i: impl Into<Point>, f: impl Into<Point>) -> Segment {
 }
 
 impl Segment {
-    // Internal helper function; see https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/.
-    fn _ccw(&self, other: &Point) -> Result<_Orientation> {
-        use std::cmp::Ordering;
-        match PartialOrd::partial_cmp(
-            &((other.y - self.i.y) * (self.f.x - self.i.x)
-                - (self.f.y - self.i.y) * (other.x - self.i.x)),
-            &0_f64,
-        ) {
-            Some(Ordering::Equal) => Ok(_Orientation::_Colinear),
-            Some(Ordering::Greater) => Ok(_Orientation::_Clockwise),
-            Some(Ordering::Less) => Ok(_Orientation::_CounterClockwise),
-            None => Err(anyhow!("!")),
-        }
-    }
-
     /// The slope of a line segment.
     /// NB: this is the "elementary school math slope"; i.e. rise over run.
     /// Not the same as the angle of the ray.
