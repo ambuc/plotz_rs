@@ -145,20 +145,14 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
 pub fn multiline_intersects_point(ml: &Multiline, p: &Point) -> Result<Isxn> {
     let mut sg_ops: Vec<(usize, Opinion)> = vec![];
     for (idx, sg) in ml.to_segments().iter().enumerate() {
-        match segment_intersects_point(sg, p)? {
-            Isxn::SpecialCase(_) => panic!("This sort of thing isn't possible."),
-            Isxn::Some(sg_op, _pt_op) => {
-                sg_ops.push((idx, sg_op));
-            }
-            Isxn::None => {
-                // do nothing
-            }
+        if let Isxn::Some(sg_op, _) = segment_intersects_point(sg, p)? {
+            sg_ops.push((idx, sg_op));
         }
     }
-    if sg_ops.is_empty() {
-        return Ok(Isxn::None);
+    match sg_ops[..] {
+        [] => Ok(Isxn::None),
+        _ => Ok(Isxn::Some(Opinion::Multiline(sg_ops), Opinion::Point)),
     }
-    Ok(Isxn::Some(Opinion::Multiline(sg_ops), Opinion::Point))
 }
 
 #[cfg(test)]
