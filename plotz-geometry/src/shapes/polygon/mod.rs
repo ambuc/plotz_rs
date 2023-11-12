@@ -12,7 +12,6 @@ use crate::{
     intersects::{opinion::Opinion, segment_intersects_point, Isxn},
     obj2::ObjType2d,
     shapes::{point::Point, segment::Segment},
-    utils::Percent,
     *,
 };
 use anyhow::{anyhow, Context, Result};
@@ -177,13 +176,10 @@ impl Polygon {
         for (idx, seg) in self.to_segments().iter().enumerate() {
             match segment_intersects_point(seg, other)? {
                 Isxn::None => {}
-                Isxn::Some(
-                    Opinion::Segment {
-                        at_point: _,
-                        percent_along: Percent::Val(_),
-                    },
-                    Opinion::Point,
-                ) => return Ok(PointLocation::OnSegment(idx)),
+                Isxn::Some(Opinion::Segment(sg_ops), _) => match sg_ops[..] {
+                    [_] => return Ok(PointLocation::OnSegment(idx)),
+                    _ => return Err(anyhow!("?")),
+                },
                 _ => return Err(anyhow!("not sure what is going on here?")),
             }
         }

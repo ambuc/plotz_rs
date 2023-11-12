@@ -7,7 +7,7 @@ use crate::{
     interpolate,
     intersection::{Intersection, IntersectionResult},
     intersects::{
-        opinion::Opinion,
+        opinion::{Opinion, SegmentOpinion},
         segment_intersects_segment,
         specialcase::{General, TwoSegments},
         Isxn,
@@ -89,16 +89,25 @@ impl Segment {
                 TwoSegments::Colinear => IntersectionResult::ErrSegmentsAreColinear,
             }),
             Ok(Isxn::SpecialCase(_)) => panic!("?"),
-            Ok(Isxn::Some(
-                Opinion::Segment {
-                    at_point: pt,
-                    percent_along: a_pct,
-                },
-                Opinion::Segment {
-                    at_point: _,
-                    percent_along: b_pct,
-                },
-            )) => Some(IntersectionResult::Ok(Intersection { pt, a_pct, b_pct })),
+            Ok(Isxn::Some(Opinion::Segment(sg_ops_a), Opinion::Segment(sg_ops_b))) => {
+                match (&sg_ops_a[..], &sg_ops_b[..]) {
+                    (
+                        [SegmentOpinion::AlongSegment {
+                            at_point: pt,
+                            percent_along: a_pct,
+                        }],
+                        [SegmentOpinion::AlongSegment {
+                            at_point: _,
+                            percent_along: b_pct,
+                        }],
+                    ) => Some(IntersectionResult::Ok(Intersection {
+                        pt: *pt,
+                        a_pct: *a_pct,
+                        b_pct: *b_pct,
+                    })),
+                    _ => None,
+                }
+            }
             _ => None,
         }
     }

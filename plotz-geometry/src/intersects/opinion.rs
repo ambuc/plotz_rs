@@ -1,6 +1,14 @@
 use crate::{shapes::point::Point, utils::Percent};
 
 #[derive(PartialEq, Clone, Debug)]
+pub enum SegmentOpinion {
+    AlongSegment {
+        at_point: Point,
+        percent_along: Percent,
+    },
+}
+
+#[derive(PartialEq, Clone, Debug)]
 pub enum MultilineOpinion {
     AtPoint {
         index: usize,
@@ -16,11 +24,7 @@ pub enum MultilineOpinion {
 #[derive(PartialEq, Clone, Debug)]
 pub enum Opinion {
     Point,
-    // TODO(ambuc): extract into SegmentOpinion; vectorize.
-    Segment {
-        at_point: Point,
-        percent_along: Percent,
-    },
+    Segment(Vec<SegmentOpinion>),
     Multiline(Vec<MultilineOpinion>),
     Polygon(),
 }
