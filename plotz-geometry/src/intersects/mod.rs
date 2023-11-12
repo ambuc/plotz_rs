@@ -70,12 +70,18 @@ pub fn point_intersects_point(a: &Point, b: &Point) -> Result<Isxn> {
 pub fn segment_intersects_point(s: &Segment, p: &Point) -> Result<Isxn> {
     if s.i == *p {
         Ok(Isxn::Some(
-            Opinion::Segment(*p, Percent::Zero),
+            Opinion::Segment {
+                at_point: *p,
+                percent_along: Percent::Zero,
+            },
             Opinion::Point,
         ))
     } else if s.f == *p {
         Ok(Isxn::Some(
-            Opinion::Segment(*p, Percent::One),
+            Opinion::Segment {
+                at_point: *p,
+                percent_along: Percent::One,
+            },
             Opinion::Point,
         ))
     } else if approx_eq!(
@@ -84,7 +90,10 @@ pub fn segment_intersects_point(s: &Segment, p: &Point) -> Result<Isxn> {
         Segment(s.i, *p).length() + Segment(*p, s.f).length()
     ) {
         Ok(Isxn::Some(
-            Opinion::Segment(*p, interpolate_2d_checked(s.i, s.f, *p)?),
+            Opinion::Segment {
+                at_point: *p,
+                percent_along: interpolate_2d_checked(s.i, s.f, *p)?,
+            },
             Opinion::Point,
         ))
     } else {
@@ -134,8 +143,14 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
     if (0_f64..=1_f64).contains(&s) && (0_f64..=1_f64).contains(&t) {
         let pt = Point(p0_x + (t * s1_x), p0_y + (t * s1_y));
         return Ok(Isxn::Some(
-            Opinion::Segment(pt, interpolate_2d_checked(sa.i, sa.f, pt)?),
-            Opinion::Segment(pt, interpolate_2d_checked(sb.i, sb.f, pt)?),
+            Opinion::Segment {
+                at_point: pt,
+                percent_along: interpolate_2d_checked(sa.i, sa.f, pt)?,
+            },
+            Opinion::Segment {
+                at_point: pt,
+                percent_along: interpolate_2d_checked(sb.i, sb.f, pt)?,
+            },
         ));
     }
 
@@ -211,11 +226,23 @@ mod tests {
             for (i, f) in &[(*A, *B), (*A, *E), (*A, *G)] {
                 assert_eq!(
                     segment_intersects_point(&Segment(*i, *f), i)?,
-                    Isxn::Some(Opinion::Segment(*i, Percent::Zero), Opinion::Point)
+                    Isxn::Some(
+                        Opinion::Segment {
+                            at_point: *i,
+                            percent_along: Percent::Zero
+                        },
+                        Opinion::Point
+                    )
                 );
                 assert_eq!(
                     segment_intersects_point(&Segment(*i, *f), f)?,
-                    Isxn::Some(Opinion::Segment(*f, Percent::One), Opinion::Point)
+                    Isxn::Some(
+                        Opinion::Segment {
+                            at_point: *f,
+                            percent_along: Percent::One
+                        },
+                        Opinion::Point
+                    )
                 );
             }
             Ok(())
@@ -226,7 +253,13 @@ mod tests {
             for (i, m, f) in &[(*A, *B, *C), (*A, *E, *I), (*A, *D, *G)] {
                 assert_eq!(
                     segment_intersects_point(&Segment(*i, *f), m)?,
-                    Isxn::Some(Opinion::Segment(*m, Percent::Val(0.5)), Opinion::Point)
+                    Isxn::Some(
+                        Opinion::Segment {
+                            at_point: *m,
+                            percent_along: Percent::Val(0.5)
+                        },
+                        Opinion::Point
+                    )
                 );
             }
             Ok(())
@@ -296,8 +329,14 @@ mod tests {
                     assert_eq!(
                         segment_intersects_segment(&Segment(p0, p1), &Segment(p1, *p2))?,
                         Isxn::Some(
-                            Opinion::Segment(p1, Percent::One),
-                            Opinion::Segment(p1, Percent::Zero)
+                            Opinion::Segment {
+                                at_point: p1,
+                                percent_along: Percent::One
+                            },
+                            Opinion::Segment {
+                                at_point: p1,
+                                percent_along: Percent::Zero
+                            }
                         )
                     );
                 }
@@ -316,8 +355,14 @@ mod tests {
                     assert_eq!(
                         segment_intersects_segment(sa, sb)?,
                         Isxn::Some(
-                            Opinion::Segment(*E, Percent::Val(0.5)),
-                            Opinion::Segment(*E, Percent::Val(0.5))
+                            Opinion::Segment {
+                                at_point: *E,
+                                percent_along: Percent::Val(0.5)
+                            },
+                            Opinion::Segment {
+                                at_point: *E,
+                                percent_along: Percent::Val(0.5)
+                            }
                         )
                     );
                 }

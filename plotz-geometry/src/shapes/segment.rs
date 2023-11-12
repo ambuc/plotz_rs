@@ -89,9 +89,16 @@ impl Segment {
                 TwoSegments::Colinear => IntersectionResult::ErrSegmentsAreColinear,
             }),
             Ok(Isxn::SpecialCase(_)) => panic!("?"),
-            Ok(Isxn::Some(Opinion::Segment(pt, a_pct), Opinion::Segment(_, b_pct))) => {
-                Some(IntersectionResult::Ok(Intersection { pt, a_pct, b_pct }))
-            }
+            Ok(Isxn::Some(
+                Opinion::Segment {
+                    at_point: pt,
+                    percent_along: a_pct,
+                },
+                Opinion::Segment {
+                    at_point: _,
+                    percent_along: b_pct,
+                },
+            )) => Some(IntersectionResult::Ok(Intersection { pt, a_pct, b_pct })),
             _ => None,
         }
     }

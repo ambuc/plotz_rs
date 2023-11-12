@@ -3,12 +3,10 @@ use crate::{shapes::point::Point, utils::Percent};
 #[derive(PartialEq, Clone, Debug)]
 pub enum Opinion {
     Point,
-    Segment(
-        // The point at which it occurred.
-        Point,
-        // The percentage of the way along this segment which it occurred.
-        Percent,
-    ),
+    Segment {
+        at_point: Point,
+        percent_along: Percent,
+    },
     Multiline(
         // A list of possible collisions --
         // The index of the segment, and
