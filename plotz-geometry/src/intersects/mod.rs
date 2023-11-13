@@ -122,88 +122,13 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
         ));
     }
 
-    // This only only counts if the point is _within_ the segment.
-    // TODO(ambuc): neaten this up.
-    let sai_in_sb = segment_intersects_point(sb, &sa.i)?;
-    let saf_in_sb = segment_intersects_point(sb, &sa.f)?;
-    let sbi_in_sa = segment_intersects_point(sa, &sb.i)?;
-    let sbf_in_sa = segment_intersects_point(sa, &sb.f)?;
-
     if approx_eq!(f64, sa.slope(), sb.slope()) || approx_eq!(f64, sa.slope(), sb.flip().slope()) {
-        let isxn_segment: Option<Segment> = match (sai_in_sb, saf_in_sb, sbi_in_sa, sbf_in_sa) {
-
-            // |---|
-            // |----|
-            // or
-            //  |---|
-            // |----|
-            // or
-            //  |---|
-            // |-----|
-            (Isxn::Some(_, _), Isxn::Some(_, _), Isxn::Some(_, _), Isxn::None) |
-            (Isxn::Some(_, _), Isxn::Some(_, _), Isxn::None, Isxn::Some(_, _)) |
-            (Isxn::Some(_, _), Isxn::Some(_, _), Isxn::None, Isxn::None) => Some(*sa),
-
-            // |-----|
-            // |---|
-            // or
-            // |-----|
-            //  |---|
-            // |----|
-            //  |---|
-            (Isxn::Some(_, _), Isxn::None, Isxn::Some(_, _), Isxn::Some(_, _)) |
-            (Isxn::None, Isxn::None, Isxn::Some(_, _), Isxn::Some(_, _)) |
-            (Isxn::None, Isxn::Some(_, _), Isxn::Some(_, _), Isxn::Some(_, _)) => Some(*sb),
-
-            (Isxn::Some(_, _), Isxn::None, Isxn::None, Isxn::Some(_, _)) => {
-                if sa.i == sb.f {
-                    //     |---|
-                    // |---|
-                    let pt = sa.i;
-                    return Ok(Isxn::Some(
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::Zero }]),
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::One }]),
-                    ))
-                }
-                //   |---|
-                // |---|
-                Some(Segment(sa.i, sb.f))
-            },
-
-            (Isxn::None, Isxn::Some(_, _), Isxn::Some(_, _), Isxn::None) => {
-                if sa.f == sb.i {
-                    // |---|
-                    //     |---|
-                    let pt = sa.f;
-                    return Ok(Isxn::Some(
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::One }]),
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::Zero }]),
-                    ));
-                }
-                // |---|
-                //   |---|
-                Some(Segment(sb.i, sa.f))
-            },
-
-
-            // Head-to-head collision.
-            (Isxn::Some(_, _), Isxn::None, Isxn::Some(_, _), Isxn::None)  => {
-                let pt = sa.i;
-                return Ok(Isxn::Some(
-                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::Zero }]),
-                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::Zero }]),
-                ));
-            }
-
-            // Tail-to-tail collision.
-            (Isxn::None, Isxn::Some(_, _), Isxn::None, Isxn::Some(_, _))  => {
-                let pt = sa.f;
-                return Ok(Isxn::Some(
-                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::One }]),
-                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::One }]),
-                ));
-            }
-
+        let isxn_segment: Option<Segment> = match (
+            segment_intersects_point(sb, &sa.i)?,
+            segment_intersects_point(sb, &sa.f)?,
+            segment_intersects_point(sa, &sb.i)?,
+            segment_intersects_point(sa, &sb.f)?,
+        ) {
             // No collision.
             (Isxn::None, Isxn::None, Isxn::None, Isxn::None) => None,
 
@@ -217,16 +142,98 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
                 ));
             }
 
-            // ERR: cannot have
-            //
-            //  (sa.f == sb.f == None, but collision)
-            (Isxn::Some(_, _), Isxn::None, Isxn::None, Isxn::None) |
-            //  (sa.i == sb.i == None, but collision)
-            (Isxn::None, Isxn::Some(_, _), Isxn::None, Isxn::None) |
-            //  (sa.f == sb.f == None, but collision)
-            (Isxn::None, Isxn::None, Isxn::Some(_, _), Isxn::None) |
-            //  (sa.i == sb.i == None, but collision)
-            (Isxn::None, Isxn::None, Isxn::None, Isxn::Some(_, _)) => {
+            // |---|
+            // |----|
+            // or
+            //  |---|
+            // |----|
+            // or
+            //  |---|
+            // |-----|
+            (Isxn::Some(_, _), Isxn::Some(_, _), _, _) => Some(*sa),
+
+            // |-----|
+            // |---|
+            // or
+            // |-----|
+            //  |---|
+            // |----|
+            //  |---|
+            (_, _, Isxn::Some(_, _), Isxn::Some(_, _)) => Some(*sb),
+
+            (Isxn::Some(_, _), Isxn::None, Isxn::None, Isxn::Some(_, _)) => {
+                if sa.i == sb.f {
+                    //     |---|
+                    // |---|
+                    let pt = sa.i;
+                    return Ok(Isxn::Some(
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            at_point: pt,
+                            percent_along: Percent::Zero
+                        }]),
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            at_point: pt,
+                            percent_along: Percent::One
+                        }]),
+                    ));
+                }
+                //   |---|
+                // |---|
+                Some(Segment(sa.i, sb.f))
+            }
+
+            (Isxn::None, Isxn::Some(_, _), Isxn::Some(_, _), Isxn::None) => {
+                if sa.f == sb.i {
+                    // |---|
+                    //     |---|
+                    let pt = sa.f;
+                    return Ok(Isxn::Some(
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            at_point: pt,
+                            percent_along: Percent::One
+                        }]),
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            at_point: pt,
+                            percent_along: Percent::Zero
+                        }]),
+                    ));
+                }
+                // |---|
+                //   |---|
+                Some(Segment(sb.i, sa.f))
+            }
+
+            // Head-to-head collision.
+            (Isxn::Some(_, _), Isxn::None, Isxn::Some(_, _), Isxn::None) => {
+                let pt = sa.i;
+                return Ok(Isxn::Some(
+                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                        at_point: pt,
+                        percent_along: Percent::Zero
+                    }]),
+                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                        at_point: pt,
+                        percent_along: Percent::Zero
+                    }]),
+                ));
+            }
+
+            // Tail-to-tail collision.
+            (Isxn::None, Isxn::Some(_, _), Isxn::None, Isxn::Some(_, _)) => {
+                let pt = sa.f;
+                return Ok(Isxn::Some(
+                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                        at_point: pt,
+                        percent_along: Percent::One
+                    }]),
+                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                        at_point: pt,
+                        percent_along: Percent::One
+                    }]),
+                ));
+            }
+
+            _ => {
                 return Err(anyhow!("this should not be possible."));
             }
         };
@@ -553,12 +560,21 @@ mod tests {
             }
 
             #[test_case(Segment(*Q, *T), Segment(*Q, *E), Segment(*Q, *E))]
+            #[test_case(Segment(*Q, *T), Segment(*W, *R), Segment(*W, *R))]
+            #[test_case(Segment(*Q, *T), Segment(*E, *T), Segment(*E, *T))]
             fn atsubsegment(sga: Segment, sgb: Segment, subsegment: Segment) -> Result<()> {
                 assert_eq!(
                     segment_intersects_segment(&sga, &sgb)?,
                     Isxn::Some(
                         Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(subsegment)]),
                         Opinion::Segment(nonempty![SegmentOpinion::EntireSegment])
+                    )
+                );
+                assert_eq!(
+                    segment_intersects_segment(&sgb, &sga)?,
+                    Isxn::Some(
+                        Opinion::Segment(nonempty![SegmentOpinion::EntireSegment]),
+                        Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(subsegment)])
                     )
                 );
 
