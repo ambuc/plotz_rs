@@ -122,57 +122,132 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
         ));
     }
 
-    let sai_in_sb = matches!(segment_intersects_point(sb, &sa.i)?, Isxn::Some(_, _));
-    let saf_in_sb = matches!(segment_intersects_point(sb, &sa.f)?, Isxn::Some(_, _));
-    let sbi_in_sa = matches!(segment_intersects_point(sa, &sb.i)?, Isxn::Some(_, _));
-    let sbf_in_sa = matches!(segment_intersects_point(sa, &sb.f)?, Isxn::Some(_, _));
+    // This only only counts if the point is _within_ the segment.
+    // TODO(ambuc): neaten this up.
+    let sai_in_sb = segment_intersects_point(sb, &sa.i)?;
+    let saf_in_sb = segment_intersects_point(sb, &sa.f)?;
+    let sbi_in_sa = segment_intersects_point(sa, &sb.i)?;
+    let sbf_in_sa = segment_intersects_point(sa, &sb.f)?;
 
-    if sa.slope() == sb.slope() || sa.slope() == sb.flip().slope() {
-        #[allow(clippy::nonminimal_bool)]
-        let isxn_segment: Option<Segment> = if sai_in_sb && saf_in_sb {
+    if approx_eq!(f64, sa.slope(), sb.slope()) || approx_eq!(f64, sa.slope(), sb.flip().slope()) {
+        let isxn_segment: Option<Segment> = match (sai_in_sb, saf_in_sb, sbi_in_sa, sbf_in_sa) {
+
             // |---|
-            //   |---|
-            Some(Segment(sb.i, sa.f))
-        } else if sai_in_sb && sbf_in_sa {
-            //   |---|
-            // |---|
-            Some(Segment(sa.i, sb.f))
-        } else if (sa.i == sb.i && saf_in_sb)
-            || (sai_in_sb && saf_in_sb)
-            || (sa.f == sb.f && sai_in_sb)
-        {
-            // |---|
+            // |----|
+            // or
+            //  |---|
             // |----|
             // or
             //  |---|
             // |-----|
-            // or
-            //  |---|
-            // |----|
-            Some(*sa)
-        } else if (sa.i == sb.i && sbf_in_sa)
-            || (sa.f == sb.f && sbi_in_sa)
-            || (sbi_in_sa && sbf_in_sa)
-        {
-            // |----|
+            (Isxn::Some(_, _), Isxn::Some(_, _), Isxn::Some(_, _), Isxn::None) |
+            (Isxn::Some(_, _), Isxn::Some(_, _), Isxn::None, Isxn::Some(_, _)) |
+            (Isxn::Some(_, _), Isxn::Some(_, _), Isxn::None, Isxn::None) => Some(*sa),
+
+            // |-----|
             // |---|
-            // or
-            // |----|
-            //  |---|
             // or
             // |-----|
             //  |---|
-            Some(*sb)
-        } else {
-            // no intersection segment. no overlap. continue on.
-            None
+            // |----|
+            //  |---|
+            (Isxn::Some(_, _), Isxn::None, Isxn::Some(_, _), Isxn::Some(_, _)) |
+            (Isxn::None, Isxn::None, Isxn::Some(_, _), Isxn::Some(_, _)) |
+            (Isxn::None, Isxn::Some(_, _), Isxn::Some(_, _), Isxn::Some(_, _)) => Some(*sb),
+
+            (Isxn::Some(_, _), Isxn::None, Isxn::None, Isxn::Some(_, _)) => {
+                if sa.i == sb.f {
+                    //     |---|
+                    // |---|
+                    let pt = sa.i;
+                    return Ok(Isxn::Some(
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::Zero }]),
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::One }]),
+                    ))
+                }
+                //   |---|
+                // |---|
+                Some(Segment(sa.i, sb.f))
+            },
+
+            (Isxn::None, Isxn::Some(_, _), Isxn::Some(_, _), Isxn::None) => {
+                if sa.f == sb.i {
+                    // |---|
+                    //     |---|
+                    let pt = sa.f;
+                    return Ok(Isxn::Some(
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::One }]),
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::Zero }]),
+                    ));
+                }
+                // |---|
+                //   |---|
+                Some(Segment(sb.i, sa.f))
+            },
+
+
+            // Head-to-head collision.
+            (Isxn::Some(_, _), Isxn::None, Isxn::Some(_, _), Isxn::None)  => {
+                let pt = sa.i;
+                return Ok(Isxn::Some(
+                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::Zero }]),
+                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::Zero }]),
+                ));
+            }
+
+            // Tail-to-tail collision.
+            (Isxn::None, Isxn::Some(_, _), Isxn::None, Isxn::Some(_, _))  => {
+                let pt = sa.f;
+                return Ok(Isxn::Some(
+                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::One }]),
+                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment { at_point: pt, percent_along: Percent::One }]),
+                ));
+            }
+
+            // No collision.
+            (Isxn::None, Isxn::None, Isxn::None, Isxn::None) => None,
+
+            // ERR: same
+            //
+            // |---|
+            // |---|
+            (Isxn::Some(_, _), Isxn::Some(_, _), Isxn::Some(_, _), Isxn::Some(_, _)) => {
+                return Err(anyhow!(
+                    "these are the same line; sa==sb should have triggered."
+                ));
+            }
+
+            // ERR: cannot have
+            //
+            //  (sa.f == sb.f == None, but collision)
+            (Isxn::Some(_, _), Isxn::None, Isxn::None, Isxn::None) |
+            //  (sa.i == sb.i == None, but collision)
+            (Isxn::None, Isxn::Some(_, _), Isxn::None, Isxn::None) |
+            //  (sa.f == sb.f == None, but collision)
+            (Isxn::None, Isxn::None, Isxn::Some(_, _), Isxn::None) |
+            //  (sa.i == sb.i == None, but collision)
+            (Isxn::None, Isxn::None, Isxn::None, Isxn::Some(_, _)) => {
+                return Err(anyhow!("this should not be possible."));
+            }
         };
 
         if let Some(isxn_segment) = isxn_segment {
-            return Ok(Isxn::Some(
-                Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(isxn_segment),]),
-                Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(isxn_segment),]),
-            ));
+            if isxn_segment == *sa {
+                return Ok(Isxn::Some(
+                    Opinion::Segment(nonempty![SegmentOpinion::EntireSegment,]),
+                    Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(isxn_segment),]),
+                ));
+            } else if isxn_segment == *sb {
+                return Ok(Isxn::Some(
+                    Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(isxn_segment),]),
+                    Opinion::Segment(nonempty![SegmentOpinion::EntireSegment,]),
+                ));
+            } else {
+                return Ok(Isxn::Some(
+                    Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(isxn_segment),]),
+                    Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(isxn_segment),]),
+                ));
+            }
         }
     }
 
@@ -398,6 +473,7 @@ mod tests {
 
     mod sg_sg {
         use super::*;
+        // use test_case::test_case;
 
         #[test]
         fn the_same() -> Result<()> {
@@ -431,34 +507,64 @@ mod tests {
             Ok(())
         }
 
-        // TODO(ambuc): colinearity tests
+        mod colinear {
+            use super::*;
+            use test_case::test_case;
 
-        /*
-        #[test]
-        fn the_same_colinear() -> Result<()> {
-            for (i, j, k) in &[(*A, *B, *C), (*A, *E, *I), (*A, *D, *G)] {
-                for (sa, sb) in &[
-                    (Segment(*i, *j), Segment(*j, *k)),
-                    (Segment(*i, *k), Segment(*j, *k)),
-                    (Segment(*i, *j), Segment(*i, *k)),
-                    (Segment(*j, *k), Segment(*i, *j)),
-                ] {
-                    for (sa, sb) in &[
-                        (sa, sb),
-                        (sa, &sb.flip()),
-                        (&sa.flip(), sb),
-                        (&sa.flip(), &sb.flip()),
-                    ] {
-                        assert_eq!(
-                            segment_intersects_segment(sa, sb)?,
-                            Isxn::SpecialCase(General::TwoSegments(TwoSegments::Colinear))
-                        );
-                    }
-                }
+            //   ^
+            //   |
+            // --Q--W--E--R--T-->
+            //   |
+            lazy_static! {
+                static ref Q: Point = Point(0, 0);
+                static ref W: Point = Point(1, 0);
+                static ref E: Point = Point(2, 0);
+                static ref R: Point = Point(3, 0);
+                static ref T: Point = Point(4, 0);
             }
-            Ok(())
+
+            #[test_case(Segment(*Q, *E),Percent::One, Segment(*E, *T), Percent::Zero, *E)]
+            #[test_case(Segment(*E, *Q),Percent::Zero, Segment(*E, *T), Percent::Zero, *E)]
+            #[test_case(Segment(*E, *Q),Percent::Zero, Segment(*T, *E), Percent::One, *E)]
+            #[test_case(Segment(*Q, *E),Percent::One, Segment(*T, *E), Percent::One, *E)]
+
+            fn atpoint(
+                sga: Segment,
+                a_pct: Percent,
+                sgb: Segment,
+                b_pct: Percent,
+                at_point: Point,
+            ) -> Result<()> {
+                assert_eq!(
+                    segment_intersects_segment(&sga, &sgb)?,
+                    Isxn::Some(
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            at_point,
+                            percent_along: a_pct,
+                        }]),
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            at_point,
+                            percent_along: b_pct,
+                        }])
+                    )
+                );
+
+                Ok(())
+            }
+
+            #[test_case(Segment(*Q, *T), Segment(*Q, *E), Segment(*Q, *E))]
+            fn atsubsegment(sga: Segment, sgb: Segment, subsegment: Segment) -> Result<()> {
+                assert_eq!(
+                    segment_intersects_segment(&sga, &sgb)?,
+                    Isxn::Some(
+                        Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(subsegment)]),
+                        Opinion::Segment(nonempty![SegmentOpinion::EntireSegment])
+                    )
+                );
+
+                Ok(())
+            }
         }
-         */
 
         #[test]
         fn partway() -> Result<()> {
