@@ -265,8 +265,41 @@ pub fn multiline_intersects_segment(ml: &Multiline, sg: &Segment) -> Result<Isxn
     }
 }
 
-pub fn multiline_intersects_multiline(_: &Multiline, _: &Multiline) -> Result<Isxn> {
-    unimplemented!()
+pub fn multiline_intersects_multiline(ml1: &Multiline, ml2: &Multiline) -> Result<Isxn> {
+    let mut total_ml1_ops: Vec<MultilineOpinion> = vec![];
+    let mut total_ml2_ops: Vec<MultilineOpinion> = vec![];
+
+    for (_ml_sg1_idx, ml_sg1) in ml1.to_segments().iter().enumerate() {
+        for (_ml_sg2_idx, ml_sg2) in ml2.to_segments().iter().enumerate() {
+            //
+            match segment_intersects_segment(ml_sg1, ml_sg2)? {
+                Isxn::SpecialCase(General::TwoSegments(_sc)) => {
+                    // return early. not guaranteed to find _all_ unusual
+                    // special-case intersections.
+                    todo!()
+                }
+                Isxn::SpecialCase(_) => {
+                    return Err(anyhow!("segment_intersects_segment should not have returned any SpecialCase besides General::TwoSegments(_)."));
+                }
+                Isxn::Some(_, _) => todo!(),
+                Isxn::None => todo!(),
+            }
+        }
+    }
+
+    total_ml1_ops.dedup();
+    total_ml2_ops.dedup();
+
+    match (
+        NonEmpty::from_vec(total_ml1_ops),
+        NonEmpty::from_vec(total_ml2_ops),
+    ) {
+        (Some(total_ml1_ops), Some(total_ml2_ops)) => Ok(Isxn::Some(
+            Opinion::Multiline(total_ml1_ops),
+            Opinion::Multiline(total_ml2_ops),
+        )),
+        _ => Ok(Isxn::None),
+    }
     //
 }
 
