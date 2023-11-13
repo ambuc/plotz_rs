@@ -95,11 +95,11 @@ impl Segment {
 
                 match (sg_ops_a.head, sg_ops_b.head) {
                     (
-                        SegmentOpinion::AlongSegment {
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: pt,
                             percent_along: a_pct,
                         },
-                        SegmentOpinion::AlongSegment {
+                        SegmentOpinion::AtPointAlongSegment {
                             percent_along: b_pct,
                             ..
                         },

@@ -3,7 +3,7 @@ use nonempty::NonEmpty;
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum SegmentOpinion {
-    AlongSegment {
+    AtPointAlongSegment {
         at_point: Point,
         percent_along: Percent,
     },
@@ -15,7 +15,7 @@ pub enum MultilineOpinion {
         index: usize,
         at_point: Point,
     },
-    AlongSharedSegment {
+    AtPointAlongSharedSegment {
         index: usize,
         at_point: Point,
         percent_along: Percent,
@@ -33,7 +33,7 @@ impl MultilineOpinion {
     // That's why.
     pub fn from_segment_opinion(index: usize, so: SegmentOpinion) -> MultilineOpinion {
         match so {
-            SegmentOpinion::AlongSegment {
+            SegmentOpinion::AtPointAlongSegment {
                 at_point,
                 percent_along,
             } => match percent_along {
@@ -42,7 +42,7 @@ impl MultilineOpinion {
                     index: index + 1,
                     at_point,
                 },
-                _ => MultilineOpinion::AlongSharedSegment {
+                _ => MultilineOpinion::AtPointAlongSharedSegment {
                     index,
                     at_point,
                     percent_along,

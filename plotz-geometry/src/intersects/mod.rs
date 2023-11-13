@@ -87,7 +87,7 @@ pub fn point_intersects_point(a: &Point, b: &Point) -> Result<Isxn> {
 pub fn segment_intersects_point(s: &Segment, p: &Point) -> Result<Isxn> {
     if s.i == *p {
         Ok(Isxn::Some(
-            Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                 at_point: *p,
                 percent_along: Percent::Zero,
             }]),
@@ -95,7 +95,7 @@ pub fn segment_intersects_point(s: &Segment, p: &Point) -> Result<Isxn> {
         ))
     } else if s.f == *p {
         Ok(Isxn::Some(
-            Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                 at_point: *p,
                 percent_along: Percent::One,
             }]),
@@ -107,7 +107,7 @@ pub fn segment_intersects_point(s: &Segment, p: &Point) -> Result<Isxn> {
         Segment(s.i, *p).length() + Segment(*p, s.f).length()
     ) {
         Ok(Isxn::Some(
-            Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                 at_point: *p,
                 percent_along: interpolate_2d_checked(s.i, s.f, *p)?,
             }]),
@@ -160,11 +160,11 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
     if (0_f64..=1_f64).contains(&s) && (0_f64..=1_f64).contains(&t) {
         let pt = Point(p0_x + (t * s1_x), p0_y + (t * s1_y));
         return Ok(Isxn::Some(
-            Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                 at_point: pt,
                 percent_along: interpolate_2d_checked(sa.i, sa.f, pt)?,
             }]),
-            Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                 at_point: pt,
                 percent_along: interpolate_2d_checked(sb.i, sb.f, pt)?,
             }]),
@@ -180,13 +180,13 @@ pub fn multiline_intersects_point(ml: &Multiline, p: &Point) -> Result<Isxn> {
         if let Isxn::Some(Opinion::Segment(sgs), _) = segment_intersects_point(sg, p)? {
             assert_eq!(sgs.len(), 1);
             match sgs.head {
-                SegmentOpinion::AlongSegment {
+                SegmentOpinion::AtPointAlongSegment {
                     at_point,
                     percent_along,
                 } => {
                     sg_ops.push(match percent_along {
                         Percent::Zero => MultilineOpinion::AtPoint { index, at_point },
-                        Percent::Val(_) => MultilineOpinion::AlongSharedSegment {
+                        Percent::Val(_) => MultilineOpinion::AtPointAlongSharedSegment {
                             index,
                             at_point,
                             percent_along,
@@ -361,7 +361,7 @@ mod tests {
                 assert_eq!(
                     segment_intersects_point(&Segment(*i, *f), i)?,
                     Isxn::Some(
-                        Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                             at_point: *i,
                             percent_along: Percent::Zero
                         }]),
@@ -371,7 +371,7 @@ mod tests {
                 assert_eq!(
                     segment_intersects_point(&Segment(*i, *f), f)?,
                     Isxn::Some(
-                        Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                             at_point: *f,
                             percent_along: Percent::One
                         }]),
@@ -388,7 +388,7 @@ mod tests {
                 assert_eq!(
                     segment_intersects_point(&Segment(*i, *f), m)?,
                     Isxn::Some(
-                        Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                             at_point: *m,
                             percent_along: Percent::Val(0.5)
                         }]),
@@ -463,11 +463,11 @@ mod tests {
                     assert_eq!(
                         segment_intersects_segment(&Segment(p0, p1), &Segment(p1, *p2))?,
                         Isxn::Some(
-                            Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+                            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                                 at_point: p1,
                                 percent_along: Percent::One
                             }]),
-                            Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+                            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                                 at_point: p1,
                                 percent_along: Percent::Zero
                             }]),
@@ -489,11 +489,11 @@ mod tests {
                     assert_eq!(
                         segment_intersects_segment(sa, sb)?,
                         Isxn::Some(
-                            Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+                            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                                 at_point: *E,
                                 percent_along: Percent::Val(0.5)
                             }]),
-                            Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+                            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                                 at_point: *E,
                                 percent_along: Percent::Val(0.5)
                             }]),
@@ -548,11 +548,13 @@ mod tests {
                     assert_eq!(
                         multiline_intersects_point(&ml, &pt)?,
                         Isxn::Some(
-                            Opinion::Multiline(nonempty![MultilineOpinion::AlongSharedSegment {
-                                index: idx,
-                                at_point: *pt,
-                                percent_along: Percent::Val(0.5)
-                            }]),
+                            Opinion::Multiline(nonempty![
+                                MultilineOpinion::AtPointAlongSharedSegment {
+                                    index: idx,
+                                    at_point: *pt,
+                                    percent_along: Percent::Val(0.5)
+                                }
+                            ]),
                             Opinion::Point
                         ),
                     );
@@ -615,7 +617,7 @@ mod tests {
                 multiline_intersects_segment(&ml, &sg)?,
                 Isxn::Some(
                     Opinion::Multiline(nonempty![MultilineOpinion::AtPoint { index, at_point }]),
-                    Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                         at_point,
                         percent_along,
                     }])
@@ -641,12 +643,12 @@ mod tests {
             assert_eq!(
                 multiline_intersects_segment(&ml, &sg)?,
                 Isxn::Some(
-                    Opinion::Multiline(nonempty![MultilineOpinion::AlongSharedSegment {
+                    Opinion::Multiline(nonempty![MultilineOpinion::AtPointAlongSharedSegment {
                         index,
                         at_point,
                         percent_along: ml_pct_along,
                     }]),
-                    Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
                         at_point,
                         percent_along: sg_pct_along,
                     }])
@@ -687,11 +689,11 @@ mod tests {
                         }
                     ]),
                     Opinion::Segment(nonempty![
-                        SegmentOpinion::AlongSegment {
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: *A,
                             percent_along: Percent::Zero,
                         },
-                        SegmentOpinion::AlongSegment {
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: *I,
                             percent_along: Percent::One,
                         }
@@ -710,23 +712,23 @@ mod tests {
                 multiline_intersects_segment(&ml, &sg)?,
                 Isxn::Some(
                     Opinion::Multiline(nonempty![
-                        MultilineOpinion::AlongSharedSegment {
+                        MultilineOpinion::AtPointAlongSharedSegment {
                             index: 0,
                             at_point: *B,
                             percent_along: Percent::Val(0.5),
                         },
-                        MultilineOpinion::AlongSharedSegment {
+                        MultilineOpinion::AtPointAlongSharedSegment {
                             index: 1,
                             at_point: *F,
                             percent_along: Percent::Val(0.5),
                         }
                     ]),
                     Opinion::Segment(nonempty![
-                        SegmentOpinion::AlongSegment {
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: *B,
                             percent_along: Percent::Zero,
                         },
-                        SegmentOpinion::AlongSegment {
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: *F,
                             percent_along: Percent::One,
                         }
