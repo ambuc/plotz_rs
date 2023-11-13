@@ -8,9 +8,7 @@ use crate::{
     intersection::{Intersection, IntersectionResult},
     intersects::{
         opinion::{Opinion, SegmentOpinion},
-        segment_intersects_segment,
-        specialcase::{General, TwoSegments},
-        Isxn,
+        segment_intersects_segment, Isxn,
     },
     obj2::ObjType2d,
     shapes::{point::Point, polygon::Polygon, ray::Ray},
@@ -81,14 +79,6 @@ impl Segment {
         match segment_intersects_segment(self, other) {
             Err(_) => None,
             Ok(Isxn::None) => None,
-            Ok(Isxn::SpecialCase(General::TwoSegments(case))) => Some(match case {
-                TwoSegments::Same => IntersectionResult::ErrSegmentsAreTheSame,
-                TwoSegments::SameButReversed => {
-                    IntersectionResult::ErrSegmentsAreTheSameButReversed
-                }
-                TwoSegments::Colinear => IntersectionResult::ErrSegmentsAreColinear,
-            }),
-            Ok(Isxn::SpecialCase(_)) => panic!("?"),
             Ok(Isxn::Some(Opinion::Segment(sg_ops_a), Opinion::Segment(sg_ops_b))) => {
                 assert_eq!(sg_ops_a.len(), 1);
                 assert_eq!(sg_ops_b.len(), 1);
