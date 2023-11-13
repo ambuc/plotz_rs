@@ -177,26 +177,14 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
 pub fn multiline_intersects_point(ml: &Multiline, p: &Point) -> Result<Isxn> {
     let mut sg_ops: Vec<MultilineOpinion> = vec![];
     for (index, sg) in ml.to_segments().iter().enumerate() {
-        if let Isxn::Some(Opinion::Segment(sgs), _) = segment_intersects_point(sg, p)? {
-            assert_eq!(sgs.len(), 1);
-            match sgs.head {
-                SegmentOpinion::AtPointAlongSegment {
-                    at_point,
-                    percent_along,
-                } => {
-                    sg_ops.push(match percent_along {
-                        Percent::Zero => MultilineOpinion::AtPoint { index, at_point },
-                        Percent::Val(_) => MultilineOpinion::AtPointAlongSharedSegment {
-                            index,
-                            at_point,
-                            percent_along,
-                        },
-                        Percent::One => MultilineOpinion::AtPoint {
-                            index: index + 1,
-                            at_point,
-                        },
-                    });
-                }
+        if let Isxn::Some(Opinion::Segment(segment_opinions), _) = segment_intersects_point(sg, p)?
+        {
+            assert_eq!(segment_opinions.len(), 1);
+            for segment_opinion in segment_opinions {
+                sg_ops.push(MultilineOpinion::from_segment_opinion(
+                    index,
+                    segment_opinion,
+                ));
             }
         }
     }

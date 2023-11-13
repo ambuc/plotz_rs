@@ -104,6 +104,11 @@ impl Segment {
                             ..
                         },
                     ) => Some(IntersectionResult::Ok(Intersection { pt, a_pct, b_pct })),
+                    _ => {
+                        // This is actually super wrong. But Segment::intersects
+                        // is going away soon, so....
+                        None
+                    }
                 }
             }
             _ => None,

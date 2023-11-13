@@ -1,4 +1,7 @@
-use crate::{shapes::point::Point, utils::Percent};
+use crate::{
+    shapes::{point::Point, segment::Segment},
+    utils::Percent,
+};
 use nonempty::NonEmpty;
 
 #[derive(PartialEq, Clone, Debug)]
@@ -7,6 +10,12 @@ pub enum SegmentOpinion {
         at_point: Point,
         percent_along: Percent,
     },
+
+    // intersection is a subsegment of this segment.
+    AlongSubsegment(Segment),
+
+    // intersection point(s) comprise this entire segment.
+    EntireSegment,
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -15,10 +24,23 @@ pub enum MultilineOpinion {
         index: usize,
         at_point: Point,
     },
+
     AtPointAlongSharedSegment {
         index: usize,
         at_point: Point,
         percent_along: Percent,
+    },
+
+    // intersection point(s) comprise a subsegment of a segment of this
+    // multiline.
+    AlongSubsegmentOf {
+        index: usize,
+        subsegment: Segment,
+    },
+
+    // intersection point(s) comprise an entire subsegment of this multiline.
+    EntireSubsegment {
+        index: usize,
     },
 }
 
@@ -48,6 +70,11 @@ impl MultilineOpinion {
                     percent_along,
                 },
             },
+            SegmentOpinion::AlongSubsegment(segment) => MultilineOpinion::AlongSubsegmentOf {
+                index,
+                subsegment: segment,
+            },
+            SegmentOpinion::EntireSegment => MultilineOpinion::EntireSubsegment { index },
         }
     }
 }
