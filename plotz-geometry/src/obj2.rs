@@ -18,11 +18,12 @@ use itertools::Itertools;
 use std::{fmt::Debug, ops::*};
 
 pub enum ObjType2d {
+    // Roughly in complexity order.
     Point2d,
-    Polygon2d,
-    PolygonWithCavities2d,
     Segment2d,
     Multiline2d,
+    Polygon2d,
+    PolygonWithCavities2d,
     CurveArc2d,
     Text2d,
     Group2d,
@@ -32,11 +33,12 @@ pub enum ObjType2d {
 #[derive(Debug, PartialEq, Clone)]
 #[enum_dispatch]
 pub enum Obj2 {
+    // Roughly in complexity order.
     Point(Point),                             // A point.
-    Polygon(Polygon),                         // A polygon.
-    PolygonWithCavities(PolygonWithCavities), // A polygon with cavities.
     Segment(Segment),                         // A segment.
     Multiline(Multiline),                     // A multiline.
+    Polygon(Polygon),                         // A polygon.
+    PolygonWithCavities(PolygonWithCavities), // A polygon with cavities.
     CurveArc(CurveArc),                       // An arc.
     Text(Text),                               // A character to be printed in SVG, at a point.
     Group(Group<Style>),                      // A group of other objects.

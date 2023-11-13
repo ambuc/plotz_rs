@@ -53,27 +53,25 @@ pub fn obj_intersects_obj(a: &Obj2, b: &Obj2) -> Result<Isxn> {
     // ==========++====+====+====+==
     //     point || ✔️  | \  | \  |
     //   segment || ✔️  | ✔️  | \  |
-    // multiline || ✔️  | ~  |    |
+    // multiline || ✔️  | ✔️  | ~  |
     // ==========++====+====+====+==
     //
-    match (a, b) {
-        (Obj2::Point(pa), Obj2::Point(pb)) => point_intersects_point(pa, pb),
-
-        (Obj2::Segment(s), Obj2::Point(p)) => segment_intersects_point(s, p),
-        (Obj2::Point(p), Obj2::Segment(s)) => segment_intersects_point(s, p).map(Isxn::flip),
-
-        (Obj2::Segment(sa), Obj2::Segment(sb)) => segment_intersects_segment(sa, sb),
-
-        (Obj2::Multiline(ml), Obj2::Point(p)) => multiline_intersects_point(ml, p),
-        (Obj2::Point(p), Obj2::Multiline(ml)) => multiline_intersects_point(ml, p).map(Isxn::flip),
-
-        (Obj2::Multiline(ml), Obj2::Segment(sg)) => multiline_intersects_segment(ml, sg),
-        (Obj2::Segment(sg), Obj2::Multiline(ml)) => {
-            multiline_intersects_segment(ml, sg).map(Isxn::flip)
-        }
-
-        (Obj2::Multiline(ml1), Obj2::Multiline(ml2)) => multiline_intersects_multiline(ml1, ml2),
-
+    match a {
+        Obj2::Point(p) => match b {
+            Obj2::Point(p2) => point_intersects_point(p, p2),
+            _ => obj_intersects_obj(b, a).map(Isxn::flip),
+        },
+        Obj2::Segment(sg) => match b {
+            Obj2::Point(pt) => segment_intersects_point(sg, pt),
+            Obj2::Segment(sg2) => segment_intersects_segment(sg, sg2),
+            _ => obj_intersects_obj(b, a).map(Isxn::flip),
+        },
+        Obj2::Multiline(ml) => match b {
+            Obj2::Point(pt) => multiline_intersects_point(ml, pt),
+            Obj2::Segment(sg) => multiline_intersects_segment(ml, sg),
+            Obj2::Multiline(ml2) => multiline_intersects_multiline(ml, ml2),
+            _ => unimplemented!(),
+        },
         _ => unimplemented!(),
     }
 }
@@ -702,6 +700,17 @@ mod tests {
                     ]),
                 )
             );
+            Ok(())
+        }
+    }
+
+    mod ml_ml {
+        use super::*;
+
+        #[test]
+        fn test_foo() -> Result<()> {
+            //
+
             Ok(())
         }
     }
