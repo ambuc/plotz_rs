@@ -5,7 +5,7 @@ pub mod specialcase;
 
 use self::{
     opinion::{MultilineOpinion, Opinion, SegmentOpinion},
-    specialcase::{General, MultilineAndSegment, TwoPoints, TwoSegments},
+    specialcase::{General, MultilineAndSegment, TwoSegments},
 };
 use crate::{
     interpolate::interpolate_2d_checked,
@@ -78,7 +78,7 @@ pub fn obj_intersects_obj(a: &Obj2, b: &Obj2) -> Result<Isxn> {
 
 pub fn point_intersects_point(a: &Point, b: &Point) -> Result<Isxn> {
     if a == b {
-        Ok(Isxn::SpecialCase(General::TwoPoints(TwoPoints::Same)))
+        Ok(Isxn::Some(Opinion::Point, Opinion::Point))
     } else {
         Ok(Isxn::None)
     }
@@ -337,7 +337,7 @@ mod tests {
             for i in &[*A, *B, *C] {
                 assert_eq!(
                     point_intersects_point(i, i)?,
-                    Isxn::SpecialCase(General::TwoPoints(TwoPoints::Same))
+                    Isxn::Some(Opinion::Point, Opinion::Point),
                 );
             }
             Ok(())
