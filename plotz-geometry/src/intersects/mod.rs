@@ -536,6 +536,7 @@ mod tests {
 
     mod ml_sg {
         use super::*;
+        use test_case::test_case;
 
         //   ^
         //   |
@@ -546,33 +547,161 @@ mod tests {
         // --G--H--I->
         //   |
 
-        #[test]
-        fn no_intersections() -> Result<()> {
-            // let ml = Multiline([*A, *C, *I]);
-            // let sg = Segment(*G, *H);
-            // assert_eq!(multiline_intersects_segment(&ml, &sg)?, Isxn::None);
+        #[test_case(Multiline([*A, *C, *I]), Segment(*G, *H))]
+        #[test_case(Multiline([*A, *C, *F]), Segment(*G, *H))]
+        #[test_case(Multiline([*A, *C, *I]), Segment(*D, *H))]
+        #[test_case(Multiline([*A, *E, *I]), Segment(*B, *F))]
+        fn none(ml: Multiline, sg: Segment) -> Result<()> {
+            assert_eq!(multiline_intersects_segment(&ml, &sg)?, Isxn::None);
             Ok(())
         }
 
-        #[test]
-        fn one_intersection_at_segment_start() -> Result<()> {
+        #[test_case(Multiline([*A, *C, *I]), Segment(*A, *G), 0, *A, Percent::Zero)]
+        #[test_case(Multiline([*C, *I, *G]), Segment(*C, *A), 0, *C, Percent::Zero)]
+        #[test_case(Multiline([*I, *G, *A]), Segment(*I, *C), 0, *I, Percent::Zero)]
+        #[test_case(Multiline([*A, *E, *I]), Segment(*A, *G), 0, *A, Percent::Zero)]
+        #[test_case(Multiline([*A, *C, *I]), Segment(*G, *A), 0, *A, Percent::One)]
+        #[test_case(Multiline([*C, *I, *G]), Segment(*A, *C), 0, *C, Percent::One)]
+        #[test_case(Multiline([*I, *G, *A]), Segment(*C, *I), 0, *I, Percent::One)]
+        #[test_case(Multiline([*A, *E, *I]), Segment(*G, *A), 0, *A, Percent::One)]
+        #[test_case(Multiline([*B, *E, *H]), Segment(*A, *C), 0, *B, Percent::Val(0.5))]
+        #[test_case(Multiline([*D, *E, *F]), Segment(*G, *A), 0, *D, Percent::Val(0.5))]
+        #[test_case(Multiline([*B, *E, *H]), Segment(*E, *F), 1, *E, Percent::Zero)]
+        #[test_case(Multiline([*B, *E, *H]), Segment(*D, *E), 1, *E, Percent::One)]
+        #[test_case(Multiline([*B, *E, *H]), Segment(*D, *F), 1, *E, Percent::Val(0.5))]
+        #[test_case(Multiline([*B, *E, *H]), Segment(*H, *I), 2, *H, Percent::Zero)]
+        #[test_case(Multiline([*B, *E, *H]), Segment(*G, *H), 2, *H, Percent::One)]
+        #[test_case(Multiline([*B, *E, *H]), Segment(*G, *I), 2, *H, Percent::Val(0.5))]
+        // At segment midpoint
+        fn one_intersection_ml_atpoint_sg(
+            ml: Multiline,
+            sg: Segment,
+            index: usize,
+            at_point: Point,
+            percent_along: Percent,
+        ) -> Result<()> {
+            assert_eq!(
+                multiline_intersects_segment(&ml, &sg)?,
+                Isxn::Some(
+                    Opinion::Multiline(nonempty![MultilineOpinion::AtPoint { index, at_point }]),
+                    Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+                        at_point,
+                        percent_along,
+                    }])
+                )
+            );
             Ok(())
         }
-        #[test]
-        fn one_intersection_at_segment_midpoint() -> Result<()> {
+
+        #[test_case(Multiline([*D, *F, *I]), Segment(*B, *H), 0, *E, Percent::Val(0.5), Percent::Val(0.5))]
+        #[test_case(Multiline([*D, *F, *I]), Segment(*E, *H), 0, *E, Percent::Val(0.5), Percent::Zero)]
+        #[test_case(Multiline([*D, *F, *I]), Segment(*B, *E), 0, *E, Percent::Val(0.5), Percent::One)]
+        #[test_case(Multiline([*G, *D, *F]), Segment(*B, *H), 1, *E, Percent::Val(0.5), Percent::Val(0.5))]
+        #[test_case(Multiline([*G, *D, *F]), Segment(*E, *H), 1, *E, Percent::Val(0.5), Percent::Zero)]
+        #[test_case(Multiline([*G, *D, *F]), Segment(*B, *E), 1, *E, Percent::Val(0.5), Percent::One)]
+        fn one_intersection_ml_alongsharedsegment_sg(
+            ml: Multiline,
+            sg: Segment,
+            index: usize,
+            at_point: Point,
+            ml_pct_along: Percent,
+            sg_pct_along: Percent,
+        ) -> Result<()> {
+            assert_eq!(
+                multiline_intersects_segment(&ml, &sg)?,
+                Isxn::Some(
+                    Opinion::Multiline(nonempty![MultilineOpinion::AlongSharedSegment {
+                        index,
+                        at_point,
+                        percent_along: ml_pct_along,
+                    }]),
+                    Opinion::Segment(nonempty![SegmentOpinion::AlongSegment {
+                        at_point,
+                        percent_along: sg_pct_along,
+                    }])
+                )
+            );
             Ok(())
         }
-        #[test]
-        fn one_intersection_at_segment_end() -> Result<()> {
+
+        #[test_case(Segment(*A, *B), MultilineAndSegment::SegmentInMultiline{sc: TwoSegments::Same, index: 0})]
+        #[test_case(Segment(*B, *A), MultilineAndSegment::SegmentInMultiline{sc: TwoSegments::SameButReversed, index: 0})]
+        #[test_case(Segment(*A, *C), MultilineAndSegment::SegmentInMultiline{sc: TwoSegments::Colinear, index: 0})]
+        fn special_case(sg: Segment, ml_and_sg_sc: MultilineAndSegment) -> Result<()> {
+            let ml = Multiline([*A, *B, *C]);
+            assert_eq!(
+                multiline_intersects_segment(&ml, &sg)?,
+                Isxn::SpecialCase(General::MultilineAndSegment(ml_and_sg_sc))
+            );
             Ok(())
         }
+
+        // here is the fun stuff.
         #[test]
         fn two_intersections_at_segment_bookends() -> Result<()> {
+            let ml = Multiline([*A, *C, *I]);
+            let sg = Segment(*A, *I);
+
+            assert_eq!(
+                multiline_intersects_segment(&ml, &sg)?,
+                Isxn::Some(
+                    Opinion::Multiline(nonempty![
+                        MultilineOpinion::AtPoint {
+                            index: 0,
+                            at_point: *A,
+                        },
+                        MultilineOpinion::AtPoint {
+                            index: 2,
+                            at_point: *I,
+                        }
+                    ]),
+                    Opinion::Segment(nonempty![
+                        SegmentOpinion::AlongSegment {
+                            at_point: *A,
+                            percent_along: Percent::Zero,
+                        },
+                        SegmentOpinion::AlongSegment {
+                            at_point: *I,
+                            percent_along: Percent::One,
+                        }
+                    ])
+                )
+            );
             Ok(())
         }
 
         #[test]
-        fn two_intersections_along_segment() -> Result<()> {
+        fn two_intersections_at_segment_bookends_2() -> Result<()> {
+            let ml = Multiline([*A, *C, *I]);
+            let sg = Segment(*B, *F);
+
+            assert_eq!(
+                multiline_intersects_segment(&ml, &sg)?,
+                Isxn::Some(
+                    Opinion::Multiline(nonempty![
+                        MultilineOpinion::AlongSharedSegment {
+                            index: 0,
+                            at_point: *B,
+                            percent_along: Percent::Val(0.5),
+                        },
+                        MultilineOpinion::AlongSharedSegment {
+                            index: 1,
+                            at_point: *F,
+                            percent_along: Percent::Val(0.5),
+                        }
+                    ]),
+                    Opinion::Segment(nonempty![
+                        SegmentOpinion::AlongSegment {
+                            at_point: *B,
+                            percent_along: Percent::Zero,
+                        },
+                        SegmentOpinion::AlongSegment {
+                            at_point: *F,
+                            percent_along: Percent::One,
+                        }
+                    ]),
+                )
+            );
             Ok(())
         }
     }
