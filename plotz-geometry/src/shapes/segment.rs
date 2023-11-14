@@ -121,6 +121,12 @@ impl Segment {
         (x1 * y2) - (x2 * y1)
     }
 
+    pub fn dot(&self, other: &Segment) -> f64 {
+        let o = other.f - other.i;
+        let s = self.f - self.i;
+        (o.x * s.x) + (o.y * s.y)
+    }
+
     pub fn midpoint(&self) -> Point {
         (self.i + self.f) / 2.0
     }

@@ -115,6 +115,8 @@ pub fn segment_intersects_point(s: &Segment, p: &Point) -> Result<Isxn> {
 }
 
 pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
+    // NB: sa and sb are _not_ guaranteed to point the same way.
+
     if sa == sb || *sa == sb.flip() {
         return Ok(Isxn::Some(
             Opinion::Segment(nonempty![SegmentOpinion::EntireSegment]),
@@ -134,37 +136,37 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
 
             // ERR: same
             //
-            // |---|
-            // |---|
+            // |-->|
+            // |-->|
             (Isxn::Some(_, _), Isxn::Some(_, _), Isxn::Some(_, _), Isxn::Some(_, _)) => {
                 return Err(anyhow!(
                     "these are the same line; sa==sb should have triggered."
                 ));
             }
 
-            // |---|
-            // |----|
+            // |-->|
+            // |--->|
             // or
-            //  |---|
-            // |----|
+            //  |-->|
+            // |--->|
             // or
-            //  |---|
-            // |-----|
+            //  |-->|
+            // |---->|
             (Isxn::Some(_, _), Isxn::Some(_, _), _, _) => Some(*sa),
 
-            // |-----|
-            // |---|
+            // |---->|
+            // |-->|
             // or
-            // |-----|
-            //  |---|
-            // |----|
-            //  |---|
+            // |---->|
+            //  |-->|
+            // |--->|
+            //  |-->|
             (_, _, Isxn::Some(_, _), Isxn::Some(_, _)) => Some(*sb),
 
             (Isxn::Some(_, _), Isxn::None, Isxn::None, Isxn::Some(_, _)) => {
                 if sa.i == sb.f {
-                    //     |---|
-                    // |---|
+                    //     |-->|
+                    // |-->|
                     let pt = sa.i;
                     return Ok(Isxn::Some(
                         Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
@@ -177,15 +179,15 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
                         }]),
                     ));
                 }
-                //   |---|
-                // |---|
+                //    |--->|
+                // |--->|
                 Some(Segment(sa.i, sb.f))
             }
 
             (Isxn::None, Isxn::Some(_, _), Isxn::Some(_, _), Isxn::None) => {
                 if sa.f == sb.i {
-                    // |---|
-                    //     |---|
+                    // |-->|
+                    //     |-->|
                     let pt = sa.f;
                     return Ok(Isxn::Some(
                         Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
@@ -198,39 +200,53 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
                         }]),
                     ));
                 }
-                // |---|
-                //   |---|
+                // |--->|
+                //    |--->|
                 Some(Segment(sb.i, sa.f))
             }
 
             // Head-to-head collision.
             (Isxn::Some(_, _), Isxn::None, Isxn::Some(_, _), Isxn::None) => {
-                let pt = sa.i;
-                return Ok(Isxn::Some(
-                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
-                        at_point: pt,
-                        percent_along: Percent::Zero
-                    }]),
-                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
-                        at_point: pt,
-                        percent_along: Percent::Zero
-                    }]),
-                ));
+                if sa.i == sb.i {
+                    // |<--|
+                    //     |-->|
+                    let pt = sa.i;
+                    return Ok(Isxn::Some(
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            at_point: pt,
+                            percent_along: Percent::Zero
+                        }]),
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            at_point: pt,
+                            percent_along: Percent::Zero
+                        }]),
+                    ));
+                }
+                // |<---|
+                //    |--->|
+                Some(Segment(sa.i, sb.i))
             }
 
             // Tail-to-tail collision.
             (Isxn::None, Isxn::Some(_, _), Isxn::None, Isxn::Some(_, _)) => {
-                let pt = sa.f;
-                return Ok(Isxn::Some(
-                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
-                        at_point: pt,
-                        percent_along: Percent::One
-                    }]),
-                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
-                        at_point: pt,
-                        percent_along: Percent::One
-                    }]),
-                ));
+                if sa.f == sb.f {
+                    //     |<--|
+                    // |-->|
+                    let pt = sa.f;
+                    return Ok(Isxn::Some(
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            at_point: pt,
+                            percent_along: Percent::One
+                        }]),
+                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            at_point: pt,
+                            percent_along: Percent::One
+                        }]),
+                    ));
+                }
+                //   |<--|
+                // |-->|
+                Some(Segment(sa.f, sb.f))
             }
 
             _ => {
@@ -251,8 +267,24 @@ pub fn segment_intersects_segment(sa: &Segment, sb: &Segment) -> Result<Isxn> {
                 ));
             } else {
                 return Ok(Isxn::Some(
-                    Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(isxn_segment),]),
-                    Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(isxn_segment),]),
+                    Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(
+                        // why dot/flip here? if the resultant segment doesn't
+                        // run 'along' the input |sa|, |sb|, we have to flip it
+                        // so that its subsegment is correctly oriented with
+                        // respect to the input subsegment.
+                        if isxn_segment.dot(sa) < 0.0 {
+                            isxn_segment.flip()
+                        } else {
+                            isxn_segment
+                        }
+                    ),]),
+                    Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(
+                        if isxn_segment.dot(sb) < 0.0 {
+                            isxn_segment.flip()
+                        } else {
+                            isxn_segment
+                        }
+                    ),]),
                 ));
             }
         }
@@ -339,47 +371,36 @@ pub fn multiline_intersects_segment(ml: &Multiline, sg: &Segment) -> Result<Isxn
     total_ml_ops.dedup();
     total_sg_ops.dedup();
 
-    // MUST dedup things like:
-    // vec![
-    //   AtPoint{index:n, ..},      // ERR: must be deleted
-    //   EntireSubsegment{index:n}, // OK
-    //   AtPoint{index:n+1, ..},    // ERR: must be deleted
-    // ]
-    // since they're overlapping here
-    let mut ml_ops_idxs_to_delete: Vec<usize> = vec![];
-    for ((mlop_a_idx, mlop_a), (mlop_b_idx, mlop_b)) in total_ml_ops
-        .iter()
-        .enumerate()
-        .zip(total_ml_ops.iter().enumerate().skip(1))
-    {
-        //
-        match (mlop_a, mlop_b) {
-            (
-                MultilineOpinion::AtPoint { index: pt_idx, .. },
-                MultilineOpinion::EntireSubsegment { index: sg_idx },
-            ) if pt_idx == sg_idx => {
-                //
-                ml_ops_idxs_to_delete.push(mlop_a_idx);
-            }
-            (
-                MultilineOpinion::EntireSubsegment { index: sg_idx },
-                MultilineOpinion::AtPoint { index: pt_idx, .. },
-            ) if sg_idx + 1 == *pt_idx => {
-                ml_ops_idxs_to_delete.push(mlop_b_idx);
-            }
-            _ => {
-                // do nothing
+    'edit: loop {
+        let ops_ = total_ml_ops.clone();
+        for ((idx1, op1), (idx2, op2)) in
+            ops_.iter().enumerate().zip(ops_.iter().enumerate().skip(1))
+        {
+            match (op1, op2) {
+                (
+                    MultilineOpinion::AtPoint { index: pt_idx, .. },
+                    MultilineOpinion::EntireSubsegment { index: sg_idx },
+                ) if pt_idx == sg_idx => {
+                    //
+                    total_ml_ops.remove(idx1);
+                    continue 'edit;
+                }
+                (
+                    MultilineOpinion::EntireSubsegment { index: sg_idx },
+                    MultilineOpinion::AtPoint { index: pt_idx, .. },
+                ) if sg_idx + 1 == *pt_idx => {
+                    total_ml_ops.remove(idx2);
+                    continue 'edit;
+                }
+                _ => {
+                    // do nothing
+                }
             }
         }
-    }
-    ml_ops_idxs_to_delete.dedup();
-    ml_ops_idxs_to_delete.reverse();
-    for idx in ml_ops_idxs_to_delete {
-        total_ml_ops.remove(idx);
+        break;
     }
 
     'edit: loop {
-        dbg!(&total_sg_ops);
         let ops_ = total_sg_ops.clone();
         for (idx, op) in ops_.iter().enumerate() {
             match op {
@@ -414,6 +435,14 @@ pub fn multiline_intersects_segment(ml: &Multiline, sg: &Segment) -> Result<Isxn
                     total_sg_ops.push(SegmentOpinion::AlongSubsegment(Segment(s1.i, s2.f)));
                     continue 'edit;
                 }
+                (SegmentOpinion::AlongSubsegment(s1), SegmentOpinion::AlongSubsegment(s2))
+                    if s2.f == s1.i =>
+                {
+                    total_sg_ops.remove(idx2);
+                    total_sg_ops.remove(idx1);
+                    total_sg_ops.push(SegmentOpinion::AlongSubsegment(Segment(s2.i, s1.f)));
+                    continue 'edit;
+                }
                 _ => {
                     // do nothing
                 }
@@ -421,30 +450,6 @@ pub fn multiline_intersects_segment(ml: &Multiline, sg: &Segment) -> Result<Isxn
         }
         break;
     }
-    // let mut sg_ops_idxs_to_delete: Vec<usize> = vec![];
-    // for ((sgop_a_idx, sgop_a), (sgop_b_idx, sgop_b)) in total_sg_ops
-    // .iter()
-    // .enumerate()
-    // .zip(total_sg_ops.iter().enumerate().skip(1))
-    // {
-    // // TODO(ambuc): handle atpoint / alongsubsegment collisions
-    // match (sgop_a, sgop_b) {
-    // (SegmentOpinion::AtPointAlongSegment { .. }, SegmentOpinion::EntireSegment) => {
-    // sg_ops_idxs_to_delete.push(sgop_a_idx);
-    // }
-    // (SegmentOpinion::EntireSegment, SegmentOpinion::AtPointAlongSegment { .. }) => {
-    // sg_ops_idxs_to_delete.push(sgop_b_idx);
-    // }
-    // _ => {
-    // // do nothing
-    // }
-    // }
-    // }
-    // sg_ops_idxs_to_delete.dedup();
-    // sg_ops_idxs_to_delete.reverse();
-    // for idx in sg_ops_idxs_to_delete {
-    // total_sg_ops.remove(idx);
-    // }
 
     match (
         NonEmpty::from_vec(total_ml_ops),
@@ -596,7 +601,7 @@ mod tests {
 
     mod sg_sg {
         use super::*;
-        // use test_case::test_case;
+        use test_case::test_case;
 
         #[test]
         fn the_same() -> Result<()> {
@@ -746,6 +751,50 @@ mod tests {
                 }
             }
 
+            Ok(())
+        }
+
+        #[test_case(
+            Segment(*A, *C),
+            Segment(Point(0.5, 2), Point(1.5,2)),
+            Isxn::Some(
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::AlongSubsegment(Segment(Point(0.5,2), Point(1.5, 2)))
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::EntireSegment
+                ]),
+            );
+            "partial collision"
+        )]
+        #[test_case(
+            Segment(*A, *C),
+            Segment(Point(1.5, 2), Point(0.5,2)),
+            Isxn::Some(
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::AlongSubsegment(Segment(Point(1.5,2), Point(0.5, 2)))
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::EntireSegment
+                ]),
+            );
+            "partial collision, flip"
+        )]
+        #[test_case(
+            Segment(Point(0,2), Point(1,2)),
+            Segment(Point(1.5,2), Point(0.5,2)),
+            Isxn::Some(
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::AlongSubsegment(Segment(Point(0.5,2), Point(1,2))),
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::AlongSubsegment(Segment(Point(1,2), Point(0.5,2))),
+                ])
+            );
+            "partial collision, backwards"
+        )]
+        fn isxn(a: Segment, b: Segment, expectation: Isxn) -> Result<()> {
+            assert_eq!(segment_intersects_segment(&a, &b)?, expectation);
             Ok(())
         }
     }
@@ -1052,6 +1101,46 @@ mod tests {
             );
             "total collision 01 flip"
         )]
+        #[test_case(
+            Multiline([*A, *B, *C]),
+            Segment(Point(0.5,2), Point(1.5,2)),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AlongSubsegmentOf {
+                        index: 0,
+                        subsegment: Segment(Point(0.5,2), Point(1,2))
+                    },
+                    MultilineOpinion::AlongSubsegmentOf {
+                        index: 1,
+                        subsegment: Segment(Point(1,2), Point(1.5,2))
+                    }
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::EntireSegment
+                ])
+            );
+            "total collision half shift 01"
+        )]
+        #[test_case(
+            Multiline([*A, *B, *C]),
+            Segment(Point(1.5,2), Point(0.5,2)),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AlongSubsegmentOf {
+                        index: 0,
+                        subsegment: Segment(Point(0.5,2), Point(1,2))
+                    },
+                    MultilineOpinion::AlongSubsegmentOf {
+                        index: 1,
+                        subsegment: Segment(Point(1,2), Point(1.5,2))
+                    }
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::EntireSegment
+                ])
+            );
+            "total collision half shift 01 flip"
+        )]
         fn isxn(ml: Multiline, sg: Segment, expectation: Isxn) -> Result<()> {
             assert_eq!(multiline_intersects_segment(&ml, &sg)?, expectation);
             Ok(())
@@ -1085,7 +1174,7 @@ mod tests {
                     MultilineOpinion::AtPoint { index: 0, at_point: *A }
                 ])
             );
-            "AtPoint 0, AtPoint 0" 
+            "AtPoint 0, AtPoint 0"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
@@ -1098,7 +1187,7 @@ mod tests {
                     MultilineOpinion::AtPoint { index: 2, at_point: *A }
                 ])
             );
-            "AtPoint 0, AtPoint 2" 
+            "AtPoint 0, AtPoint 2"
         )]
         #[test_case(
             Multiline([*C, *B, *A]),
@@ -1111,7 +1200,7 @@ mod tests {
                     MultilineOpinion::AtPoint { index: 2, at_point: *A }
                 ])
             );
-            "AtPoint 2, AtPoint 2" 
+            "AtPoint 2, AtPoint 2"
         )]
         #[test_case(
             Multiline([*A, *E, *I]),
