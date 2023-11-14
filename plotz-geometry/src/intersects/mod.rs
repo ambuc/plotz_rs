@@ -355,12 +355,21 @@ pub fn multiline_intersects_multiline(ml1: &Multiline, ml2: &Multiline) -> Resul
     let mut total_ml1_ops: Vec<MultilineOpinion> = vec![];
     let mut total_ml2_ops: Vec<MultilineOpinion> = vec![];
 
-    for (_ml_sg1_idx, ml_sg1) in ml1.to_segments().iter().enumerate() {
-        for (_ml_sg2_idx, ml_sg2) in ml2.to_segments().iter().enumerate() {
-            //
+    for (ml_sg1_idx, ml_sg1) in ml1.to_segments().iter().enumerate() {
+        for (ml_sg2_idx, ml_sg2) in ml2.to_segments().iter().enumerate() {
             match segment_intersects_segment(ml_sg1, ml_sg2)? {
-                Isxn::Some(_, _) => todo!(),
-                Isxn::None => todo!(),
+                Isxn::Some(Opinion::Segment(ml_sg1_ops), Opinion::Segment(ml_sg2_ops)) => {
+                    for ml_sg1_op in ml_sg1_ops.into_iter() {
+                        total_ml1_ops.push(MultilineOpinion::from_segment_opinion(ml_sg1_idx, ml_sg1_op));
+                    }
+                    for ml_sg2_op in ml_sg2_ops.into_iter() {
+                        total_ml2_ops.push(MultilineOpinion::from_segment_opinion(ml_sg2_idx, ml_sg2_op));
+                    }
+                }
+                Isxn::Some(_, _) => panic!("segment_intersects_segment should not have returned anything besides Opinion::Segment(_)."),
+                Isxn::None => {
+                    // nothing to do
+                }
             }
         }
     }
@@ -786,19 +795,6 @@ mod tests {
         }
 
         // TODO(ambuc): multiline_and_segment special case tests
-        /*
-        #[test_case(Segment(*A, *B), MultilineAndSegment::SegmentInMultiline{sc: TwoSegments::Same, index: 0})]
-        #[test_case(Segment(*B, *A), MultilineAndSegment::SegmentInMultiline{sc: TwoSegments::SameButReversed, index: 0})]
-        #[test_case(Segment(*A, *C), MultilineAndSegment::SegmentInMultiline{sc: TwoSegments::Colinear, index: 0})]
-        fn special_case(sg: Segment, ml_and_sg_sc: MultilineAndSegment) -> Result<()> {
-            let ml = Multiline([*A, *B, *C]);
-            assert_eq!(
-                multiline_intersects_segment(&ml, &sg)?,
-                Isxn::SpecialCase(General::MultilineAndSegment(ml_and_sg_sc))
-            );
-            Ok(())
-        }
-         */
 
         // here is the fun stuff.
         #[test]
@@ -872,11 +868,93 @@ mod tests {
 
     mod ml_ml {
         use super::*;
+        use test_case::test_case;
 
-        #[test]
-        fn test_foo() -> Result<()> {
-            //
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
 
+        #[test_case(Multiline([*A, *B, *C]), Multiline([*D, *E, *F]), Isxn::None; "none 01")]
+        #[test_case(Multiline([*A, *B, *C]), Multiline([*G, *H, *I]), Isxn::None; "none 02")]
+        #[test_case(Multiline([*A, *E, *I]), Multiline([*B, *F]), Isxn::None; "none diagonal")]
+        #[test_case(
+            Multiline([*A, *B, *C]),
+            Multiline([*A, *D, *G]),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AtPoint { index: 0, at_point: *A },
+                ]),
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AtPoint { index: 0, at_point: *A }
+                ])
+            );
+            "AtPoint 0, AtPoint 0" 
+        )]
+        #[test_case(
+            Multiline([*A, *B, *C]),
+            Multiline([*G, *D, *A]),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AtPoint { index: 0, at_point: *A },
+                ]),
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AtPoint { index: 2, at_point: *A }
+                ])
+            );
+            "AtPoint 0, AtPoint 2" 
+        )]
+        #[test_case(
+            Multiline([*C, *B, *A]),
+            Multiline([*G, *D, *A]),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AtPoint { index: 2, at_point: *A },
+                ]),
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AtPoint { index: 2, at_point: *A }
+                ])
+            );
+            "AtPoint 2, AtPoint 2" 
+        )]
+        #[test_case(
+            Multiline([*A, *E, *I]),
+            Multiline([*G, *E, *C]),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AtPoint { index: 1, at_point: *E },
+                ]),
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AtPoint { index: 1, at_point: *E }
+                ])
+            );
+            "AtPoint 1, AtPoint 1"
+        )]
+        #[test_case(
+            Multiline([*A, *I]),
+            Multiline([*C, *G]),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *E, percent_along: Percent::Val(0.5) }
+                ]),
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *E, percent_along: Percent::Val(0.5) }
+                ])
+            );
+            "crosshairs"
+        )]
+        // #[test_case(
+        //     Multiline([*A, *B, *C]),
+        //     Multiline([*A, *B, *E]),
+        //     Isxn::None;
+        //     "partial collision"
+        // )]
+        fn isxn(ml1: Multiline, ml2: Multiline, expectation: Isxn) -> Result<()> {
+            assert_eq!(multiline_intersects_multiline(&ml1, &ml2)?, expectation);
             Ok(())
         }
     }
