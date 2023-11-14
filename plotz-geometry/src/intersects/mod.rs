@@ -339,6 +339,113 @@ pub fn multiline_intersects_segment(ml: &Multiline, sg: &Segment) -> Result<Isxn
     total_ml_ops.dedup();
     total_sg_ops.dedup();
 
+    // MUST dedup things like:
+    // vec![
+    //   AtPoint{index:n, ..},      // ERR: must be deleted
+    //   EntireSubsegment{index:n}, // OK
+    //   AtPoint{index:n+1, ..},    // ERR: must be deleted
+    // ]
+    // since they're overlapping here
+    let mut ml_ops_idxs_to_delete: Vec<usize> = vec![];
+    for ((mlop_a_idx, mlop_a), (mlop_b_idx, mlop_b)) in total_ml_ops
+        .iter()
+        .enumerate()
+        .zip(total_ml_ops.iter().enumerate().skip(1))
+    {
+        //
+        match (mlop_a, mlop_b) {
+            (
+                MultilineOpinion::AtPoint { index: pt_idx, .. },
+                MultilineOpinion::EntireSubsegment { index: sg_idx },
+            ) if pt_idx == sg_idx => {
+                //
+                ml_ops_idxs_to_delete.push(mlop_a_idx);
+            }
+            (
+                MultilineOpinion::EntireSubsegment { index: sg_idx },
+                MultilineOpinion::AtPoint { index: pt_idx, .. },
+            ) if sg_idx + 1 == *pt_idx => {
+                ml_ops_idxs_to_delete.push(mlop_b_idx);
+            }
+            _ => {
+                // do nothing
+            }
+        }
+    }
+    ml_ops_idxs_to_delete.dedup();
+    ml_ops_idxs_to_delete.reverse();
+    for idx in ml_ops_idxs_to_delete {
+        total_ml_ops.remove(idx);
+    }
+
+    'edit: loop {
+        dbg!(&total_sg_ops);
+        let ops_ = total_sg_ops.clone();
+        for (idx, op) in ops_.iter().enumerate() {
+            match op {
+                SegmentOpinion::AlongSubsegment(s) if (s == sg) || (s.flip() == *sg) => {
+                    total_sg_ops.remove(idx);
+                    total_sg_ops.push(SegmentOpinion::EntireSegment);
+                    continue 'edit;
+                }
+                _ => {
+                    // do nothing
+                }
+            }
+        }
+        for ((idx1, op1), (idx2, op2)) in
+            ops_.iter().enumerate().zip(ops_.iter().enumerate().skip(1))
+        {
+            // these are... ugh... rewrite rules.
+            match (op1, op2) {
+                (SegmentOpinion::AtPointAlongSegment { .. }, SegmentOpinion::EntireSegment) => {
+                    total_sg_ops.remove(idx1);
+                    continue 'edit;
+                }
+                (SegmentOpinion::EntireSegment, SegmentOpinion::AtPointAlongSegment { .. }) => {
+                    total_sg_ops.remove(idx2);
+                    continue 'edit;
+                }
+                (SegmentOpinion::AlongSubsegment(s1), SegmentOpinion::AlongSubsegment(s2))
+                    if s1.f == s2.i =>
+                {
+                    total_sg_ops.remove(idx2);
+                    total_sg_ops.remove(idx1);
+                    total_sg_ops.push(SegmentOpinion::AlongSubsegment(Segment(s1.i, s2.f)));
+                    continue 'edit;
+                }
+                _ => {
+                    // do nothing
+                }
+            }
+        }
+        break;
+    }
+    // let mut sg_ops_idxs_to_delete: Vec<usize> = vec![];
+    // for ((sgop_a_idx, sgop_a), (sgop_b_idx, sgop_b)) in total_sg_ops
+    // .iter()
+    // .enumerate()
+    // .zip(total_sg_ops.iter().enumerate().skip(1))
+    // {
+    // // TODO(ambuc): handle atpoint / alongsubsegment collisions
+    // match (sgop_a, sgop_b) {
+    // (SegmentOpinion::AtPointAlongSegment { .. }, SegmentOpinion::EntireSegment) => {
+    // sg_ops_idxs_to_delete.push(sgop_a_idx);
+    // }
+    // (SegmentOpinion::EntireSegment, SegmentOpinion::AtPointAlongSegment { .. }) => {
+    // sg_ops_idxs_to_delete.push(sgop_b_idx);
+    // }
+    // _ => {
+    // // do nothing
+    // }
+    // }
+    // }
+    // sg_ops_idxs_to_delete.dedup();
+    // sg_ops_idxs_to_delete.reverse();
+    // for idx in sg_ops_idxs_to_delete {
+    // total_sg_ops.remove(idx);
+    // }
+
     match (
         NonEmpty::from_vec(total_ml_ops),
         NonEmpty::from_vec(total_sg_ops),
@@ -862,6 +969,91 @@ mod tests {
                     ]),
                 )
             );
+            Ok(())
+        }
+
+        #[test_case(
+            Multiline([*A, *B, *C]),
+            Segment(*A, *B),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::EntireSubsegment { index: 0 }
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::EntireSegment
+                ])
+            );
+            "partial collision"
+        )]
+        #[test_case(
+            Multiline([*A, *B, *C]),
+            Segment(*B, *A),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::EntireSubsegment { index: 0 }
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::EntireSegment
+                ])
+            );
+            "partial collision 02"
+        )]
+        #[test_case(
+            Multiline([*A, *B, *C]),
+            Segment(*B, *C),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::EntireSubsegment { index: 1 }
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::EntireSegment
+                ])
+            );
+            "partial collision 03"
+        )]
+        #[test_case(
+            Multiline([*A, *B, *C]),
+            Segment(*C, *B),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::EntireSubsegment { index: 1 }
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::EntireSegment
+                ])
+            );
+            "partial collision 04"
+        )]
+        #[test_case(
+            Multiline([*A, *B, *C]),
+            Segment(*A, *C),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::EntireSubsegment { index: 0 },
+                    MultilineOpinion::EntireSubsegment { index: 1 }
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::EntireSegment
+                ])
+            );
+            "total collision 01"
+        )]
+        #[test_case(
+            Multiline([*A, *B, *C]),
+            Segment(*C, *A),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::EntireSubsegment { index: 0 },
+                    MultilineOpinion::EntireSubsegment { index: 1 }
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::EntireSegment
+                ])
+            );
+            "total collision 01 flip"
+        )]
+        fn isxn(ml: Multiline, sg: Segment, expectation: Isxn) -> Result<()> {
+            assert_eq!(multiline_intersects_segment(&ml, &sg)?, expectation);
             Ok(())
         }
     }
