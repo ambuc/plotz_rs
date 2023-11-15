@@ -2,6 +2,7 @@ use crate::{
     shapes::{point::Point, segment::Segment},
     utils::Percent,
 };
+use anyhow::Result;
 use nonempty::NonEmpty;
 
 #[derive(PartialEq, Clone, Debug)]
@@ -85,4 +86,101 @@ pub enum Opinion {
     Segment(NonEmpty<SegmentOpinion>),
     Multiline(NonEmpty<MultilineOpinion>),
     Polygon(),
+}
+
+pub fn rewrite_segment_opinions(
+    segment_opinions: &mut Vec<SegmentOpinion>,
+    original_sg: &Segment,
+) -> Result<()> {
+    segment_opinions.dedup();
+    'edit: loop {
+        let opinions_ = segment_opinions.clone();
+        for (idx, op) in opinions_.iter().enumerate() {
+            match op {
+                SegmentOpinion::AlongSubsegment(s)
+                    if (s == original_sg) || (s.flip() == *original_sg) =>
+                {
+                    segment_opinions.remove(idx);
+                    segment_opinions.push(SegmentOpinion::EntireSegment);
+                    continue 'edit;
+                }
+                _ => {
+                    // do nothing
+                }
+            }
+        }
+        for ((idx1, op1), (idx2, op2)) in opinions_
+            .iter()
+            .enumerate()
+            .zip(opinions_.iter().enumerate().skip(1))
+        {
+            // these are... ugh... rewrite rules.
+            match (op1, op2) {
+                (SegmentOpinion::AtPointAlongSegment { .. }, SegmentOpinion::EntireSegment) => {
+                    segment_opinions.remove(idx1);
+                    continue 'edit;
+                }
+                (SegmentOpinion::EntireSegment, SegmentOpinion::AtPointAlongSegment { .. }) => {
+                    segment_opinions.remove(idx2);
+                    continue 'edit;
+                }
+                (SegmentOpinion::AlongSubsegment(s1), SegmentOpinion::AlongSubsegment(s2))
+                    if s1.f == s2.i =>
+                {
+                    segment_opinions.remove(idx2);
+                    segment_opinions.remove(idx1);
+                    segment_opinions.push(SegmentOpinion::AlongSubsegment(Segment(s1.i, s2.f)));
+                    continue 'edit;
+                }
+                (SegmentOpinion::AlongSubsegment(s1), SegmentOpinion::AlongSubsegment(s2))
+                    if s2.f == s1.i =>
+                {
+                    segment_opinions.remove(idx2);
+                    segment_opinions.remove(idx1);
+                    segment_opinions.push(SegmentOpinion::AlongSubsegment(Segment(s2.i, s1.f)));
+                    continue 'edit;
+                }
+                _ => {
+                    // do nothing
+                }
+            }
+        }
+        break;
+    }
+
+    Ok(())
+}
+
+pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOpinion>) -> Result<()> {
+    multiline_opinions.dedup();
+    'edit: loop {
+        let ops_ = multiline_opinions.clone();
+        for ((idx1, op1), (idx2, op2)) in
+            ops_.iter().enumerate().zip(ops_.iter().enumerate().skip(1))
+        {
+            match (op1, op2) {
+                (
+                    MultilineOpinion::AtPoint { index: pt_idx, .. },
+                    MultilineOpinion::EntireSubsegment { index: sg_idx },
+                ) if (sg_idx + 1 == *pt_idx || pt_idx == sg_idx) => {
+                    //
+                    multiline_opinions.remove(idx1);
+                    continue 'edit;
+                }
+                (
+                    MultilineOpinion::EntireSubsegment { index: sg_idx },
+                    MultilineOpinion::AtPoint { index: pt_idx, .. },
+                ) if (pt_idx == sg_idx || *pt_idx == sg_idx + 1) => {
+                    multiline_opinions.remove(idx2);
+                    continue 'edit;
+                }
+                _ => {
+                    // do nothing
+                }
+            }
+        }
+        break;
+    }
+
+    Ok(())
 }

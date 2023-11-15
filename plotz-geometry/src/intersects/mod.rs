@@ -2,7 +2,9 @@
 
 pub mod opinion;
 
-use self::opinion::{MultilineOpinion, Opinion, SegmentOpinion};
+use self::opinion::{
+    rewrite_multiline_opinions, rewrite_segment_opinions, MultilineOpinion, Opinion, SegmentOpinion,
+};
 use crate::{
     interpolate::interpolate_2d_checked,
     obj2::Obj2,
@@ -342,8 +344,8 @@ pub fn multiline_intersects_point(ml: &Multiline, p: &Point) -> Result<Isxn> {
 }
 
 pub fn multiline_intersects_segment(ml: &Multiline, sg: &Segment) -> Result<Isxn> {
-    let mut total_ml_ops: Vec<MultilineOpinion> = vec![];
-    let mut total_sg_ops: Vec<SegmentOpinion> = vec![];
+    let mut ml_opinions: Vec<MultilineOpinion> = vec![];
+    let mut sg_opinions: Vec<SegmentOpinion> = vec![];
 
     for (ml_sg_idx, ml_sg) in ml.to_segments().iter().enumerate() {
         match segment_intersects_segment(ml_sg, sg)? {
@@ -351,11 +353,11 @@ pub fn multiline_intersects_segment(ml: &Multiline, sg: &Segment) -> Result<Isxn
                 assert_eq!(ml_sg_ops.len(), 1);
                 assert_eq!(sg_ops.len(), 1);
 
-                total_ml_ops.push(MultilineOpinion::from_segment_opinion(
+                ml_opinions.push(MultilineOpinion::from_segment_opinion(
                     ml_sg_idx,
                     ml_sg_ops.head,
                 ));
-                total_sg_ops.push(sg_ops.head);
+                sg_opinions.push(sg_ops.head);
             }
             Isxn::Some(_, _) => {
                 return Err(anyhow!("segment_intersects_segment should not have returned anything besides Opinion::Segment(_)."));
@@ -368,114 +370,37 @@ pub fn multiline_intersects_segment(ml: &Multiline, sg: &Segment) -> Result<Isxn
         }
     }
 
-    total_ml_ops.dedup();
-    total_sg_ops.dedup();
-
-    'edit: loop {
-        let ops_ = total_ml_ops.clone();
-        for ((idx1, op1), (idx2, op2)) in
-            ops_.iter().enumerate().zip(ops_.iter().enumerate().skip(1))
-        {
-            match (op1, op2) {
-                (
-                    MultilineOpinion::AtPoint { index: pt_idx, .. },
-                    MultilineOpinion::EntireSubsegment { index: sg_idx },
-                ) if pt_idx == sg_idx => {
-                    //
-                    total_ml_ops.remove(idx1);
-                    continue 'edit;
-                }
-                (
-                    MultilineOpinion::EntireSubsegment { index: sg_idx },
-                    MultilineOpinion::AtPoint { index: pt_idx, .. },
-                ) if sg_idx + 1 == *pt_idx => {
-                    total_ml_ops.remove(idx2);
-                    continue 'edit;
-                }
-                _ => {
-                    // do nothing
-                }
-            }
-        }
-        break;
-    }
-
-    'edit: loop {
-        let ops_ = total_sg_ops.clone();
-        for (idx, op) in ops_.iter().enumerate() {
-            match op {
-                SegmentOpinion::AlongSubsegment(s) if (s == sg) || (s.flip() == *sg) => {
-                    total_sg_ops.remove(idx);
-                    total_sg_ops.push(SegmentOpinion::EntireSegment);
-                    continue 'edit;
-                }
-                _ => {
-                    // do nothing
-                }
-            }
-        }
-        for ((idx1, op1), (idx2, op2)) in
-            ops_.iter().enumerate().zip(ops_.iter().enumerate().skip(1))
-        {
-            // these are... ugh... rewrite rules.
-            match (op1, op2) {
-                (SegmentOpinion::AtPointAlongSegment { .. }, SegmentOpinion::EntireSegment) => {
-                    total_sg_ops.remove(idx1);
-                    continue 'edit;
-                }
-                (SegmentOpinion::EntireSegment, SegmentOpinion::AtPointAlongSegment { .. }) => {
-                    total_sg_ops.remove(idx2);
-                    continue 'edit;
-                }
-                (SegmentOpinion::AlongSubsegment(s1), SegmentOpinion::AlongSubsegment(s2))
-                    if s1.f == s2.i =>
-                {
-                    total_sg_ops.remove(idx2);
-                    total_sg_ops.remove(idx1);
-                    total_sg_ops.push(SegmentOpinion::AlongSubsegment(Segment(s1.i, s2.f)));
-                    continue 'edit;
-                }
-                (SegmentOpinion::AlongSubsegment(s1), SegmentOpinion::AlongSubsegment(s2))
-                    if s2.f == s1.i =>
-                {
-                    total_sg_ops.remove(idx2);
-                    total_sg_ops.remove(idx1);
-                    total_sg_ops.push(SegmentOpinion::AlongSubsegment(Segment(s2.i, s1.f)));
-                    continue 'edit;
-                }
-                _ => {
-                    // do nothing
-                }
-            }
-        }
-        break;
-    }
+    rewrite_multiline_opinions(&mut ml_opinions)?;
+    rewrite_segment_opinions(&mut sg_opinions, sg)?;
 
     match (
-        NonEmpty::from_vec(total_ml_ops),
-        NonEmpty::from_vec(total_sg_ops),
+        NonEmpty::from_vec(ml_opinions),
+        NonEmpty::from_vec(sg_opinions),
     ) {
         (Some(total_ml_ops), Some(total_sg_ops)) => Ok(Isxn::Some(
             Opinion::Multiline(total_ml_ops),
             Opinion::Segment(total_sg_ops),
         )),
-        _ => Ok(Isxn::None),
+        (Some(_), None) | (None, Some(_)) => Err(anyhow!(
+            "unexpected case - how can one object see collisions but the other doesn't?"
+        )),
+        (None, None) => Ok(Isxn::None),
     }
 }
 
 pub fn multiline_intersects_multiline(ml1: &Multiline, ml2: &Multiline) -> Result<Isxn> {
-    let mut total_ml1_ops: Vec<MultilineOpinion> = vec![];
-    let mut total_ml2_ops: Vec<MultilineOpinion> = vec![];
+    let mut ml1_opinions: Vec<MultilineOpinion> = vec![];
+    let mut ml2_opinions: Vec<MultilineOpinion> = vec![];
 
     for (ml_sg1_idx, ml_sg1) in ml1.to_segments().iter().enumerate() {
         for (ml_sg2_idx, ml_sg2) in ml2.to_segments().iter().enumerate() {
             match segment_intersects_segment(ml_sg1, ml_sg2)? {
                 Isxn::Some(Opinion::Segment(ml_sg1_ops), Opinion::Segment(ml_sg2_ops)) => {
                     for ml_sg1_op in ml_sg1_ops.into_iter() {
-                        total_ml1_ops.push(MultilineOpinion::from_segment_opinion(ml_sg1_idx, ml_sg1_op));
+                        ml1_opinions.push(MultilineOpinion::from_segment_opinion(ml_sg1_idx, ml_sg1_op));
                     }
                     for ml_sg2_op in ml_sg2_ops.into_iter() {
-                        total_ml2_ops.push(MultilineOpinion::from_segment_opinion(ml_sg2_idx, ml_sg2_op));
+                        ml2_opinions.push(MultilineOpinion::from_segment_opinion(ml_sg2_idx, ml_sg2_op));
                     }
                 }
                 Isxn::Some(_, _) => panic!("segment_intersects_segment should not have returned anything besides Opinion::Segment(_)."),
@@ -486,76 +411,21 @@ pub fn multiline_intersects_multiline(ml1: &Multiline, ml2: &Multiline) -> Resul
         }
     }
 
-    total_ml1_ops.dedup();
-    total_ml2_ops.dedup();
-
-    'edit: loop {
-        let ops_ = total_ml1_ops.clone();
-        for ((idx1, op1), (idx2, op2)) in
-            ops_.iter().enumerate().zip(ops_.iter().enumerate().skip(1))
-        {
-            match (op1, op2) {
-                (
-                    MultilineOpinion::AtPoint { index: pt_idx, .. },
-                    MultilineOpinion::EntireSubsegment { index: sg_idx },
-                ) if (sg_idx + 1 == *pt_idx || pt_idx == sg_idx) => {
-                    // if
-                    total_ml1_ops.remove(idx1);
-                    continue 'edit;
-                }
-                (
-                    MultilineOpinion::EntireSubsegment { index: sg_idx },
-                    MultilineOpinion::AtPoint { index: pt_idx, .. },
-                ) if (pt_idx == sg_idx || *pt_idx == sg_idx + 1) => {
-                    total_ml1_ops.remove(idx2);
-                    continue 'edit;
-                }
-                _ => {
-                    // do nothing
-                }
-            }
-        }
-        break;
-    }
-
-    'edit: loop {
-        let ops_ = total_ml2_ops.clone();
-        for ((idx1, op1), (idx2, op2)) in
-            ops_.iter().enumerate().zip(ops_.iter().enumerate().skip(1))
-        {
-            match (op1, op2) {
-                (
-                    MultilineOpinion::AtPoint { index: pt_idx, .. },
-                    MultilineOpinion::EntireSubsegment { index: sg_idx },
-                ) if pt_idx == sg_idx => {
-                    //
-                    total_ml2_ops.remove(idx1);
-                    continue 'edit;
-                }
-                (
-                    MultilineOpinion::EntireSubsegment { index: sg_idx },
-                    MultilineOpinion::AtPoint { index: pt_idx, .. },
-                ) if sg_idx + 1 == *pt_idx => {
-                    total_ml2_ops.remove(idx2);
-                    continue 'edit;
-                }
-                _ => {
-                    // do nothing
-                }
-            }
-        }
-        break;
-    }
+    rewrite_multiline_opinions(&mut ml1_opinions)?;
+    rewrite_multiline_opinions(&mut ml2_opinions)?;
 
     match (
-        NonEmpty::from_vec(total_ml1_ops),
-        NonEmpty::from_vec(total_ml2_ops),
+        NonEmpty::from_vec(ml1_opinions),
+        NonEmpty::from_vec(ml2_opinions),
     ) {
         (Some(total_ml1_ops), Some(total_ml2_ops)) => Ok(Isxn::Some(
             Opinion::Multiline(total_ml1_ops),
             Opinion::Multiline(total_ml2_ops),
         )),
-        _ => Ok(Isxn::None),
+        (Some(_), None) | (None, Some(_)) => Err(anyhow!(
+            "unexpected case - how can one object see collisions but the other doesn't?"
+        )),
+        (None, None) => Ok(Isxn::None),
     }
     //
 }
