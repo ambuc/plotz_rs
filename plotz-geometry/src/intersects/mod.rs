@@ -35,12 +35,13 @@ pub enum Isxn {
     None,
 }
 
-//           || pt | sg | ml |
-// ==========++====+====+====+==
-//     point || ✔️  | \  | \  |
-//   segment || ✔️  | ✔️  | \  |
-// multiline || ✔️  | ✔️  |️ ✔️  |
-// ==========++====+====+====+==
+//           || pt | sg | ml | ca |
+// ==========++====+====+====+====+==
+//     point || ✔️  | \  | \  | \  |
+//   segment || ✔️  | ✔️  | \  | \  |
+// multiline || ✔️  | ✔️  |️ ✔️  | \  |
+//  curvearc || -️  | -️  |️ -  | -  |
+// ==========++====+====+====+====+==
 
 pub fn point_intersects_point(a: &Point, b: &Point) -> Result<Isxn> {
     if a == b {
