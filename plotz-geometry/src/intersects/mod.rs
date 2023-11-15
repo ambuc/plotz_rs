@@ -1195,6 +1195,36 @@ mod tests {
             );
             "partial collision, entire subsegment 01 01 flipped"
         )]
+        #[test_case(
+            Multiline([*A, *B, *C, *F, *I]),
+            Multiline([*A, *B, *E, *F, *I]),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::EntireSubsegment { index: 0 },
+                    MultilineOpinion::EntireSubsegment { index: 3 }
+                ]),
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::EntireSubsegment { index: 0 },
+                    MultilineOpinion::EntireSubsegment { index: 3 }
+                ])
+            );
+            "shared segment, then diversion, then another shared segment"
+        )]
+        #[test_case(
+            Multiline([*A, *B, *C, *F, *I]),
+            Multiline([*A, *B, *E, *F]),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::EntireSubsegment { index: 0 },
+                    MultilineOpinion::AtPoint { index: 3, at_point: *F }
+                ]),
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::EntireSubsegment { index: 0 },
+                    MultilineOpinion::AtPoint { index: 3, at_point: *F }
+                ])
+            );
+            "shared segment, then diversion, then atpoint"
+        )]
         fn isxn(ml1: Multiline, ml2: Multiline, expectation: Isxn) -> Result<()> {
             assert_eq!(multiline_intersects_multiline(&ml1, &ml2)?, expectation);
             Ok(())
