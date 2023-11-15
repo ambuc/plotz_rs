@@ -51,7 +51,7 @@ pub fn obj_intersects_obj(a: &Obj2, b: &Obj2) -> Result<Isxn> {
     // ==========++====+====+====+==
     //     point || ✔️  | \  | \  |
     //   segment || ✔️  | ✔️  | \  |
-    // multiline || ✔️  | ✔️  | ~  |
+    // multiline || ✔️  | ✔️  |️ ✔️  |
     // ==========++====+====+====+==
     //
     match a {
