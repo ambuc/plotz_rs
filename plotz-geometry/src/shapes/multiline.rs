@@ -99,25 +99,8 @@ impl Multiline {
             .for_each(|pt| pt.rotate_inplace(about, by_rad))
     }
 
-    pub fn intersects(&self, other: &Self) -> bool {
-        self.intersects_detailed(other).count() != 0
-    }
-
     pub fn intersects_detailed(&self, other: &Self) -> impl Iterator<Item = IntersectionResult> {
         iproduct!(self.to_segments(), other.to_segments()).flat_map(|(l1, l2)| l1.intersects(&l2))
-    }
-
-    pub fn intersects_segment(&self, other: &Segment) -> bool {
-        self.to_segments()
-            .iter()
-            .any(|l: &Segment| l.intersects(other).is_some())
-    }
-
-    pub fn intersects_segment_detailed(&self, other: &Segment) -> Vec<IntersectionResult> {
-        self.to_segments()
-            .iter()
-            .flat_map(|l: &Segment| l.intersects(other))
-            .collect::<Vec<_>>()
     }
 }
 
