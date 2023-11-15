@@ -7,7 +7,6 @@ use self::opinion::{
 };
 use crate::{
     interpolate::interpolate_2d_checked,
-    obj2::Obj2,
     shapes::{multiline::Multiline, point::Point, segment::Segment},
     utils::Percent,
 };
@@ -36,43 +35,12 @@ pub enum Isxn {
     None,
 }
 
-impl Isxn {
-    fn flip(self) -> Isxn {
-        match self {
-            Isxn::Some(a, b) => Isxn::Some(b, a),
-            _ => self,
-        }
-    }
-}
-
-pub fn obj_intersects_obj(a: &Obj2, b: &Obj2) -> Result<Isxn> {
-    //
-    //           || pt | sg | ml |
-    // ==========++====+====+====+==
-    //     point || ✔️  | \  | \  |
-    //   segment || ✔️  | ✔️  | \  |
-    // multiline || ✔️  | ✔️  |️ ✔️  |
-    // ==========++====+====+====+==
-    //
-    match a {
-        Obj2::Point(p) => match b {
-            Obj2::Point(p2) => point_intersects_point(p, p2),
-            _ => obj_intersects_obj(b, a).map(Isxn::flip),
-        },
-        Obj2::Segment(sg) => match b {
-            Obj2::Point(pt) => segment_intersects_point(sg, pt),
-            Obj2::Segment(sg2) => segment_intersects_segment(sg, sg2),
-            _ => obj_intersects_obj(b, a).map(Isxn::flip),
-        },
-        Obj2::Multiline(ml) => match b {
-            Obj2::Point(pt) => multiline_intersects_point(ml, pt),
-            Obj2::Segment(sg) => multiline_intersects_segment(ml, sg),
-            Obj2::Multiline(ml2) => multiline_intersects_multiline(ml, ml2),
-            _ => unimplemented!(),
-        },
-        _ => unimplemented!(),
-    }
-}
+//           || pt | sg | ml |
+// ==========++====+====+====+==
+//     point || ✔️  | \  | \  |
+//   segment || ✔️  | ✔️  | \  |
+// multiline || ✔️  | ✔️  |️ ✔️  |
+// ==========++====+====+====+==
 
 pub fn point_intersects_point(a: &Point, b: &Point) -> Result<Isxn> {
     if a == b {

@@ -149,16 +149,9 @@ impl Polygon {
         .collect()
     }
 
-    /// Returns true if any line segment from this polygon intersects other.
-    pub fn intersects_segment(&self, other: &Segment) -> bool {
-        self.to_segments()
-            .iter()
-            .any(|l| l.intersects(other).is_some())
-    }
-
     /// Returns the detailed set of intersection outcomes between this polygon's
     /// segments and another segment.
-    pub fn intersects_segment_detailed(&self, other: &Segment) -> Vec<IntersectionResult> {
+    fn intersects_segment_detailed(&self, other: &Segment) -> Vec<IntersectionResult> {
         self.to_segments()
             .iter()
             .flat_map(|l| l.intersects(other))
