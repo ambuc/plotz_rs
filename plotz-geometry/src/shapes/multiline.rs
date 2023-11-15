@@ -5,13 +5,11 @@ use super::{point::Point, polygon::Polygon, segment::Segment};
 use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable},
-    intersection::IntersectionResult,
     obj2::ObjType2d,
     Object,
 };
 use anyhow::{anyhow, Result};
 use float_ord::FloatOrd;
-use itertools::iproduct;
 use std::{fmt::Debug, ops::*};
 
 #[derive(Clone)]
@@ -97,10 +95,6 @@ impl Multiline {
         self.pts
             .iter_mut()
             .for_each(|pt| pt.rotate_inplace(about, by_rad))
-    }
-
-    pub fn intersects_detailed(&self, other: &Self) -> impl Iterator<Item = IntersectionResult> {
-        iproduct!(self.to_segments(), other.to_segments()).flat_map(|(l1, l2)| l1.intersects(&l2))
     }
 }
 
