@@ -1008,77 +1008,62 @@ mod tests {
             Ok(())
         }
 
-        // TODO(ambuc): multiline_and_segment special case tests
-
-        // here is the fun stuff.
-        #[test]
-        fn two_intersections_at_segment_bookends() -> Result<()> {
-            let ml = Multiline([*A, *C, *I]);
-            let sg = Segment(*A, *I);
-
-            assert_eq!(
-                multiline_intersects_segment(&ml, &sg)?,
-                Isxn::Some(
-                    Opinion::Multiline(nonempty![
-                        MultilineOpinion::AtPoint {
-                            index: 0,
-                            at_point: *A,
-                        },
-                        MultilineOpinion::AtPoint {
-                            index: 2,
-                            at_point: *I,
-                        }
-                    ]),
-                    Opinion::Segment(nonempty![
-                        SegmentOpinion::AtPointAlongSegment {
-                            at_point: *A,
-                            percent_along: Percent::Zero,
-                        },
-                        SegmentOpinion::AtPointAlongSegment {
-                            at_point: *I,
-                            percent_along: Percent::One,
-                        }
-                    ])
-                )
+        #[test_case(
+            Multiline([*A, *C, *I]),
+            Segment(*A, *I),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AtPoint {
+                        index: 0,
+                        at_point: *A,
+                    },
+                    MultilineOpinion::AtPoint {
+                        index: 2,
+                        at_point: *I,
+                    }
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::AtPointAlongSegment {
+                        at_point: *A,
+                        percent_along: Percent::Zero,
+                    },
+                    SegmentOpinion::AtPointAlongSegment {
+                        at_point: *I,
+                        percent_along: Percent::One,
+                    }
+                ])
             );
-            Ok(())
-        }
-
-        #[test]
-        fn two_intersections_at_segment_bookends_2() -> Result<()> {
-            let ml = Multiline([*A, *C, *I]);
-            let sg = Segment(*B, *F);
-
-            assert_eq!(
-                multiline_intersects_segment(&ml, &sg)?,
-                Isxn::Some(
-                    Opinion::Multiline(nonempty![
-                        MultilineOpinion::AtPointAlongSharedSegment {
-                            index: 0,
-                            at_point: *B,
-                            percent_along: Percent::Val(0.5),
-                        },
-                        MultilineOpinion::AtPointAlongSharedSegment {
-                            index: 1,
-                            at_point: *F,
-                            percent_along: Percent::Val(0.5),
-                        }
-                    ]),
-                    Opinion::Segment(nonempty![
-                        SegmentOpinion::AtPointAlongSegment {
-                            at_point: *B,
-                            percent_along: Percent::Zero,
-                        },
-                        SegmentOpinion::AtPointAlongSegment {
-                            at_point: *F,
-                            percent_along: Percent::One,
-                        }
-                    ]),
-                )
+            "segment bookends 1"
+        )]
+        #[test_case(
+            Multiline([*A, *C, *I]),
+            Segment(*B, *F),
+            Isxn::Some(
+                Opinion::Multiline(nonempty![
+                    MultilineOpinion::AtPointAlongSharedSegment {
+                        index: 0,
+                        at_point: *B,
+                        percent_along: Percent::Val(0.5),
+                    },
+                    MultilineOpinion::AtPointAlongSharedSegment {
+                        index: 1,
+                        at_point: *F,
+                        percent_along: Percent::Val(0.5),
+                    }
+                ]),
+                Opinion::Segment(nonempty![
+                    SegmentOpinion::AtPointAlongSegment {
+                        at_point: *B,
+                        percent_along: Percent::Zero,
+                    },
+                    SegmentOpinion::AtPointAlongSegment {
+                        at_point: *F,
+                        percent_along: Percent::One,
+                    }
+                ]),
             );
-            Ok(())
-        }
-
+            "segment bookends 2"
+        )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Segment(*A, *B),
