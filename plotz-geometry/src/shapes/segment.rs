@@ -7,10 +7,7 @@ use crate::{
     interpolate,
     intersection::{Intersection, IntersectionResult},
     obj2::ObjType2d,
-    overlaps::{
-        opinion::{Opinion, SegmentOpinion},
-        segment_overlaps_segment, Overlap,
-    },
+    overlaps::{opinion::SegmentOpinion, segment_overlaps_segment},
     shapes::{point::Point, polygon::Polygon, ray::Ray},
     Object,
 };
@@ -76,32 +73,22 @@ impl Segment {
 
     pub fn intersects(&self, other: &Segment) -> Option<IntersectionResult> {
         // TODO(ambuc): remove Segment::intersects entirely.
-        match segment_overlaps_segment(self, other) {
-            Err(_) => None,
-            Ok(Overlap::None) => None,
-            Ok(Overlap::Some(Opinion::Segment(sg_ops_a), Opinion::Segment(sg_ops_b))) => {
-                assert_eq!(sg_ops_a.len(), 1);
-                assert_eq!(sg_ops_b.len(), 1);
-
-                match (sg_ops_a.head, sg_ops_b.head) {
-                    (
-                        SegmentOpinion::AtPointAlongSegment {
-                            at_point: pt,
-                            percent_along: a_pct,
-                        },
-                        SegmentOpinion::AtPointAlongSegment {
-                            percent_along: b_pct,
-                            ..
-                        },
-                    ) => Some(IntersectionResult::Ok(Intersection { pt, a_pct, b_pct })),
-                    _ => {
-                        // This is actually super wrong. But Segment::intersects
-                        // is going away soon, so....
-                        None
-                    }
-                }
-            }
-            _ => None,
+        if let Ok(Some((
+            SegmentOpinion::AtPointAlongSegment {
+                at_point: pt,
+                percent_along: a_pct,
+            },
+            SegmentOpinion::AtPointAlongSegment {
+                percent_along: b_pct,
+                ..
+            },
+        ))) = segment_overlaps_segment(self, other)
+        {
+            Some(IntersectionResult::Ok(Intersection { pt, a_pct, b_pct }))
+        } else {
+            // This is actually super wrong. But Segment::intersects
+            // is going away soon, so....
+            None
         }
     }
 

@@ -12,7 +12,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
-use nonempty::{nonempty, NonEmpty};
+use nonempty::NonEmpty;
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Overlap {
@@ -71,14 +71,17 @@ pub fn segment_overlaps_point(s: &Segment, p: &Point) -> Result<Option<(SegmentO
     }
 }
 
-pub fn segment_overlaps_segment(sa: &Segment, sb: &Segment) -> Result<Overlap> {
+pub fn segment_overlaps_segment(
+    sa: &Segment,
+    sb: &Segment,
+) -> Result<Option<(SegmentOpinion, SegmentOpinion)>> {
     // NB: sa and sb are _not_ guaranteed to point the same way.
 
     if sa == sb || *sa == sb.flip() {
-        return Ok(Overlap::Some(
-            Opinion::Segment(nonempty![SegmentOpinion::EntireSegment]),
-            Opinion::Segment(nonempty![SegmentOpinion::EntireSegment]),
-        ));
+        return Ok(Some((
+            SegmentOpinion::EntireSegment,
+            SegmentOpinion::EntireSegment,
+        )));
     }
 
     if approx_eq!(f64, sa.slope(), sb.slope()) || approx_eq!(f64, sa.slope(), sb.flip().slope()) {
@@ -125,16 +128,16 @@ pub fn segment_overlaps_segment(sa: &Segment, sb: &Segment) -> Result<Overlap> {
                     //     |-->|
                     // |-->|
                     let pt = sa.i;
-                    return Ok(Overlap::Some(
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                    return Ok(Some((
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: pt,
-                            percent_along: Percent::Zero
-                        }]),
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            percent_along: Percent::Zero,
+                        },
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: pt,
-                            percent_along: Percent::One
-                        }]),
-                    ));
+                            percent_along: Percent::One,
+                        },
+                    )));
                 }
                 //    |--->|
                 // |--->|
@@ -146,16 +149,16 @@ pub fn segment_overlaps_segment(sa: &Segment, sb: &Segment) -> Result<Overlap> {
                     // |-->|
                     //     |-->|
                     let pt = sa.f;
-                    return Ok(Overlap::Some(
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                    return Ok(Some((
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: pt,
-                            percent_along: Percent::One
-                        }]),
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            percent_along: Percent::One,
+                        },
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: pt,
-                            percent_along: Percent::Zero
-                        }]),
-                    ));
+                            percent_along: Percent::Zero,
+                        },
+                    )));
                 }
                 // |--->|
                 //    |--->|
@@ -168,16 +171,16 @@ pub fn segment_overlaps_segment(sa: &Segment, sb: &Segment) -> Result<Overlap> {
                     // |<--|
                     //     |-->|
                     let pt = sa.i;
-                    return Ok(Overlap::Some(
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                    return Ok(Some((
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: pt,
-                            percent_along: Percent::Zero
-                        }]),
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            percent_along: Percent::Zero,
+                        },
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: pt,
-                            percent_along: Percent::Zero
-                        }]),
-                    ));
+                            percent_along: Percent::Zero,
+                        },
+                    )));
                 }
                 // |<---|
                 //    |--->|
@@ -190,16 +193,16 @@ pub fn segment_overlaps_segment(sa: &Segment, sb: &Segment) -> Result<Overlap> {
                     //     |<--|
                     // |-->|
                     let pt = sa.f;
-                    return Ok(Overlap::Some(
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                    return Ok(Some((
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: pt,
-                            percent_along: Percent::One
-                        }]),
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            percent_along: Percent::One,
+                        },
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point: pt,
-                            percent_along: Percent::One
-                        }]),
-                    ));
+                            percent_along: Percent::One,
+                        },
+                    )));
                 }
                 //   |<--|
                 // |-->|
@@ -213,18 +216,18 @@ pub fn segment_overlaps_segment(sa: &Segment, sb: &Segment) -> Result<Overlap> {
 
         if let Some(isxn_segment) = isxn_segment {
             if isxn_segment == *sa {
-                return Ok(Overlap::Some(
-                    Opinion::Segment(nonempty![SegmentOpinion::EntireSegment,]),
-                    Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(isxn_segment),]),
-                ));
+                return Ok(Some((
+                    SegmentOpinion::EntireSegment,
+                    SegmentOpinion::AlongSubsegment(isxn_segment),
+                )));
             } else if isxn_segment == *sb {
-                return Ok(Overlap::Some(
-                    Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(isxn_segment),]),
-                    Opinion::Segment(nonempty![SegmentOpinion::EntireSegment,]),
-                ));
+                return Ok(Some((
+                    SegmentOpinion::AlongSubsegment(isxn_segment),
+                    SegmentOpinion::EntireSegment,
+                )));
             } else {
-                return Ok(Overlap::Some(
-                    Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(
+                return Ok(Some((
+                    SegmentOpinion::AlongSubsegment(
                         // why dot/flip here? if the resultant segment doesn't
                         // run 'along' the input |sa|, |sb|, we have to flip it
                         // so that its subsegment is correctly oriented with
@@ -233,16 +236,14 @@ pub fn segment_overlaps_segment(sa: &Segment, sb: &Segment) -> Result<Overlap> {
                             isxn_segment.flip()
                         } else {
                             isxn_segment
-                        }
-                    ),]),
-                    Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(
-                        if isxn_segment.dot(sb) < 0.0 {
-                            isxn_segment.flip()
-                        } else {
-                            isxn_segment
-                        }
-                    ),]),
-                ));
+                        },
+                    ),
+                    SegmentOpinion::AlongSubsegment(if isxn_segment.dot(sb) < 0.0 {
+                        isxn_segment.flip()
+                    } else {
+                        isxn_segment
+                    }),
+                )));
             }
         }
     }
@@ -262,19 +263,19 @@ pub fn segment_overlaps_segment(sa: &Segment, sb: &Segment) -> Result<Overlap> {
 
     if (0_f64..=1_f64).contains(&s) && (0_f64..=1_f64).contains(&t) {
         let pt = Point(p0_x + (t * s1_x), p0_y + (t * s1_y));
-        return Ok(Overlap::Some(
-            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+        return Ok(Some((
+            SegmentOpinion::AtPointAlongSegment {
                 at_point: pt,
                 percent_along: interpolate_2d_checked(sa.i, sa.f, pt)?,
-            }]),
-            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+            },
+            SegmentOpinion::AtPointAlongSegment {
                 at_point: pt,
                 percent_along: interpolate_2d_checked(sb.i, sb.f, pt)?,
-            }]),
-        ));
+            },
+        )));
     }
 
-    Ok(Overlap::None)
+    Ok(None)
 }
 
 pub fn multiline_overlaps_point(ml: &Multiline, p: &Point) -> Result<Overlap> {
@@ -299,25 +300,9 @@ pub fn multiline_overlaps_segment(ml: &Multiline, sg: &Segment) -> Result<Overla
     let mut sg_opinions: Vec<SegmentOpinion> = vec![];
 
     for (ml_sg_idx, ml_sg) in ml.to_segments().iter().enumerate() {
-        match segment_overlaps_segment(ml_sg, sg)? {
-            Overlap::Some(Opinion::Segment(ml_sg_ops), Opinion::Segment(sg_ops)) => {
-                assert_eq!(ml_sg_ops.len(), 1);
-                assert_eq!(sg_ops.len(), 1);
-
-                ml_opinions.push(MultilineOpinion::from_segment_opinion(
-                    ml_sg_idx,
-                    ml_sg_ops.head,
-                ));
-                sg_opinions.push(sg_ops.head);
-            }
-            Overlap::Some(_, _) => {
-                return Err(anyhow!("segment_overlaps_segment should not have returned anything besides Opinion::Segment(_)."));
-            }
-
-            // finally Isxn::None.
-            Overlap::None => {
-                // nothing to do.
-            }
+        if let Some((ml_sg_op, sg_op)) = segment_overlaps_segment(ml_sg, sg)? {
+            ml_opinions.push(MultilineOpinion::from_segment_opinion(ml_sg_idx, ml_sg_op));
+            sg_opinions.push(sg_op);
         }
     }
 
@@ -345,19 +330,13 @@ pub fn multiline_overlaps_multiline(ml1: &Multiline, ml2: &Multiline) -> Result<
 
     for (ml_sg1_idx, ml_sg1) in ml1.to_segments().iter().enumerate() {
         for (ml_sg2_idx, ml_sg2) in ml2.to_segments().iter().enumerate() {
-            match segment_overlaps_segment(ml_sg1, ml_sg2)? {
-                Overlap::Some(Opinion::Segment(ml_sg1_ops), Opinion::Segment(ml_sg2_ops)) => {
-                    for ml_sg1_op in ml_sg1_ops.into_iter() {
-                        ml1_opinions.push(MultilineOpinion::from_segment_opinion(ml_sg1_idx, ml_sg1_op));
-                    }
-                    for ml_sg2_op in ml_sg2_ops.into_iter() {
-                        ml2_opinions.push(MultilineOpinion::from_segment_opinion(ml_sg2_idx, ml_sg2_op));
-                    }
-                }
-                Overlap::Some(_, _) => panic!("segment_overlaps_segment should not have returned anything besides Opinion::Segment(_)."),
-                Overlap::None => {
-                    // nothing to do
-                }
+            if let Some((ml_sg1_op, ml_sg2_op)) = segment_overlaps_segment(ml_sg1, ml_sg2)? {
+                ml1_opinions.push(MultilineOpinion::from_segment_opinion(
+                    ml_sg1_idx, ml_sg1_op,
+                ));
+                ml2_opinions.push(MultilineOpinion::from_segment_opinion(
+                    ml_sg2_idx, ml_sg2_op,
+                ));
             }
         }
     }
@@ -485,10 +464,7 @@ mod tests {
                 for j in &[*D, *E, *F] {
                     assert_eq!(
                         segment_overlaps_segment(&Segment(*i, *j), &Segment(*i, *j))?,
-                        Overlap::Some(
-                            Opinion::Segment(nonempty![SegmentOpinion::EntireSegment]),
-                            Opinion::Segment(nonempty![SegmentOpinion::EntireSegment]),
-                        )
+                        Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment,))
                     );
                 }
             }
@@ -501,10 +477,7 @@ mod tests {
                 for j in &[*D, *E, *F] {
                     assert_eq!(
                         segment_overlaps_segment(&Segment(*i, *j), &Segment(*j, *i))?,
-                        Overlap::Some(
-                            Opinion::Segment(nonempty![SegmentOpinion::EntireSegment]),
-                            Opinion::Segment(nonempty![SegmentOpinion::EntireSegment]),
-                        )
+                        Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment))
                     );
                 }
             }
@@ -541,16 +514,16 @@ mod tests {
             ) -> Result<()> {
                 assert_eq!(
                     segment_overlaps_segment(&sga, &sgb)?,
-                    Overlap::Some(
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                    Some((
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point,
                             percent_along: a_pct,
-                        }]),
-                        Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                        },
+                        SegmentOpinion::AtPointAlongSegment {
                             at_point,
                             percent_along: b_pct,
-                        }])
-                    )
+                        },
+                    ))
                 );
 
                 Ok(())
@@ -562,17 +535,17 @@ mod tests {
             fn atsubsegment(sga: Segment, sgb: Segment, subsegment: Segment) -> Result<()> {
                 assert_eq!(
                     segment_overlaps_segment(&sga, &sgb)?,
-                    Overlap::Some(
-                        Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(subsegment)]),
-                        Opinion::Segment(nonempty![SegmentOpinion::EntireSegment])
-                    )
+                    Some((
+                        SegmentOpinion::AlongSubsegment(subsegment),
+                        SegmentOpinion::EntireSegment,
+                    ))
                 );
                 assert_eq!(
                     segment_overlaps_segment(&sgb, &sga)?,
-                    Overlap::Some(
-                        Opinion::Segment(nonempty![SegmentOpinion::EntireSegment]),
-                        Opinion::Segment(nonempty![SegmentOpinion::AlongSubsegment(subsegment)])
-                    )
+                    Some((
+                        SegmentOpinion::EntireSegment,
+                        SegmentOpinion::AlongSubsegment(subsegment),
+                    ))
                 );
 
                 Ok(())
@@ -587,16 +560,16 @@ mod tests {
                 for p2 in &[*D, *E, *F, *G, *H, *I] {
                     assert_eq!(
                         segment_overlaps_segment(&Segment(p0, p1), &Segment(p1, *p2))?,
-                        Overlap::Some(
-                            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                        Some((
+                            SegmentOpinion::AtPointAlongSegment {
                                 at_point: p1,
                                 percent_along: Percent::One
-                            }]),
-                            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            },
+                            SegmentOpinion::AtPointAlongSegment {
                                 at_point: p1,
                                 percent_along: Percent::Zero
-                            }]),
-                        )
+                            },
+                        ))
                     );
                 }
             }
@@ -613,16 +586,16 @@ mod tests {
                 ] {
                     assert_eq!(
                         segment_overlaps_segment(sa, sb)?,
-                        Overlap::Some(
-                            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                        Some((
+                            SegmentOpinion::AtPointAlongSegment {
                                 at_point: *E,
                                 percent_along: Percent::Val(0.5)
-                            }]),
-                            Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                            },
+                            SegmentOpinion::AtPointAlongSegment {
                                 at_point: *E,
                                 percent_along: Percent::Val(0.5)
-                            }]),
-                        )
+                            }
+                        ))
                     );
                 }
             }
@@ -633,43 +606,35 @@ mod tests {
         #[test_case(
             Segment(*A, *C),
             Segment(Point(0.5, 2), Point(1.5,2)),
-            Overlap::Some(
-                Opinion::Segment(nonempty![
-                    SegmentOpinion::AlongSubsegment(Segment(Point(0.5,2), Point(1.5, 2)))
-                ]),
-                Opinion::Segment(nonempty![
+            Some((
+                    SegmentOpinion::AlongSubsegment(Segment(Point(0.5,2), Point(1.5, 2))),
                     SegmentOpinion::EntireSegment
-                ]),
-            );
+            ));
             "partial collision"
         )]
         #[test_case(
             Segment(*A, *C),
             Segment(Point(1.5, 2), Point(0.5,2)),
-            Overlap::Some(
-                Opinion::Segment(nonempty![
-                    SegmentOpinion::AlongSubsegment(Segment(Point(1.5,2), Point(0.5, 2)))
-                ]),
-                Opinion::Segment(nonempty![
+            Some((
+                    SegmentOpinion::AlongSubsegment(Segment(Point(1.5,2), Point(0.5, 2))),
                     SegmentOpinion::EntireSegment
-                ]),
-            );
+            ));
             "partial collision, flip"
         )]
         #[test_case(
             Segment(Point(0,2), Point(1,2)),
             Segment(Point(1.5,2), Point(0.5,2)),
-            Overlap::Some(
-                Opinion::Segment(nonempty![
+            Some((
                     SegmentOpinion::AlongSubsegment(Segment(Point(0.5,2), Point(1,2))),
-                ]),
-                Opinion::Segment(nonempty![
                     SegmentOpinion::AlongSubsegment(Segment(Point(1,2), Point(0.5,2))),
-                ])
-            );
+            ));
             "partial collision, backwards"
         )]
-        fn isxn(a: Segment, b: Segment, expectation: Overlap) -> Result<()> {
+        fn isxn(
+            a: Segment,
+            b: Segment,
+            expectation: Option<(SegmentOpinion, SegmentOpinion)>,
+        ) -> Result<()> {
             assert_eq!(segment_overlaps_segment(&a, &b)?, expectation);
             Ok(())
         }

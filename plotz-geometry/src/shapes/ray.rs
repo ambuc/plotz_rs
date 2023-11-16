@@ -2,7 +2,7 @@
 #![allow(missing_docs)]
 
 use crate::{
-    overlaps::{segment_overlaps_segment, Overlap},
+    overlaps::{opinion::SegmentOpinion, segment_overlaps_segment},
     shapes::{
         point::{Point, PolarPt},
         segment::Segment,
@@ -30,11 +30,14 @@ pub fn Ray(pt: Point, angle_out_rad: f64) -> Ray {
 }
 
 impl Ray {
-    pub fn intersects(&self, other: &Ray) -> Result<Overlap> {
+    pub fn intersects(&self, other: &Ray) -> Result<Option<(SegmentOpinion, SegmentOpinion)>> {
         segment_overlaps_segment(&self.to_sg(10.0), &other.to_sg(10.0))
     }
 
-    pub fn intersects_sg(&self, other: &Segment) -> Result<Overlap> {
+    pub fn intersects_sg(
+        &self,
+        other: &Segment,
+    ) -> Result<Option<(SegmentOpinion, SegmentOpinion)>> {
         segment_overlaps_segment(&self.to_sg(10.0), other)
     }
 
