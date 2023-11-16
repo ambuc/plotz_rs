@@ -278,7 +278,10 @@ pub fn segment_overlaps_segment(
     Ok(None)
 }
 
-pub fn multiline_overlaps_point(ml: &Multiline, p: &Point) -> Result<Overlap> {
+pub fn multiline_overlaps_point(
+    ml: &Multiline,
+    p: &Point,
+) -> Result<Option<(NonEmpty<MultilineOpinion>, Point)>> {
     let mut sg_ops: Vec<MultilineOpinion> = vec![];
     for (index, sg) in ml.to_segments().iter().enumerate() {
         if let Some((segment_opinion, _)) = segment_overlaps_point(sg, p)? {
@@ -290,8 +293,8 @@ pub fn multiline_overlaps_point(ml: &Multiline, p: &Point) -> Result<Overlap> {
     }
     sg_ops.dedup();
     match NonEmpty::from_vec(sg_ops) {
-        None => Ok(Overlap::None),
-        Some(u) => Ok(Overlap::Some(Opinion::Multiline(u), Opinion::Point)),
+        None => Ok(None),
+        Some(u) => Ok(Some((u, *p))),
     }
 }
 
@@ -666,13 +669,13 @@ mod tests {
                 for (pt, idx) in [(start, 0), (pivot, 1), (end, 2)] {
                     assert_eq!(
                         multiline_overlaps_point(&ml, &pt)?,
-                        Overlap::Some(
-                            Opinion::Multiline(nonempty![MultilineOpinion::AtPoint {
+                        Some((
+                            nonempty![MultilineOpinion::AtPoint {
                                 index: idx,
                                 at_point: *pt
-                            }]),
-                            Opinion::Point
-                        )
+                            }],
+                            *pt,
+                        ))
                     );
                 }
 
@@ -681,20 +684,18 @@ mod tests {
                 for (pt, idx) in [(midpoint1, 0), (midpoint2, 1)] {
                     assert_eq!(
                         multiline_overlaps_point(&ml, &pt)?,
-                        Overlap::Some(
-                            Opinion::Multiline(nonempty![
-                                MultilineOpinion::AtPointAlongSharedSegment {
-                                    index: idx,
-                                    at_point: *pt,
-                                    percent_along: Percent::Val(0.5)
-                                }
-                            ]),
-                            Opinion::Point
-                        ),
+                        Some((
+                            nonempty![MultilineOpinion::AtPointAlongSharedSegment {
+                                index: idx,
+                                at_point: *pt,
+                                percent_along: Percent::Val(0.5)
+                            }],
+                            *pt,
+                        )),
                     );
                 }
 
-                assert_eq!(multiline_overlaps_point(&ml, unrelated)?, Overlap::None);
+                assert_eq!(multiline_overlaps_point(&ml, unrelated)?, None);
             }
 
             Ok(())
