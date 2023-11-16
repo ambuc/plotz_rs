@@ -6,11 +6,11 @@ use crate::{
     crop::{CropType, Croppable, PointLocation},
     interpolate,
     intersection::{Intersection, IntersectionResult},
-    intersects::{
-        opinion::{Opinion, SegmentOpinion},
-        segment_intersects_segment, Isxn,
-    },
     obj2::ObjType2d,
+    overlaps::{
+        opinion::{Opinion, SegmentOpinion},
+        segment_overlaps_segment, Overlap,
+    },
     shapes::{point::Point, polygon::Polygon, ray::Ray},
     Object,
 };
@@ -76,10 +76,10 @@ impl Segment {
 
     pub fn intersects(&self, other: &Segment) -> Option<IntersectionResult> {
         // TODO(ambuc): remove Segment::intersects entirely.
-        match segment_intersects_segment(self, other) {
+        match segment_overlaps_segment(self, other) {
             Err(_) => None,
-            Ok(Isxn::None) => None,
-            Ok(Isxn::Some(Opinion::Segment(sg_ops_a), Opinion::Segment(sg_ops_b))) => {
+            Ok(Overlap::None) => None,
+            Ok(Overlap::Some(Opinion::Segment(sg_ops_a), Opinion::Segment(sg_ops_b))) => {
                 assert_eq!(sg_ops_a.len(), 1);
                 assert_eq!(sg_ops_b.len(), 1);
 

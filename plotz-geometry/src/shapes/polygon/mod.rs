@@ -9,8 +9,8 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable, PointLocation},
     intersection::IntersectionResult,
-    intersects::{opinion::Opinion, segment_intersects_point, Isxn},
     obj2::ObjType2d,
+    overlaps::{opinion::Opinion, segment_overlaps_point, Overlap},
     shapes::{point::Point, segment::Segment},
     *,
 };
@@ -167,9 +167,9 @@ impl Polygon {
             }
         }
         for (idx, seg) in self.to_segments().iter().enumerate() {
-            match segment_intersects_point(seg, other)? {
-                Isxn::None => {}
-                Isxn::Some(Opinion::Segment(_), _) => return Ok(PointLocation::OnSegment(idx)),
+            match segment_overlaps_point(seg, other)? {
+                Overlap::None => {}
+                Overlap::Some(Opinion::Segment(_), _) => return Ok(PointLocation::OnSegment(idx)),
                 _ => return Err(anyhow!("not sure what is going on here?")),
             }
         }

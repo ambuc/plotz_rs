@@ -3,9 +3,9 @@ use plotz_color::{subway::PURPLE_7, ColorRGB, LIGHTBLUE, LIMEGREEN, ORANGERED, Y
 use plotz_geometry::{
     bounded::Bounded,
     crop::PointLocation,
-    intersects::{
+    overlaps::{
         opinion::{Opinion, SegmentOpinion},
-        Isxn,
+        Overlap,
     },
     shapes::{
         point::{Point, PolarPt},
@@ -189,7 +189,7 @@ impl PlacedTile {
 
             let a_ray: Ray = Ray(edge1.midpoint(), a_ray_angle);
 
-            if let Isxn::Some(_, _) = a_ray.intersects_sg(edgeb)? {
+            if let Overlap::Some(_, _) = a_ray.intersects_sg(edgeb)? {
                 strapwork.push(Segment(edge1.midpoint(), edgeb.midpoint()));
             } else {
                 // imagine a bridge from a_mdpt to b_mdpt.
@@ -200,8 +200,8 @@ impl PlacedTile {
 
                 // ztex lies at the intersection of a_ray and the tower.
                 let ztex = match (tower_a.intersects(&a_ray)?, tower_b.intersects(&a_ray)?) {
-                    (Isxn::Some(Opinion::Segment(opinions), _), _)
-                    | (_, Isxn::Some(Opinion::Segment(opinions), _)) => match opinions.head {
+                    (Overlap::Some(Opinion::Segment(opinions), _), _)
+                    | (_, Overlap::Some(Opinion::Segment(opinions), _)) => match opinions.head {
                         SegmentOpinion::AtPointAlongSegment { at_point, .. } => at_point,
                         _ => panic!("oh"),
                     },
@@ -248,13 +248,15 @@ impl PlacedTile {
                     };
 
                     match (perp_ray_1.intersects_sg(&s)?, perp_ray_2.intersects_sg(&s)?) {
-                        (Isxn::Some(Opinion::Segment(opinions), _), _)
-                        | (_, Isxn::Some(Opinion::Segment(opinions), _)) => match opinions.head {
-                            SegmentOpinion::AtPointAlongSegment { at_point, .. } => {
-                                s_ver.push(Segment(pt_inside, at_point));
+                        (Overlap::Some(Opinion::Segment(opinions), _), _)
+                        | (_, Overlap::Some(Opinion::Segment(opinions), _)) => {
+                            match opinions.head {
+                                SegmentOpinion::AtPointAlongSegment { at_point, .. } => {
+                                    s_ver.push(Segment(pt_inside, at_point));
+                                }
+                                _ => panic!("OH"),
                             }
-                            _ => panic!("OH"),
-                        },
+                        }
                         _ => panic!("OH"),
                     }
                 }
