@@ -327,7 +327,10 @@ pub fn multiline_overlaps_segment(
     }
 }
 
-pub fn multiline_overlaps_multiline(ml1: &Multiline, ml2: &Multiline) -> Result<Overlap> {
+pub fn multiline_overlaps_multiline(
+    ml1: &Multiline,
+    ml2: &Multiline,
+) -> Result<Option<(NonEmpty<MultilineOpinion>, NonEmpty<MultilineOpinion>)>> {
     let mut ml1_opinions: Vec<MultilineOpinion> = vec![];
     let mut ml2_opinions: Vec<MultilineOpinion> = vec![];
 
@@ -351,14 +354,11 @@ pub fn multiline_overlaps_multiline(ml1: &Multiline, ml2: &Multiline) -> Result<
         NonEmpty::from_vec(ml1_opinions),
         NonEmpty::from_vec(ml2_opinions),
     ) {
-        (Some(total_ml1_ops), Some(total_ml2_ops)) => Ok(Overlap::Some(
-            Opinion::Multiline(total_ml1_ops),
-            Opinion::Multiline(total_ml2_ops),
-        )),
+        (Some(total_ml1_ops), Some(total_ml2_ops)) => Ok(Some((total_ml1_ops, total_ml2_ops))),
         (Some(_), None) | (None, Some(_)) => Err(anyhow!(
             "unexpected case - how can one object see collisions but the other doesn't?"
         )),
-        (None, None) => Ok(Overlap::None),
+        (None, None) => Ok(None),
     }
     //
 }
@@ -967,159 +967,102 @@ mod tests {
         // --G--H--I->
         //   |
 
-        #[test_case(Multiline([*A, *B, *C]), Multiline([*D, *E, *F]), Overlap::None; "none 01")]
-        #[test_case(Multiline([*A, *B, *C]), Multiline([*G, *H, *I]), Overlap::None; "none 02")]
-        #[test_case(Multiline([*A, *E, *I]), Multiline([*B, *F]), Overlap::None; "none diagonal")]
+        #[test_case(Multiline([*A, *B, *C]), Multiline([*D, *E, *F]), None; "none 01")]
+        #[test_case(Multiline([*A, *B, *C]), Multiline([*G, *H, *I]), None; "none 02")]
+        #[test_case(Multiline([*A, *E, *I]), Multiline([*B, *F]), None; "none diagonal")]
         #[test_case(
             Multiline([*A, *B, *C]),
             Multiline([*A, *D, *G]),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::AtPoint { index: 0, at_point: *A },
-                ]),
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::AtPoint { index: 0, at_point: *A }
-                ])
-            );
+            Some( (
+                nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *A }, ],
+                nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *A } ]));
             "AtPoint 0, AtPoint 0"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Multiline([*G, *D, *A]),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::AtPoint { index: 0, at_point: *A },
-                ]),
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::AtPoint { index: 2, at_point: *A }
-                ])
-            );
+            Some( (
+                nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *A }, ],
+                nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *A } ]));
             "AtPoint 0, AtPoint 2"
         )]
         #[test_case(
             Multiline([*C, *B, *A]),
             Multiline([*G, *D, *A]),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::AtPoint { index: 2, at_point: *A },
-                ]),
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::AtPoint { index: 2, at_point: *A }
-                ])
-            );
+            Some( (
+                nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *A }, ],
+                nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *A } ]));
             "AtPoint 2, AtPoint 2"
         )]
         #[test_case(
             Multiline([*A, *E, *I]),
             Multiline([*G, *E, *C]),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::AtPoint { index: 1, at_point: *E },
-                ]),
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::AtPoint { index: 1, at_point: *E }
-                ])
-            );
+            Some( (
+                nonempty![ MultilineOpinion::AtPoint { index: 1, at_point: *E }, ],
+                nonempty![ MultilineOpinion::AtPoint { index: 1, at_point: *E } ]));
             "AtPoint 1, AtPoint 1"
         )]
         #[test_case(
             Multiline([*A, *I]),
             Multiline([*C, *G]),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *E, percent_along: Percent::Val(0.5) }
-                ]),
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *E, percent_along: Percent::Val(0.5) }
-                ])
-            );
+            Some( (
+                nonempty![ MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *E, percent_along: Percent::Val(0.5) } ],
+                nonempty![ MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *E, percent_along: Percent::Val(0.5) } ]));
             "crosshairs"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Multiline([*A, *B, *E]),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 0 },
-                ]),
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 0 },
-                ])
-            );
+            Some( (
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, ],
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, ]));
             "partial collision, entire subsegment 0 0"
         )]
         #[test_case(
             Multiline([*C, *B, *A]),
             Multiline([*E, *B, *A]),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 1 },
-                ]),
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 1 },
-                ])
-            );
+            Some( (
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, ],
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, ]));
             "partial collision, entire subsegment 1 1"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Multiline([*B, *C, *F]),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 1 },
-                ]),
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 0 },
-                ])
-            );
+            Some( (
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, ],
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, ]));
             "partial collision, entire subsegment 1 0"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Multiline([*C, *B, *A]),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 0 },
-                    MultilineOpinion::EntireSubsegment { index: 1 }
-                ]),
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 1 },
-                    MultilineOpinion::EntireSubsegment { index: 0 }
-                ])
-            );
+            Some( (
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::EntireSubsegment { index: 1 } ],
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, MultilineOpinion::EntireSubsegment { index: 0 } ]));
             "partial collision, entire subsegment 01 01 flipped"
         )]
         #[test_case(
             Multiline([*A, *B, *C, *F, *I]),
             Multiline([*A, *B, *E, *F, *I]),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 0 },
-                    MultilineOpinion::EntireSubsegment { index: 3 }
-                ]),
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 0 },
-                    MultilineOpinion::EntireSubsegment { index: 3 }
-                ])
-            );
+            Some( (
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::EntireSubsegment { index: 3 } ],
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::EntireSubsegment { index: 3 } ]));
             "shared segment, then diversion, then another shared segment"
         )]
         #[test_case(
             Multiline([*A, *B, *C, *F, *I]),
             Multiline([*A, *B, *E, *F]),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 0 },
-                    MultilineOpinion::AtPoint { index: 3, at_point: *F }
-                ]),
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 0 },
-                    MultilineOpinion::AtPoint { index: 3, at_point: *F }
-                ])
-            );
+            Some( (
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::AtPoint { index: 3, at_point: *F } ],
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::AtPoint { index: 3, at_point: *F } ]));
             "shared segment, then diversion, then atpoint"
         )]
-        fn isxn(ml1: Multiline, ml2: Multiline, expectation: Overlap) -> Result<()> {
+        fn isxn(
+            ml1: Multiline,
+            ml2: Multiline,
+            expectation: Option<(NonEmpty<MultilineOpinion>, NonEmpty<MultilineOpinion>)>,
+        ) -> Result<()> {
             assert_eq!(multiline_overlaps_multiline(&ml1, &ml2)?, expectation);
             Ok(())
         }
