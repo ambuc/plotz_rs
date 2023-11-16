@@ -298,7 +298,10 @@ pub fn multiline_overlaps_point(
     }
 }
 
-pub fn multiline_overlaps_segment(ml: &Multiline, sg: &Segment) -> Result<Overlap> {
+pub fn multiline_overlaps_segment(
+    ml: &Multiline,
+    sg: &Segment,
+) -> Result<Option<(NonEmpty<MultilineOpinion>, NonEmpty<SegmentOpinion>)>> {
     let mut ml_opinions: Vec<MultilineOpinion> = vec![];
     let mut sg_opinions: Vec<SegmentOpinion> = vec![];
 
@@ -316,14 +319,11 @@ pub fn multiline_overlaps_segment(ml: &Multiline, sg: &Segment) -> Result<Overla
         NonEmpty::from_vec(ml_opinions),
         NonEmpty::from_vec(sg_opinions),
     ) {
-        (Some(total_ml_ops), Some(total_sg_ops)) => Ok(Overlap::Some(
-            Opinion::Multiline(total_ml_ops),
-            Opinion::Segment(total_sg_ops),
-        )),
+        (Some(total_ml_ops), Some(total_sg_ops)) => Ok(Some((total_ml_ops, total_sg_ops))),
         (Some(_), None) | (None, Some(_)) => Err(anyhow!(
             "unexpected case - how can one object see collisions but the other doesn't?"
         )),
-        (None, None) => Ok(Overlap::None),
+        (None, None) => Ok(None),
     }
 }
 
@@ -720,7 +720,7 @@ mod tests {
         #[test_case(Multiline([*A, *C, *I]), Segment(*D, *H))]
         #[test_case(Multiline([*A, *E, *I]), Segment(*B, *F))]
         fn none(ml: Multiline, sg: Segment) -> Result<()> {
-            assert_eq!(multiline_overlaps_segment(&ml, &sg)?, Overlap::None);
+            assert_eq!(multiline_overlaps_segment(&ml, &sg)?, None);
             Ok(())
         }
 
@@ -750,13 +750,13 @@ mod tests {
         ) -> Result<()> {
             assert_eq!(
                 multiline_overlaps_segment(&ml, &sg)?,
-                Overlap::Some(
-                    Opinion::Multiline(nonempty![MultilineOpinion::AtPoint { index, at_point }]),
-                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                Some((
+                    nonempty![MultilineOpinion::AtPoint { index, at_point }],
+                    nonempty![SegmentOpinion::AtPointAlongSegment {
                         at_point,
                         percent_along,
-                    }])
-                )
+                    }]
+                ))
             );
             Ok(())
         }
@@ -777,17 +777,17 @@ mod tests {
         ) -> Result<()> {
             assert_eq!(
                 multiline_overlaps_segment(&ml, &sg)?,
-                Overlap::Some(
-                    Opinion::Multiline(nonempty![MultilineOpinion::AtPointAlongSharedSegment {
+                Some((
+                    nonempty![MultilineOpinion::AtPointAlongSharedSegment {
                         index,
                         at_point,
                         percent_along: ml_pct_along,
-                    }]),
-                    Opinion::Segment(nonempty![SegmentOpinion::AtPointAlongSegment {
+                    }],
+                    nonempty![SegmentOpinion::AtPointAlongSegment {
                         at_point,
                         percent_along: sg_pct_along,
-                    }])
-                )
+                    }]
+                ))
             );
             Ok(())
         }
@@ -795,8 +795,8 @@ mod tests {
         #[test_case(
             Multiline([*A, *C, *I]),
             Segment(*A, *I),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
+            Some((
+                nonempty![
                     MultilineOpinion::AtPoint {
                         index: 0,
                         at_point: *A,
@@ -805,8 +805,8 @@ mod tests {
                         index: 2,
                         at_point: *I,
                     }
-                ]),
-                Opinion::Segment(nonempty![
+                ],
+                nonempty![
                     SegmentOpinion::AtPointAlongSegment {
                         at_point: *A,
                         percent_along: Percent::Zero,
@@ -815,15 +815,15 @@ mod tests {
                         at_point: *I,
                         percent_along: Percent::One,
                     }
-                ])
-            );
+                ]
+            ));
             "segment bookends 1"
         )]
         #[test_case(
             Multiline([*A, *C, *I]),
             Segment(*B, *F),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
+            Some((
+                nonempty![
                     MultilineOpinion::AtPointAlongSharedSegment {
                         index: 0,
                         at_point: *B,
@@ -834,8 +834,8 @@ mod tests {
                         at_point: *F,
                         percent_along: Percent::Val(0.5),
                     }
-                ]),
-                Opinion::Segment(nonempty![
+                ],
+                nonempty![
                     SegmentOpinion::AtPointAlongSegment {
                         at_point: *B,
                         percent_along: Percent::Zero,
@@ -844,95 +844,75 @@ mod tests {
                         at_point: *F,
                         percent_along: Percent::One,
                     }
-                ]),
-            );
+                ],
+            ));
             "segment bookends 2"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Segment(*A, *B),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 0 }
-                ]),
-                Opinion::Segment(nonempty![
-                    SegmentOpinion::EntireSegment
-                ])
-            );
+            Some((
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 } ],
+                nonempty![ SegmentOpinion::EntireSegment ]
+            ));
             "partial collision"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Segment(*B, *A),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 0 }
-                ]),
-                Opinion::Segment(nonempty![
-                    SegmentOpinion::EntireSegment
-                ])
-            );
+            Some((
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 } ],
+                nonempty![ SegmentOpinion::EntireSegment ]
+            ));
             "partial collision 02"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Segment(*B, *C),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 1 }
-                ]),
-                Opinion::Segment(nonempty![
-                    SegmentOpinion::EntireSegment
-                ])
-            );
+            Some((
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 1 } ],
+                nonempty![ SegmentOpinion::EntireSegment ]
+            ));
             "partial collision 03"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Segment(*C, *B),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
-                    MultilineOpinion::EntireSubsegment { index: 1 }
-                ]),
-                Opinion::Segment(nonempty![
-                    SegmentOpinion::EntireSegment
-                ])
-            );
+            Some((
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 1 } ],
+                nonempty![ SegmentOpinion::EntireSegment ]
+            ));
             "partial collision 04"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Segment(*A, *C),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
+            Some((
+                nonempty![
                     MultilineOpinion::EntireSubsegment { index: 0 },
                     MultilineOpinion::EntireSubsegment { index: 1 }
-                ]),
-                Opinion::Segment(nonempty![
-                    SegmentOpinion::EntireSegment
-                ])
-            );
+                ],
+                nonempty![ SegmentOpinion::EntireSegment ]
+            ));
             "total collision 01"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Segment(*C, *A),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
+            Some((
+                nonempty![
                     MultilineOpinion::EntireSubsegment { index: 0 },
                     MultilineOpinion::EntireSubsegment { index: 1 }
-                ]),
-                Opinion::Segment(nonempty![
-                    SegmentOpinion::EntireSegment
-                ])
-            );
+                ],
+                nonempty![ SegmentOpinion::EntireSegment ]
+            ));
             "total collision 01 flip"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Segment(Point(0.5,2), Point(1.5,2)),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
+            Some((
+                nonempty![
                     MultilineOpinion::AlongSubsegmentOf {
                         index: 0,
                         subsegment: Segment(Point(0.5,2), Point(1,2))
@@ -941,18 +921,16 @@ mod tests {
                         index: 1,
                         subsegment: Segment(Point(1,2), Point(1.5,2))
                     }
-                ]),
-                Opinion::Segment(nonempty![
-                    SegmentOpinion::EntireSegment
-                ])
-            );
+                ],
+                nonempty![ SegmentOpinion::EntireSegment ]
+            ));
             "total collision half shift 01"
         )]
         #[test_case(
             Multiline([*A, *B, *C]),
             Segment(Point(1.5,2), Point(0.5,2)),
-            Overlap::Some(
-                Opinion::Multiline(nonempty![
+            Some((
+                nonempty![
                     MultilineOpinion::AlongSubsegmentOf {
                         index: 0,
                         subsegment: Segment(Point(0.5,2), Point(1,2))
@@ -961,14 +939,16 @@ mod tests {
                         index: 1,
                         subsegment: Segment(Point(1,2), Point(1.5,2))
                     }
-                ]),
-                Opinion::Segment(nonempty![
-                    SegmentOpinion::EntireSegment
-                ])
-            );
+                ],
+                nonempty![ SegmentOpinion::EntireSegment ]
+            ));
             "total collision half shift 01 flip"
         )]
-        fn isxn(ml: Multiline, sg: Segment, expectation: Overlap) -> Result<()> {
+        fn isxn(
+            ml: Multiline,
+            sg: Segment,
+            expectation: Option<(NonEmpty<MultilineOpinion>, NonEmpty<SegmentOpinion>)>,
+        ) -> Result<()> {
             assert_eq!(multiline_overlaps_segment(&ml, &sg)?, expectation);
             Ok(())
         }
