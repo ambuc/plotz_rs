@@ -3,7 +3,6 @@ use crate::{
     utils::Percent,
 };
 use anyhow::Result;
-use nonempty::NonEmpty;
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum SegmentOpinion {
@@ -78,14 +77,6 @@ impl MultilineOpinion {
             SegmentOpinion::EntireSegment => MultilineOpinion::EntireSubsegment { index },
         }
     }
-}
-
-#[derive(PartialEq, Clone, Debug)]
-pub enum Opinion {
-    Point,
-    Segment(NonEmpty<SegmentOpinion>),
-    Multiline(NonEmpty<MultilineOpinion>),
-    Polygon(),
 }
 
 pub fn rewrite_segment_opinions(
