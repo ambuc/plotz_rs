@@ -3,7 +3,7 @@
 pub mod opinion;
 
 use self::opinion::{
-    rewrite_multiline_opinions, rewrite_segment_opinions, MultilineOpinion, Opinion, SegmentOpinion,
+    rewrite_multiline_opinions, rewrite_segment_opinions, MultilineOpinion, SegmentOpinion,
 };
 use crate::{
     interpolate::interpolate_2d_checked,
@@ -13,13 +13,6 @@ use crate::{
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
 use nonempty::NonEmpty;
-
-#[derive(PartialEq, Clone, Debug)]
-pub enum Overlap {
-    // respects order of overlaps() argument.
-    Some(Opinion, Opinion),
-    None,
-}
 
 //           || pt | sg | ml | ca |
 // ==========++====+====+====+====+==
