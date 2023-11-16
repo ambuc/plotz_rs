@@ -3,16 +3,22 @@
 pub mod opinion;
 
 use self::opinion::{
-    rewrite_multiline_opinions, rewrite_segment_opinions, MultilineOpinion, SegmentOpinion,
+    rewrite_multiline_opinions, rewrite_segment_opinions, MultilineOpinion, PolygonOpinion,
+    SegmentOpinion,
 };
 use crate::{
     interpolate::interpolate_2d_checked,
-    shapes::{multiline::Multiline, point::Point, segment::Segment},
+    shapes::{
+        multiline::Multiline,
+        point::Point,
+        polygon::{abp, Polygon},
+        segment::Segment,
+    },
     utils::Percent,
 };
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
-use nonempty::NonEmpty;
+use nonempty::{nonempty, NonEmpty};
 
 //           || pt | sg | ml | ca |
 // ==========++====+====+====+====+==
@@ -354,6 +360,54 @@ pub fn multiline_overlaps_multiline(
         (None, None) => Ok(None),
     }
     //
+}
+
+pub fn polygon_overlaps_point(
+    polygon: &Polygon,
+    point: &Point,
+) -> Result<Option<(NonEmpty<PolygonOpinion>, Point)>> {
+    dbg!(&polygon.pts);
+    for (index, pg_pt) in polygon.pts.iter().enumerate() {
+        if pg_pt == point {
+            return Ok(Some((
+                nonempty![PolygonOpinion::AtPoint {
+                    index,
+                    at_point: *point
+                }],
+                *point,
+            )));
+        }
+    }
+    for (index, pg_sg) in polygon.to_segments().iter().enumerate() {
+        if let Some((
+            SegmentOpinion::AtPointAlongSegment {
+                at_point,
+                percent_along,
+            },
+            _,
+        )) = segment_overlaps_point(pg_sg, point)?
+        {
+            return Ok(Some((
+                nonempty![PolygonOpinion::AlongEdge {
+                    index,
+                    at_point,
+                    percent_along
+                }],
+                *point,
+            )));
+        }
+    }
+
+    let theta: f64 = (polygon.pts.iter())
+        .zip(polygon.pts.iter().cycle().skip(1))
+        .map(|(i, j)| abp(point, i, j))
+        .sum();
+
+    if approx_eq!(f64, theta, 0_f64, epsilon = 0.00001) {
+        Ok(None)
+    } else {
+        Ok(Some((nonempty![PolygonOpinion::WithinArea], *point)))
+    }
 }
 
 #[cfg(test)]
@@ -1057,6 +1111,100 @@ mod tests {
             expectation: Option<(NonEmpty<MultilineOpinion>, NonEmpty<MultilineOpinion>)>,
         ) -> Result<()> {
             assert_eq!(multiline_overlaps_multiline(&ml1, &ml2)?, expectation);
+            Ok(())
+        }
+    }
+
+    mod pg_pt {
+        use super::*;
+        use test_case::test_case;
+
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
+        #[test_case(Polygon([*B, *D, *H, *F]), &A, None; "point not in polygon 00")]
+        #[test_case(Polygon([*B, *D, *H, *F]), &C, None; "point not in polygon 01")]
+        #[test_case(
+            Polygon([*B, *D, *H, *F]),
+            &E,
+            Some((nonempty![PolygonOpinion::WithinArea], *E));
+            "point in polygon"
+        )]
+        #[test_case(
+            Polygon([*B, *D, *H, *F]),
+            &B,
+            Some((nonempty![PolygonOpinion::AtPoint{index:0, at_point: *B}], *B));
+            "point at point of polygon 00"
+        )]
+        #[test_case(
+            Polygon([*B, *D, *H, *F]),
+            &D,
+            Some((nonempty![PolygonOpinion::AtPoint{index:1, at_point: *D}], *D));
+            "point at point of polygon 01"
+        )]
+        #[test_case(
+            Polygon([*B, *D, *H, *F]),
+            &H,
+            Some((nonempty![PolygonOpinion::AtPoint{index:2, at_point: *H}], *H));
+            "point at point of polygon 02"
+        )]
+        #[test_case(
+            Polygon([*B, *D, *H, *F]),
+            &F,
+            Some((nonempty![PolygonOpinion::AtPoint{index:3, at_point: *F}], *F));
+            "point at point of polygon 03"
+        )]
+        #[test_case(
+            Polygon([*A, *G, *I, *C]),
+            &D,
+            Some((nonempty![PolygonOpinion::AlongEdge{
+                index: 0,
+                at_point: *D,
+                percent_along: Percent::Val(0.5)
+            }], *D));
+            "point at edge of polygon 00"
+        )]
+        #[test_case(
+            Polygon([*A, *G, *I, *C]),
+            &H,
+            Some((nonempty![PolygonOpinion::AlongEdge{
+                index: 1,
+                at_point: *H,
+                percent_along: Percent::Val(0.5)
+            }], *H));
+            "point at edge of polygon 01"
+        )]
+        #[test_case(
+            Polygon([*A, *G, *I, *C]),
+            &F,
+            Some((nonempty![PolygonOpinion::AlongEdge{
+                index: 2,
+                at_point: *F,
+                percent_along: Percent::Val(0.5)
+            }], *F));
+            "point at edge of polygon 02"
+        )]
+        #[test_case(
+            Polygon([*A, *G, *I, *C]),
+            &B,
+            Some((nonempty![PolygonOpinion::AlongEdge{
+                index: 3,
+                at_point: *B,
+                percent_along: Percent::Val(0.5)
+            }], *B));
+            "point at edge of polygon 03"
+        )]
+        fn overlaps(
+            pg: Result<Polygon>,
+            pt: &Point,
+            expectation: Option<(NonEmpty<PolygonOpinion>, Point)>,
+        ) -> Result<()> {
+            assert_eq!(polygon_overlaps_point(&pg?, pt)?, expectation);
             Ok(())
         }
     }
