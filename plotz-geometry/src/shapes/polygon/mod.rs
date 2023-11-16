@@ -10,7 +10,7 @@ use crate::{
     crop::{CropType, Croppable, PointLocation},
     intersection::IntersectionResult,
     obj2::ObjType2d,
-    overlaps::{opinion::Opinion, segment_overlaps_point, Overlap},
+    overlaps::segment_overlaps_point,
     shapes::{point::Point, segment::Segment},
     *,
 };
@@ -168,9 +168,8 @@ impl Polygon {
         }
         for (idx, seg) in self.to_segments().iter().enumerate() {
             match segment_overlaps_point(seg, other)? {
-                Overlap::None => {}
-                Overlap::Some(Opinion::Segment(_), _) => return Ok(PointLocation::OnSegment(idx)),
-                _ => return Err(anyhow!("not sure what is going on here?")),
+                None => {}
+                Some(_) => return Ok(PointLocation::OnSegment(idx)),
             }
         }
 
