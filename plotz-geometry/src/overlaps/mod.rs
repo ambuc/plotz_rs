@@ -16,7 +16,6 @@ use nonempty::{nonempty, NonEmpty};
 
 #[derive(PartialEq, Clone, Debug)]
 pub enum Overlap {
-    // SpecialCase(General),
     // respects order of overlaps() argument.
     Some(Opinion, Opinion),
     None,
@@ -30,11 +29,11 @@ pub enum Overlap {
 //  curvearc || -️  | -️  |️ -  | -  |
 // ==========++====+====+====+====+==
 
-pub fn point_overlaps_point(a: &Point, b: &Point) -> Result<Overlap> {
+pub fn point_overlaps_point(a: &Point, b: &Point) -> Result<Option<Point>> {
     if a == b {
-        Ok(Overlap::Some(Opinion::Point, Opinion::Point))
+        Ok(Some(*a))
     } else {
-        Ok(Overlap::None)
+        Ok(None)
     }
 }
 
@@ -423,10 +422,7 @@ mod tests {
         #[test]
         fn the_same() -> Result<()> {
             for i in &[*A, *B, *C] {
-                assert_eq!(
-                    point_overlaps_point(i, i)?,
-                    Overlap::Some(Opinion::Point, Opinion::Point),
-                );
+                assert_eq!(point_overlaps_point(i, i)?, Some(*i));
             }
             Ok(())
         }
@@ -434,7 +430,7 @@ mod tests {
         #[test]
         fn not_the_same() -> Result<()> {
             for i in &[*A, *B, *C] {
-                assert_eq!(point_overlaps_point(i, &D)?, Overlap::None,);
+                assert_eq!(point_overlaps_point(i, &D)?, None);
             }
             Ok(())
         }
