@@ -409,6 +409,13 @@ pub fn polygon_overlaps_point(
     }
 }
 
+pub fn polygon_overlaps_segment(
+    _polygon: &Polygon,
+    _segment: &Segment,
+) -> Result<Option<(NonEmpty<PolygonOpinion>, NonEmpty<SegmentOpinion>)>> {
+    unimplemented!()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1204,6 +1211,27 @@ mod tests {
             expectation: Option<(PolygonOpinion, Point)>,
         ) -> Result<()> {
             assert_eq!(polygon_overlaps_point(&pg?, pt)?, expectation);
+            Ok(())
+        }
+    }
+
+    mod pg_sg {
+        use super::*;
+        use test_case::test_case;
+        //   ^
+        //   |
+        //   A  B  C
+        //   |
+        //   D  E  F
+        //   |
+        // --G--H--I->
+        //   |
+
+        fn overlaps(
+            pg: Result<Polygon>,
+            sg: Segment,
+            expectation: Option<(NonEmpty<PolygonOpinion>, NonEmpty<SegmentOpinion>)>,
+        ) -> Result<()> {
             Ok(())
         }
     }
