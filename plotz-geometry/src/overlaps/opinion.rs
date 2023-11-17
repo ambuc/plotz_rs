@@ -33,10 +33,7 @@ pub enum MultilineOpinion {
 pub enum PolygonOpinion {
     // polygon sees point:
     WithinArea,
-    AtPoint {
-        index: usize,
-        at_point: Point,
-    },
+    AtPoint(usize, Point),
     AlongEdge {
         index: usize, // segment index
         at_point: Point,
@@ -107,11 +104,11 @@ pub fn rewrite_segment_opinions(
         {
             // these are... ugh... rewrite rules.
             match (op1, op2) {
-                (SegmentOpinion::AtPointAlongSegment(_, _), SegmentOpinion::EntireSegment) => {
+                (SegmentOpinion::AtPointAlongSegment(..), SegmentOpinion::EntireSegment) => {
                     segment_opinions.remove(idx1);
                     continue 'edit;
                 }
-                (SegmentOpinion::EntireSegment, SegmentOpinion::AtPointAlongSegment(_, _)) => {
+                (SegmentOpinion::EntireSegment, SegmentOpinion::AtPointAlongSegment(..)) => {
                     segment_opinions.remove(idx2);
                     continue 'edit;
                 }

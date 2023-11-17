@@ -329,13 +329,7 @@ pub fn polygon_overlaps_point(
 ) -> Result<Option<(PolygonOpinion, Point)>> {
     for (index, pg_pt) in polygon.pts.iter().enumerate() {
         if pg_pt == point {
-            return Ok(Some((
-                PolygonOpinion::AtPoint {
-                    index,
-                    at_point: *point,
-                },
-                *point,
-            )));
+            return Ok(Some((PolygonOpinion::AtPoint(index, *point), *point)));
         }
     }
     for (index, pg_sg) in polygon.to_segments().iter().enumerate() {
@@ -572,10 +566,10 @@ mod tests {
     #[test_case(Polygon([*D, *H, *N, *J]), &C, None; "point not in polygon 00")]
     #[test_case(Polygon([*D, *H, *N, *J]), &E, None; "point not in polygon 01")]
     #[test_case(Polygon([*D, *H, *N, *J]), &I, Some((PolygonOpinion::WithinArea, *I)); "point in polygon")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &D, Some((PolygonOpinion::AtPoint{index:0, at_point: *D}, *D)); "point at point of polygon 00")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &H, Some((PolygonOpinion::AtPoint{index:1, at_point: *H}, *H)); "point at point of polygon 01")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &N, Some((PolygonOpinion::AtPoint{index:2, at_point: *N}, *N)); "point at point of polygon 02")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &J, Some((PolygonOpinion::AtPoint{index:3, at_point: *J}, *J)); "point at point of polygon 03")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &D, Some((PolygonOpinion::AtPoint(0,  *D), *D)); "point at point of polygon 00")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &H, Some((PolygonOpinion::AtPoint(1,  *H), *H)); "point at point of polygon 01")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &N, Some((PolygonOpinion::AtPoint(2,  *N), *N)); "point at point of polygon 02")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &J, Some((PolygonOpinion::AtPoint(3,  *J), *J)); "point at point of polygon 03")]
     #[test_case(Polygon([*C, *M, *O, *E]), &H, Some((PolygonOpinion::AlongEdge{ index: 0, at_point: *H, percent_along: Percent::Val(0.5) }, *H)); "point at edge of polygon 00")]
     #[test_case(Polygon([*C, *M, *O, *E]), &N, Some((PolygonOpinion::AlongEdge{ index: 1, at_point: *N, percent_along: Percent::Val(0.5) }, *N)); "point at edge of polygon 01")]
     #[test_case(Polygon([*C, *M, *O, *E]), &J, Some((PolygonOpinion::AlongEdge{ index: 2, at_point: *J, percent_along: Percent::Val(0.5) }, *J)); "point at edge of polygon 02")]
