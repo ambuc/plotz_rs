@@ -10,7 +10,7 @@ use crate::{
     crop::{CropType, Croppable, PointLocation},
     intersection::IntersectionResult,
     obj2::ObjType2d,
-    overlaps::{opinion::PolygonOpinion, polygon_overlaps_point},
+    overlaps::{opinion::PolygonOp, polygon_overlaps_point},
     shapes::{point::Point, segment::Segment},
     *,
 };
@@ -163,9 +163,9 @@ impl Polygon {
     pub fn contains_pt_deprecated(&self, other: &Point) -> Result<PointLocation> {
         match polygon_overlaps_point(self, other)? {
             None => Ok(PointLocation::Outside),
-            Some((PolygonOpinion::WithinArea, _)) => Ok(PointLocation::Inside),
-            Some((PolygonOpinion::AtPoint(index, _), _)) => Ok(PointLocation::OnPoint(index)),
-            Some((PolygonOpinion::AlongEdge(index, ..), _)) => Ok(PointLocation::OnSegment(index)),
+            Some((PolygonOp::WithinArea, _)) => Ok(PointLocation::Inside),
+            Some((PolygonOp::AtPoint(index, _), _)) => Ok(PointLocation::OnPoint(index)),
+            Some((PolygonOp::AlongEdge(index, ..), _)) => Ok(PointLocation::OnSegment(index)),
             _ => Err(anyhow!("how did we get here?")),
         }
     }
@@ -174,9 +174,9 @@ impl Polygon {
     pub fn point_is_inside_or_on_border_deprecated(&self, other: &Point) -> bool {
         matches!(
             polygon_overlaps_point(self, other).unwrap(),
-            Some((PolygonOpinion::WithinArea, _))
-                | Some((PolygonOpinion::AtPoint(..), _))
-                | Some((PolygonOpinion::AlongEdge(..), _))
+            Some((PolygonOp::WithinArea, _))
+                | Some((PolygonOp::AtPoint(..), _))
+                | Some((PolygonOp::AlongEdge(..), _))
         )
     }
 
@@ -184,7 +184,7 @@ impl Polygon {
     pub fn point_is_inside_deprecated(&self, other: &Point) -> bool {
         matches!(
             polygon_overlaps_point(self, other).unwrap(),
-            Some((PolygonOpinion::WithinArea, _))
+            Some((PolygonOp::WithinArea, _))
         )
     }
 

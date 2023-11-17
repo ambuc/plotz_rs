@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 use indicatif::ProgressBar;
 use itertools::Itertools;
 use plotz_geometry::{
-    overlaps::{opinion::PolygonOpinion, polygon_overlaps_point},
+    overlaps::{opinion::PolygonOp, polygon_overlaps_point},
     shapes::{point::Point, polygon::Polygon, segment::Segment},
 };
 use rand::seq::SliceRandom;
@@ -104,7 +104,7 @@ impl Layout {
             .any(|(extant_tile, test_pt)| {
                 matches!(
                     polygon_overlaps_point(&extant_tile.pg, test_pt),
-                    Ok(Some((PolygonOpinion::WithinArea, _)))
+                    Ok(Some((PolygonOp::WithinArea, _)))
                 )
             })
         {
@@ -133,12 +133,12 @@ impl Layout {
                     ({
                         matches!(
                             polygon_overlaps_point(&cand.pg, &trial_pt).unwrap(),
-                            Some((PolygonOpinion::WithinArea, _))
+                            Some((PolygonOp::WithinArea, _))
                         )
                     }) || self.placed_tiles.iter().any(|extant_tile| {
                         matches!(
                             polygon_overlaps_point(&extant_tile.pg, &trial_pt).unwrap(),
-                            Some((PolygonOpinion::WithinArea, _))
+                            Some((PolygonOp::WithinArea, _))
                         )
                     }),
                 );

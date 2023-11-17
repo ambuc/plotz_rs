@@ -5,7 +5,7 @@ use crate::{
 use anyhow::Result;
 
 #[derive(PartialEq, Copy, Clone, Debug)]
-pub enum SegmentOpinion {
+pub enum SegmentOp {
     AtPointAlongSegment(/*at_point=*/ Point, /*percent_along=*/ Percent),
 
     // intersection is a subsegment of this segment.
@@ -16,7 +16,7 @@ pub enum SegmentOpinion {
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
-pub enum MultilineOpinion {
+pub enum MultilineOp {
     AtPoint(/*index=*/ usize, Point),
 
     AtPointAlongSharedSegment(usize, Point, Percent),
@@ -30,7 +30,7 @@ pub enum MultilineOpinion {
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
-pub enum PolygonOpinion {
+pub enum PolygonOp {
     // polygon sees point:
     WithinArea,
     AtPoint(usize, Point),
@@ -44,7 +44,7 @@ pub enum PolygonOpinion {
     AtSubpolygon,
 }
 
-impl MultilineOpinion {
+impl MultilineOp {
     // When would you need to convert a SegmentOpinion into a MultilineOpinion?
     // Well, what if you were traversing a multiline and found a collision along
     // one of its segments?
@@ -53,23 +53,21 @@ impl MultilineOpinion {
     //  - and if that collision occurred along the segment at Percent::One, it
     //    would really be a MultilineOpinion::AtPoint{ index+1, ..}.
     // That's why.
-    pub fn from_segment_opinion(index: usize, so: SegmentOpinion) -> MultilineOpinion {
+    pub fn from_segment_opinion(index: usize, so: SegmentOp) -> MultilineOp {
         match so {
-            SegmentOpinion::AtPointAlongSegment(at_point, percent_along) => match percent_along {
-                Percent::Zero => MultilineOpinion::AtPoint(index, at_point),
-                Percent::One => MultilineOpinion::AtPoint(index + 1, at_point),
-                _ => MultilineOpinion::AtPointAlongSharedSegment(index, at_point, percent_along),
+            SegmentOp::AtPointAlongSegment(at_point, percent_along) => match percent_along {
+                Percent::Zero => MultilineOp::AtPoint(index, at_point),
+                Percent::One => MultilineOp::AtPoint(index + 1, at_point),
+                _ => MultilineOp::AtPointAlongSharedSegment(index, at_point, percent_along),
             },
-            SegmentOpinion::AlongSubsegment(segment) => {
-                MultilineOpinion::AlongSubsegmentOf(index, segment)
-            }
-            SegmentOpinion::EntireSegment => MultilineOpinion::EntireSubsegment(index),
+            SegmentOp::AlongSubsegment(segment) => MultilineOp::AlongSubsegmentOf(index, segment),
+            SegmentOp::EntireSegment => MultilineOp::EntireSubsegment(index),
         }
     }
 }
 
 pub fn rewrite_segment_opinions(
-    segment_opinions: &mut Vec<SegmentOpinion>,
+    segment_opinions: &mut Vec<SegmentOp>,
     original_sg: &Segment,
 ) -> Result<()> {
     segment_opinions.dedup();
@@ -77,11 +75,11 @@ pub fn rewrite_segment_opinions(
         let opinions_ = segment_opinions.clone();
         for (idx, op) in opinions_.iter().enumerate() {
             match op {
-                SegmentOpinion::AlongSubsegment(s)
+                SegmentOp::AlongSubsegment(s)
                     if (s == original_sg) || (s.flip() == *original_sg) =>
                 {
                     segment_opinions.remove(idx);
-                    segment_opinions.push(SegmentOpinion::EntireSegment);
+                    segment_opinions.push(SegmentOp::EntireSegment);
                     continue 'edit;
                 }
                 _ => {
@@ -96,28 +94,28 @@ pub fn rewrite_segment_opinions(
         {
             // these are... ugh... rewrite rules.
             match (op1, op2) {
-                (SegmentOpinion::AtPointAlongSegment(..), SegmentOpinion::EntireSegment) => {
+                (SegmentOp::AtPointAlongSegment(..), SegmentOp::EntireSegment) => {
                     segment_opinions.remove(idx1);
                     continue 'edit;
                 }
-                (SegmentOpinion::EntireSegment, SegmentOpinion::AtPointAlongSegment(..)) => {
+                (SegmentOp::EntireSegment, SegmentOp::AtPointAlongSegment(..)) => {
                     segment_opinions.remove(idx2);
                     continue 'edit;
                 }
-                (SegmentOpinion::AlongSubsegment(s1), SegmentOpinion::AlongSubsegment(s2))
+                (SegmentOp::AlongSubsegment(s1), SegmentOp::AlongSubsegment(s2))
                     if s1.f == s2.i =>
                 {
                     segment_opinions.remove(idx2);
                     segment_opinions.remove(idx1);
-                    segment_opinions.push(SegmentOpinion::AlongSubsegment(Segment(s1.i, s2.f)));
+                    segment_opinions.push(SegmentOp::AlongSubsegment(Segment(s1.i, s2.f)));
                     continue 'edit;
                 }
-                (SegmentOpinion::AlongSubsegment(s1), SegmentOpinion::AlongSubsegment(s2))
+                (SegmentOp::AlongSubsegment(s1), SegmentOp::AlongSubsegment(s2))
                     if s2.f == s1.i =>
                 {
                     segment_opinions.remove(idx2);
                     segment_opinions.remove(idx1);
-                    segment_opinions.push(SegmentOpinion::AlongSubsegment(Segment(s2.i, s1.f)));
+                    segment_opinions.push(SegmentOp::AlongSubsegment(Segment(s2.i, s1.f)));
                     continue 'edit;
                 }
                 _ => {
@@ -131,7 +129,7 @@ pub fn rewrite_segment_opinions(
     Ok(())
 }
 
-pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOpinion>) -> Result<()> {
+pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOp>) -> Result<()> {
     multiline_opinions.dedup();
     'edit: loop {
         let ops_ = multiline_opinions.clone();
@@ -139,18 +137,16 @@ pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOpinion>
             ops_.iter().enumerate().zip(ops_.iter().enumerate().skip(1))
         {
             match (op1, op2) {
-                (
-                    MultilineOpinion::AtPoint(pt_idx, _),
-                    MultilineOpinion::EntireSubsegment(sg_idx),
-                ) if (sg_idx + 1 == *pt_idx || pt_idx == sg_idx) => {
+                (MultilineOp::AtPoint(pt_idx, _), MultilineOp::EntireSubsegment(sg_idx))
+                    if (sg_idx + 1 == *pt_idx || pt_idx == sg_idx) =>
+                {
                     //
                     multiline_opinions.remove(idx1);
                     continue 'edit;
                 }
-                (
-                    MultilineOpinion::EntireSubsegment(sg_idx),
-                    MultilineOpinion::AtPoint(pt_idx, _),
-                ) if (pt_idx == sg_idx || *pt_idx == sg_idx + 1) => {
+                (MultilineOp::EntireSubsegment(sg_idx), MultilineOp::AtPoint(pt_idx, _))
+                    if (pt_idx == sg_idx || *pt_idx == sg_idx + 1) =>
+                {
                     multiline_opinions.remove(idx2);
                     continue 'edit;
                 }

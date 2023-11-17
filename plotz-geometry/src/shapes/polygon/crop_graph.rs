@@ -3,7 +3,7 @@
 use crate::{
     crop::{CropType, PointLocation},
     intersection::{Intersection, IntersectionResult},
-    overlaps::{opinion::PolygonOpinion, polygon_overlaps_point},
+    overlaps::{opinion::PolygonOp, polygon_overlaps_point},
     shapes::{
         point::{is_colinear_n, Point},
         polygon::Polygon,
@@ -191,7 +191,7 @@ impl<'a> CropGraph<'a> {
         while let Some(node) = self.graph.nodes().find(|node| {
             matches!(
                 polygon_overlaps_point(self.get(which), node).unwrap(),
-                Some((PolygonOpinion::WithinArea, _))
+                Some((PolygonOp::WithinArea, _))
             )
         }) {
             self.graph.remove_node(node);

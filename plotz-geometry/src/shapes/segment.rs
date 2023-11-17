@@ -7,7 +7,7 @@ use crate::{
     interpolate,
     intersection::{Intersection, IntersectionResult},
     obj2::ObjType2d,
-    overlaps::{opinion::SegmentOpinion, segment_overlaps_segment},
+    overlaps::{opinion::SegmentOp, segment_overlaps_segment},
     shapes::{point::Point, polygon::Polygon, ray::Ray},
     Object,
 };
@@ -80,8 +80,8 @@ impl Segment {
     pub fn intersects(&self, other: &Segment) -> Option<IntersectionResult> {
         // TODO(ambuc): remove Segment::intersects entirely.
         if let Ok(Some((
-            SegmentOpinion::AtPointAlongSegment(pt, a_pct),
-            SegmentOpinion::AtPointAlongSegment(_, b_pct),
+            SegmentOp::AtPointAlongSegment(pt, a_pct),
+            SegmentOp::AtPointAlongSegment(_, b_pct),
         ))) = segment_overlaps_segment(self, other)
         {
             Some(IntersectionResult::Ok(Intersection { pt, a_pct, b_pct }))
