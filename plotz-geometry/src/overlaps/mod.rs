@@ -517,8 +517,9 @@ mod tests {
         if let Some((o1, o2)) = expectation {
             assert_eq!(segment_overlaps_segment(&a, &b)?, Some((o1, o2)));
             assert_eq!(segment_overlaps_segment(&b, &a)?, Some((o2, o1)));
+        } else {
+            assert_eq!(segment_overlaps_segment(&a, &b)?, expectation);
         }
-        // assert_eq!(segment_overlaps_segment(&a, &b)?, expectation);
         Ok(())
     }
 
