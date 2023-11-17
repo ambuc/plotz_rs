@@ -489,102 +489,78 @@ mod tests {
         Ok(())
     }
 
+    #[test_case(Segment(*C, *D), Segment(*C, *D), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same 00")]
+    #[test_case(Segment(*C, *M), Segment(*C, *M), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same 01")]
+    #[test_case(Segment(*C, *M), Segment(*M, *C), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same reverse 00")]
+    #[test_case(Segment(*Y, *M), Segment(*M, *Y), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same reverse 01")]
+    #[test_case(Segment(*B, *E), Segment(*C, *D), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *D)), SegmentOpinion::EntireSegment)); "total collision")]
+    #[test_case(Segment(*B, *E), Segment(*D, *C), Some((SegmentOpinion::AlongSubsegment(Segment(*D, *C)), SegmentOpinion::EntireSegment)); "total collision, flip")]
+    // a b - d .
+    // . . c - e
+    #[test_case(Segment(*B, *D), Segment(*C, *E), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *D)), SegmentOpinion::AlongSubsegment(Segment(*C, *D)))); "partial collision")]
+    #[test_case(Segment(*B, *D), Segment(*E, *C), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *D)), SegmentOpinion::AlongSubsegment(Segment(*D, *C)))); "partial collision, flip")]
+    fn test_segment_overlaps_segment(
+        a: Segment,
+        b: Segment,
+        expectation: Option<(SegmentOpinion, SegmentOpinion)>,
+    ) -> Result<()> {
+        assert_eq!(segment_overlaps_segment(&a, &b)?, expectation);
+        Ok(())
+    }
+
     mod sg_sg {
         use super::*;
         use test_case::test_case;
 
-        #[test]
-        fn the_same() -> Result<()> {
-            for i in &[*C, *D, *E] {
-                for j in &[*H, *I, *J] {
-                    assert_eq!(
-                        segment_overlaps_segment(&Segment(*i, *j), &Segment(*i, *j))?,
-                        Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment,))
-                    );
-                }
-            }
+        #[test_case(Segment(*A, *C),Percent::One, Segment(*C, *E), Percent::Zero, *C)]
+        #[test_case(Segment(*C, *A),Percent::Zero, Segment(*C, *E), Percent::Zero, *C)]
+        #[test_case(Segment(*C, *A),Percent::Zero, Segment(*E, *C), Percent::One, *C)]
+        #[test_case(Segment(*A, *C),Percent::One, Segment(*E, *C), Percent::One, *C)]
+
+        fn atpoint(
+            sga: Segment,
+            a_pct: Percent,
+            sgb: Segment,
+            b_pct: Percent,
+            at_point: Point,
+        ) -> Result<()> {
+            assert_eq!(
+                segment_overlaps_segment(&sga, &sgb)?,
+                Some((
+                    SegmentOpinion::AtPointAlongSegment {
+                        at_point,
+                        percent_along: a_pct,
+                    },
+                    SegmentOpinion::AtPointAlongSegment {
+                        at_point,
+                        percent_along: b_pct,
+                    },
+                ))
+            );
+
             Ok(())
         }
 
-        #[test]
-        fn the_same_but_reversed() -> Result<()> {
-            for i in &[*C, *D, *E] {
-                for j in &[*H, *I, *J] {
-                    assert_eq!(
-                        segment_overlaps_segment(&Segment(*i, *j), &Segment(*j, *i))?,
-                        Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment))
-                    );
-                }
-            }
+        #[test_case(Segment(*A, *E), Segment(*A, *C), Segment(*A, *C))]
+        #[test_case(Segment(*A, *E), Segment(*B, *D), Segment(*B, *D))]
+        #[test_case(Segment(*A, *E), Segment(*C, *E), Segment(*C, *E))]
+        fn atsubsegment(sga: Segment, sgb: Segment, subsegment: Segment) -> Result<()> {
+            assert_eq!(
+                segment_overlaps_segment(&sga, &sgb)?,
+                Some((
+                    SegmentOpinion::AlongSubsegment(subsegment),
+                    SegmentOpinion::EntireSegment,
+                ))
+            );
+            assert_eq!(
+                segment_overlaps_segment(&sgb, &sga)?,
+                Some((
+                    SegmentOpinion::EntireSegment,
+                    SegmentOpinion::AlongSubsegment(subsegment),
+                ))
+            );
+
             Ok(())
-        }
-
-        mod colinear {
-            use super::*;
-            use test_case::test_case;
-
-            //   ^
-            //   |
-            // --Q--W--E--R--T-->
-            //   |
-            lazy_static! {
-                static ref Q: Point = Point(0, 0);
-                static ref W: Point = Point(1, 0);
-                static ref E: Point = Point(2, 0);
-                static ref R: Point = Point(3, 0);
-                static ref T: Point = Point(4, 0);
-            }
-
-            #[test_case(Segment(*Q, *E),Percent::One, Segment(*E, *T), Percent::Zero, *E)]
-            #[test_case(Segment(*E, *Q),Percent::Zero, Segment(*E, *T), Percent::Zero, *E)]
-            #[test_case(Segment(*E, *Q),Percent::Zero, Segment(*T, *E), Percent::One, *E)]
-            #[test_case(Segment(*Q, *E),Percent::One, Segment(*T, *E), Percent::One, *E)]
-
-            fn atpoint(
-                sga: Segment,
-                a_pct: Percent,
-                sgb: Segment,
-                b_pct: Percent,
-                at_point: Point,
-            ) -> Result<()> {
-                assert_eq!(
-                    segment_overlaps_segment(&sga, &sgb)?,
-                    Some((
-                        SegmentOpinion::AtPointAlongSegment {
-                            at_point,
-                            percent_along: a_pct,
-                        },
-                        SegmentOpinion::AtPointAlongSegment {
-                            at_point,
-                            percent_along: b_pct,
-                        },
-                    ))
-                );
-
-                Ok(())
-            }
-
-            #[test_case(Segment(*Q, *T), Segment(*Q, *E), Segment(*Q, *E))]
-            #[test_case(Segment(*Q, *T), Segment(*W, *R), Segment(*W, *R))]
-            #[test_case(Segment(*Q, *T), Segment(*E, *T), Segment(*E, *T))]
-            fn atsubsegment(sga: Segment, sgb: Segment, subsegment: Segment) -> Result<()> {
-                assert_eq!(
-                    segment_overlaps_segment(&sga, &sgb)?,
-                    Some((
-                        SegmentOpinion::AlongSubsegment(subsegment),
-                        SegmentOpinion::EntireSegment,
-                    ))
-                );
-                assert_eq!(
-                    segment_overlaps_segment(&sgb, &sga)?,
-                    Some((
-                        SegmentOpinion::EntireSegment,
-                        SegmentOpinion::AlongSubsegment(subsegment),
-                    ))
-                );
-
-                Ok(())
-            }
         }
 
         #[test]
@@ -635,42 +611,6 @@ mod tests {
                 }
             }
 
-            Ok(())
-        }
-
-        #[test_case(
-            Segment(*C, *E),
-            Segment(Point(0.5, 2), Point(1.5,2)),
-            Some((
-                    SegmentOpinion::AlongSubsegment(Segment(Point(0.5,2), Point(1.5, 2))),
-                    SegmentOpinion::EntireSegment
-            ));
-            "partial collision"
-        )]
-        #[test_case(
-            Segment(*C, *E),
-            Segment(Point(1.5, 2), Point(0.5,2)),
-            Some((
-                    SegmentOpinion::AlongSubsegment(Segment(Point(1.5,2), Point(0.5, 2))),
-                    SegmentOpinion::EntireSegment
-            ));
-            "partial collision, flip"
-        )]
-        #[test_case(
-            Segment(Point(0,2), Point(1,2)),
-            Segment(Point(1.5,2), Point(0.5,2)),
-            Some((
-                    SegmentOpinion::AlongSubsegment(Segment(Point(0.5,2), Point(1,2))),
-                    SegmentOpinion::AlongSubsegment(Segment(Point(1,2), Point(0.5,2))),
-            ));
-            "partial collision, backwards"
-        )]
-        fn isxn(
-            a: Segment,
-            b: Segment,
-            expectation: Option<(SegmentOpinion, SegmentOpinion)>,
-        ) -> Result<()> {
-            assert_eq!(segment_overlaps_segment(&a, &b)?, expectation);
             Ok(())
         }
     }
