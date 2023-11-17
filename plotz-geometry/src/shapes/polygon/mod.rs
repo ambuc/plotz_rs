@@ -164,8 +164,8 @@ impl Polygon {
         match polygon_overlaps_point(self, other)? {
             None => Ok(PointLocation::Outside),
             Some((PolygonOp::WithinArea, _)) => Ok(PointLocation::Inside),
-            Some((PolygonOp::AtPoint(index, _), _)) => Ok(PointLocation::OnPoint(index)),
-            Some((PolygonOp::AlongEdge(index, ..), _)) => Ok(PointLocation::OnSegment(index)),
+            Some((PolygonOp::Point(index, _), _)) => Ok(PointLocation::OnPoint(index)),
+            Some((PolygonOp::PointAlongEdge(index, ..), _)) => Ok(PointLocation::OnSegment(index)),
             _ => Err(anyhow!("how did we get here?")),
         }
     }
@@ -175,8 +175,8 @@ impl Polygon {
         matches!(
             polygon_overlaps_point(self, other).unwrap(),
             Some((PolygonOp::WithinArea, _))
-                | Some((PolygonOp::AtPoint(..), _))
-                | Some((PolygonOp::AlongEdge(..), _))
+                | Some((PolygonOp::Point(..), _))
+                | Some((PolygonOp::PointAlongEdge(..), _))
         )
     }
 

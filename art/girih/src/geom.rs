@@ -204,7 +204,7 @@ impl PlacedTile {
                 // ztex lies at the intersection of a_ray and the tower.
                 let ztex = match (tower_a.intersects(&a_ray)?, tower_b.intersects(&a_ray)?) {
                     (Some((op, _)), _) | (_, Some((op, _))) => match op {
-                        SegmentOp::AtPointAlongSegment(at_point, _) => at_point,
+                        SegmentOp::PointAlongSegment(at_point, _) => at_point,
                         _ => panic!("oh"),
                     },
                     _ => panic!("oh"),
@@ -226,13 +226,13 @@ impl PlacedTile {
         let tile_contains = |sg: &Segment| {
             (match polygon_overlaps_point(&self.pg, &sg.i).unwrap() {
                 Some((PolygonOp::WithinArea, _))
-                | Some((PolygonOp::AtPoint(..), _))
-                | Some((PolygonOp::AlongEdge(..), _)) => true,
+                | Some((PolygonOp::Point(..), _))
+                | Some((PolygonOp::PointAlongEdge(..), _)) => true,
                 _ => false,
             }) && (match polygon_overlaps_point(&self.pg, &sg.f).unwrap() {
                 Some((PolygonOp::WithinArea, _))
-                | Some((PolygonOp::AtPoint(..), _))
-                | Some((PolygonOp::AlongEdge(..), _)) => true,
+                | Some((PolygonOp::Point(..), _))
+                | Some((PolygonOp::PointAlongEdge(..), _)) => true,
                 _ => false,
             })
         };
@@ -253,16 +253,16 @@ impl PlacedTile {
                         {
                             match polygon_overlaps_point(&self.pg, &s.i).unwrap() {
                                 Some((PolygonOp::WithinArea, _))
-                                | Some((PolygonOp::AtPoint(..), _))
-                                | Some((PolygonOp::AlongEdge(..), _)) => true,
+                                | Some((PolygonOp::Point(..), _))
+                                | Some((PolygonOp::PointAlongEdge(..), _)) => true,
                                 _ => false,
                             }
                         },
                         {
                             match polygon_overlaps_point(&self.pg, &s.f).unwrap() {
                                 Some((PolygonOp::WithinArea, _))
-                                | Some((PolygonOp::AtPoint(..), _))
-                                | Some((PolygonOp::AlongEdge(..), _)) => true,
+                                | Some((PolygonOp::Point(..), _))
+                                | Some((PolygonOp::PointAlongEdge(..), _)) => true,
                                 _ => false,
                             }
                         },
@@ -274,7 +274,7 @@ impl PlacedTile {
 
                     match (perp_ray_1.intersects_sg(&s)?, perp_ray_2.intersects_sg(&s)?) {
                         (Some((op, _)), _) | (_, Some((op, _))) => match op {
-                            SegmentOp::AtPointAlongSegment(at_point, _) => {
+                            SegmentOp::PointAlongSegment(at_point, _) => {
                                 s_ver.push(Segment(pt_inside, at_point))
                             }
                             _ => panic!("oh"),

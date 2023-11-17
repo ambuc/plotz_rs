@@ -6,42 +6,27 @@ use anyhow::Result;
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum SegmentOp {
-    AtPointAlongSegment(/*at_point=*/ Point, /*percent_along=*/ Percent),
-
-    // intersection is a subsegment of this segment.
-    AlongSubsegment(Segment),
-
-    // intersection point(s) comprise this entire segment.
-    EntireSegment,
+    PointAlongSegment(Point, Percent), // a point some percent along this segment.
+    Subsegment(Segment),               // a subsegment of this segment.
+    EntireSegment,                     // the whole segment.
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum MultilineOp {
-    AtPoint(/*index=*/ usize, Point),
-
-    AtPointAlongSharedSegment(usize, Point, Percent),
-
-    // intersection point(s) comprise a subsegment of a segment of this
-    // multiline.
-    AlongSubsegmentOf(usize, Segment),
-
-    // intersection point(s) comprise an entire subsegment of this multiline.
-    EntireSubsegment(/*index=*/ usize),
+    Point(usize, Point),                      // one of the points in the multiline.
+    PointAlongSegment(usize, Point, Percent), // a point some percent along a segment of this multiline.
+    SubsegmentOf(usize, Segment),             // a subsegment of a segment of this multiline.
+    EntireSubsegment(usize),                  // an entire subsegment of this multiline
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum PolygonOp {
-    // polygon sees point:
-    WithinArea,
-    AtPoint(usize, Point),
-    AlongEdge(usize, Point, Percent),
-
-    // polygon sees segment / multiline
-    PartiallyWithinArea,
-    AlongSubsegmentOfEdge(usize, Segment),
-
-    // polygon sees polygon,
-    AtSubpolygon,
+    WithinArea,                            // within the area of the polygon.
+    Point(usize, Point),                   // on a point of the polygon.
+    PointAlongEdge(usize, Point, Percent), // a point some percent along an edge of this polygon.
+    PartiallyWithinArea,                   // partially within the area of the polygon.
+    SubsegmentOfEdge(usize, Segment),      // a subsegment of an edge of the polygon.
+    AtSubpolygon,                          // a subpolygon of the polygon.
 }
 
 impl MultilineOp {
@@ -55,12 +40,12 @@ impl MultilineOp {
     // That's why.
     pub fn from_segment_opinion(index: usize, so: SegmentOp) -> MultilineOp {
         match so {
-            SegmentOp::AtPointAlongSegment(at_point, percent_along) => match percent_along {
-                Percent::Zero => MultilineOp::AtPoint(index, at_point),
-                Percent::One => MultilineOp::AtPoint(index + 1, at_point),
-                _ => MultilineOp::AtPointAlongSharedSegment(index, at_point, percent_along),
+            SegmentOp::PointAlongSegment(at_point, percent_along) => match percent_along {
+                Percent::Zero => MultilineOp::Point(index, at_point),
+                Percent::One => MultilineOp::Point(index + 1, at_point),
+                _ => MultilineOp::PointAlongSegment(index, at_point, percent_along),
             },
-            SegmentOp::AlongSubsegment(segment) => MultilineOp::AlongSubsegmentOf(index, segment),
+            SegmentOp::Subsegment(segment) => MultilineOp::SubsegmentOf(index, segment),
             SegmentOp::EntireSegment => MultilineOp::EntireSubsegment(index),
         }
     }
@@ -75,9 +60,7 @@ pub fn rewrite_segment_opinions(
         let opinions_ = segment_opinions.clone();
         for (idx, op) in opinions_.iter().enumerate() {
             match op {
-                SegmentOp::AlongSubsegment(s)
-                    if (s == original_sg) || (s.flip() == *original_sg) =>
-                {
+                SegmentOp::Subsegment(s) if (s == original_sg) || (s.flip() == *original_sg) => {
                     segment_opinions.remove(idx);
                     segment_opinions.push(SegmentOp::EntireSegment);
                     continue 'edit;
@@ -94,28 +77,24 @@ pub fn rewrite_segment_opinions(
         {
             // these are... ugh... rewrite rules.
             match (op1, op2) {
-                (SegmentOp::AtPointAlongSegment(..), SegmentOp::EntireSegment) => {
+                (SegmentOp::PointAlongSegment(..), SegmentOp::EntireSegment) => {
                     segment_opinions.remove(idx1);
                     continue 'edit;
                 }
-                (SegmentOp::EntireSegment, SegmentOp::AtPointAlongSegment(..)) => {
+                (SegmentOp::EntireSegment, SegmentOp::PointAlongSegment(..)) => {
                     segment_opinions.remove(idx2);
                     continue 'edit;
                 }
-                (SegmentOp::AlongSubsegment(s1), SegmentOp::AlongSubsegment(s2))
-                    if s1.f == s2.i =>
-                {
+                (SegmentOp::Subsegment(s1), SegmentOp::Subsegment(s2)) if s1.f == s2.i => {
                     segment_opinions.remove(idx2);
                     segment_opinions.remove(idx1);
-                    segment_opinions.push(SegmentOp::AlongSubsegment(Segment(s1.i, s2.f)));
+                    segment_opinions.push(SegmentOp::Subsegment(Segment(s1.i, s2.f)));
                     continue 'edit;
                 }
-                (SegmentOp::AlongSubsegment(s1), SegmentOp::AlongSubsegment(s2))
-                    if s2.f == s1.i =>
-                {
+                (SegmentOp::Subsegment(s1), SegmentOp::Subsegment(s2)) if s2.f == s1.i => {
                     segment_opinions.remove(idx2);
                     segment_opinions.remove(idx1);
-                    segment_opinions.push(SegmentOp::AlongSubsegment(Segment(s2.i, s1.f)));
+                    segment_opinions.push(SegmentOp::Subsegment(Segment(s2.i, s1.f)));
                     continue 'edit;
                 }
                 _ => {
@@ -137,14 +116,14 @@ pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOp>) -> 
             ops_.iter().enumerate().zip(ops_.iter().enumerate().skip(1))
         {
             match (op1, op2) {
-                (MultilineOp::AtPoint(pt_idx, _), MultilineOp::EntireSubsegment(sg_idx))
+                (MultilineOp::Point(pt_idx, _), MultilineOp::EntireSubsegment(sg_idx))
                     if (sg_idx + 1 == *pt_idx || pt_idx == sg_idx) =>
                 {
                     //
                     multiline_opinions.remove(idx1);
                     continue 'edit;
                 }
-                (MultilineOp::EntireSubsegment(sg_idx), MultilineOp::AtPoint(pt_idx, _))
+                (MultilineOp::EntireSubsegment(sg_idx), MultilineOp::Point(pt_idx, _))
                     if (pt_idx == sg_idx || *pt_idx == sg_idx + 1) =>
                 {
                     multiline_opinions.remove(idx2);
