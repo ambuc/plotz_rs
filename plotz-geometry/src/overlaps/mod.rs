@@ -818,95 +818,18 @@ mod tests {
         #[test_case(Multiline([*C, *D, *E]), Multiline([*H, *I, *J]), None; "none 01")]
         #[test_case(Multiline([*C, *D, *E]), Multiline([*M, *N, *O]), None; "none 02")]
         #[test_case(Multiline([*C, *I, *O]), Multiline([*D, *J]), None; "none diagonal")]
-        #[test_case(
-            Multiline([*C, *D, *E]),
-            Multiline([*C, *H, *M]),
-            Some( (
-                nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *C }, ],
-                nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *C } ]));
-            "AtPoint 0, AtPoint 0"
-        )]
-        #[test_case(
-            Multiline([*C, *D, *E]),
-            Multiline([*M, *H, *C]),
-            Some( (
-                nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *C }, ],
-                nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *C } ]));
-            "AtPoint 0, AtPoint 2"
-        )]
-        #[test_case(
-            Multiline([*E, *D, *C]),
-            Multiline([*M, *H, *C]),
-            Some( (
-                nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *C }, ],
-                nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *C } ]));
-            "AtPoint 2, AtPoint 2"
-        )]
-        #[test_case(
-            Multiline([*C, *I, *O]),
-            Multiline([*M, *I, *E]),
-            Some( (
-                nonempty![ MultilineOpinion::AtPoint { index: 1, at_point: *I }, ],
-                nonempty![ MultilineOpinion::AtPoint { index: 1, at_point: *I } ]));
-            "AtPoint 1, AtPoint 1"
-        )]
-        #[test_case(
-            Multiline([*C, *O]),
-            Multiline([*E, *M]),
-            Some( (
-                nonempty![ MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *I, percent_along: Percent::Val(0.5) } ],
-                nonempty![ MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *I, percent_along: Percent::Val(0.5) } ]));
-            "crosshairs"
-        )]
-        #[test_case(
-            Multiline([*C, *D, *E]),
-            Multiline([*C, *D, *I]),
-            Some( (
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, ],
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, ]));
-            "partial collision, entire subsegment 0 0"
-        )]
-        #[test_case(
-            Multiline([*E, *D, *C]),
-            Multiline([*I, *D, *C]),
-            Some( (
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, ],
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, ]));
-            "partial collision, entire subsegment 1 1"
-        )]
-        #[test_case(
-            Multiline([*C, *D, *E]),
-            Multiline([*D, *E, *J]),
-            Some( (
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, ],
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, ]));
-            "partial collision, entire subsegment 1 0"
-        )]
-        #[test_case(
-            Multiline([*C, *D, *E]),
-            Multiline([*E, *D, *C]),
-            Some( (
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::EntireSubsegment { index: 1 } ],
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, MultilineOpinion::EntireSubsegment { index: 0 } ]));
-            "partial collision, entire subsegment 01 01 flipped"
-        )]
-        #[test_case(
-            Multiline([*C, *D, *E, *J, *O]),
-            Multiline([*C, *D, *I, *J, *O]),
-            Some( (
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::EntireSubsegment { index: 3 } ],
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::EntireSubsegment { index: 3 } ]));
-            "shared segment, then diversion, then another shared segment"
-        )]
-        #[test_case(
-            Multiline([*C, *D, *E, *J, *O]),
-            Multiline([*C, *D, *I, *J]),
-            Some( (
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::AtPoint { index: 3, at_point: *J } ],
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::AtPoint { index: 3, at_point: *J } ]));
-            "shared segment, then diversion, then atpoint"
-        )]
-        fn isxn(
+        #[test_case(Multiline([*C, *D, *E]), Multiline([*C, *H, *M]), Some( ( nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *C }, ], nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *C } ])); "AtPoint 0, AtPoint 0")]
+        #[test_case( Multiline([*C, *D, *E]), Multiline([*M, *H, *C]), Some( ( nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *C }, ], nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *C } ])); "AtPoint 0, AtPoint 2")]
+        #[test_case( Multiline([*E, *D, *C]), Multiline([*M, *H, *C]), Some( ( nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *C }, ], nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *C } ])); "AtPoint 2, AtPoint 2")]
+        #[test_case( Multiline([*C, *I, *O]), Multiline([*M, *I, *E]), Some( ( nonempty![ MultilineOpinion::AtPoint { index: 1, at_point: *I }, ], nonempty![ MultilineOpinion::AtPoint { index: 1, at_point: *I } ])); "AtPoint 1, AtPoint 1")]
+        #[test_case( Multiline([*C, *O]), Multiline([*E, *M]), Some( ( nonempty![ MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *I, percent_along: Percent::Val(0.5) } ], nonempty![ MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *I, percent_along: Percent::Val(0.5) } ])); "crosshairs")]
+        #[test_case( Multiline([*C, *D, *E]), Multiline([*C, *D, *I]), Some( ( nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, ], nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, ])); "partial collision, entire subsegment 0 0")]
+        #[test_case( Multiline([*E, *D, *C]), Multiline([*I, *D, *C]), Some( ( nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, ], nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, ])); "partial collision, entire subsegment 1 1")]
+        #[test_case( Multiline([*C, *D, *E]), Multiline([*D, *E, *J]), Some( ( nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, ], nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, ])); "partial collision, entire subsegment 1 0")]
+        #[test_case( Multiline([*C, *D, *E]), Multiline([*E, *D, *C]), Some( ( nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::EntireSubsegment { index: 1 } ], nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, MultilineOpinion::EntireSubsegment { index: 0 } ])); "partial collision, entire subsegment 01 01 flipped")]
+        #[test_case( Multiline([*C, *D, *E, *J, *O]), Multiline([*C, *D, *I, *J, *O]), Some( ( nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::EntireSubsegment { index: 3 } ], nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::EntireSubsegment { index: 3 } ])); "shared segment, then diversion, then another shared segment")]
+        #[test_case( Multiline([*C, *D, *E, *J, *O]), Multiline([*C, *D, *I, *J]), Some( ( nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::AtPoint { index: 3, at_point: *J } ], nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::AtPoint { index: 3, at_point: *J } ])); "shared segment, then diversion, then atpoint")]
+        fn test_multiline_overlaps_multiline(
             ml1: Multiline,
             ml2: Multiline,
             expectation: Option<(NonEmpty<MultilineOpinion>, NonEmpty<MultilineOpinion>)>,
