@@ -26,7 +26,7 @@ pub fn PolygonWithCavities(
     let outer: Polygon = a.into();
     for inner_pg in &inner {
         for pt in &inner_pg.pts {
-            if outer.contains_pt(pt)? == PointLocation::Outside {
+            if outer.contains_pt_deprecated(pt)? == PointLocation::Outside {
                 return Err(anyhow!("pt in inner is outside of outer"));
             }
         }

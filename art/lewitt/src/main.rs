@@ -62,7 +62,10 @@ fn main() -> Result<()> {
                     let curve_arc_ctr: Point = || -> Point {
                         loop {
                             let cand = Point(rng.gen_range(0.0..800.0), rng.gen_range(0.0..1000.0));
-                            if !matches!(bounds.contains_pt(cand), Ok(PointLocation::Inside)) {
+                            if !matches!(
+                                bounds.to_polygon().contains_pt_deprecated(&cand),
+                                Ok(PointLocation::Inside)
+                            ) {
                                 return cand;
                             }
                         }

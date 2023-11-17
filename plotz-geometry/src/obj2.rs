@@ -52,7 +52,7 @@ impl Croppable for Obj2 {
         Ok(match &self {
             Obj2::Point(pt) => {
                 assert_eq!(crop_type, CropType::Inclusive);
-                if !matches!(frame.contains_pt(pt), Ok(PointLocation::Outside)) {
+                if !matches!(frame.contains_pt_deprecated(pt), Ok(PointLocation::Outside)) {
                     vec![self.clone()]
                 } else {
                     vec![]
@@ -85,7 +85,10 @@ impl Croppable for Obj2 {
                 .collect::<Vec<_>>(),
             Obj2::Text(ch) => {
                 assert_eq!(crop_type, CropType::Inclusive);
-                if !matches!(frame.contains_pt(&ch.pt), Ok(PointLocation::Outside)) {
+                if !matches!(
+                    frame.contains_pt_deprecated(&ch.pt),
+                    Ok(PointLocation::Outside)
+                ) {
                     vec![self.clone()]
                 } else {
                     vec![]
@@ -105,7 +108,7 @@ impl Croppable for Obj2 {
     {
         match &self {
             Obj2::Point(pt) => {
-                if matches!(other.contains_pt(pt), Ok(PointLocation::Outside)) {
+                if matches!(other.contains_pt_deprecated(pt), Ok(PointLocation::Outside)) {
                     Ok(vec![])
                 } else {
                     Ok(vec![self.clone()])
@@ -137,7 +140,10 @@ impl Croppable for Obj2 {
                 .map(Obj2::from)
                 .collect::<Vec<_>>()),
             Obj2::Text(ch) => {
-                if matches!(other.contains_pt(&ch.pt), Ok(PointLocation::Outside)) {
+                if matches!(
+                    other.contains_pt_deprecated(&ch.pt),
+                    Ok(PointLocation::Outside)
+                ) {
                     Ok(vec![])
                 } else {
                     Ok(vec![self.clone()])

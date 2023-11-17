@@ -2,7 +2,10 @@ use crate::geom::*;
 use anyhow::{anyhow, Result};
 use indicatif::ProgressBar;
 use itertools::Itertools;
-use plotz_geometry::shapes::{point::Point, polygon::Polygon, segment::Segment};
+use plotz_geometry::{
+    overlaps::{opinion::PolygonOpinion, polygon_overlaps_point},
+    shapes::{point::Point, polygon::Polygon, segment::Segment},
+};
 use rand::seq::SliceRandom;
 use std::f64::consts::TAU;
 
@@ -65,7 +68,11 @@ impl Layout {
                 // if there is any point adjacent to the segment (a tiny offset away)
                 for pt in [ray_a.to_sg(offset).f, ray_b.to_sg(offset).f] {
                     // for which it is outside of _ALL_ known placed tiles
-                    if self.placed_tiles.iter().all(|t| t.pg.point_is_outside(&pt)) {
+                    if self
+                        .placed_tiles
+                        .iter()
+                        .all(|t| matches!(polygon_overlaps_point(&t.pg, &pt).unwrap(), None))
+                    {
                         bare_edges.push(segment);
                     }
                 }
@@ -94,7 +101,12 @@ impl Layout {
             .cartesian_product(test_pts.iter())
             .collect::<Vec<_>>()
             .iter()
-            .any(|(extant_tile, test_pt)| extant_tile.pg.point_is_inside(test_pt))
+            .any(|(extant_tile, test_pt)| {
+                matches!(
+                    polygon_overlaps_point(&extant_tile.pg, test_pt).unwrap(),
+                    Some((PolygonOpinion::WithinArea, _))
+                )
+            })
         {
             return false;
         }
@@ -118,11 +130,17 @@ impl Layout {
 
                 let trial_pt = rotor.f;
                 results.push(
-                    cand.pg.point_is_inside(&trial_pt)
-                        || self
-                            .placed_tiles
-                            .iter()
-                            .any(|extant_tile| extant_tile.pg.point_is_inside(&trial_pt)),
+                    ({
+                        matches!(
+                            polygon_overlaps_point(&cand.pg, &trial_pt).unwrap(),
+                            Some((PolygonOpinion::WithinArea, _))
+                        )
+                    }) || self.placed_tiles.iter().any(|extant_tile| {
+                        matches!(
+                            polygon_overlaps_point(&extant_tile.pg, &trial_pt).unwrap(),
+                            Some((PolygonOpinion::WithinArea, _))
+                        )
+                    }),
                 );
             }
             if results

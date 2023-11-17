@@ -3,10 +3,7 @@
 
 use std::cmp::{max, min};
 
-use crate::{
-    crop::PointLocation,
-    shapes::{point::Point, polygon::Polygon},
-};
+use crate::shapes::{point::Point, polygon::Polygon};
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
 use float_ord::FloatOrd;
@@ -38,10 +35,6 @@ impl Bounds {
             self.x_min_y_max(),
         ])
         .unwrap()
-    }
-
-    pub fn contains_pt(&self, pt: Point) -> Result<PointLocation> {
-        self.to_polygon().contains_pt(&pt)
     }
 
     pub fn x_span(&self) -> f64 {

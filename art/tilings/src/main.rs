@@ -38,8 +38,12 @@ fn main() -> Result<()> {
 
     // drain things not in frame
     dos.retain(|(obj, _style)| {
-        obj.iter()
-            .all(|pt| matches!(frame_polygon.contains_pt(pt), Ok(PointLocation::Inside)))
+        obj.iter().all(|pt| {
+            matches!(
+                frame_polygon.contains_pt_deprecated(pt),
+                Ok(PointLocation::Inside)
+            )
+        })
     });
 
     Canvas::builder()

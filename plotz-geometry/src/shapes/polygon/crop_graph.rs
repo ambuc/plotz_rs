@@ -3,6 +3,7 @@
 use crate::{
     crop::{CropType, PointLocation},
     intersection::{Intersection, IntersectionResult},
+    overlaps::polygon_overlaps_point,
     shapes::{
         point::{is_colinear_n, Point},
         polygon::Polygon,
@@ -190,7 +191,7 @@ impl<'a> CropGraph<'a> {
         while let Some(node) = self
             .graph
             .nodes()
-            .find(|node| self.get(which).point_is_inside(node))
+            .find(|node| self.get(which).point_is_inside_deprecated(node))
         {
             self.graph.remove_node(node);
         }
@@ -200,7 +201,7 @@ impl<'a> CropGraph<'a> {
         while let Some(node) = self
             .graph
             .nodes()
-            .find(|node| self.get(which).point_is_outside(node))
+            .find(|node| matches!(polygon_overlaps_point(self.get(which), node).unwrap(), None))
         {
             self.graph.remove_node(node);
         }
@@ -263,7 +264,7 @@ impl<'a> CropGraph<'a> {
     fn remove_edges_outside(&mut self, which: Which) {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
-                self.get(which).contains_pt(&edge.0.avg(&edge.1)),
+                self.get(which).contains_pt_deprecated(&edge.0.avg(&edge.1)),
                 Ok(PointLocation::Outside),
             )
         }) {
@@ -273,7 +274,7 @@ impl<'a> CropGraph<'a> {
     fn remove_edges_inside(&mut self, which: Which) {
         while let Some((i, j, ())) = self.graph.all_edges().find(|edge| {
             matches!(
-                self.get(which).contains_pt(&edge.0.avg(&edge.1)),
+                self.get(which).contains_pt_deprecated(&edge.0.avg(&edge.1)),
                 Ok(PointLocation::Inside)
             )
         }) {
@@ -462,8 +463,10 @@ mod test {
             // outside of boundary.
             for node in graph.nodes() {
                 match crop_type {
-                    CropType::Inclusive => assert!(boundary.point_is_inside_or_on_border(&node)),
-                    CropType::Exclusive => assert!(!boundary.point_is_inside(&node)),
+                    CropType::Inclusive => {
+                        assert!(boundary.point_is_inside_or_on_border_deprecated(&node))
+                    }
+                    CropType::Exclusive => assert!(!boundary.point_is_inside_deprecated(&node)),
                 }
             }
             // we should also make sure that, along each line, no
@@ -474,8 +477,10 @@ mod test {
                 for i in 0..=10 {
                     let p = extrapolate_2d(a, b, (i as f64) / 10.0);
                     match crop_type {
-                        CropType::Inclusive => assert!(boundary.point_is_inside_or_on_border(&p)),
-                        CropType::Exclusive => assert!(!boundary.point_is_inside(&p)),
+                        CropType::Inclusive => {
+                            assert!(boundary.point_is_inside_or_on_border_deprecated(&p))
+                        }
+                        CropType::Exclusive => assert!(!boundary.point_is_inside_deprecated(&p)),
                     }
                 }
             }

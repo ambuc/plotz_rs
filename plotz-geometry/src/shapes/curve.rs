@@ -383,8 +383,8 @@ impl Croppable for CurveArc {
         // without and has no overlaps.
         if isxns.is_empty() {
             //
-            let contains_i = frame.contains_pt(&self.pt_i());
-            let contains_f = frame.contains_pt(&self.pt_f());
+            let contains_i = frame.contains_pt_deprecated(&self.pt_i());
+            let contains_f = frame.contains_pt_deprecated(&self.pt_f());
             if let (
                 Ok(PointLocation::Inside | PointLocation::OnSegment(_) | PointLocation::OnPoint(_)),
                 Ok(PointLocation::Inside | PointLocation::OnSegment(_) | PointLocation::OnPoint(_)),
@@ -400,10 +400,16 @@ impl Croppable for CurveArc {
                 FloatOrd(self.angle_i + (self.angle_f - self.angle_i) * cl.as_f64())
             })
             .collect::<Vec<_>>();
-        if !matches!(frame.contains_pt(&self.pt_i()), Ok(PointLocation::Outside)) {
+        if !matches!(
+            frame.contains_pt_deprecated(&self.pt_i()),
+            Ok(PointLocation::Outside)
+        ) {
             isxns_angles.insert(0, FloatOrd(self.angle_i));
         }
-        if !matches!(frame.contains_pt(&self.pt_f()), Ok(PointLocation::Outside)) {
+        if !matches!(
+            frame.contains_pt_deprecated(&self.pt_f()),
+            Ok(PointLocation::Outside)
+        ) {
             isxns_angles.insert(0, FloatOrd(self.angle_f));
         }
         isxns_angles.sort();
@@ -422,7 +428,10 @@ impl Croppable for CurveArc {
             })
         {
             let mdpt = self.ctr + PolarPt(self.radius, (a1 + a2) / 2.0);
-            if !matches!(frame.contains_pt(&mdpt), Ok(PointLocation::Outside)) {
+            if !matches!(
+                frame.contains_pt_deprecated(&mdpt),
+                Ok(PointLocation::Outside)
+            ) {
                 r.push(CurveArc(self.ctr, a1..=a2, self.radius));
             }
         }

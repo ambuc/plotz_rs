@@ -10,7 +10,7 @@ use crate::{
     crop::{CropType, Croppable, PointLocation},
     intersection::IntersectionResult,
     obj2::ObjType2d,
-    overlaps::segment_overlaps_point,
+    overlaps::{opinion::PolygonOpinion, polygon_overlaps_point},
     shapes::{point::Point, segment::Segment},
     *,
 };
@@ -160,46 +160,34 @@ impl Polygon {
 
     /// Calculates whether a point is within, without, or along a closed polygon
     /// using the https://en.wikipedia.org/wiki/Winding_number method.
-    pub fn contains_pt(&self, other: &Point) -> Result<PointLocation> {
-        for (idx, pt) in self.pts.iter().enumerate() {
-            if other == pt {
-                return Ok(PointLocation::OnPoint(idx));
+    pub fn contains_pt_deprecated(&self, other: &Point) -> Result<PointLocation> {
+        match polygon_overlaps_point(self, other)? {
+            None => Ok(PointLocation::Outside),
+            Some((PolygonOpinion::WithinArea, _)) => Ok(PointLocation::Inside),
+            Some((PolygonOpinion::AtPoint { index, .. }, _)) => Ok(PointLocation::OnPoint(index)),
+            Some((PolygonOpinion::AlongEdge { index, .. }, _)) => {
+                Ok(PointLocation::OnSegment(index))
             }
-        }
-        for (idx, seg) in self.to_segments().iter().enumerate() {
-            match segment_overlaps_point(seg, other)? {
-                None => {}
-                Some(_) => return Ok(PointLocation::OnSegment(idx)),
-            }
-        }
-
-        let mut theta = 0_f64;
-        for (i, j) in zip(self.pts.iter(), self.pts.iter().cycle().skip(1)) {
-            theta += abp(other, i, j)
-        }
-
-        match approx_eq!(f64, theta, 0_f64, epsilon = 0.00001) {
-            true => Ok(PointLocation::Outside),
-            false => Ok(PointLocation::Inside),
+            _ => Err(anyhow!("how did we get here?")),
         }
     }
 
     /// True if the area or points/edges of this polygon contain a point.
-    pub fn point_is_inside_or_on_border(&self, other: &Point) -> bool {
+    pub fn point_is_inside_or_on_border_deprecated(&self, other: &Point) -> bool {
         matches!(
-            self.contains_pt(other),
-            Ok(PointLocation::Inside | PointLocation::OnPoint(_) | PointLocation::OnSegment(_))
+            polygon_overlaps_point(self, other).unwrap(),
+            Some((PolygonOpinion::WithinArea, _))
+                | Some((PolygonOpinion::AtPoint { .. }, _))
+                | Some((PolygonOpinion::AlongEdge { .. }, _))
         )
     }
 
     /// True if the area of this polygon contains a point.
-    pub fn point_is_inside(&self, other: &Point) -> bool {
-        matches!(self.contains_pt(other), Ok(PointLocation::Inside))
-    }
-
-    /// True if the point is totally outside the polygon.
-    pub fn point_is_outside(&self, pt: &Point) -> bool {
-        matches!(self.contains_pt(pt), Ok(PointLocation::Outside))
+    pub fn point_is_inside_deprecated(&self, other: &Point) -> bool {
+        matches!(
+            polygon_overlaps_point(self, other).unwrap(),
+            Some((PolygonOpinion::WithinArea, _))
+        )
     }
 
     /// Which curve orientation a polygon has. Curve orientation refers to
@@ -243,7 +231,7 @@ impl Polygon {
         Ok(other
             .pts
             .iter()
-            .all(|pt| !matches!(self.contains_pt(pt), Ok(PointLocation::Outside))))
+            .all(|pt| !matches!(self.contains_pt_deprecated(pt), Ok(PointLocation::Outside))))
     }
 
     // check if the other polygon isn't inside of or intersecting this one at all.
@@ -252,7 +240,7 @@ impl Polygon {
         Ok(other
             .pts
             .iter()
-            .all(|pt| matches!(self.contains_pt(pt), Ok(PointLocation::Outside))))
+            .all(|pt| matches!(self.contains_pt_deprecated(pt), Ok(PointLocation::Outside))))
     }
 }
 
@@ -549,36 +537,84 @@ mod tests {
         let frame1 = Polygon([a, c, i, g])?;
         {
             let p = e;
-            assert_eq!(frame1.contains_pt(&p)?, PointLocation::Inside);
+            assert_eq!(frame1.contains_pt_deprecated(&p)?, PointLocation::Inside);
         }
-        assert_eq!(frame1.contains_pt(&a)?, PointLocation::OnPoint(3));
-        assert_eq!(frame1.contains_pt(&c)?, PointLocation::OnPoint(2));
-        assert_eq!(frame1.contains_pt(&i)?, PointLocation::OnPoint(1));
-        assert_eq!(frame1.contains_pt(&g)?, PointLocation::OnPoint(0));
+        assert_eq!(
+            frame1.contains_pt_deprecated(&a)?,
+            PointLocation::OnPoint(3)
+        );
+        assert_eq!(
+            frame1.contains_pt_deprecated(&c)?,
+            PointLocation::OnPoint(2)
+        );
+        assert_eq!(
+            frame1.contains_pt_deprecated(&i)?,
+            PointLocation::OnPoint(1)
+        );
+        assert_eq!(
+            frame1.contains_pt_deprecated(&g)?,
+            PointLocation::OnPoint(0)
+        );
 
-        assert_eq!(frame1.contains_pt(&d)?, PointLocation::OnSegment(3));
-        assert_eq!(frame1.contains_pt(&b)?, PointLocation::OnSegment(2));
-        assert_eq!(frame1.contains_pt(&f)?, PointLocation::OnSegment(1));
-        assert_eq!(frame1.contains_pt(&h)?, PointLocation::OnSegment(0));
+        assert_eq!(
+            frame1.contains_pt_deprecated(&d)?,
+            PointLocation::OnSegment(3)
+        );
+        assert_eq!(
+            frame1.contains_pt_deprecated(&b)?,
+            PointLocation::OnSegment(2)
+        );
+        assert_eq!(
+            frame1.contains_pt_deprecated(&f)?,
+            PointLocation::OnSegment(1)
+        );
+        assert_eq!(
+            frame1.contains_pt_deprecated(&h)?,
+            PointLocation::OnSegment(0)
+        );
 
         // frame [a,b,e,d] should contain a, b, d, e...
         let frame2 = Polygon([a, b, e, d])?;
-        assert_eq!(frame2.contains_pt(&a)?, PointLocation::OnPoint(3));
-        assert_eq!(frame2.contains_pt(&b)?, PointLocation::OnPoint(2));
-        assert_eq!(frame2.contains_pt(&e)?, PointLocation::OnPoint(1));
-        assert_eq!(frame2.contains_pt(&d)?, PointLocation::OnPoint(0));
+        assert_eq!(
+            frame2.contains_pt_deprecated(&a)?,
+            PointLocation::OnPoint(3)
+        );
+        assert_eq!(
+            frame2.contains_pt_deprecated(&b)?,
+            PointLocation::OnPoint(2)
+        );
+        assert_eq!(
+            frame2.contains_pt_deprecated(&e)?,
+            PointLocation::OnPoint(1)
+        );
+        assert_eq!(
+            frame2.contains_pt_deprecated(&d)?,
+            PointLocation::OnPoint(0)
+        );
         for p in [c, f, i, h, g] {
-            assert_eq!(frame2.contains_pt(&p)?, PointLocation::Outside);
+            assert_eq!(frame2.contains_pt_deprecated(&p)?, PointLocation::Outside);
         }
 
         let frame3 = Polygon([b, f, h, d])?;
-        assert_eq!(frame3.contains_pt(&b)?, PointLocation::OnPoint(3));
-        assert_eq!(frame3.contains_pt(&f)?, PointLocation::OnPoint(2));
-        assert_eq!(frame3.contains_pt(&h)?, PointLocation::OnPoint(1));
-        assert_eq!(frame3.contains_pt(&d)?, PointLocation::OnPoint(0));
-        assert_eq!(frame3.contains_pt(&e)?, PointLocation::Inside);
+        assert_eq!(
+            frame3.contains_pt_deprecated(&b)?,
+            PointLocation::OnPoint(3)
+        );
+        assert_eq!(
+            frame3.contains_pt_deprecated(&f)?,
+            PointLocation::OnPoint(2)
+        );
+        assert_eq!(
+            frame3.contains_pt_deprecated(&h)?,
+            PointLocation::OnPoint(1)
+        );
+        assert_eq!(
+            frame3.contains_pt_deprecated(&d)?,
+            PointLocation::OnPoint(0)
+        );
+        assert_eq!(frame3.contains_pt_deprecated(&e)?, PointLocation::Inside);
         for p in [a, c, g, i] {
-            assert_eq!(frame3.contains_pt(&p)?, PointLocation::Outside);
+            assert_eq!(frame3.contains_pt_deprecated(&p)?, PointLocation::Outside);
         }
         Ok(())
     }
@@ -611,7 +647,10 @@ mod tests {
             (228.17, 202.35),
         ])?;
         let suspicious_pt = Point(228, 400);
-        assert_eq!(frame.contains_pt(&suspicious_pt)?, PointLocation::Outside);
+        assert_eq!(
+            frame.contains_pt_deprecated(&suspicious_pt)?,
+            PointLocation::Outside
+        );
         Ok(())
     }
 

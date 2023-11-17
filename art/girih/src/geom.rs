@@ -3,7 +3,10 @@ use plotz_color::{subway::PURPLE_7, ColorRGB, LIGHTBLUE, LIMEGREEN, ORANGERED, Y
 use plotz_geometry::{
     bounded::Bounded,
     crop::PointLocation,
-    overlaps::opinion::SegmentOpinion,
+    overlaps::{
+        opinion::{PolygonOpinion, SegmentOpinion},
+        polygon_overlaps_point,
+    },
     shapes::{
         point::{Point, PolarPt},
         polygon::Polygon,
@@ -177,7 +180,10 @@ impl PlacedTile {
 
                 let sg_1_f = edge1.midpoint() + PolarPt(0.1, angle_1);
                 let sg_2_f = edge1.midpoint() + PolarPt(0.1, angle_2);
-                match (self.pg.contains_pt(&sg_1_f)?, self.pg.contains_pt(&sg_2_f)?) {
+                match (
+                    self.pg.contains_pt_deprecated(&sg_1_f)?,
+                    self.pg.contains_pt_deprecated(&sg_2_f)?,
+                ) {
                     (PointLocation::Inside, _) => angle_1,
                     (_, PointLocation::Inside) => angle_2,
                     _ => panic!("oh"),
@@ -218,8 +224,17 @@ impl PlacedTile {
         let mut s_ver = vec![];
 
         let tile_contains = |sg: &Segment| {
-            self.pg.point_is_inside_or_on_border(&sg.i)
-                && self.pg.point_is_inside_or_on_border(&sg.f)
+            (match polygon_overlaps_point(&self.pg, &sg.i).unwrap() {
+                Some((PolygonOpinion::WithinArea, _))
+                | Some((PolygonOpinion::AtPoint { .. }, _))
+                | Some((PolygonOpinion::AlongEdge { .. }, _)) => true,
+                _ => false,
+            }) && (match polygon_overlaps_point(&self.pg, &sg.f).unwrap() {
+                Some((PolygonOpinion::WithinArea, _))
+                | Some((PolygonOpinion::AtPoint { .. }, _))
+                | Some((PolygonOpinion::AlongEdge { .. }, _)) => true,
+                _ => false,
+            })
         };
 
         for s in strapwork {
@@ -235,8 +250,22 @@ impl PlacedTile {
                         self.pg.to_segments()[0].rays_perpendicular_both();
 
                     let pt_inside = match (
-                        self.pg.point_is_inside_or_on_border(&s.i),
-                        self.pg.point_is_inside_or_on_border(&s.f),
+                        {
+                            match polygon_overlaps_point(&self.pg, &s.i).unwrap() {
+                                Some((PolygonOpinion::WithinArea, _))
+                                | Some((PolygonOpinion::AtPoint { .. }, _))
+                                | Some((PolygonOpinion::AlongEdge { .. }, _)) => true,
+                                _ => false,
+                            }
+                        },
+                        {
+                            match polygon_overlaps_point(&self.pg, &s.f).unwrap() {
+                                Some((PolygonOpinion::WithinArea, _))
+                                | Some((PolygonOpinion::AtPoint { .. }, _))
+                                | Some((PolygonOpinion::AlongEdge { .. }, _)) => true,
+                                _ => false,
+                            }
+                        },
                     ) {
                         (true, false) => s.i,
                         (false, true) => s.f,
