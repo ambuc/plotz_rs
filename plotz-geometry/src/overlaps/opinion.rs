@@ -6,10 +6,7 @@ use anyhow::Result;
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum SegmentOpinion {
-    AtPointAlongSegment {
-        at_point: Point,
-        percent_along: Percent,
-    },
+    AtPointAlongSegment(/*at_point=*/ Point, /*percent_along=*/ Percent),
 
     // intersection is a subsegment of this segment.
     AlongSubsegment(Segment),
@@ -76,10 +73,7 @@ impl MultilineOpinion {
     // That's why.
     pub fn from_segment_opinion(index: usize, so: SegmentOpinion) -> MultilineOpinion {
         match so {
-            SegmentOpinion::AtPointAlongSegment {
-                at_point,
-                percent_along,
-            } => match percent_along {
+            SegmentOpinion::AtPointAlongSegment(at_point, percent_along) => match percent_along {
                 Percent::Zero => MultilineOpinion::AtPoint(index, at_point),
                 Percent::One => MultilineOpinion::AtPoint(index + 1, at_point),
                 _ => MultilineOpinion::AtPointAlongSharedSegment {
@@ -125,11 +119,11 @@ pub fn rewrite_segment_opinions(
         {
             // these are... ugh... rewrite rules.
             match (op1, op2) {
-                (SegmentOpinion::AtPointAlongSegment { .. }, SegmentOpinion::EntireSegment) => {
+                (SegmentOpinion::AtPointAlongSegment(_, _), SegmentOpinion::EntireSegment) => {
                     segment_opinions.remove(idx1);
                     continue 'edit;
                 }
-                (SegmentOpinion::EntireSegment, SegmentOpinion::AtPointAlongSegment { .. }) => {
+                (SegmentOpinion::EntireSegment, SegmentOpinion::AtPointAlongSegment(_, _)) => {
                     segment_opinions.remove(idx2);
                     continue 'edit;
                 }

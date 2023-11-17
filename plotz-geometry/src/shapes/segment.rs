@@ -80,14 +80,8 @@ impl Segment {
     pub fn intersects(&self, other: &Segment) -> Option<IntersectionResult> {
         // TODO(ambuc): remove Segment::intersects entirely.
         if let Ok(Some((
-            SegmentOpinion::AtPointAlongSegment {
-                at_point: pt,
-                percent_along: a_pct,
-            },
-            SegmentOpinion::AtPointAlongSegment {
-                percent_along: b_pct,
-                ..
-            },
+            SegmentOpinion::AtPointAlongSegment(pt, a_pct),
+            SegmentOpinion::AtPointAlongSegment(_, b_pct),
         ))) = segment_overlaps_segment(self, other)
         {
             Some(IntersectionResult::Ok(Intersection { pt, a_pct, b_pct }))
