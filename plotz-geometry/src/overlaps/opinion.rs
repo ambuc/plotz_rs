@@ -39,9 +39,7 @@ pub enum MultilineOpinion {
     },
 
     // intersection point(s) comprise an entire subsegment of this multiline.
-    EntireSubsegment {
-        index: usize,
-    },
+    EntireSubsegment(/*index=*/ usize),
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
@@ -100,7 +98,7 @@ impl MultilineOpinion {
                 index,
                 subsegment: segment,
             },
-            SegmentOpinion::EntireSegment => MultilineOpinion::EntireSubsegment { index },
+            SegmentOpinion::EntireSegment => MultilineOpinion::EntireSubsegment(index),
         }
     }
 }
@@ -178,14 +176,14 @@ pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOpinion>
             match (op1, op2) {
                 (
                     MultilineOpinion::AtPoint { index: pt_idx, .. },
-                    MultilineOpinion::EntireSubsegment { index: sg_idx },
+                    MultilineOpinion::EntireSubsegment(sg_idx),
                 ) if (sg_idx + 1 == *pt_idx || pt_idx == sg_idx) => {
                     //
                     multiline_opinions.remove(idx1);
                     continue 'edit;
                 }
                 (
-                    MultilineOpinion::EntireSubsegment { index: sg_idx },
+                    MultilineOpinion::EntireSubsegment(sg_idx),
                     MultilineOpinion::AtPoint { index: pt_idx, .. },
                 ) if (pt_idx == sg_idx || *pt_idx == sg_idx + 1) => {
                     multiline_opinions.remove(idx2);
