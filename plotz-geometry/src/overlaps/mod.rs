@@ -422,24 +422,45 @@ mod tests {
     use lazy_static::lazy_static;
     use nonempty::nonempty;
 
-    //   ^
-    //   |
-    //   A  B  C
-    //   |
-    //   D  E  F
-    //   |
-    // --G--H--I->
-    //   |
+    //           ^ (y)
+    //           |
+    //   a . b . c . d . e
+    //           |
+    //   f . g . h . i . j
+    //           |
+    // <-k---l---m---n---o-> (x)
+    //           |
+    //   p . q . r . s . t
+    //           |
+    //   u . v . w . x . y
+    //           |
+    //           v
     lazy_static! {
-        static ref A: Point = Point(0, 2);
-        static ref B: Point = Point(1, 2);
-        static ref C: Point = Point(2, 2);
-        static ref D: Point = Point(0, 1);
-        static ref E: Point = Point(1, 1);
-        static ref F: Point = Point(2, 1);
-        static ref G: Point = Point(0, 0);
-        static ref H: Point = Point(1, 0);
-        static ref I: Point = Point(2, 0);
+        static ref A: Point = Point(-2, 2);
+        static ref B: Point = Point(-1, 2);
+        static ref C: Point = Point(0, 2);
+        static ref D: Point = Point(1, 2);
+        static ref E: Point = Point(2, 2);
+        static ref F: Point = Point(-2, 1);
+        static ref G: Point = Point(-1, 1);
+        static ref H: Point = Point(0, 1);
+        static ref I: Point = Point(1, 1);
+        static ref J: Point = Point(2, 1);
+        static ref K: Point = Point(-2, 0);
+        static ref L: Point = Point(-1, 0);
+        static ref M: Point = Point(0, 0);
+        static ref N: Point = Point(1, 0);
+        static ref O: Point = Point(2, 0);
+        static ref P: Point = Point(-2, -1);
+        static ref Q: Point = Point(-1, -1);
+        static ref R: Point = Point(0, -1);
+        static ref S: Point = Point(1, -1);
+        static ref T: Point = Point(2, -1);
+        static ref U: Point = Point(-2, -2);
+        static ref V: Point = Point(-1, -2);
+        static ref W: Point = Point(0, -2);
+        static ref X: Point = Point(1, -2);
+        static ref Y: Point = Point(2, -2);
     }
 
     mod pt_pt {
@@ -447,7 +468,7 @@ mod tests {
 
         #[test]
         fn the_same() -> Result<()> {
-            for i in &[*A, *B, *C] {
+            for i in &[*C, *D, *E] {
                 assert_eq!(point_overlaps_point(i, i)?, Some(*i));
             }
             Ok(())
@@ -455,8 +476,8 @@ mod tests {
 
         #[test]
         fn not_the_same() -> Result<()> {
-            for i in &[*A, *B, *C] {
-                assert_eq!(point_overlaps_point(i, &D)?, None);
+            for i in &[*C, *D, *E] {
+                assert_eq!(point_overlaps_point(i, &H)?, None);
             }
             Ok(())
         }
@@ -467,7 +488,7 @@ mod tests {
 
         #[test]
         fn at_start_or_end() -> Result<()> {
-            for (i, f) in &[(*A, *B), (*A, *E), (*A, *G)] {
+            for (i, f) in &[(*C, *D), (*C, *I), (*C, *M)] {
                 assert_eq!(
                     segment_overlaps_point(&Segment(*i, *f), i)?,
                     Some((
@@ -494,7 +515,7 @@ mod tests {
 
         #[test]
         fn halfway_along() -> Result<()> {
-            for (i, m, f) in &[(*A, *B, *C), (*A, *E, *I), (*A, *D, *G)] {
+            for (i, m, f) in &[(*C, *D, *E), (*C, *I, *O), (*C, *H, *M)] {
                 assert_eq!(
                     segment_overlaps_point(&Segment(*i, *f), m)?,
                     Some((
@@ -516,8 +537,8 @@ mod tests {
 
         #[test]
         fn the_same() -> Result<()> {
-            for i in &[*A, *B, *C] {
-                for j in &[*D, *E, *F] {
+            for i in &[*C, *D, *E] {
+                for j in &[*H, *I, *J] {
                     assert_eq!(
                         segment_overlaps_segment(&Segment(*i, *j), &Segment(*i, *j))?,
                         Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment,))
@@ -529,8 +550,8 @@ mod tests {
 
         #[test]
         fn the_same_but_reversed() -> Result<()> {
-            for i in &[*A, *B, *C] {
-                for j in &[*D, *E, *F] {
+            for i in &[*C, *D, *E] {
+                for j in &[*H, *I, *J] {
                     assert_eq!(
                         segment_overlaps_segment(&Segment(*i, *j), &Segment(*j, *i))?,
                         Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment))
@@ -612,8 +633,8 @@ mod tests {
         fn partway() -> Result<()> {
             {
                 // given two non-colinear segments,
-                let (p0, p1) = (*A, *B);
-                for p2 in &[*D, *E, *F, *G, *H, *I] {
+                let (p0, p1) = (*C, *D);
+                for p2 in &[*H, *I, *J, *M, *N, *O] {
                     assert_eq!(
                         segment_overlaps_segment(&Segment(p0, p1), &Segment(p1, *p2))?,
                         Some((
@@ -632,8 +653,8 @@ mod tests {
 
             {
                 // midpoints
-                let sa = Segment(*A, *I);
-                let sb = Segment(*C, *G);
+                let sa = Segment(*C, *O);
+                let sb = Segment(*E, *M);
                 for (sa, sb) in &[
                     (sa, sb),
                     (sa, sb.flip()),
@@ -644,11 +665,11 @@ mod tests {
                         segment_overlaps_segment(sa, sb)?,
                         Some((
                             SegmentOpinion::AtPointAlongSegment {
-                                at_point: *E,
+                                at_point: *I,
                                 percent_along: Percent::Val(0.5)
                             },
                             SegmentOpinion::AtPointAlongSegment {
-                                at_point: *E,
+                                at_point: *I,
                                 percent_along: Percent::Val(0.5)
                             }
                         ))
@@ -660,7 +681,7 @@ mod tests {
         }
 
         #[test_case(
-            Segment(*A, *C),
+            Segment(*C, *E),
             Segment(Point(0.5, 2), Point(1.5,2)),
             Some((
                     SegmentOpinion::AlongSubsegment(Segment(Point(0.5,2), Point(1.5, 2))),
@@ -669,7 +690,7 @@ mod tests {
             "partial collision"
         )]
         #[test_case(
-            Segment(*A, *C),
+            Segment(*C, *E),
             Segment(Point(1.5, 2), Point(0.5,2)),
             Some((
                     SegmentOpinion::AlongSubsegment(Segment(Point(1.5,2), Point(0.5, 2))),
@@ -699,21 +720,26 @@ mod tests {
     mod ml_pt {
         use super::*;
 
-        //   ^
-        //   |
-        //   A  B  C
-        //   |
-        //   D  E  F
-        //   |
-        // --G--H--I->
-        //   |
+        //           ^ (y)
+        //           |
+        //   a . b . c . d . e
+        //           |
+        //   f . g . h . i . j
+        //           |
+        // <-k---l---m---n---o-> (x)
+        //           |
+        //   p . q . r . s . t
+        //           |
+        //   u . v . w . x . y
+        //           |
+        //           v
         #[test]
         fn test_along_two_segment_multiline() -> Result<()> {
             for ((start, midpoint1, pivot, midpoint2, end), unrelated) in &[
-                ((*G, *H, *I, *F, *C), *A),
-                ((*G, *D, *A, *B, *C), *I),
-                ((*C, *B, *A, *D, *G), *I),
-                ((*G, *E, *C, *B, *A), *D),
+                ((*M, *N, *O, *J, *E), *C),
+                ((*M, *H, *C, *D, *E), *O),
+                ((*E, *D, *C, *H, *M), *O),
+                ((*M, *I, *E, *D, *C), *H),
             ] {
                 let ml = Multiline([*start, *pivot, *end]);
 
@@ -759,40 +785,45 @@ mod tests {
         use super::*;
         use test_case::test_case;
 
-        //   ^
-        //   |
-        //   A  B  C
-        //   |
-        //   D  E  F
-        //   |
-        // --G--H--I->
-        //   |
+        //           ^ (y)
+        //           |
+        //   a . b . c . d . e
+        //           |
+        //   f . g . h . i . j
+        //           |
+        // <-k---l---m---n---o-> (x)
+        //           |
+        //   p . q . r . s . t
+        //           |
+        //   u . v . w . x . y
+        //           |
+        //           v
 
-        #[test_case(Multiline([*A, *C, *I]), Segment(*G, *H))]
-        #[test_case(Multiline([*A, *C, *F]), Segment(*G, *H))]
-        #[test_case(Multiline([*A, *C, *I]), Segment(*D, *H))]
-        #[test_case(Multiline([*A, *E, *I]), Segment(*B, *F))]
+        #[test_case(Multiline([*C, *E, *O]), Segment(*M, *N))]
+        #[test_case(Multiline([*C, *E, *J]), Segment(*M, *N))]
+        #[test_case(Multiline([*C, *E, *O]), Segment(*H, *N))]
+        #[test_case(Multiline([*C, *I, *O]), Segment(*D, *J))]
         fn none(ml: Multiline, sg: Segment) -> Result<()> {
             assert_eq!(multiline_overlaps_segment(&ml, &sg)?, None);
             Ok(())
         }
 
-        #[test_case(Multiline([*A, *C, *I]), Segment(*A, *G), 0, *A, Percent::Zero)]
-        #[test_case(Multiline([*C, *I, *G]), Segment(*C, *A), 0, *C, Percent::Zero)]
-        #[test_case(Multiline([*I, *G, *A]), Segment(*I, *C), 0, *I, Percent::Zero)]
-        #[test_case(Multiline([*A, *E, *I]), Segment(*A, *G), 0, *A, Percent::Zero)]
-        #[test_case(Multiline([*A, *C, *I]), Segment(*G, *A), 0, *A, Percent::One)]
-        #[test_case(Multiline([*C, *I, *G]), Segment(*A, *C), 0, *C, Percent::One)]
-        #[test_case(Multiline([*I, *G, *A]), Segment(*C, *I), 0, *I, Percent::One)]
-        #[test_case(Multiline([*A, *E, *I]), Segment(*G, *A), 0, *A, Percent::One)]
-        #[test_case(Multiline([*B, *E, *H]), Segment(*A, *C), 0, *B, Percent::Val(0.5))]
-        #[test_case(Multiline([*D, *E, *F]), Segment(*G, *A), 0, *D, Percent::Val(0.5))]
-        #[test_case(Multiline([*B, *E, *H]), Segment(*E, *F), 1, *E, Percent::Zero)]
-        #[test_case(Multiline([*B, *E, *H]), Segment(*D, *E), 1, *E, Percent::One)]
-        #[test_case(Multiline([*B, *E, *H]), Segment(*D, *F), 1, *E, Percent::Val(0.5))]
-        #[test_case(Multiline([*B, *E, *H]), Segment(*H, *I), 2, *H, Percent::Zero)]
-        #[test_case(Multiline([*B, *E, *H]), Segment(*G, *H), 2, *H, Percent::One)]
-        #[test_case(Multiline([*B, *E, *H]), Segment(*G, *I), 2, *H, Percent::Val(0.5))]
+        #[test_case(Multiline([*C, *E, *O]), Segment(*C, *M), 0, *C, Percent::Zero)]
+        #[test_case(Multiline([*E, *O, *M]), Segment(*E, *C), 0, *E, Percent::Zero)]
+        #[test_case(Multiline([*O, *M, *C]), Segment(*O, *E), 0, *O, Percent::Zero)]
+        #[test_case(Multiline([*C, *I, *O]), Segment(*C, *M), 0, *C, Percent::Zero)]
+        #[test_case(Multiline([*C, *E, *O]), Segment(*M, *C), 0, *C, Percent::One)]
+        #[test_case(Multiline([*E, *O, *M]), Segment(*C, *E), 0, *E, Percent::One)]
+        #[test_case(Multiline([*O, *M, *C]), Segment(*E, *O), 0, *O, Percent::One)]
+        #[test_case(Multiline([*C, *I, *O]), Segment(*M, *C), 0, *C, Percent::One)]
+        #[test_case(Multiline([*D, *I, *N]), Segment(*C, *E), 0, *D, Percent::Val(0.5))]
+        #[test_case(Multiline([*H, *I, *J]), Segment(*M, *C), 0, *H, Percent::Val(0.5))]
+        #[test_case(Multiline([*D, *I, *N]), Segment(*I, *J), 1, *I, Percent::Zero)]
+        #[test_case(Multiline([*D, *I, *N]), Segment(*H, *I), 1, *I, Percent::One)]
+        #[test_case(Multiline([*D, *I, *N]), Segment(*H, *J), 1, *I, Percent::Val(0.5))]
+        #[test_case(Multiline([*D, *I, *N]), Segment(*N, *O), 2, *N, Percent::Zero)]
+        #[test_case(Multiline([*D, *I, *N]), Segment(*M, *N), 2, *N, Percent::One)]
+        #[test_case(Multiline([*D, *I, *N]), Segment(*M, *O), 2, *N, Percent::Val(0.5))]
         // At segment midpoint
         fn one_overlap_ml_atpoint_sg(
             ml: Multiline,
@@ -814,12 +845,12 @@ mod tests {
             Ok(())
         }
 
-        #[test_case(Multiline([*D, *F, *I]), Segment(*B, *H), 0, *E, Percent::Val(0.5), Percent::Val(0.5))]
-        #[test_case(Multiline([*D, *F, *I]), Segment(*E, *H), 0, *E, Percent::Val(0.5), Percent::Zero)]
-        #[test_case(Multiline([*D, *F, *I]), Segment(*B, *E), 0, *E, Percent::Val(0.5), Percent::One)]
-        #[test_case(Multiline([*G, *D, *F]), Segment(*B, *H), 1, *E, Percent::Val(0.5), Percent::Val(0.5))]
-        #[test_case(Multiline([*G, *D, *F]), Segment(*E, *H), 1, *E, Percent::Val(0.5), Percent::Zero)]
-        #[test_case(Multiline([*G, *D, *F]), Segment(*B, *E), 1, *E, Percent::Val(0.5), Percent::One)]
+        #[test_case(Multiline([*H, *J, *O]), Segment(*D, *N), 0, *I, Percent::Val(0.5), Percent::Val(0.5))]
+        #[test_case(Multiline([*H, *J, *O]), Segment(*I, *N), 0, *I, Percent::Val(0.5), Percent::Zero)]
+        #[test_case(Multiline([*H, *J, *O]), Segment(*D, *I), 0, *I, Percent::Val(0.5), Percent::One)]
+        #[test_case(Multiline([*M, *H, *J]), Segment(*D, *N), 1, *I, Percent::Val(0.5), Percent::Val(0.5))]
+        #[test_case(Multiline([*M, *H, *J]), Segment(*I, *N), 1, *I, Percent::Val(0.5), Percent::Zero)]
+        #[test_case(Multiline([*M, *H, *J]), Segment(*D, *I), 1, *I, Percent::Val(0.5), Percent::One)]
         fn one_overlap_ml_alongsharedsegment_sg(
             ml: Multiline,
             sg: Segment,
@@ -846,26 +877,26 @@ mod tests {
         }
 
         #[test_case(
-            Multiline([*A, *C, *I]),
-            Segment(*A, *I),
+            Multiline([*C, *E, *O]),
+            Segment(*C, *O),
             Some((
                 nonempty![
                     MultilineOpinion::AtPoint {
                         index: 0,
-                        at_point: *A,
+                        at_point: *C,
                     },
                     MultilineOpinion::AtPoint {
                         index: 2,
-                        at_point: *I,
+                        at_point: *O,
                     }
                 ],
                 nonempty![
                     SegmentOpinion::AtPointAlongSegment {
-                        at_point: *A,
+                        at_point: *C,
                         percent_along: Percent::Zero,
                     },
                     SegmentOpinion::AtPointAlongSegment {
-                        at_point: *I,
+                        at_point: *O,
                         percent_along: Percent::One,
                     }
                 ]
@@ -873,28 +904,28 @@ mod tests {
             "segment bookends 1"
         )]
         #[test_case(
-            Multiline([*A, *C, *I]),
-            Segment(*B, *F),
+            Multiline([*C, *E, *O]),
+            Segment(*D, *J),
             Some((
                 nonempty![
                     MultilineOpinion::AtPointAlongSharedSegment {
                         index: 0,
-                        at_point: *B,
+                        at_point: *D,
                         percent_along: Percent::Val(0.5),
                     },
                     MultilineOpinion::AtPointAlongSharedSegment {
                         index: 1,
-                        at_point: *F,
+                        at_point: *J,
                         percent_along: Percent::Val(0.5),
                     }
                 ],
                 nonempty![
                     SegmentOpinion::AtPointAlongSegment {
-                        at_point: *B,
+                        at_point: *D,
                         percent_along: Percent::Zero,
                     },
                     SegmentOpinion::AtPointAlongSegment {
-                        at_point: *F,
+                        at_point: *J,
                         percent_along: Percent::One,
                     }
                 ],
@@ -902,8 +933,8 @@ mod tests {
             "segment bookends 2"
         )]
         #[test_case(
-            Multiline([*A, *B, *C]),
-            Segment(*A, *B),
+            Multiline([*C, *D, *E]),
+            Segment(*C, *D),
             Some((
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 0 } ],
                 nonempty![ SegmentOpinion::EntireSegment ]
@@ -911,8 +942,8 @@ mod tests {
             "partial collision"
         )]
         #[test_case(
-            Multiline([*A, *B, *C]),
-            Segment(*B, *A),
+            Multiline([*C, *D, *E]),
+            Segment(*D, *C),
             Some((
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 0 } ],
                 nonempty![ SegmentOpinion::EntireSegment ]
@@ -920,8 +951,8 @@ mod tests {
             "partial collision 02"
         )]
         #[test_case(
-            Multiline([*A, *B, *C]),
-            Segment(*B, *C),
+            Multiline([*C, *D, *E]),
+            Segment(*D, *E),
             Some((
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 1 } ],
                 nonempty![ SegmentOpinion::EntireSegment ]
@@ -929,8 +960,8 @@ mod tests {
             "partial collision 03"
         )]
         #[test_case(
-            Multiline([*A, *B, *C]),
-            Segment(*C, *B),
+            Multiline([*C, *D, *E]),
+            Segment(*E, *D),
             Some((
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 1 } ],
                 nonempty![ SegmentOpinion::EntireSegment ]
@@ -938,8 +969,8 @@ mod tests {
             "partial collision 04"
         )]
         #[test_case(
-            Multiline([*A, *B, *C]),
-            Segment(*A, *C),
+            Multiline([*C, *D, *E]),
+            Segment(*C, *E),
             Some((
                 nonempty![
                     MultilineOpinion::EntireSubsegment { index: 0 },
@@ -950,8 +981,8 @@ mod tests {
             "total collision 01"
         )]
         #[test_case(
-            Multiline([*A, *B, *C]),
-            Segment(*C, *A),
+            Multiline([*C, *D, *E]),
+            Segment(*E, *C),
             Some((
                 nonempty![
                     MultilineOpinion::EntireSubsegment { index: 0 },
@@ -962,7 +993,7 @@ mod tests {
             "total collision 01 flip"
         )]
         #[test_case(
-            Multiline([*A, *B, *C]),
+            Multiline([*C, *D, *E]),
             Segment(Point(0.5,2), Point(1.5,2)),
             Some((
                 nonempty![
@@ -980,7 +1011,7 @@ mod tests {
             "total collision half shift 01"
         )]
         #[test_case(
-            Multiline([*A, *B, *C]),
+            Multiline([*C, *D, *E]),
             Segment(Point(1.5,2), Point(0.5,2)),
             Some((
                 nonempty![
@@ -1011,104 +1042,109 @@ mod tests {
         use super::*;
         use test_case::test_case;
 
-        //   ^
-        //   |
-        //   A  B  C
-        //   |
-        //   D  E  F
-        //   |
-        // --G--H--I->
-        //   |
+        //           ^ (y)
+        //           |
+        //   a . b . c . d . e
+        //           |
+        //   f . g . h . i . j
+        //           |
+        // <-k---l---m---n---o-> (x)
+        //           |
+        //   p . q . r . s . t
+        //           |
+        //   u . v . w . x . y
+        //           |
+        //           v
 
-        #[test_case(Multiline([*A, *B, *C]), Multiline([*D, *E, *F]), None; "none 01")]
-        #[test_case(Multiline([*A, *B, *C]), Multiline([*G, *H, *I]), None; "none 02")]
-        #[test_case(Multiline([*A, *E, *I]), Multiline([*B, *F]), None; "none diagonal")]
+        #[test_case(Multiline([*C, *D, *E]), Multiline([*H, *I, *J]), None; "none 01")]
+        #[test_case(Multiline([*C, *D, *E]), Multiline([*M, *N, *O]), None; "none 02")]
+        #[test_case(Multiline([*C, *I, *O]), Multiline([*D, *J]), None; "none diagonal")]
         #[test_case(
-            Multiline([*A, *B, *C]),
-            Multiline([*A, *D, *G]),
+            Multiline([*C, *D, *E]),
+            Multiline([*C, *H, *M]),
             Some( (
-                nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *A }, ],
-                nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *A } ]));
+                nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *C }, ],
+                nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *C } ]));
             "AtPoint 0, AtPoint 0"
         )]
         #[test_case(
-            Multiline([*A, *B, *C]),
-            Multiline([*G, *D, *A]),
+            Multiline([*C, *D, *E]),
+            Multiline([*M, *H, *C]),
             Some( (
-                nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *A }, ],
-                nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *A } ]));
+                nonempty![ MultilineOpinion::AtPoint { index: 0, at_point: *C }, ],
+                nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *C } ]));
             "AtPoint 0, AtPoint 2"
         )]
         #[test_case(
-            Multiline([*C, *B, *A]),
-            Multiline([*G, *D, *A]),
+            Multiline([*E, *D, *C]),
+            Multiline([*M, *H, *C]),
             Some( (
-                nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *A }, ],
-                nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *A } ]));
+                nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *C }, ],
+                nonempty![ MultilineOpinion::AtPoint { index: 2, at_point: *C } ]));
             "AtPoint 2, AtPoint 2"
         )]
         #[test_case(
-            Multiline([*A, *E, *I]),
-            Multiline([*G, *E, *C]),
+            Multiline([*C, *I, *O]),
+            Multiline([*M, *I, *E]),
             Some( (
-                nonempty![ MultilineOpinion::AtPoint { index: 1, at_point: *E }, ],
-                nonempty![ MultilineOpinion::AtPoint { index: 1, at_point: *E } ]));
+                nonempty![ MultilineOpinion::AtPoint { index: 1, at_point: *I }, ],
+                nonempty![ MultilineOpinion::AtPoint { index: 1, at_point: *I } ]));
             "AtPoint 1, AtPoint 1"
         )]
         #[test_case(
-            Multiline([*A, *I]),
-            Multiline([*C, *G]),
+            Multiline([*C, *O]),
+            Multiline([*E, *M]),
             Some( (
-                nonempty![ MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *E, percent_along: Percent::Val(0.5) } ],
-                nonempty![ MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *E, percent_along: Percent::Val(0.5) } ]));
+                nonempty![ MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *I, percent_along: Percent::Val(0.5) } ],
+                nonempty![ MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *I, percent_along: Percent::Val(0.5) } ]));
             "crosshairs"
         )]
         #[test_case(
-            Multiline([*A, *B, *C]),
-            Multiline([*A, *B, *E]),
+            Multiline([*C, *D, *E]),
+            Multiline([*C, *D, *I]),
             Some( (
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, ],
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, ]));
             "partial collision, entire subsegment 0 0"
         )]
         #[test_case(
-            Multiline([*C, *B, *A]),
-            Multiline([*E, *B, *A]),
+            Multiline([*E, *D, *C]),
+            Multiline([*I, *D, *C]),
             Some( (
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, ],
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, ]));
             "partial collision, entire subsegment 1 1"
         )]
         #[test_case(
-            Multiline([*A, *B, *C]),
-            Multiline([*B, *C, *F]),
+            Multiline([*C, *D, *E]),
+            Multiline([*D, *E, *J]),
             Some( (
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, ],
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, ]));
             "partial collision, entire subsegment 1 0"
         )]
         #[test_case(
-            Multiline([*A, *B, *C]),
-            Multiline([*C, *B, *A]),
+            Multiline([*C, *D, *E]),
+            Multiline([*E, *D, *C]),
             Some( (
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::EntireSubsegment { index: 1 } ],
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 1 }, MultilineOpinion::EntireSubsegment { index: 0 } ]));
             "partial collision, entire subsegment 01 01 flipped"
         )]
         #[test_case(
-            Multiline([*A, *B, *C, *F, *I]),
-            Multiline([*A, *B, *E, *F, *I]),
+            Multiline([*C, *D, *E, *J, *O]),
+            Multiline([*C, *D, *I, *J, *O]),
             Some( (
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::EntireSubsegment { index: 3 } ],
                 nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::EntireSubsegment { index: 3 } ]));
             "shared segment, then diversion, then another shared segment"
         )]
         #[test_case(
-            Multiline([*A, *B, *C, *F, *I]),
-            Multiline([*A, *B, *E, *F]),
+            Multiline([*C, *D, *E, *J, *O]),
+            Multiline([*C, *D, *I, *J]),
             Some( (
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::AtPoint { index: 3, at_point: *F } ],
-                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::AtPoint { index: 3, at_point: *F } ]));
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::AtPoint { index: 3, at_point: *J } ],
+                nonempty![ MultilineOpinion::EntireSubsegment { index: 0 }, MultilineOpinion::AtPoint { index: 3, at_point: *J } ]));
             "shared segment, then diversion, then atpoint"
         )]
         fn isxn(
@@ -1125,84 +1161,89 @@ mod tests {
         use super::*;
         use test_case::test_case;
 
-        //   ^
-        //   |
-        //   A  B  C
-        //   |
-        //   D  E  F
-        //   |
-        // --G--H--I->
-        //   |
-        #[test_case(Polygon([*B, *D, *H, *F]), &A, None; "point not in polygon 00")]
-        #[test_case(Polygon([*B, *D, *H, *F]), &C, None; "point not in polygon 01")]
+        //           ^ (y)
+        //           |
+        //   a . b . c . d . e
+        //           |
+        //   f . g . h . i . j
+        //           |
+        // <-k---l---m---n---o-> (x)
+        //           |
+        //   p . q . r . s . t
+        //           |
+        //   u . v . w . x . y
+        //           |
+        //           v
+        #[test_case(Polygon([*D, *H, *N, *J]), &C, None; "point not in polygon 00")]
+        #[test_case(Polygon([*D, *H, *N, *J]), &E, None; "point not in polygon 01")]
         #[test_case(
-            Polygon([*B, *D, *H, *F]),
-            &E,
-            Some((PolygonOpinion::WithinArea, *E));
+            Polygon([*D, *H, *N, *J]),
+            &I,
+            Some((PolygonOpinion::WithinArea, *I));
             "point in polygon"
         )]
         #[test_case(
-            Polygon([*B, *D, *H, *F]),
-            &B,
-            Some((PolygonOpinion::AtPoint{index:0, at_point: *B}, *B));
+            Polygon([*D, *H, *N, *J]),
+            &D,
+            Some((PolygonOpinion::AtPoint{index:0, at_point: *D}, *D));
             "point at point of polygon 00"
         )]
         #[test_case(
-            Polygon([*B, *D, *H, *F]),
-            &D,
-            Some((PolygonOpinion::AtPoint{index:1, at_point: *D}, *D));
+            Polygon([*D, *H, *N, *J]),
+            &H,
+            Some((PolygonOpinion::AtPoint{index:1, at_point: *H}, *H));
             "point at point of polygon 01"
         )]
         #[test_case(
-            Polygon([*B, *D, *H, *F]),
-            &H,
-            Some((PolygonOpinion::AtPoint{index:2, at_point: *H}, *H));
+            Polygon([*D, *H, *N, *J]),
+            &N,
+            Some((PolygonOpinion::AtPoint{index:2, at_point: *N}, *N));
             "point at point of polygon 02"
         )]
         #[test_case(
-            Polygon([*B, *D, *H, *F]),
-            &F,
-            Some((PolygonOpinion::AtPoint{index:3, at_point: *F}, *F));
+            Polygon([*D, *H, *N, *J]),
+            &J,
+            Some((PolygonOpinion::AtPoint{index:3, at_point: *J}, *J));
             "point at point of polygon 03"
         )]
         #[test_case(
-            Polygon([*A, *G, *I, *C]),
-            &D,
-            Some((PolygonOpinion::AlongEdge{
-                index: 0,
-                at_point: *D,
-                percent_along: Percent::Val(0.5)
-            }, *D));
-            "point at edge of polygon 00"
-        )]
-        #[test_case(
-            Polygon([*A, *G, *I, *C]),
+            Polygon([*C, *M, *O, *E]),
             &H,
             Some((PolygonOpinion::AlongEdge{
-                index: 1,
+                index: 0,
                 at_point: *H,
                 percent_along: Percent::Val(0.5)
             }, *H));
+            "point at edge of polygon 00"
+        )]
+        #[test_case(
+            Polygon([*C, *M, *O, *E]),
+            &N,
+            Some((PolygonOpinion::AlongEdge{
+                index: 1,
+                at_point: *N,
+                percent_along: Percent::Val(0.5)
+            }, *N));
             "point at edge of polygon 01"
         )]
         #[test_case(
-            Polygon([*A, *G, *I, *C]),
-            &F,
+            Polygon([*C, *M, *O, *E]),
+            &J,
             Some((PolygonOpinion::AlongEdge{
                 index: 2,
-                at_point: *F,
+                at_point: *J,
                 percent_along: Percent::Val(0.5)
-            }, *F));
+            }, *J));
             "point at edge of polygon 02"
         )]
         #[test_case(
-            Polygon([*A, *G, *I, *C]),
-            &B,
+            Polygon([*C, *M, *O, *E]),
+            &D,
             Some((PolygonOpinion::AlongEdge{
                 index: 3,
-                at_point: *B,
+                at_point: *D,
                 percent_along: Percent::Val(0.5)
-            }, *B));
+            }, *D));
             "point at edge of polygon 03"
         )]
         fn overlaps(
@@ -1218,14 +1259,20 @@ mod tests {
     mod pg_sg {
         use super::*;
         use test_case::test_case;
-        //   ^
-        //   |
-        //   A  B  C
-        //   |
-        //   D  E  F
-        //   |
-        // --G--H--I->
-        //   |
+
+        //           ^ (y)
+        //           |
+        //   a . b . c . d . e
+        //           |
+        //   f . g . h . i . j
+        //           |
+        // <-k---l---m---n---o-> (x)
+        //           |
+        //   p . q . r . s . t
+        //           |
+        //   u . v . w . x . y
+        //           |
+        //           v
 
         fn overlaps(
             pg: Result<Polygon>,
