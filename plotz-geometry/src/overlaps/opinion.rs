@@ -34,19 +34,12 @@ pub enum PolygonOpinion {
     // polygon sees point:
     WithinArea,
     AtPoint(usize, Point),
-    AlongEdge {
-        index: usize, // segment index
-        at_point: Point,
-        percent_along: Percent,
-    },
+    AlongEdge(usize, Point, Percent),
 
     // polygon sees segment / multiline
     PartiallyWithinArea,
 
-    AlongSubsegmentOfEdge {
-        index: usize,
-        subsegment: Segment,
-    },
+    AlongSubsegmentOfEdge { index: usize, subsegment: Segment },
 
     // polygon sees polygon,
     AtSubpolygon,

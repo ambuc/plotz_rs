@@ -337,11 +337,7 @@ pub fn polygon_overlaps_point(
             segment_overlaps_point(pg_sg, point)?
         {
             return Ok(Some((
-                PolygonOpinion::AlongEdge {
-                    index,
-                    at_point,
-                    percent_along,
-                },
+                PolygonOpinion::AlongEdge(index, at_point, percent_along),
                 *point,
             )));
         }
@@ -570,10 +566,10 @@ mod tests {
     #[test_case(Polygon([*D, *H, *N, *J]), &H, Some((PolygonOpinion::AtPoint(1,  *H), *H)); "point at point of polygon 01")]
     #[test_case(Polygon([*D, *H, *N, *J]), &N, Some((PolygonOpinion::AtPoint(2,  *N), *N)); "point at point of polygon 02")]
     #[test_case(Polygon([*D, *H, *N, *J]), &J, Some((PolygonOpinion::AtPoint(3,  *J), *J)); "point at point of polygon 03")]
-    #[test_case(Polygon([*C, *M, *O, *E]), &H, Some((PolygonOpinion::AlongEdge{ index: 0, at_point: *H, percent_along: Percent::Val(0.5) }, *H)); "point at edge of polygon 00")]
-    #[test_case(Polygon([*C, *M, *O, *E]), &N, Some((PolygonOpinion::AlongEdge{ index: 1, at_point: *N, percent_along: Percent::Val(0.5) }, *N)); "point at edge of polygon 01")]
-    #[test_case(Polygon([*C, *M, *O, *E]), &J, Some((PolygonOpinion::AlongEdge{ index: 2, at_point: *J, percent_along: Percent::Val(0.5) }, *J)); "point at edge of polygon 02")]
-    #[test_case(Polygon([*C, *M, *O, *E]), &D, Some((PolygonOpinion::AlongEdge{ index: 3, at_point: *D, percent_along: Percent::Val(0.5) }, *D)); "point at edge of polygon 03")]
+    #[test_case(Polygon([*C, *M, *O, *E]), &H, Some((PolygonOpinion::AlongEdge(  0,  *H,  Percent::Val(0.5) ), *H)); "point at edge of polygon 00")]
+    #[test_case(Polygon([*C, *M, *O, *E]), &N, Some((PolygonOpinion::AlongEdge(  1,  *N,  Percent::Val(0.5) ), *N)); "point at edge of polygon 01")]
+    #[test_case(Polygon([*C, *M, *O, *E]), &J, Some((PolygonOpinion::AlongEdge(  2,  *J,  Percent::Val(0.5) ), *J)); "point at edge of polygon 02")]
+    #[test_case(Polygon([*C, *M, *O, *E]), &D, Some((PolygonOpinion::AlongEdge(  3,  *D,  Percent::Val(0.5) ), *D)); "point at edge of polygon 03")]
     fn test_polygon_overlaps_point(
         pg: Result<Polygon>,
         pt: &Point,

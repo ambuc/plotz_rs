@@ -227,12 +227,12 @@ impl PlacedTile {
             (match polygon_overlaps_point(&self.pg, &sg.i).unwrap() {
                 Some((PolygonOpinion::WithinArea, _))
                 | Some((PolygonOpinion::AtPoint(..), _))
-                | Some((PolygonOpinion::AlongEdge { .. }, _)) => true,
+                | Some((PolygonOpinion::AlongEdge(..), _)) => true,
                 _ => false,
             }) && (match polygon_overlaps_point(&self.pg, &sg.f).unwrap() {
                 Some((PolygonOpinion::WithinArea, _))
                 | Some((PolygonOpinion::AtPoint(..), _))
-                | Some((PolygonOpinion::AlongEdge { .. }, _)) => true,
+                | Some((PolygonOpinion::AlongEdge(..), _)) => true,
                 _ => false,
             })
         };
@@ -254,7 +254,7 @@ impl PlacedTile {
                             match polygon_overlaps_point(&self.pg, &s.i).unwrap() {
                                 Some((PolygonOpinion::WithinArea, _))
                                 | Some((PolygonOpinion::AtPoint(..), _))
-                                | Some((PolygonOpinion::AlongEdge { .. }, _)) => true,
+                                | Some((PolygonOpinion::AlongEdge(..), _)) => true,
                                 _ => false,
                             }
                         },
@@ -262,7 +262,7 @@ impl PlacedTile {
                             match polygon_overlaps_point(&self.pg, &s.f).unwrap() {
                                 Some((PolygonOpinion::WithinArea, _))
                                 | Some((PolygonOpinion::AtPoint(..), _))
-                                | Some((PolygonOpinion::AlongEdge { .. }, _)) => true,
+                                | Some((PolygonOpinion::AlongEdge(..), _)) => true,
                                 _ => false,
                             }
                         },

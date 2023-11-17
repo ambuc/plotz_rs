@@ -165,9 +165,7 @@ impl Polygon {
             None => Ok(PointLocation::Outside),
             Some((PolygonOpinion::WithinArea, _)) => Ok(PointLocation::Inside),
             Some((PolygonOpinion::AtPoint(index, _), _)) => Ok(PointLocation::OnPoint(index)),
-            Some((PolygonOpinion::AlongEdge { index, .. }, _)) => {
-                Ok(PointLocation::OnSegment(index))
-            }
+            Some((PolygonOpinion::AlongEdge(index, ..), _)) => Ok(PointLocation::OnSegment(index)),
             _ => Err(anyhow!("how did we get here?")),
         }
     }
@@ -178,7 +176,7 @@ impl Polygon {
             polygon_overlaps_point(self, other).unwrap(),
             Some((PolygonOpinion::WithinArea, _))
                 | Some((PolygonOpinion::AtPoint(..), _))
-                | Some((PolygonOpinion::AlongEdge { .. }, _))
+                | Some((PolygonOpinion::AlongEdge(..), _))
         )
     }
 
