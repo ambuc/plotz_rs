@@ -38,8 +38,7 @@ pub enum PolygonOpinion {
 
     // polygon sees segment / multiline
     PartiallyWithinArea,
-
-    AlongSubsegmentOfEdge { index: usize, subsegment: Segment },
+    AlongSubsegmentOfEdge(usize, Segment),
 
     // polygon sees polygon,
     AtSubpolygon,
