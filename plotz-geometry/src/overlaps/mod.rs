@@ -421,6 +421,7 @@ mod tests {
     use super::*;
     use lazy_static::lazy_static;
     use nonempty::nonempty;
+    use test_case::test_case;
 
     //           ^ (y)
     //           |
@@ -463,66 +464,29 @@ mod tests {
         static ref Y: Point = Point(2, -2);
     }
 
-    mod pt_pt {
-        use super::*;
-        use test_case::test_case;
-
-        #[test_case(*C, *C, Some(*C))]
-        #[test_case(*D, *D, Some(*D))]
-        #[test_case(*D, *H, None)]
-        #[test_case(*A, *B, None)]
-        fn overlaps(a: Point, b: Point, expectation: Option<Point>) -> Result<()> {
-            assert_eq!(point_overlaps_point(&a, &b)?, expectation);
-            Ok(())
-        }
+    #[test_case(*C, *C, Some(*C))]
+    #[test_case(*D, *D, Some(*D))]
+    #[test_case(*D, *H, None)]
+    #[test_case(*A, *B, None)]
+    fn test_point_overlaps_point(a: Point, b: Point, expectation: Option<Point>) -> Result<()> {
+        assert_eq!(point_overlaps_point(&a, &b)?, expectation);
+        Ok(())
     }
 
-    mod sg_pt {
-        use super::*;
-
-        #[test]
-        fn at_start_or_end() -> Result<()> {
-            for (i, f) in &[(*C, *D), (*C, *I), (*C, *M)] {
-                assert_eq!(
-                    segment_overlaps_point(&Segment(*i, *f), i)?,
-                    Some((
-                        SegmentOpinion::AtPointAlongSegment {
-                            at_point: *i,
-                            percent_along: Percent::Zero
-                        },
-                        *i
-                    ))
-                );
-                assert_eq!(
-                    segment_overlaps_point(&Segment(*i, *f), f)?,
-                    Some((
-                        SegmentOpinion::AtPointAlongSegment {
-                            at_point: *f,
-                            percent_along: Percent::One
-                        },
-                        *f
-                    ))
-                );
-            }
-            Ok(())
-        }
-
-        #[test]
-        fn halfway_along() -> Result<()> {
-            for (i, m, f) in &[(*C, *D, *E), (*C, *I, *O), (*C, *H, *M)] {
-                assert_eq!(
-                    segment_overlaps_point(&Segment(*i, *f), m)?,
-                    Some((
-                        SegmentOpinion::AtPointAlongSegment {
-                            at_point: *m,
-                            percent_along: Percent::Val(0.5)
-                        },
-                        *m
-                    ))
-                );
-            }
-            Ok(())
-        }
+    #[test_case(Segment(*C, *D), *C, Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, *C)); "at start 00")]
+    #[test_case(Segment(*C, *D), *D, Some((SegmentOpinion::AtPointAlongSegment { at_point: *D, percent_along: Percent::One }, *D)); "at end 00")]
+    #[test_case(Segment(*C, *I), *C, Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, *C)); "at start 01")]
+    #[test_case(Segment(*C, *I), *I, Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::One }, *I)); "at end 01")]
+    #[test_case(Segment(*C, *E), *D, Some((SegmentOpinion::AtPointAlongSegment { at_point: *D, percent_along: Percent::Val(0.5) }, *D)); "halfway along 01")]
+    #[test_case(Segment(*C, *O), *I, Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, *I)); "halfway along 02")]
+    #[test_case(Segment(*C, *W), *M, Some((SegmentOpinion::AtPointAlongSegment { at_point: *M, percent_along: Percent::Val(0.5) }, *M)); "halfway along 03")]
+    fn test_segment_overlaps_point(
+        segment: Segment,
+        point: Point,
+        expectation: Option<(SegmentOpinion, Point)>,
+    ) -> Result<()> {
+        assert_eq!(segment_overlaps_point(&segment, &point)?, expectation);
+        Ok(())
     }
 
     mod sg_sg {
