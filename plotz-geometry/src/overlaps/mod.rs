@@ -501,6 +501,14 @@ mod tests {
     #[test_case(Segment(*A, *C), Segment(*E, *C), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One })); "at point end to end")]
     #[test_case(Segment(*C, *A), Segment(*E, *C), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One })); "at point head to end")]
     #[test_case(Segment(*C, *A), Segment(*C, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero })); "at point head to head")]
+    #[test_case(Segment(*A, *E), Segment(*A, *C), Some((SegmentOpinion::AlongSubsegment(Segment(*A, *C)), SegmentOpinion::EntireSegment)); "subsegment 00")]
+    #[test_case(Segment(*A, *C), Segment(*A, *E), Some((SegmentOpinion::EntireSegment, SegmentOpinion::AlongSubsegment(Segment(*A, *C)))); "subsegment 00, flip")]
+    #[test_case(Segment(*A, *E), Segment(*B, *D), Some((SegmentOpinion::AlongSubsegment(Segment(*B, *D)), SegmentOpinion::EntireSegment)); "subsegment 01")]
+    #[test_case(Segment(*A, *E), Segment(*C, *E), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *E)), SegmentOpinion::EntireSegment)); "subsegment 02")]
+    #[test_case(Segment(*C, *O), Segment(*E, *M), Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) })); "crosshairs 00")]
+    #[test_case(Segment(*O, *C), Segment(*M, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) })); "crosshairs 01")]
+    #[test_case(Segment(*C, *O), Segment(*M, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) })); "crosshairs 02")]
+    #[test_case(Segment(*O, *C), Segment(*E, *M), Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) })); "crosshairs 03")]
     fn test_segment_overlaps_segment(
         a: Segment,
         b: Segment,
@@ -508,84 +516,6 @@ mod tests {
     ) -> Result<()> {
         assert_eq!(segment_overlaps_segment(&a, &b)?, expectation);
         Ok(())
-    }
-
-    mod sg_sg {
-        use super::*;
-        use test_case::test_case;
-
-        #[test_case(Segment(*A, *E), Segment(*A, *C), Segment(*A, *C))]
-        #[test_case(Segment(*A, *E), Segment(*B, *D), Segment(*B, *D))]
-        #[test_case(Segment(*A, *E), Segment(*C, *E), Segment(*C, *E))]
-        fn atsubsegment(sga: Segment, sgb: Segment, subsegment: Segment) -> Result<()> {
-            assert_eq!(
-                segment_overlaps_segment(&sga, &sgb)?,
-                Some((
-                    SegmentOpinion::AlongSubsegment(subsegment),
-                    SegmentOpinion::EntireSegment,
-                ))
-            );
-            assert_eq!(
-                segment_overlaps_segment(&sgb, &sga)?,
-                Some((
-                    SegmentOpinion::EntireSegment,
-                    SegmentOpinion::AlongSubsegment(subsegment),
-                ))
-            );
-
-            Ok(())
-        }
-
-        #[test]
-        fn partway() -> Result<()> {
-            {
-                // given two non-colinear segments,
-                let (p0, p1) = (*C, *D);
-                for p2 in &[*H, *I, *J, *M, *N, *O] {
-                    assert_eq!(
-                        segment_overlaps_segment(&Segment(p0, p1), &Segment(p1, *p2))?,
-                        Some((
-                            SegmentOpinion::AtPointAlongSegment {
-                                at_point: p1,
-                                percent_along: Percent::One
-                            },
-                            SegmentOpinion::AtPointAlongSegment {
-                                at_point: p1,
-                                percent_along: Percent::Zero
-                            },
-                        ))
-                    );
-                }
-            }
-
-            {
-                // midpoints
-                let sa = Segment(*C, *O);
-                let sb = Segment(*E, *M);
-                for (sa, sb) in &[
-                    (sa, sb),
-                    (sa, sb.flip()),
-                    (sa.flip(), sb),
-                    (sa.flip(), sb.flip()),
-                ] {
-                    assert_eq!(
-                        segment_overlaps_segment(sa, sb)?,
-                        Some((
-                            SegmentOpinion::AtPointAlongSegment {
-                                at_point: *I,
-                                percent_along: Percent::Val(0.5)
-                            },
-                            SegmentOpinion::AtPointAlongSegment {
-                                at_point: *I,
-                                percent_along: Percent::Val(0.5)
-                            }
-                        ))
-                    );
-                }
-            }
-
-            Ok(())
-        }
     }
 
     mod ml_pt {
