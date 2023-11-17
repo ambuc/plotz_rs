@@ -23,7 +23,7 @@ pub enum MultilineOpinion {
 
     // intersection point(s) comprise a subsegment of a segment of this
     // multiline.
-    AlongSubsegmentOf { index: usize, subsegment: Segment },
+    AlongSubsegmentOf(usize, Segment),
 
     // intersection point(s) comprise an entire subsegment of this multiline.
     EntireSubsegment(/*index=*/ usize),
@@ -71,10 +71,9 @@ impl MultilineOpinion {
                 Percent::One => MultilineOpinion::AtPoint(index + 1, at_point),
                 _ => MultilineOpinion::AtPointAlongSharedSegment(index, at_point, percent_along),
             },
-            SegmentOpinion::AlongSubsegment(segment) => MultilineOpinion::AlongSubsegmentOf {
-                index,
-                subsegment: segment,
-            },
+            SegmentOpinion::AlongSubsegment(segment) => {
+                MultilineOpinion::AlongSubsegmentOf(index, segment)
+            }
             SegmentOpinion::EntireSegment => MultilineOpinion::EntireSubsegment(index),
         }
     }
