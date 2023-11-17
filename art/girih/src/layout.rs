@@ -103,8 +103,8 @@ impl Layout {
             .iter()
             .any(|(extant_tile, test_pt)| {
                 matches!(
-                    polygon_overlaps_point(&extant_tile.pg, test_pt).unwrap(),
-                    Some((PolygonOpinion::WithinArea, _))
+                    polygon_overlaps_point(&extant_tile.pg, test_pt),
+                    Ok(Some((PolygonOpinion::WithinArea, _)))
                 )
             })
         {
