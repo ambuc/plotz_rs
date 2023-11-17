@@ -492,31 +492,33 @@ mod tests {
         Ok(())
     }
 
-    #[test_case(Segment(*C, *D), Segment(*C, *D), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same 00")]
-    #[test_case(Segment(*C, *M), Segment(*C, *M), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same 01")]
-    #[test_case(Segment(*C, *M), Segment(*M, *C), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same reverse 00")]
-    #[test_case(Segment(*Y, *M), Segment(*M, *Y), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same reverse 01")]
-    #[test_case(Segment(*B, *E), Segment(*C, *D), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *D)), SegmentOpinion::EntireSegment)); "total collision")]
-    #[test_case(Segment(*B, *E), Segment(*D, *C), Some((SegmentOpinion::AlongSubsegment(Segment(*D, *C)), SegmentOpinion::EntireSegment)); "total collision, flip")]
-    #[test_case(Segment(*B, *D), Segment(*C, *E), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *D)), SegmentOpinion::AlongSubsegment(Segment(*C, *D)))); "partial collision")]
-    #[test_case(Segment(*B, *D), Segment(*E, *C), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *D)), SegmentOpinion::AlongSubsegment(Segment(*D, *C)))); "partial collision, flip")]
-    #[test_case(Segment(*A, *C), Segment(*C, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero })); "at point end to start")]
-    #[test_case(Segment(*A, *C), Segment(*E, *C), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One })); "at point end to end")]
-    #[test_case(Segment(*C, *A), Segment(*E, *C), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One })); "at point head to end")]
-    #[test_case(Segment(*C, *A), Segment(*C, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero })); "at point head to head")]
-    #[test_case(Segment(*A, *E), Segment(*A, *C), Some((SegmentOpinion::AlongSubsegment(Segment(*A, *C)), SegmentOpinion::EntireSegment)); "subsegment 00")]
-    #[test_case(Segment(*A, *C), Segment(*A, *E), Some((SegmentOpinion::EntireSegment, SegmentOpinion::AlongSubsegment(Segment(*A, *C)))); "subsegment 00, flip")]
-    #[test_case(Segment(*A, *E), Segment(*B, *D), Some((SegmentOpinion::AlongSubsegment(Segment(*B, *D)), SegmentOpinion::EntireSegment)); "subsegment 01")]
-    #[test_case(Segment(*A, *E), Segment(*C, *E), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *E)), SegmentOpinion::EntireSegment)); "subsegment 02")]
-    #[test_case(Segment(*C, *O), Segment(*E, *M), Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) })); "crosshairs 00")]
-    #[test_case(Segment(*O, *C), Segment(*M, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) })); "crosshairs 01")]
-    #[test_case(Segment(*C, *O), Segment(*M, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) })); "crosshairs 02")]
-    #[test_case(Segment(*O, *C), Segment(*E, *M), Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) })); "crosshairs 03")]
+    #[test_case((*C, *D), (*C, *D), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same 00")]
+    #[test_case((*C, *M), (*C, *M), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same 01")]
+    #[test_case((*C, *M), (*M, *C), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same reverse 00")]
+    #[test_case((*Y, *M), (*M, *Y), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same reverse 01")]
+    #[test_case((*B, *E), (*C, *D), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *D)), SegmentOpinion::EntireSegment)); "total collision")]
+    #[test_case((*B, *E), (*D, *C), Some((SegmentOpinion::AlongSubsegment(Segment(*D, *C)), SegmentOpinion::EntireSegment)); "total collision, flip")]
+    #[test_case((*B, *D), (*C, *E), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *D)), SegmentOpinion::AlongSubsegment(Segment(*C, *D)))); "partial collision")]
+    #[test_case((*B, *D), (*E, *C), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *D)), SegmentOpinion::AlongSubsegment(Segment(*D, *C)))); "partial collision, flip")]
+    #[test_case((*A, *C), (*C, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero })); "at point end to start")]
+    #[test_case((*A, *C), (*E, *C), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One })); "at point end to end")]
+    #[test_case((*C, *A), (*E, *C), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One })); "at point head to end")]
+    #[test_case((*C, *A), (*C, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero })); "at point head to head")]
+    #[test_case((*A, *E), (*A, *C), Some((SegmentOpinion::AlongSubsegment(Segment(*A, *C)), SegmentOpinion::EntireSegment)); "subsegment 00")]
+    #[test_case((*A, *C), (*A, *E), Some((SegmentOpinion::EntireSegment, SegmentOpinion::AlongSubsegment(Segment(*A, *C)))); "subsegment 00, flip")]
+    #[test_case((*A, *E), (*B, *D), Some((SegmentOpinion::AlongSubsegment(Segment(*B, *D)), SegmentOpinion::EntireSegment)); "subsegment 01")]
+    #[test_case((*A, *E), (*C, *E), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *E)), SegmentOpinion::EntireSegment)); "subsegment 02")]
+    #[test_case((*C, *O), (*E, *M), Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) })); "crosshairs 00")]
+    #[test_case((*O, *C), (*M, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) })); "crosshairs 01")]
+    #[test_case((*C, *O), (*M, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) })); "crosshairs 02")]
+    #[test_case((*O, *C), (*E, *M), Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) })); "crosshairs 03")]
     fn test_segment_overlaps_segment(
-        a: Segment,
-        b: Segment,
+        a: impl Into<Segment>,
+        b: impl Into<Segment>,
         expectation: Option<(SegmentOpinion, SegmentOpinion)>,
     ) -> Result<()> {
+        let a = a.into();
+        let b = b.into();
         if let Some((o1, o2)) = expectation {
             assert_eq!(segment_overlaps_segment(&a, &b)?, Some((o1, o2)));
             assert_eq!(segment_overlaps_segment(&b, &a)?, Some((o2, o1)));
