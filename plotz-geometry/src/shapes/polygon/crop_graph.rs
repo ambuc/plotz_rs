@@ -3,7 +3,7 @@
 use crate::{
     crop::{CropType, PointLocation},
     intersection::{Intersection, IntersectionResult},
-    overlaps::polygon_overlaps_point,
+    overlaps::{opinion::PolygonOpinion, polygon_overlaps_point},
     shapes::{
         point::{is_colinear_n, Point},
         polygon::Polygon,
@@ -188,11 +188,12 @@ impl<'a> CropGraph<'a> {
     }
 
     fn remove_nodes_inside_polygon(&mut self, which: Which) {
-        while let Some(node) = self
-            .graph
-            .nodes()
-            .find(|node| self.get(which).point_is_inside_deprecated(node))
-        {
+        while let Some(node) = self.graph.nodes().find(|node| {
+            matches!(
+                polygon_overlaps_point(self.get(which), node).unwrap(),
+                Some((PolygonOpinion::WithinArea, _))
+            )
+        }) {
             self.graph.remove_node(node);
         }
     }
@@ -464,9 +465,13 @@ mod test {
             for node in graph.nodes() {
                 match crop_type {
                     CropType::Inclusive => {
-                        assert!(boundary.point_is_inside_or_on_border_deprecated(&node))
+                        let x = boundary.point_is_inside_or_on_border_deprecated(&node);
+                        assert!(x);
                     }
-                    CropType::Exclusive => assert!(!boundary.point_is_inside_deprecated(&node)),
+                    CropType::Exclusive => {
+                        let x = !boundary.point_is_inside_deprecated(&node);
+                        assert!(x);
+                    }
                 }
             }
             // we should also make sure that, along each line, no
@@ -478,9 +483,13 @@ mod test {
                     let p = extrapolate_2d(a, b, (i as f64) / 10.0);
                     match crop_type {
                         CropType::Inclusive => {
-                            assert!(boundary.point_is_inside_or_on_border_deprecated(&p))
+                            let x = boundary.point_is_inside_or_on_border_deprecated(&p);
+                            assert!(x);
                         }
-                        CropType::Exclusive => assert!(!boundary.point_is_inside_deprecated(&p)),
+                        CropType::Exclusive => {
+                            let x = !boundary.point_is_inside_deprecated(&p);
+                            assert!(x);
+                        }
                     }
                 }
             }
