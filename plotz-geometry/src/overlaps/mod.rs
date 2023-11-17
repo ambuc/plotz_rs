@@ -523,68 +523,21 @@ mod tests {
         Ok(())
     }
 
-    mod ml_pt {
-        use super::*;
-
-        //           ^ (y)
-        //           |
-        //   a . b . c . d . e
-        //           |
-        //   f . g . h . i . j
-        //           |
-        // <-k---l---m---n---o-> (x)
-        //           |
-        //   p . q . r . s . t
-        //           |
-        //   u . v . w . x . y
-        //           |
-        //           v
-        #[test]
-        fn test_along_two_segment_multiline() -> Result<()> {
-            for ((start, midpoint1, pivot, midpoint2, end), unrelated) in &[
-                ((*M, *N, *O, *J, *E), *C),
-                ((*M, *H, *C, *D, *E), *O),
-                ((*E, *D, *C, *H, *M), *O),
-                ((*M, *I, *E, *D, *C), *H),
-            ] {
-                let ml = Multiline([*start, *pivot, *end]);
-
-                // check points
-
-                for (pt, idx) in [(start, 0), (pivot, 1), (end, 2)] {
-                    assert_eq!(
-                        multiline_overlaps_point(&ml, &pt)?,
-                        Some((
-                            nonempty![MultilineOpinion::AtPoint {
-                                index: idx,
-                                at_point: *pt
-                            }],
-                            *pt,
-                        ))
-                    );
-                }
-
-                // check segments
-
-                for (pt, idx) in [(midpoint1, 0), (midpoint2, 1)] {
-                    assert_eq!(
-                        multiline_overlaps_point(&ml, &pt)?,
-                        Some((
-                            nonempty![MultilineOpinion::AtPointAlongSharedSegment {
-                                index: idx,
-                                at_point: *pt,
-                                percent_along: Percent::Val(0.5)
-                            }],
-                            *pt,
-                        )),
-                    );
-                }
-
-                assert_eq!(multiline_overlaps_point(&ml, unrelated)?, None);
-            }
-
-            Ok(())
-        }
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *A, Some((nonempty![MultilineOpinion::AtPoint { index: 0, at_point: *A }], *A)); "multiline point at index 0")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *E, Some((nonempty![MultilineOpinion::AtPoint { index: 2, at_point: *E }], *E)); "multiline point at index 2")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *Y, Some((nonempty![MultilineOpinion::AtPoint { index: 4, at_point: *Y }], *Y)); "multiline point at index 4")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *B, Some((nonempty![MultilineOpinion::AtPointAlongSharedSegment { index: 0, at_point: *B, percent_along: Percent::Val(0.5) }], *B)); "multiline point along segment 0")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *D, Some((nonempty![MultilineOpinion::AtPointAlongSharedSegment { index: 1, at_point: *D, percent_along: Percent::Val(0.5) }], *D)); "multiline point along segment 1")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *J, Some((nonempty![MultilineOpinion::AtPointAlongSharedSegment { index: 2, at_point: *J, percent_along: Percent::Val(0.5) }], *J)); "multiline point along segment 2")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *T, Some((nonempty![MultilineOpinion::AtPointAlongSharedSegment { index: 3, at_point: *T, percent_along: Percent::Val(0.5) }], *T)); "multiline point along segment 3")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *M, None; "unrelated")]
+    fn test_multiline_overlaps_point(
+        multiline: Multiline,
+        point: Point,
+        expectation: Option<(NonEmpty<MultilineOpinion>, Point)>,
+    ) -> Result<()> {
+        assert_eq!(multiline_overlaps_point(&multiline, &point)?, expectation);
+        Ok(())
     }
 
     mod ml_sg {
