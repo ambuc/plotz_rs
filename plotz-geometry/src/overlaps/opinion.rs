@@ -20,10 +20,7 @@ pub enum SegmentOpinion {
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum MultilineOpinion {
-    AtPoint {
-        index: usize,
-        at_point: Point,
-    },
+    AtPoint(/*index=*/ usize, Point),
 
     AtPointAlongSharedSegment {
         index: usize,
@@ -83,11 +80,8 @@ impl MultilineOpinion {
                 at_point,
                 percent_along,
             } => match percent_along {
-                Percent::Zero => MultilineOpinion::AtPoint { index, at_point },
-                Percent::One => MultilineOpinion::AtPoint {
-                    index: index + 1,
-                    at_point,
-                },
+                Percent::Zero => MultilineOpinion::AtPoint(index, at_point),
+                Percent::One => MultilineOpinion::AtPoint(index + 1, at_point),
                 _ => MultilineOpinion::AtPointAlongSharedSegment {
                     index,
                     at_point,
@@ -175,7 +169,7 @@ pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOpinion>
         {
             match (op1, op2) {
                 (
-                    MultilineOpinion::AtPoint { index: pt_idx, .. },
+                    MultilineOpinion::AtPoint(pt_idx, _),
                     MultilineOpinion::EntireSubsegment(sg_idx),
                 ) if (sg_idx + 1 == *pt_idx || pt_idx == sg_idx) => {
                     //
@@ -184,7 +178,7 @@ pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOpinion>
                 }
                 (
                     MultilineOpinion::EntireSubsegment(sg_idx),
-                    MultilineOpinion::AtPoint { index: pt_idx, .. },
+                    MultilineOpinion::AtPoint(pt_idx, _),
                 ) if (pt_idx == sg_idx || *pt_idx == sg_idx + 1) => {
                     multiline_opinions.remove(idx2);
                     continue 'edit;
