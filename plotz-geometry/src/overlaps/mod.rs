@@ -473,19 +473,22 @@ mod tests {
         Ok(())
     }
 
-    #[test_case(Segment(*C, *D), *C, Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, *C)); "at start 00")]
-    #[test_case(Segment(*C, *D), *D, Some((SegmentOpinion::AtPointAlongSegment { at_point: *D, percent_along: Percent::One }, *D)); "at end 00")]
-    #[test_case(Segment(*C, *I), *C, Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, *C)); "at start 01")]
-    #[test_case(Segment(*C, *I), *I, Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::One }, *I)); "at end 01")]
-    #[test_case(Segment(*C, *E), *D, Some((SegmentOpinion::AtPointAlongSegment { at_point: *D, percent_along: Percent::Val(0.5) }, *D)); "halfway along 01")]
-    #[test_case(Segment(*C, *O), *I, Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, *I)); "halfway along 02")]
-    #[test_case(Segment(*C, *W), *M, Some((SegmentOpinion::AtPointAlongSegment { at_point: *M, percent_along: Percent::Val(0.5) }, *M)); "halfway along 03")]
+    #[test_case((*C, *D), *C, Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, *C)); "at start 00")]
+    #[test_case((*C, *D), *D, Some((SegmentOpinion::AtPointAlongSegment { at_point: *D, percent_along: Percent::One }, *D)); "at end 00")]
+    #[test_case((*C, *I), *C, Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, *C)); "at start 01")]
+    #[test_case((*C, *I), *I, Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::One }, *I)); "at end 01")]
+    #[test_case((*C, *E), *D, Some((SegmentOpinion::AtPointAlongSegment { at_point: *D, percent_along: Percent::Val(0.5) }, *D)); "halfway along 01")]
+    #[test_case((*C, *O), *I, Some((SegmentOpinion::AtPointAlongSegment { at_point: *I, percent_along: Percent::Val(0.5) }, *I)); "halfway along 02")]
+    #[test_case((*C, *W), *M, Some((SegmentOpinion::AtPointAlongSegment { at_point: *M, percent_along: Percent::Val(0.5) }, *M)); "halfway along 03")]
     fn test_segment_overlaps_point(
-        segment: Segment,
+        segment: impl Into<Segment>,
         point: Point,
         expectation: Option<(SegmentOpinion, Point)>,
     ) -> Result<()> {
-        assert_eq!(segment_overlaps_point(&segment, &point)?, expectation);
+        assert_eq!(
+            segment_overlaps_point(&segment.into(), &point)?,
+            expectation
+        );
         Ok(())
     }
 

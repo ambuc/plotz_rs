@@ -46,6 +46,12 @@ pub fn Segment(i: impl Into<Point>, f: impl Into<Point>) -> Segment {
     }
 }
 
+impl From<(Point, Point)> for Segment {
+    fn from((i, f): (Point, Point)) -> Self {
+        Segment(i, f)
+    }
+}
+
 impl Segment {
     /// The slope of a line segment.
     /// NB: this is the "elementary school math slope"; i.e. rise over run.
