@@ -4,7 +4,7 @@ use crate::{
 };
 use anyhow::Result;
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub enum SegmentOpinion {
     AtPointAlongSegment {
         at_point: Point,
@@ -18,7 +18,7 @@ pub enum SegmentOpinion {
     EntireSegment,
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub enum MultilineOpinion {
     AtPoint {
         index: usize,
@@ -44,7 +44,7 @@ pub enum MultilineOpinion {
     },
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub enum PolygonOpinion {
     // polygon sees point:
     WithinArea,
