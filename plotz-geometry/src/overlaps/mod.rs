@@ -495,10 +495,12 @@ mod tests {
     #[test_case(Segment(*Y, *M), Segment(*M, *Y), Some((SegmentOpinion::EntireSegment, SegmentOpinion::EntireSegment)); "same reverse 01")]
     #[test_case(Segment(*B, *E), Segment(*C, *D), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *D)), SegmentOpinion::EntireSegment)); "total collision")]
     #[test_case(Segment(*B, *E), Segment(*D, *C), Some((SegmentOpinion::AlongSubsegment(Segment(*D, *C)), SegmentOpinion::EntireSegment)); "total collision, flip")]
-    // a b - d .
-    // . . c - e
     #[test_case(Segment(*B, *D), Segment(*C, *E), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *D)), SegmentOpinion::AlongSubsegment(Segment(*C, *D)))); "partial collision")]
     #[test_case(Segment(*B, *D), Segment(*E, *C), Some((SegmentOpinion::AlongSubsegment(Segment(*C, *D)), SegmentOpinion::AlongSubsegment(Segment(*D, *C)))); "partial collision, flip")]
+    #[test_case(Segment(*A, *C), Segment(*C, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero })); "at point end to start")]
+    #[test_case(Segment(*A, *C), Segment(*E, *C), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One })); "at point end to end")]
+    #[test_case(Segment(*C, *A), Segment(*E, *C), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::One })); "at point head to end")]
+    #[test_case(Segment(*C, *A), Segment(*C, *E), Some((SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero }, SegmentOpinion::AtPointAlongSegment { at_point: *C, percent_along: Percent::Zero })); "at point head to head")]
     fn test_segment_overlaps_segment(
         a: Segment,
         b: Segment,
@@ -511,35 +513,6 @@ mod tests {
     mod sg_sg {
         use super::*;
         use test_case::test_case;
-
-        #[test_case(Segment(*A, *C),Percent::One, Segment(*C, *E), Percent::Zero, *C)]
-        #[test_case(Segment(*C, *A),Percent::Zero, Segment(*C, *E), Percent::Zero, *C)]
-        #[test_case(Segment(*C, *A),Percent::Zero, Segment(*E, *C), Percent::One, *C)]
-        #[test_case(Segment(*A, *C),Percent::One, Segment(*E, *C), Percent::One, *C)]
-
-        fn atpoint(
-            sga: Segment,
-            a_pct: Percent,
-            sgb: Segment,
-            b_pct: Percent,
-            at_point: Point,
-        ) -> Result<()> {
-            assert_eq!(
-                segment_overlaps_segment(&sga, &sgb)?,
-                Some((
-                    SegmentOpinion::AtPointAlongSegment {
-                        at_point,
-                        percent_along: a_pct,
-                    },
-                    SegmentOpinion::AtPointAlongSegment {
-                        at_point,
-                        percent_along: b_pct,
-                    },
-                ))
-            );
-
-            Ok(())
-        }
 
         #[test_case(Segment(*A, *E), Segment(*A, *C), Segment(*A, *C))]
         #[test_case(Segment(*A, *E), Segment(*B, *D), Segment(*B, *D))]
