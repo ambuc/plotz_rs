@@ -465,20 +465,14 @@ mod tests {
 
     mod pt_pt {
         use super::*;
+        use test_case::test_case;
 
-        #[test]
-        fn the_same() -> Result<()> {
-            for i in &[*C, *D, *E] {
-                assert_eq!(point_overlaps_point(i, i)?, Some(*i));
-            }
-            Ok(())
-        }
-
-        #[test]
-        fn not_the_same() -> Result<()> {
-            for i in &[*C, *D, *E] {
-                assert_eq!(point_overlaps_point(i, &H)?, None);
-            }
+        #[test_case(*C, *C, Some(*C))]
+        #[test_case(*D, *D, Some(*D))]
+        #[test_case(*D, *H, None)]
+        #[test_case(*A, *B, None)]
+        fn overlaps(a: Point, b: Point, expectation: Option<Point>) -> Result<()> {
+            assert_eq!(point_overlaps_point(&a, &b)?, expectation);
             Ok(())
         }
     }
