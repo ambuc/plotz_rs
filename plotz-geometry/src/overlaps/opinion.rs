@@ -13,10 +13,10 @@ pub enum SegmentOp {
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum MultilineOp {
-    Point(usize, Point),                      // one of the points in the multiline.
-    PointAlongSegment(usize, Point, Percent), // a point some percent along a segment of this multiline.
-    SubsegmentOf(usize, Segment),             // a subsegment of a segment of this multiline.
-    EntireSubsegment(usize),                  // an entire subsegment of this multiline
+    Point(usize, Point),                        // one of the points in the multiline.
+    PointAlongSegmentOf(usize, Point, Percent), // a point some percent along a segment of this multiline.
+    SubsegmentOf(usize, Segment),               // a subsegment of a segment of this multiline.
+    EntireSubsegment(usize),                    // an entire subsegment of this multiline
 }
 
 #[derive(PartialEq, Copy, Clone, Debug)]
@@ -43,7 +43,7 @@ impl MultilineOp {
             SegmentOp::PointAlongSegment(at_point, percent_along) => match percent_along {
                 Percent::Zero => MultilineOp::Point(index, at_point),
                 Percent::One => MultilineOp::Point(index + 1, at_point),
-                _ => MultilineOp::PointAlongSegment(index, at_point, percent_along),
+                _ => MultilineOp::PointAlongSegmentOf(index, at_point, percent_along),
             },
             SegmentOp::Subsegment(segment) => MultilineOp::SubsegmentOf(index, segment),
             SegmentOp::EntireSegment => MultilineOp::EntireSubsegment(index),
