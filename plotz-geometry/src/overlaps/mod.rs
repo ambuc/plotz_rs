@@ -616,6 +616,14 @@ mod tests {
     )]
     //
     // segment begins outside and ends outside and does pass through at a point
+    #[test_matrix(
+        [Polygon([*G, *Q, *S, *I])],
+        [(*C, *K), (*K, *C)],
+        Some((
+            nonempty![PolygonOp::Point(0, *G)],
+            nonempty![SegmentOp::PointAlongSegment(*G, Val(0.5))]
+        ))
+    )]
     // TODO(ambuc)
     //
     // segment begins outside and ends outside and does pass through at two points
@@ -634,17 +642,26 @@ mod tests {
     #[test_matrix(
         [Polygon([*G, *Q, *S, *I])],
         [(*A, *G), (*B, *G), (*F, *G)],
-        Some((nonempty![PolygonOp::Point(0, *G)], nonempty![SegmentOp::PointAlongSegment(*G, Percent::One)]))
+        Some((
+            nonempty![PolygonOp::Point(0, *G)],
+            nonempty![SegmentOp::PointAlongSegment(*G, One)]
+        ))
     )]
     #[test_matrix(
         [Polygon([*G, *Q, *S, *I])],
         [(*D, *I), (*E, *I), (*J, *I)],
-        Some((nonempty![PolygonOp::Point(3, *I)], nonempty![SegmentOp::PointAlongSegment(*I, Percent::One)]))
+        Some((
+            nonempty![PolygonOp::Point(3, *I)],
+            nonempty![SegmentOp::PointAlongSegment(*I, One)]
+        ))
     )]
     #[test_matrix(
         [Polygon([*G, *Q, *S, *I])],
         [(*U, *Q), (*P, *Q), (*V, *Q)],
-        Some((nonempty![PolygonOp::Point(1, *Q)], nonempty![SegmentOp::PointAlongSegment(*Q, Percent::One)]))
+        Some((
+            nonempty![PolygonOp::Point(1, *Q)],
+            nonempty![SegmentOp::PointAlongSegment(*Q, One)]
+        ))
     )]
     // segment begins outside and ends on an edge
     // TODO(ambuc)
@@ -692,7 +709,10 @@ mod tests {
     #[test_matrix(
         [Polygon([*A, *U, *Y, *E])],
         [(*G, *I), (*Q, *R), (*I, *M), (*S, *G)],
-        Some((nonempty![PolygonOp::WithinArea], nonempty![SegmentOp::EntireSegment]))
+        Some((
+            nonempty![PolygonOp::WithinArea],
+            nonempty![SegmentOp::EntireSegment]
+        ))
     )]
     //
     fn test_polygon_overlaps_segment(
