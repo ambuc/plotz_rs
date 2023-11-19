@@ -1,8 +1,11 @@
+use std::usize;
+
 use crate::{
-    shapes::{point::Point, segment::Segment},
+    shapes::{point::Point, polygon::Polygon, segment::Segment},
     utils::Percent,
 };
 use anyhow::Result;
+use nonempty::NonEmpty;
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum SegmentOp {
@@ -17,16 +20,6 @@ pub enum MultilineOp {
     PointAlongSegmentOf(usize, Point, Percent), // a point some percent along a segment of this multiline.
     SubsegmentOf(usize, Segment),               // a subsegment of a segment of this multiline.
     EntireSubsegment(usize),                    // an entire subsegment of this multiline
-}
-
-#[derive(PartialEq, Copy, Clone, Debug)]
-pub enum PolygonOp {
-    WithinArea,                            // within the area of the polygon.
-    Point(usize, Point),                   // on a point of the polygon.
-    PointAlongEdge(usize, Point, Percent), // a point some percent along an edge of this polygon.
-    PartiallyWithinArea,                   // partially within the area of the polygon.
-    SubsegmentOfEdge(usize, Segment),      // a subsegment of an edge of the polygon.
-    AtSubpolygon,                          // a subpolygon of the polygon.
 }
 
 impl MultilineOp {
@@ -47,6 +40,31 @@ impl MultilineOp {
             },
             SegmentOp::Subsegment(segment) => MultilineOp::SubsegmentOf(index, segment),
             SegmentOp::EntireSegment => MultilineOp::EntireSubsegment(index),
+        }
+    }
+}
+
+#[derive(PartialEq, Clone, Debug)]
+pub enum PolygonOp {
+    WithinArea,                            // within the area of the polygon.
+    Point(usize, Point),                   // on a point of the polygon.
+    PointAlongEdge(usize, Point, Percent), // a point some percent along an edge of this polygon.
+    PartiallyWithinArea,                   // partially within the area of the polygon.
+    SubsegmentOfEdge(usize, Segment),      // a subsegment of an edge of the polygon.
+    EntireEdge(usize),                     // an entire edge of the polygon.
+    AtSubpolygon(Polygon),                 // a subpolygon of the polygon.
+}
+
+impl PolygonOp {
+    pub fn from_segment_opinion(index: usize, so: SegmentOp) -> PolygonOp {
+        match so {
+            SegmentOp::PointAlongSegment(at_point, percent_along) => match percent_along {
+                Percent::Zero => PolygonOp::Point(index, at_point),
+                Percent::One => PolygonOp::Point(index + 1, at_point),
+                _ => PolygonOp::PointAlongEdge(index, at_point, percent_along),
+            },
+            SegmentOp::Subsegment(segment) => PolygonOp::SubsegmentOfEdge(index, segment),
+            SegmentOp::EntireSegment => PolygonOp::EntireEdge(index),
         }
     }
 }
@@ -138,4 +156,61 @@ pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOp>) -> 
     }
 
     Ok(())
+}
+
+#[derive(Clone, Default, Debug)]
+pub struct PolygonOpSet {
+    pg_ops: Vec<PolygonOp>,
+}
+impl PolygonOpSet {
+    pub fn add(&mut self, pg_op: PolygonOp, original: &Polygon) {
+        let original_pts_len = original.pts.len();
+        match pg_op {
+            PolygonOp::WithinArea => {
+                self.pg_ops.push(pg_op);
+            }
+            PolygonOp::Point(n, _) if n == 0 => {
+                if let Some(idx) = self
+                    .pg_ops
+                    .iter()
+                    .position(|x| matches!(x, PolygonOp::Point(n, _) if *n == original_pts_len))
+                {
+                    self.pg_ops.remove(idx);
+                }
+                self.pg_ops.push(pg_op);
+            }
+            PolygonOp::Point(n, _) if n == original_pts_len => {
+                if !self
+                    .pg_ops
+                    .iter()
+                    .any(|x| matches!(x, PolygonOp::Point(0, _)))
+                {
+                    self.pg_ops.push(pg_op);
+                }
+            }
+            PolygonOp::Point(..) => {
+                if !self.pg_ops.contains(&pg_op) {
+                    self.pg_ops.push(pg_op);
+                }
+            }
+            PolygonOp::PointAlongEdge(_, _, _) => {
+                self.pg_ops.push(pg_op);
+            }
+            PolygonOp::PartiallyWithinArea => {
+                self.pg_ops.push(pg_op);
+            }
+            PolygonOp::SubsegmentOfEdge(_, _) => {
+                self.pg_ops.push(pg_op);
+            }
+            PolygonOp::EntireEdge(_) => {
+                self.pg_ops.push(pg_op);
+            }
+            PolygonOp::AtSubpolygon(_) => {
+                self.pg_ops.push(pg_op);
+            }
+        }
+    }
+    pub fn to_nonempty(self) -> Option<NonEmpty<PolygonOp>> {
+        NonEmpty::from_vec(self.pg_ops)
+    }
 }

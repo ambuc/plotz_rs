@@ -2,9 +2,7 @@
 
 pub mod opinion;
 
-use self::opinion::{
-    rewrite_multiline_opinions, rewrite_segment_opinions, MultilineOp, PolygonOp, SegmentOp,
-};
+use self::opinion::*;
 use crate::{
     interpolate::interpolate_2d_checked,
     shapes::{
@@ -338,32 +336,26 @@ pub fn polygon_overlaps_point(
     }
 }
 
+// NB: the list of PolygonOp operations is not sorted.
 pub fn polygon_overlaps_segment(
     polygon: &Polygon,
     segment: &Segment,
 ) -> Result<Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>> {
-    let mut _pg_ops: Vec<PolygonOp> = vec![];
+    let mut pg_op_set = PolygonOpSet::default();
     let mut sg_ops: Vec<SegmentOp> = vec![];
-    for (_pg_sg_idx, pg_sg) in polygon.to_segments().iter().enumerate() {
-        if let Some((_pg_sg_op, _sg_op)) = segment_overlaps_segment(pg_sg, segment)? {
-            // match pg_sg_op {
-            // SegmentOp::PointAlongSegment(_, _) => todo!(),
-            // SegmentOp::Subsegment(_) => todo!(),
-            // SegmentOp::EntireSegment => todo!(),
-            // }
-            //
-            // match sg_op {
-            // SegmentOp::PointAlongSegment(_, _) => todo!(),
-            // SegmentOp::Subsegment(_) => todo!(),
-            // SegmentOp::EntireSegment => todo!(),
-            // }
+    for (pg_sg_idx, pg_sg) in polygon.to_segments().iter().enumerate() {
+        if let Some((pg_sg_op, sg_op)) = segment_overlaps_segment(pg_sg, segment)? {
+            pg_op_set.add(
+                PolygonOp::from_segment_opinion(pg_sg_idx, pg_sg_op),
+                polygon,
+            );
+            sg_ops.push(sg_op);
         }
     }
 
-    // rewrite_polygon_opinions(&mut pg_ops, polygon)?;
     rewrite_segment_opinions(&mut sg_ops, segment)?;
 
-    match (NonEmpty::from_vec(_pg_ops), NonEmpty::from_vec(sg_ops)) {
+    match (pg_op_set.to_nonempty(), NonEmpty::from_vec(sg_ops)) {
         (Some(total_pg_ops), Some(total_sg_ops)) => Ok(Some((total_pg_ops, total_sg_ops))),
         (None, None) => {
             // check the unusual case of no intersections, but the segment is totally contained within the polygon.
@@ -376,8 +368,9 @@ pub fn polygon_overlaps_segment(
                 _ => Err(anyhow!("unexpected case - how can one end of the segment be within the polygon, the other without, but still we didn't see any collisions above?")),
             }
         }
-        _ => Err(anyhow!(
-            "unexpected case - how can one object see collisions but the other doesn't?"
+        x => Err(anyhow!(
+            "unexpected case - how can one object see collisions but the other doesn't?: {:?}",
+            x
         )),
     }
 }
@@ -615,25 +608,127 @@ mod tests {
     //           |
     //           v
 
-    // No overlap, each segment is wholly outside of the polygon.
-    #[test_matrix([
-        Polygon([*G, *Q, *S, *I])],
-        [ (*A, *E), (*E, *A), (*B, *F), (*T, *X), (*O, *J), ],
-        None
-    )]
-    // Each segment is wholly within the polygon - no edge or point overlaps.
-    #[test_matrix([
-        Polygon([*A, *U, *Y, *E])],
-        [ (*G, *I), (*Q, *R), (*I, *M), (*S, *G), ],
-        Some((nonempty![PolygonOp::WithinArea], nonempty![SegmentOp::EntireSegment]))
-    )]
-    fn test_polygon_overlaps_segment(
-        pg: Result<Polygon>,
-        sg: impl Into<Segment>,
-        expectation: Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>,
-    ) -> Result<()> {
-        let sg = sg.into();
-        assert_eq!(polygon_overlaps_segment(&pg?, &sg)?, expectation);
-        Ok(())
+    // segment begins \ segment ends || outside || at point || on edge || inside ||
+    // ==============================++=========++==========++=========++========++==
+    //                       outside || .       || .        || .       || .      ||
+    //                      at point || .       || .        || .       || .      ||
+    //                       on edge || .       || .        || .       || .      ||
+    //                        inside || .       || .        || .       || .      ||
+
+    mod pg_sg {
+        use super::*;
+        use test_case::{test_case, test_matrix};
+
+        mod segment_begins_outside {
+            use super::*;
+
+            mod segment_ends_outside {
+                use super::*;
+
+                #[test_matrix(
+                    [Polygon([*G, *Q, *S, *I])],
+                    [(*A, *E), (*E, *A), (*B, *F), (*T, *X), (*O, *J)],
+                    None
+                )]
+                fn test(
+                    pg: Result<Polygon>,
+                    sg: impl Into<Segment>,
+                    expectation: Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>,
+                ) -> Result<()> {
+                    assert_eq!(polygon_overlaps_segment(&pg?, &sg.into())?, expectation);
+                    Ok(())
+                }
+            }
+            mod segment_ends_at_point {
+                use super::*;
+                #[test_matrix(
+                    [Polygon([*G, *Q, *S, *I])],
+                    [(*A, *G), (*B, *G), (*F, *G)],
+                    Some((nonempty![PolygonOp::Point(0, *G)], nonempty![SegmentOp::PointAlongSegment(*G, Percent::One)]))
+                )]
+                #[test_matrix(
+                    [Polygon([*G, *Q, *S, *I])],
+                    [(*D, *I), (*E, *I), (*J, *I)],
+                    Some((nonempty![PolygonOp::Point(3, *I)], nonempty![SegmentOp::PointAlongSegment(*I, Percent::One)]))
+                )]
+                #[test_matrix(
+                    [Polygon([*G, *Q, *S, *I])],
+                    [(*U, *Q), (*P, *Q), (*V, *Q)],
+                    Some((nonempty![PolygonOp::Point(1, *Q)], nonempty![SegmentOp::PointAlongSegment(*Q, Percent::One)]))
+                )]
+                fn test(
+                    pg: Result<Polygon>,
+                    sg: impl Into<Segment>,
+                    expectation: Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>,
+                ) -> Result<()> {
+                    assert_eq!(polygon_overlaps_segment(&pg?, &sg.into())?, expectation);
+                    Ok(())
+                }
+            }
+            mod segment_ends_on_edge {
+                use super::*;
+            }
+            mod segment_ends_inside {
+                use super::*;
+            }
+        }
+        mod segment_begins_at_point {
+            use super::*;
+            mod segment_ends_outside {
+                use super::*;
+            }
+            mod segment_ends_at_point {
+                use super::*;
+            }
+            mod segment_ends_on_edge {
+                use super::*;
+            }
+            mod segment_ends_inside {
+                use super::*;
+            }
+        }
+        mod segment_begins_on_edge {
+            use super::*;
+            mod segment_ends_outside {
+                use super::*;
+            }
+            mod segment_ends_at_point {
+                use super::*;
+            }
+            mod segment_ends_on_edge {
+                use super::*;
+            }
+            mod segment_ends_inside {
+                use super::*;
+            }
+        }
+        mod segment_begins_inside {
+            use super::*;
+            mod segment_ends_outside {
+                use super::*;
+            }
+            mod segment_ends_at_point {
+                use super::*;
+            }
+            mod segment_ends_on_edge {
+                use super::*;
+            }
+            mod segment_ends_inside {
+                use super::*;
+                #[test_matrix(
+                    [Polygon([*A, *U, *Y, *E])],
+                    [(*G, *I), (*Q, *R), (*I, *M), (*S, *G)],
+                    Some((nonempty![PolygonOp::WithinArea], nonempty![SegmentOp::EntireSegment]))
+                )]
+                fn test(
+                    pg: Result<Polygon>,
+                    sg: impl Into<Segment>,
+                    expectation: Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>,
+                ) -> Result<()> {
+                    assert_eq!(polygon_overlaps_segment(&pg?, &sg.into())?, expectation);
+                    Ok(())
+                }
+            }
+        }
     }
 }
