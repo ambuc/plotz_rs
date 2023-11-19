@@ -608,127 +608,99 @@ mod tests {
     //           |
     //           v
 
-    // segment begins \ segment ends || outside || at point || on edge || inside ||
-    // ==============================++=========++==========++=========++========++==
-    //                       outside || .       || .        || .       || .      ||
-    //                      at point || .       || .        || .       || .      ||
-    //                       on edge || .       || .        || .       || .      ||
-    //                        inside || .       || .        || .       || .      ||
+    // Segment begins outside and ends outside and does not pass through
+    #[test_matrix(
+        [Polygon([*G, *Q, *S, *I])],
+        [(*A, *E), (*E, *A), (*B, *F), (*T, *X), (*O, *J)],
+        None
+    )]
+    //
+    // segment begins outside and ends outside and does pass through at a point
+    // TODO(ambuc)
+    //
+    // segment begins outside and ends outside and does pass through at two points
+    // TODO(ambuc)
+    //
+    // segment begins outside and ends outside and does pass through along two edges
+    // TODO(ambuc)
+    //
+    // segment begins outside and ends outside and does pass through along an edge
+    // TODO(ambuc)
+    //
+    // segment begins outside and ends outside and does pass through along two edges
+    // TODO(ambuc)
+    //
+    // segment begins outside and ends at point
+    #[test_matrix(
+        [Polygon([*G, *Q, *S, *I])],
+        [(*A, *G), (*B, *G), (*F, *G)],
+        Some((nonempty![PolygonOp::Point(0, *G)], nonempty![SegmentOp::PointAlongSegment(*G, Percent::One)]))
+    )]
+    #[test_matrix(
+        [Polygon([*G, *Q, *S, *I])],
+        [(*D, *I), (*E, *I), (*J, *I)],
+        Some((nonempty![PolygonOp::Point(3, *I)], nonempty![SegmentOp::PointAlongSegment(*I, Percent::One)]))
+    )]
+    #[test_matrix(
+        [Polygon([*G, *Q, *S, *I])],
+        [(*U, *Q), (*P, *Q), (*V, *Q)],
+        Some((nonempty![PolygonOp::Point(1, *Q)], nonempty![SegmentOp::PointAlongSegment(*Q, Percent::One)]))
+    )]
+    // segment begins outside and ends on an edge
+    // TODO(ambuc)
+    //
+    // segment begins outside and ends inside
+    // TODO(ambuc)
+    //
 
-    mod pg_sg {
-        use super::*;
-        use test_case::{test_case, test_matrix};
+    // segment begins at a point and ends outside
+    // TODO(ambuc)
+    //
+    // segment begins at a point and ends at a point
+    // TODO(ambuc)
+    //
+    // segment begins at a point and ends on an edge
+    // TODO(ambuc)
+    //
+    // segment begins at a point and ends inside
+    // TODO(ambuc)
+    //
 
-        mod segment_begins_outside {
-            use super::*;
+    // segment begins on an edge and ends outside
+    // TODO(ambuc)
+    //
+    // segment begins on an edge and ends at a point
+    // TODO(ambuc)
+    //
+    // segment begins on an edge and ends on an edge
+    // TODO(ambuc)
+    //
+    // segment begins on an edge and ends inside
+    // TODO(ambuc)
+    //
 
-            mod segment_ends_outside {
-                use super::*;
-
-                #[test_matrix(
-                    [Polygon([*G, *Q, *S, *I])],
-                    [(*A, *E), (*E, *A), (*B, *F), (*T, *X), (*O, *J)],
-                    None
-                )]
-                fn test(
-                    pg: Result<Polygon>,
-                    sg: impl Into<Segment>,
-                    expectation: Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>,
-                ) -> Result<()> {
-                    assert_eq!(polygon_overlaps_segment(&pg?, &sg.into())?, expectation);
-                    Ok(())
-                }
-            }
-            mod segment_ends_at_point {
-                use super::*;
-                #[test_matrix(
-                    [Polygon([*G, *Q, *S, *I])],
-                    [(*A, *G), (*B, *G), (*F, *G)],
-                    Some((nonempty![PolygonOp::Point(0, *G)], nonempty![SegmentOp::PointAlongSegment(*G, Percent::One)]))
-                )]
-                #[test_matrix(
-                    [Polygon([*G, *Q, *S, *I])],
-                    [(*D, *I), (*E, *I), (*J, *I)],
-                    Some((nonempty![PolygonOp::Point(3, *I)], nonempty![SegmentOp::PointAlongSegment(*I, Percent::One)]))
-                )]
-                #[test_matrix(
-                    [Polygon([*G, *Q, *S, *I])],
-                    [(*U, *Q), (*P, *Q), (*V, *Q)],
-                    Some((nonempty![PolygonOp::Point(1, *Q)], nonempty![SegmentOp::PointAlongSegment(*Q, Percent::One)]))
-                )]
-                fn test(
-                    pg: Result<Polygon>,
-                    sg: impl Into<Segment>,
-                    expectation: Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>,
-                ) -> Result<()> {
-                    assert_eq!(polygon_overlaps_segment(&pg?, &sg.into())?, expectation);
-                    Ok(())
-                }
-            }
-            mod segment_ends_on_edge {
-                use super::*;
-            }
-            mod segment_ends_inside {
-                use super::*;
-            }
-        }
-        mod segment_begins_at_point {
-            use super::*;
-            mod segment_ends_outside {
-                use super::*;
-            }
-            mod segment_ends_at_point {
-                use super::*;
-            }
-            mod segment_ends_on_edge {
-                use super::*;
-            }
-            mod segment_ends_inside {
-                use super::*;
-            }
-        }
-        mod segment_begins_on_edge {
-            use super::*;
-            mod segment_ends_outside {
-                use super::*;
-            }
-            mod segment_ends_at_point {
-                use super::*;
-            }
-            mod segment_ends_on_edge {
-                use super::*;
-            }
-            mod segment_ends_inside {
-                use super::*;
-            }
-        }
-        mod segment_begins_inside {
-            use super::*;
-            mod segment_ends_outside {
-                use super::*;
-            }
-            mod segment_ends_at_point {
-                use super::*;
-            }
-            mod segment_ends_on_edge {
-                use super::*;
-            }
-            mod segment_ends_inside {
-                use super::*;
-                #[test_matrix(
-                    [Polygon([*A, *U, *Y, *E])],
-                    [(*G, *I), (*Q, *R), (*I, *M), (*S, *G)],
-                    Some((nonempty![PolygonOp::WithinArea], nonempty![SegmentOp::EntireSegment]))
-                )]
-                fn test(
-                    pg: Result<Polygon>,
-                    sg: impl Into<Segment>,
-                    expectation: Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>,
-                ) -> Result<()> {
-                    assert_eq!(polygon_overlaps_segment(&pg?, &sg.into())?, expectation);
-                    Ok(())
-                }
-            }
-        }
+    // segment begins inside and ends outside
+    // TODO(ambuc)
+    //
+    // segment begins inside and ends at a point
+    // TODO(ambuc)
+    //
+    // segment begins inside and ends on an edge
+    // TODO(ambuc)
+    //
+    // segment begins inside and ends inside
+    #[test_matrix(
+        [Polygon([*A, *U, *Y, *E])],
+        [(*G, *I), (*Q, *R), (*I, *M), (*S, *G)],
+        Some((nonempty![PolygonOp::WithinArea], nonempty![SegmentOp::EntireSegment]))
+    )]
+    //
+    fn test_polygon_overlaps_segment(
+        pg: Result<Polygon>,
+        sg: impl Into<Segment>,
+        expectation: Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>,
+    ) -> Result<()> {
+        assert_eq!(polygon_overlaps_segment(&pg?, &sg.into())?, expectation);
+        Ok(())
     }
 }
