@@ -17,7 +17,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
-use nonempty::NonEmpty;
+use nonempty::{nonempty, NonEmpty};
 
 //           || pt | sg | ml | ca |
 // ==========++====+====+====+====+==
@@ -339,10 +339,47 @@ pub fn polygon_overlaps_point(
 }
 
 pub fn polygon_overlaps_segment(
-    _polygon: &Polygon,
-    _segment: &Segment,
+    polygon: &Polygon,
+    segment: &Segment,
 ) -> Result<Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>> {
-    unimplemented!()
+    let mut _pg_ops: Vec<PolygonOp> = vec![];
+    let mut sg_ops: Vec<SegmentOp> = vec![];
+    for (_pg_sg_idx, pg_sg) in polygon.to_segments().iter().enumerate() {
+        if let Some((_pg_sg_op, _sg_op)) = segment_overlaps_segment(pg_sg, segment)? {
+            // match pg_sg_op {
+            // SegmentOp::PointAlongSegment(_, _) => todo!(),
+            // SegmentOp::Subsegment(_) => todo!(),
+            // SegmentOp::EntireSegment => todo!(),
+            // }
+            //
+            // match sg_op {
+            // SegmentOp::PointAlongSegment(_, _) => todo!(),
+            // SegmentOp::Subsegment(_) => todo!(),
+            // SegmentOp::EntireSegment => todo!(),
+            // }
+        }
+    }
+
+    // rewrite_polygon_opinions(&mut pg_ops, polygon)?;
+    rewrite_segment_opinions(&mut sg_ops, segment)?;
+
+    match (NonEmpty::from_vec(_pg_ops), NonEmpty::from_vec(sg_ops)) {
+        (Some(total_pg_ops), Some(total_sg_ops)) => Ok(Some((total_pg_ops, total_sg_ops))),
+        (None, None) => {
+            // check the unusual case of no intersections, but the segment is totally contained within the polygon.
+            match (
+                polygon_overlaps_point(polygon, &segment.i)?,
+                polygon_overlaps_point(polygon, &segment.f)?,
+            ) {
+                (Some(_), Some(_)) => Ok(Some((nonempty![PolygonOp::WithinArea], nonempty![SegmentOp::EntireSegment]))),
+                (None, None) => Ok(None),
+                _ => Err(anyhow!("unexpected case - how can one end of the segment be within the polygon, the other without, but still we didn't see any collisions above?")),
+            }
+        }
+        _ => Err(anyhow!(
+            "unexpected case - how can one object see collisions but the other doesn't?"
+        )),
+    }
 }
 
 #[cfg(test)]
@@ -350,7 +387,7 @@ mod tests {
     use super::*;
     use lazy_static::lazy_static;
     use nonempty::nonempty as ne;
-    use test_case::test_case;
+    use test_case::{test_case, test_matrix};
     use Percent::{One, Val, Zero};
 
     //           ^ (y)
@@ -564,30 +601,39 @@ mod tests {
         Ok(())
     }
 
-    mod pg_sg {
-        use super::*;
-        use test_case::test_case;
+    //           ^ (y)
+    //           |
+    //   a . b . c . d . e
+    //           |
+    //   f . g . h . i . j
+    //           |
+    // <-k---l---m---n---o-> (x)
+    //           |
+    //   p . q . r . s . t
+    //           |
+    //   u . v . w . x . y
+    //           |
+    //           v
 
-        //           ^ (y)
-        //           |
-        //   a . b . c . d . e
-        //           |
-        //   f . g . h . i . j
-        //           |
-        // <-k---l---m---n---o-> (x)
-        //           |
-        //   p . q . r . s . t
-        //           |
-        //   u . v . w . x . y
-        //           |
-        //           v
-
-        fn overlaps(
-            pg: Result<Polygon>,
-            sg: Segment,
-            expectation: Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>,
-        ) -> Result<()> {
-            Ok(())
-        }
+    // No overlap, each segment is wholly outside of the polygon.
+    #[test_matrix([
+        Polygon([*G, *Q, *S, *I])],
+        [ (*A, *E), (*E, *A), (*B, *F), (*T, *X), (*O, *J), ],
+        None
+    )]
+    // Each segment is wholly within the polygon - no edge or point overlaps.
+    #[test_matrix([
+        Polygon([*A, *U, *Y, *E])],
+        [ (*G, *I), (*Q, *R), (*I, *M), (*S, *G), ],
+        Some((nonempty![PolygonOp::WithinArea], nonempty![SegmentOp::EntireSegment]))
+    )]
+    fn test_polygon_overlaps_segment(
+        pg: Result<Polygon>,
+        sg: impl Into<Segment>,
+        expectation: Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>,
+    ) -> Result<()> {
+        let sg = sg.into();
+        assert_eq!(polygon_overlaps_segment(&pg?, &sg)?, expectation);
+        Ok(())
     }
 }
