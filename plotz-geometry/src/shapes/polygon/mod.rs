@@ -67,6 +67,12 @@ impl PartialEq for Polygon {
 }
 impl Eq for Polygon {}
 
+impl std::hash::Hash for Polygon {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.pts.hash(state);
+    }
+}
+
 /// Constructor for polygons. Polygons must have inner area, so they must have
 /// three or more points. Constructing a polygon from two or fewer points will
 /// result in a PolygonConstructorError

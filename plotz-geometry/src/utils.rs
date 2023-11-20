@@ -90,3 +90,8 @@ impl Ord for Percent {
     }
     //
 }
+impl core::hash::Hash for Percent {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        core::mem::discriminant(self).hash(state);
+    }
+}

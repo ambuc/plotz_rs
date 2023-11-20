@@ -121,6 +121,7 @@ pub fn rewrite_segment_opinions(
         }
         break;
     }
+    segment_opinions.sort();
 
     Ok(())
 }
@@ -153,6 +154,7 @@ pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOp>) -> 
         }
         break;
     }
+    multiline_opinions.sort();
 
     Ok(())
 }

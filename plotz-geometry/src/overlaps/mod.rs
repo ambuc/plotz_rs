@@ -562,9 +562,9 @@ mod tests {
     #[test_case(Multiline([*C, *D, *E]), Multiline([*C, *D, *I]), Some((ne![MultilineOp::EntireSubsegment(0)], ne![MultilineOp::EntireSubsegment(0)])); "partial collision, entire subsegment 0 0")]
     #[test_case(Multiline([*E, *D, *C]), Multiline([*I, *D, *C]), Some((ne![MultilineOp::EntireSubsegment(1)], ne![MultilineOp::EntireSubsegment(1)])); "partial collision, entire subsegment 1 1")]
     #[test_case(Multiline([*C, *D, *E]), Multiline([*D, *E, *J]), Some((ne![MultilineOp::EntireSubsegment(1)], ne![MultilineOp::EntireSubsegment(0)])); "partial collision, entire subsegment 1 0")]
-    #[test_case(Multiline([*C, *D, *E]), Multiline([*E, *D, *C]), Some((ne![MultilineOp::EntireSubsegment(0), MultilineOp::EntireSubsegment(1)], ne![MultilineOp::EntireSubsegment(1), MultilineOp::EntireSubsegment(0)])); "partial collision, entire subsegment 01 01 flipped")]
+    #[test_case(Multiline([*C, *D, *E]), Multiline([*E, *D, *C]), Some((ne![MultilineOp::EntireSubsegment(0), MultilineOp::EntireSubsegment(1)], ne![MultilineOp::EntireSubsegment(0), MultilineOp::EntireSubsegment(1)])); "partial collision, entire subsegment 01 01 flipped")]
     #[test_case(Multiline([*C, *D, *E, *J, *O]), Multiline([*C, *D, *I, *J, *O]), Some((ne![MultilineOp::EntireSubsegment(0), MultilineOp::EntireSubsegment(3)], ne![MultilineOp::EntireSubsegment(0), MultilineOp::EntireSubsegment(3)])); "shared segment, then diversion, then another shared segment")]
-    #[test_case(Multiline([*C, *D, *E, *J, *O]), Multiline([*C, *D, *I, *J]), Some((ne![MultilineOp::EntireSubsegment(0), MultilineOp::Point(3, *J)], ne![MultilineOp::EntireSubsegment(0), MultilineOp::Point(3, *J)])); "shared segment, then diversion, then atpoint")]
+    #[test_case(Multiline([*C, *D, *E, *J, *O]), Multiline([*C, *D, *I, *J]), Some((ne![MultilineOp::Point(3, *J), MultilineOp::EntireSubsegment(0)], ne![MultilineOp::Point(3, *J), MultilineOp::EntireSubsegment(0)])); "shared segment, then diversion, then atpoint")]
     fn test_multiline_overlaps_multiline(
         ml1: Multiline,
         ml2: Multiline,
