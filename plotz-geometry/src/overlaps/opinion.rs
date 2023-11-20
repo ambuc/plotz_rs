@@ -13,7 +13,7 @@ pub enum SegmentOp {
     EntireSegment,                     // the whole segment.
 }
 
-#[derive(PartialEq, Copy, Clone, Debug)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum MultilineOp {
     Point(usize, Point),                        // one of the points in the multiline.
     PointAlongSegmentOf(usize, Point, Percent), // a point some percent along a segment of this multiline.
