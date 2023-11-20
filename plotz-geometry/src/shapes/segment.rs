@@ -32,7 +32,7 @@ pub enum SegmentContainsPoint {
     AtStart,
     AtEnd,
 }
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Ord)]
 pub struct Segment {
     pub i: Point,
     pub f: Point,
