@@ -6,7 +6,7 @@ use anyhow::Result;
 use nonempty::NonEmpty;
 use std::usize;
 
-#[derive(PartialEq, Eq, Copy, Clone, Debug, PartialOrd)]
+#[derive(PartialEq, Eq, Copy, Clone, Debug, PartialOrd, Ord)]
 pub enum SegmentOp {
     PointAlongSegment(Point, Percent), // a point some percent along this segment.
     Subsegment(Segment),               // a subsegment of this segment.

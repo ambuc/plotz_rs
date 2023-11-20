@@ -1,5 +1,8 @@
+use std::cmp::Ordering;
+
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
+use float_ord::FloatOrd;
 
 #[derive(Debug, Copy, Clone)]
 
@@ -30,7 +33,7 @@ impl<'a, T> Pair<'a, T> {
     }
 }
 
-#[derive(Debug, PartialEq, Copy, Clone, PartialOrd)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 /// Guaranteed to be 0.0 <= f <= 1.0. Witness type.
 pub enum Percent {
     Zero,
@@ -64,3 +67,26 @@ impl Percent {
 }
 
 impl Eq for Percent {}
+
+impl PartialOrd for Percent {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(match (self, other) {
+            (Percent::Zero, Percent::Zero) => Ordering::Equal,
+            (Percent::Zero, Percent::Val(_)) => Ordering::Less,
+            (Percent::Zero, Percent::One) => Ordering::Less,
+            (Percent::Val(_), Percent::Zero) => Ordering::Greater,
+            (Percent::Val(v1), Percent::Val(v2)) => FloatOrd(*v1).cmp(&FloatOrd(*v2)),
+            (Percent::Val(_), Percent::One) => Ordering::Less,
+            (Percent::One, Percent::Zero) => Ordering::Greater,
+            (Percent::One, Percent::Val(_)) => Ordering::Greater,
+            (Percent::One, Percent::One) => Ordering::Equal,
+        })
+    }
+}
+
+impl Ord for Percent {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+    //
+}
