@@ -62,3 +62,5 @@ impl Percent {
         }
     }
 }
+
+impl Eq for Percent {}
