@@ -25,7 +25,7 @@ use std::{
     ops::*,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialOrd, Ord)]
 pub struct Polygon {
     pub pts: Vec<Point>,
 }
@@ -65,6 +65,7 @@ impl PartialEq for Polygon {
         self_new_pts == other_new_pts
     }
 }
+impl Eq for Polygon {}
 
 /// Constructor for polygons. Polygons must have inner area, so they must have
 /// three or more points. Constructing a polygon from two or fewer points will

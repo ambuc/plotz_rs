@@ -43,7 +43,7 @@ impl MultilineOp {
     }
 }
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
 pub enum PolygonOp {
     WithinArea,                            // within the area of the polygon.
     Point(usize, Point),                   // on a point of the polygon.
