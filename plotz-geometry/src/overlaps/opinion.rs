@@ -1,11 +1,10 @@
-use std::usize;
-
 use crate::{
     shapes::{point::Point, polygon::Polygon, segment::Segment},
     utils::Percent,
 };
 use anyhow::Result;
 use nonempty::NonEmpty;
+use std::usize;
 
 #[derive(PartialEq, Copy, Clone, Debug)]
 pub enum SegmentOp {

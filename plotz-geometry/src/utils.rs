@@ -30,7 +30,7 @@ impl<'a, T> Pair<'a, T> {
     }
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone, PartialOrd)]
 /// Guaranteed to be 0.0 <= f <= 1.0. Witness type.
 pub enum Percent {
     Zero,

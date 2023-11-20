@@ -608,7 +608,7 @@ mod tests {
     //           |
     //           v
 
-    // Segment begins outside and ends outside and does not pass through
+    // segment begins outside and ends outside and does not pass through
     #[test_matrix(
         [Polygon([*G, *Q, *S, *I])],
         [(*A, *E), (*E, *A), (*B, *F), (*T, *X), (*O, *J)],
@@ -624,10 +624,23 @@ mod tests {
             nonempty![SegmentOp::PointAlongSegment(*G, Val(0.5))]
         ))
     )]
-    // TODO(ambuc)
     //
     // segment begins outside and ends outside and does pass through at two points
     // TODO(ambuc)
+    // #[test_case(
+    //     Polygon([*I, *M, *G, *K, *O]), // crown shape
+    //     (*J, *F),
+    //     Some((
+    //         nonempty![
+    //             PolygonOp::Point(0, *I),
+    //             PolygonOp::Point(2, *G)
+    //         ],
+    //         nonempty![
+    //             SegmentOp::PointAlongSegment(*I, Val(0.25)),
+    //             SegmentOp::PointAlongSegment(*G, Val(0.75))
+    //         ]
+    //     ))
+    // )]
     //
     // segment begins outside and ends outside and does pass through along two edges
     // TODO(ambuc)
