@@ -626,21 +626,20 @@ mod tests {
     )]
     //
     // segment begins outside and ends outside and does pass through at two points
-    // TODO(ambuc)
-    // #[test_case(
-    //     Polygon([*I, *M, *G, *K, *O]), // crown shape
-    //     (*J, *F),
-    //     Some((
-    //         nonempty![
-    //             PolygonOp::Point(0, *I),
-    //             PolygonOp::Point(2, *G)
-    //         ],
-    //         nonempty![
-    //             SegmentOp::PointAlongSegment(*I, Val(0.25)),
-    //             SegmentOp::PointAlongSegment(*G, Val(0.75))
-    //         ]
-    //     ))
-    // )]
+    #[test_case(
+        Polygon([*I, *M, *G, *K, *O]), // crown shape
+        (*J, *F),
+        Some((
+            nonempty![
+                PolygonOp::Point(0, *I),
+                PolygonOp::Point(2, *G)
+            ],
+            nonempty![
+                SegmentOp::PointAlongSegment(*G, Val(0.75)),
+                SegmentOp::PointAlongSegment(*I, Val(0.25))
+            ]
+        ))
+    )]
     //
     // segment begins outside and ends outside and does pass through along two edges
     // TODO(ambuc)

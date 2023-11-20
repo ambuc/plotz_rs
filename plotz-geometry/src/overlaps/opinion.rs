@@ -122,6 +122,7 @@ pub fn rewrite_segment_opinions(
         break;
     }
     segment_opinions.sort();
+    segment_opinions.dedup();
 
     Ok(())
 }
@@ -155,6 +156,7 @@ pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOp>) -> 
         break;
     }
     multiline_opinions.sort();
+    multiline_opinions.dedup();
 
     Ok(())
 }
@@ -214,6 +216,7 @@ impl PolygonOpSet {
     pub fn to_nonempty(self) -> Option<NonEmpty<PolygonOp>> {
         let PolygonOpSet { mut pg_ops } = self;
         pg_ops.sort();
+        pg_ops.dedup();
         NonEmpty::from_vec(pg_ops)
     }
 }
