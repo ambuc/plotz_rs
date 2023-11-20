@@ -212,6 +212,8 @@ impl PolygonOpSet {
         }
     }
     pub fn to_nonempty(self) -> Option<NonEmpty<PolygonOp>> {
-        NonEmpty::from_vec(self.pg_ops)
+        let PolygonOpSet { mut pg_ops } = self;
+        pg_ops.sort();
+        NonEmpty::from_vec(pg_ops)
     }
 }
