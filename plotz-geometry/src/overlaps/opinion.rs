@@ -1,7 +1,7 @@
 use super::totally_covers;
 use crate::{
     obj2::Obj2,
-    shapes::{point::Point, polygon::Polygon, segment::Segment},
+    shapes::{multiline::Multiline, point::Point, polygon::Polygon, segment::Segment},
     utils::Percent,
 };
 use anyhow::{anyhow, Result};
@@ -166,6 +166,74 @@ impl MultilineOp {
             SegmentOp::EntireSegment => MultilineOp::EntireSubsegment(index),
         }
     }
+    pub fn to_obj(&self, original_ml: &Multiline) -> Obj2 {
+        match self {
+            MultilineOp::Point(_, p) | MultilineOp::PointAlongSegmentOf(_, p, _) => Obj2::from(*p),
+            MultilineOp::SubsegmentOf(_, sg) => Obj2::from(*sg),
+            MultilineOp::EntireSubsegment(idx) => Obj2::from(original_ml.to_segments()[*idx]),
+            MultilineOp::EntireMultiline => Obj2::from(original_ml.clone()),
+        }
+    }
+    pub fn totally_covers(&self, other: &Self, original_ml: &Multiline) -> Result<bool> {
+        totally_covers(&self.to_obj(original_ml), &other.to_obj(original_ml))
+    }
+}
+
+pub struct MultilineOpSet {
+    ml_ops: Vec<MultilineOp>,
+    original: Multiline,
+}
+
+impl MultilineOpSet {
+    pub fn new(original: &Multiline) -> MultilineOpSet {
+        MultilineOpSet {
+            ml_ops: vec![],
+            original: original.clone(),
+        }
+    }
+
+    pub fn add(&mut self, ml_op: MultilineOp) -> Result<()> {
+        // If the incoming op is covered by an extant one, discard it.
+        for extant_op in self.ml_ops.iter() {
+            if extant_op.totally_covers(&ml_op, &self.original)? {
+                return Ok(());
+            }
+        }
+
+        // If the incoming op covers extant ones, discard them.
+        let mut idxs_to_remove = vec![];
+        for (idx, sg_op_extant) in self.ml_ops.iter().enumerate() {
+            if ml_op.totally_covers(sg_op_extant, &self.original)? {
+                idxs_to_remove.push(idx);
+            }
+        }
+        idxs_to_remove.reverse();
+        for idx_to_remove in idxs_to_remove {
+            self.ml_ops.remove(idx_to_remove);
+        }
+
+        // TODO(ambuc): deduplicate adjacent subsegments -- coverage doesn't take care of that.
+
+        self.ml_ops.push(ml_op);
+
+        Ok(())
+    }
+
+    pub fn to_nonempty(mut self) -> Option<NonEmpty<MultilineOp>> {
+        self.final_pass();
+
+        let MultilineOpSet { mut ml_ops, .. } = self;
+
+        ml_ops.sort();
+        ml_ops.dedup();
+
+        NonEmpty::from_vec(ml_ops)
+    }
+
+    fn final_pass(&mut self) {
+        // TODO(ambuc): deduplicate the case where all of the subsegments are
+        // covered, and we need to resolve it up to EntireMultiline.
+    }
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
@@ -173,10 +241,10 @@ pub enum PolygonOp {
     WithinArea,                            // within the area of the polygon.
     Point(usize, Point),                   // on a point of the polygon.
     PointAlongEdge(usize, Point, Percent), // a point some percent along an edge of this polygon.
-    PartiallyWithinArea,                   // partially within the area of the polygon.
-    SubsegmentOfEdge(usize, Segment),      // a subsegment of an edge of the polygon.
-    EntireEdge(usize),                     // an entire edge of the polygon.
-    AtSubpolygon(Polygon),                 // a subpolygon of the polygon.
+    // Should there be a "partially within"?
+    SubsegmentOfEdge(usize, Segment), // a subsegment of an edge of the polygon.
+    EntireEdge(usize),                // an entire edge of the polygon.
+    AtSubpolygon(Polygon),            // a subpolygon of the polygon.
 }
 
 impl PolygonOp {
@@ -191,40 +259,16 @@ impl PolygonOp {
             SegmentOp::EntireSegment => PolygonOp::EntireEdge(index),
         }
     }
-}
-
-pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOp>) -> Result<()> {
-    multiline_opinions.dedup();
-    'edit: loop {
-        let ops_ = multiline_opinions.clone();
-        for ((idx1, op1), (idx2, op2)) in
-            ops_.iter().enumerate().zip(ops_.iter().enumerate().skip(1))
-        {
-            match (op1, op2) {
-                (MultilineOp::Point(pt_idx, _), MultilineOp::EntireSubsegment(sg_idx))
-                    if (sg_idx + 1 == *pt_idx || pt_idx == sg_idx) =>
-                {
-                    //
-                    multiline_opinions.remove(idx1);
-                    continue 'edit;
-                }
-                (MultilineOp::EntireSubsegment(sg_idx), MultilineOp::Point(pt_idx, _))
-                    if (pt_idx == sg_idx || *pt_idx == sg_idx + 1) =>
-                {
-                    multiline_opinions.remove(idx2);
-                    continue 'edit;
-                }
-                _ => {
-                    // do nothing
-                }
-            }
+    pub fn to_obj(&self, original: &Polygon, other: &Obj2) -> Obj2 {
+        match self {
+            PolygonOp::WithinArea => other.clone(),
+            PolygonOp::Point(_, p) => Obj2::from(*p),
+            PolygonOp::PointAlongEdge(_, p, _) => Obj2::from(*p),
+            PolygonOp::SubsegmentOfEdge(_, sg) => Obj2::from(*sg),
+            PolygonOp::EntireEdge(idx) => Obj2::from(original.to_segments()[*idx]),
+            PolygonOp::AtSubpolygon(pg) => Obj2::from(pg.clone()),
         }
-        break;
     }
-    multiline_opinions.sort();
-    multiline_opinions.dedup();
-
-    Ok(())
 }
 
 #[derive(Clone, Debug)]
@@ -270,9 +314,6 @@ impl PolygonOpSet {
                 }
             }
             PolygonOp::PointAlongEdge(_, _, _) => {
-                self.pg_ops.push(pg_op);
-            }
-            PolygonOp::PartiallyWithinArea => {
                 self.pg_ops.push(pg_op);
             }
             PolygonOp::SubsegmentOfEdge(_, _) => {

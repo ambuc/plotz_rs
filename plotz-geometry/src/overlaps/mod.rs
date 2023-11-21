@@ -302,14 +302,13 @@ pub fn multiline_overlaps_point(
     ml: &Multiline,
     p: &Point,
 ) -> Result<Option<(NonEmpty<MultilineOp>, Point)>> {
-    let mut sg_ops: Vec<MultilineOp> = vec![];
+    let mut ml_op_set = MultilineOpSet::new(ml);
     for (index, sg) in ml.to_segments().iter().enumerate() {
         if let Some((segment_opinion, _)) = segment_overlaps_point(sg, p)? {
-            sg_ops.push(MultilineOp::from_segment_opinion(index, segment_opinion));
+            ml_op_set.add(MultilineOp::from_segment_opinion(index, segment_opinion))?;
         }
     }
-    sg_ops.dedup();
-    match NonEmpty::from_vec(sg_ops) {
+    match ml_op_set.to_nonempty() {
         None => Ok(None),
         Some(u) => Ok(Some((u, *p))),
     }
@@ -319,19 +318,17 @@ pub fn multiline_overlaps_segment(
     ml: &Multiline,
     sg: &Segment,
 ) -> Result<Option<(NonEmpty<MultilineOp>, NonEmpty<SegmentOp>)>> {
-    let mut ml_opinions: Vec<MultilineOp> = vec![];
+    let mut ml_op_set = MultilineOpSet::new(/*original=*/ ml);
     let mut sg_op_set = SegmentOpSet::new(/*original=*/ sg);
 
     for (ml_sg_idx, ml_sg) in ml.to_segments().iter().enumerate() {
         if let Some((ml_sg_op, sg_op)) = segment_overlaps_segment(ml_sg, sg)? {
-            ml_opinions.push(MultilineOp::from_segment_opinion(ml_sg_idx, ml_sg_op));
+            ml_op_set.add(MultilineOp::from_segment_opinion(ml_sg_idx, ml_sg_op))?;
             sg_op_set.add(sg_op)?;
         }
     }
 
-    rewrite_multiline_opinions(&mut ml_opinions)?;
-
-    match (NonEmpty::from_vec(ml_opinions), sg_op_set.to_nonempty()) {
+    match (ml_op_set.to_nonempty(), sg_op_set.to_nonempty()) {
         (Some(total_ml_ops), Some(total_sg_ops)) => Ok(Some((total_ml_ops, total_sg_ops))),
         (Some(_), None) | (None, Some(_)) => Err(anyhow!(
             "unexpected case - how can one object see collisions but the other doesn't?"
@@ -344,25 +341,19 @@ pub fn multiline_overlaps_multiline(
     ml1: &Multiline,
     ml2: &Multiline,
 ) -> Result<Option<(NonEmpty<MultilineOp>, NonEmpty<MultilineOp>)>> {
-    let mut ml1_opinions: Vec<MultilineOp> = vec![];
-    let mut ml2_opinions: Vec<MultilineOp> = vec![];
+    let mut ml1_op_set = MultilineOpSet::new(/*original=*/ ml1);
+    let mut ml2_op_set = MultilineOpSet::new(/*original=*/ ml2);
 
     for (ml_sg1_idx, ml_sg1) in ml1.to_segments().iter().enumerate() {
         for (ml_sg2_idx, ml_sg2) in ml2.to_segments().iter().enumerate() {
             if let Some((ml_sg1_op, ml_sg2_op)) = segment_overlaps_segment(ml_sg1, ml_sg2)? {
-                ml1_opinions.push(MultilineOp::from_segment_opinion(ml_sg1_idx, ml_sg1_op));
-                ml2_opinions.push(MultilineOp::from_segment_opinion(ml_sg2_idx, ml_sg2_op));
+                ml1_op_set.add(MultilineOp::from_segment_opinion(ml_sg1_idx, ml_sg1_op))?;
+                ml2_op_set.add(MultilineOp::from_segment_opinion(ml_sg2_idx, ml_sg2_op))?;
             }
         }
     }
 
-    rewrite_multiline_opinions(&mut ml1_opinions)?;
-    rewrite_multiline_opinions(&mut ml2_opinions)?;
-
-    match (
-        NonEmpty::from_vec(ml1_opinions),
-        NonEmpty::from_vec(ml2_opinions),
-    ) {
+    match (ml1_op_set.to_nonempty(), ml2_op_set.to_nonempty()) {
         (Some(total_ml1_ops), Some(total_ml2_ops)) => Ok(Some((total_ml1_ops, total_ml2_ops))),
         (Some(_), None) | (None, Some(_)) => Err(anyhow!(
             "unexpected case - how can one object see collisions but the other doesn't?"
@@ -704,20 +695,21 @@ mod tests {
     )]
     //
     // segment begins outside and ends outside and does pass through along two edges
-    // #[test_case(
-    // Polygon([*T, *N, *M, *H, *B, *F, *X]), // crown shape
-    // (*T, *B),
-    // Some((
-    // nonempty![
-    // PolygonOp::EntireEdge(0),
-    // PolygonOp::EntireEdge(3)
-    // ],
-    // nonempty![
-    // SegmentOp::Subsegment(Segment(*T, *N)),
-    // SegmentOp::Subsegment(Segment(*H, *B))
-    // ]
-    // ))
-    // )]
+    /*
+    #[test_case(
+        Polygon([*T, *N, *M, *H, *B, *F, *X]), // crown shape
+        (*T, *B),
+        Some((nonempty![
+            PolygonOp::EntireEdge(0),
+            PolygonOp::EntireEdge(3)
+        ],
+        nonempty![
+            SegmentOp::Subsegment(Segment(*H, *B)),
+            SegmentOp::Subsegment(Segment(*T, *N))
+        ]
+        ))
+    )]
+    */
     //
     // segment begins outside and ends outside and does pass through along an edge
     // TODO(ambuc)
