@@ -403,7 +403,7 @@ pub fn polygon_overlaps_segment(
     let mut sg_op_set = SegmentOpSet::new(/*original=*/ segment);
     for (pg_sg_idx, pg_sg) in polygon.to_segments().iter().enumerate() {
         if let Some((pg_sg_op, sg_op)) = segment_overlaps_segment(pg_sg, segment)? {
-            pg_op_set.add(PolygonOp::from_segment_opinion(pg_sg_idx, pg_sg_op));
+            pg_op_set.add(PolygonOp::from_segment_opinion(pg_sg_idx, pg_sg_op))?;
             sg_op_set.add(sg_op)?;
         }
     }
@@ -722,21 +722,20 @@ mod tests {
     )]
     //
     // segment begins outside and ends outside and does pass through along two edges
-    /*
     #[test_case(
         Polygon([*T, *N, *M, *H, *B, *F, *X]), // crown shape
         (*T, *B),
-        Some((nonempty![
-            PolygonOp::EntireEdge(0),
-            PolygonOp::EntireEdge(3)
-        ],
-        nonempty![
-            SegmentOp::Subsegment(Segment(*H, *B)),
-            SegmentOp::Subsegment(Segment(*T, *N))
-        ]
+        Some((
+            nonempty![
+                PolygonOp::EntireEdge(0),
+                PolygonOp::EntireEdge(3)
+            ],
+            nonempty![
+                SegmentOp::Subsegment(Segment(*H, *B)),
+                SegmentOp::Subsegment(Segment(*T, *N))
+            ]
         ))
     )]
-    */
     //
     // segment begins outside and ends outside and does pass through along an edge
     // TODO(ambuc)

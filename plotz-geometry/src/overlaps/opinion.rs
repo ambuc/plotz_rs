@@ -309,54 +309,33 @@ impl PolygonOpSet {
             original: original.clone(),
         }
     }
-    pub fn add(&mut self, pg_op: PolygonOp) {
-        let original_pts_len = self.original.pts.len();
-        match pg_op {
-            PolygonOp::PointWithinArea(_) => {
-                self.pg_ops.push(pg_op);
-            }
-            PolygonOp::OnPoint(n, _) if n == 0 => {
-                if let Some(idx) = self
-                    .pg_ops
-                    .iter()
-                    .position(|x| matches!(x, PolygonOp::OnPoint(n, _) if *n == original_pts_len))
-                {
-                    self.pg_ops.remove(idx);
-                }
-                self.pg_ops.push(pg_op);
-            }
-            PolygonOp::OnPoint(n, _) if n == original_pts_len => {
-                if !self
-                    .pg_ops
-                    .iter()
-                    .any(|x| matches!(x, PolygonOp::OnPoint(0, _)))
-                {
-                    self.pg_ops.push(pg_op);
-                }
-            }
-            PolygonOp::OnPoint(..) => {
-                if !self.pg_ops.contains(&pg_op) {
-                    self.pg_ops.push(pg_op);
-                }
-            }
-            PolygonOp::PointAlongEdge(_, _, _) => {
-                self.pg_ops.push(pg_op);
-            }
-            PolygonOp::SegmentWithinArea(_) => {
-                self.pg_ops.push(pg_op);
-            }
-            PolygonOp::SubsegmentOfEdge(_, _) => {
-                self.pg_ops.push(pg_op);
-            }
-            PolygonOp::EntireEdge(_) => {
-                self.pg_ops.push(pg_op);
-            }
-            PolygonOp::AtSubpolygon(_) => {
-                self.pg_ops.push(pg_op);
+    pub fn add(&mut self, pg_op: PolygonOp) -> Result<()> {
+        // If the incoming op is covered by an extant one, discard it.
+        for extant_op in self.pg_ops.iter() {
+            if extant_op.totally_covers(&pg_op, &self.original)? {
+                return Ok(());
             }
         }
+
+        // If the incoming op covers extant ones, discard them.
+        let mut idxs_to_remove = vec![];
+        for (idx, sg_op_extant) in self.pg_ops.iter().enumerate() {
+            if pg_op.totally_covers(sg_op_extant, &self.original)? {
+                idxs_to_remove.push(idx);
+            }
+        }
+        idxs_to_remove.reverse();
+        for idx_to_remove in idxs_to_remove {
+            self.pg_ops.remove(idx_to_remove);
+        }
+        // TODO(ambuc):  inline deduplication
+
+        self.pg_ops.push(pg_op);
+
+        Ok(())
     }
     pub fn to_nonempty(self) -> Option<NonEmpty<PolygonOp>> {
+        // TODO(ambuc):  final pass
         let PolygonOpSet { mut pg_ops, .. } = self;
         pg_ops.sort();
         pg_ops.dedup();
