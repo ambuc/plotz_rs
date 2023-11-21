@@ -292,6 +292,9 @@ impl PolygonOp {
             PolygonOp::AtSubpolygon(pg) => Obj2::from(pg.clone()),
         }
     }
+    pub fn totally_covers(&self, other: &Self, original_pg: &Polygon) -> Result<bool> {
+        totally_covers(&self.to_obj(original_pg), &other.to_obj(original_pg))
+    }
 }
 
 #[derive(Clone, Debug)]
