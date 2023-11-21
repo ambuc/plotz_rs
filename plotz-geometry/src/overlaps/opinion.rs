@@ -44,25 +44,24 @@ impl SegmentOpSet {
         }
     }
 
-    pub fn add(&mut self, sg_op: SegmentOp) -> Result<()> {
-        // If the incoming op is covered by an extant one, discard it.
-        for extant_op in self.sg_ops.iter() {
-            if extant_op.totally_covers(&sg_op, &self.original)? {
-                return Ok(());
+    // Returns true if any extant sg_ops totally cover the incoming sg_op.
+    pub fn any_ops_cover(&self, incoming: SegmentOp) -> Result<bool> {
+        for extant in &self.sg_ops {
+            if extant.totally_covers(&incoming, &self.original)? {
+                return Ok(true);
             }
         }
+        Ok(false)
+    }
 
+    pub fn add(&mut self, sg_op: SegmentOp) -> Result<()> {
+        // If the incoming op is covered by an extant one, discard it (by returning early).
+        if self.any_ops_cover(sg_op)? {
+            return Ok(());
+        }
         // If the incoming op covers extant ones, discard them.
-        let mut idxs_to_remove = vec![];
-        for (idx, sg_op_extant) in self.sg_ops.iter().enumerate() {
-            if sg_op.totally_covers(sg_op_extant, &self.original)? {
-                idxs_to_remove.push(idx);
-            }
-        }
-        idxs_to_remove.reverse();
-        for idx_to_remove in idxs_to_remove {
-            self.sg_ops.remove(idx_to_remove);
-        }
+        self.sg_ops
+            .retain(|extant| !sg_op.totally_covers(extant, &self.original).unwrap());
 
         // need to deduplicate adjacent subsegments -- coverage doesn't take care of that.
         if let SegmentOp::Subsegment(s_new) = sg_op {
@@ -192,25 +191,24 @@ impl MultilineOpSet {
         }
     }
 
+    pub fn any_ops_cover(&self, incoming: MultilineOp) -> Result<bool> {
+        for extant in &self.ml_ops {
+            if extant.totally_covers(&incoming, &self.original)? {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
     pub fn add(&mut self, ml_op: MultilineOp) -> Result<()> {
         // If the incoming op is covered by an extant one, discard it.
-        for extant_op in self.ml_ops.iter() {
-            if extant_op.totally_covers(&ml_op, &self.original)? {
-                return Ok(());
-            }
+        if self.any_ops_cover(ml_op)? {
+            return Ok(());
         }
 
         // If the incoming op covers extant ones, discard them.
-        let mut idxs_to_remove = vec![];
-        for (idx, sg_op_extant) in self.ml_ops.iter().enumerate() {
-            if ml_op.totally_covers(sg_op_extant, &self.original)? {
-                idxs_to_remove.push(idx);
-            }
-        }
-        idxs_to_remove.reverse();
-        for idx_to_remove in idxs_to_remove {
-            self.ml_ops.remove(idx_to_remove);
-        }
+        self.ml_ops
+            .retain(|extant| !ml_op.totally_covers(extant, &self.original).unwrap());
 
         // TODO(ambuc): deduplicate adjacent subsegments -- coverage doesn't take care of that.
 
@@ -309,25 +307,23 @@ impl PolygonOpSet {
             original: original.clone(),
         }
     }
+    pub fn any_ops_cover(&self, incoming: &PolygonOp) -> Result<bool> {
+        for extant in &self.pg_ops {
+            if extant.totally_covers(incoming, &self.original)? {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
     pub fn add(&mut self, pg_op: PolygonOp) -> Result<()> {
         // If the incoming op is covered by an extant one, discard it.
-        for extant_op in self.pg_ops.iter() {
-            if extant_op.totally_covers(&pg_op, &self.original)? {
-                return Ok(());
-            }
+        if self.any_ops_cover(&pg_op)? {
+            return Ok(());
         }
 
-        // If the incoming op covers extant ones, discard them.
-        let mut idxs_to_remove = vec![];
-        for (idx, sg_op_extant) in self.pg_ops.iter().enumerate() {
-            if pg_op.totally_covers(sg_op_extant, &self.original)? {
-                idxs_to_remove.push(idx);
-            }
-        }
-        idxs_to_remove.reverse();
-        for idx_to_remove in idxs_to_remove {
-            self.pg_ops.remove(idx_to_remove);
-        }
+        self.pg_ops
+            .retain(|extant| !pg_op.totally_covers(extant, &self.original).unwrap());
+
         // TODO(ambuc):  inline deduplication
 
         self.pg_ops.push(pg_op);
