@@ -227,13 +227,20 @@ pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOp>) -> 
     Ok(())
 }
 
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Debug)]
 pub struct PolygonOpSet {
     pg_ops: Vec<PolygonOp>,
+    original: Polygon,
 }
 impl PolygonOpSet {
-    pub fn add(&mut self, pg_op: PolygonOp, original: &Polygon) {
-        let original_pts_len = original.pts.len();
+    pub fn new(original: &Polygon) -> PolygonOpSet {
+        PolygonOpSet {
+            pg_ops: vec![],
+            original: original.clone(),
+        }
+    }
+    pub fn add(&mut self, pg_op: PolygonOp) {
+        let original_pts_len = self.original.pts.len();
         match pg_op {
             PolygonOp::WithinArea => {
                 self.pg_ops.push(pg_op);
@@ -280,7 +287,7 @@ impl PolygonOpSet {
         }
     }
     pub fn to_nonempty(self) -> Option<NonEmpty<PolygonOp>> {
-        let PolygonOpSet { mut pg_ops } = self;
+        let PolygonOpSet { mut pg_ops, .. } = self;
         pg_ops.sort();
         pg_ops.dedup();
         NonEmpty::from_vec(pg_ops)

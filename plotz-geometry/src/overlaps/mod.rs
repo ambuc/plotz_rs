@@ -408,14 +408,11 @@ pub fn polygon_overlaps_segment(
     polygon: &Polygon,
     segment: &Segment,
 ) -> Result<Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>> {
-    let mut pg_op_set = PolygonOpSet::default();
+    let mut pg_op_set = PolygonOpSet::new(/*original=*/ polygon);
     let mut sg_op_set = SegmentOpSet::new(/*original=*/ segment);
     for (pg_sg_idx, pg_sg) in polygon.to_segments().iter().enumerate() {
         if let Some((pg_sg_op, sg_op)) = segment_overlaps_segment(pg_sg, segment)? {
-            pg_op_set.add(
-                PolygonOp::from_segment_opinion(pg_sg_idx, pg_sg_op),
-                polygon,
-            );
+            pg_op_set.add(PolygonOp::from_segment_opinion(pg_sg_idx, pg_sg_op));
             sg_op_set.add(sg_op)?;
         }
     }
