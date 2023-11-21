@@ -30,66 +30,11 @@ impl SegmentOp {
     }
 }
 
-#[derive(PartialEq, Eq, Copy, Clone, Debug, PartialOrd, Ord)]
-pub enum MultilineOp {
-    Point(usize, Point),                        // one of the points in the multiline.
-    PointAlongSegmentOf(usize, Point, Percent), // a point some percent along a segment of this multiline.
-    SubsegmentOf(usize, Segment),               // a subsegment of a segment of this multiline.
-    EntireSubsegment(usize),                    // an entire subsegment of this multiline
-    EntireMultiline,                            // the entire multiline // TODO(ambuc)
-}
-
-impl MultilineOp {
-    // When would you need to convert a SegmentOpinion into a MultilineOpinion?
-    // Well, what if you were traversing a multiline and found a collision along
-    // one of its segments?
-    //  - if that collision occurred along the segment at Percent::Zero, it would
-    //    really be a MultilineOpinion::AtPoint { index, .. }.
-    //  - and if that collision occurred along the segment at Percent::One, it
-    //    would really be a MultilineOpinion::AtPoint{ index+1, ..}.
-    // That's why.
-    pub fn from_segment_opinion(index: usize, so: SegmentOp) -> MultilineOp {
-        match so {
-            SegmentOp::PointAlongSegment(at_point, percent_along) => match percent_along {
-                Percent::Zero => MultilineOp::Point(index, at_point),
-                Percent::One => MultilineOp::Point(index + 1, at_point),
-                _ => MultilineOp::PointAlongSegmentOf(index, at_point, percent_along),
-            },
-            SegmentOp::Subsegment(segment) => MultilineOp::SubsegmentOf(index, segment),
-            SegmentOp::EntireSegment => MultilineOp::EntireSubsegment(index),
-        }
-    }
-}
-
-#[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
-pub enum PolygonOp {
-    WithinArea,                            // within the area of the polygon.
-    Point(usize, Point),                   // on a point of the polygon.
-    PointAlongEdge(usize, Point, Percent), // a point some percent along an edge of this polygon.
-    PartiallyWithinArea,                   // partially within the area of the polygon.
-    SubsegmentOfEdge(usize, Segment),      // a subsegment of an edge of the polygon.
-    EntireEdge(usize),                     // an entire edge of the polygon.
-    AtSubpolygon(Polygon),                 // a subpolygon of the polygon.
-}
-
-impl PolygonOp {
-    pub fn from_segment_opinion(index: usize, so: SegmentOp) -> PolygonOp {
-        match so {
-            SegmentOp::PointAlongSegment(at_point, percent_along) => match percent_along {
-                Percent::Zero => PolygonOp::Point(index, at_point),
-                Percent::One => PolygonOp::Point(index + 1, at_point),
-                _ => PolygonOp::PointAlongEdge(index, at_point, percent_along),
-            },
-            SegmentOp::Subsegment(segment) => PolygonOp::SubsegmentOfEdge(index, segment),
-            SegmentOp::EntireSegment => PolygonOp::EntireEdge(index),
-        }
-    }
-}
-
 #[derive(Clone, Default, Debug)]
 pub struct SegmentOpSet {
     sg_ops: Vec<SegmentOp>,
 }
+
 impl SegmentOpSet {
     pub fn add(&mut self, sg_op: SegmentOp, original: &Segment) -> Result<()> {
         // If the incoming op is covered by an extant one, discard it.
@@ -180,6 +125,62 @@ impl SegmentOpSet {
         ) {
             self.sg_ops.remove(idx);
             self.sg_ops.push(SegmentOp::EntireSegment);
+        }
+    }
+}
+#[derive(PartialEq, Eq, Copy, Clone, Debug, PartialOrd, Ord)]
+
+pub enum MultilineOp {
+    Point(usize, Point),                        // one of the points in the multiline.
+    PointAlongSegmentOf(usize, Point, Percent), // a point some percent along a segment of this multiline.
+    SubsegmentOf(usize, Segment),               // a subsegment of a segment of this multiline.
+    EntireSubsegment(usize),                    // an entire subsegment of this multiline
+    EntireMultiline,                            // the entire multiline // TODO(ambuc)
+}
+
+impl MultilineOp {
+    // When would you need to convert a SegmentOpinion into a MultilineOpinion?
+    // Well, what if you were traversing a multiline and found a collision along
+    // one of its segments?
+    //  - if that collision occurred along the segment at Percent::Zero, it would
+    //    really be a MultilineOpinion::AtPoint { index, .. }.
+    //  - and if that collision occurred along the segment at Percent::One, it
+    //    would really be a MultilineOpinion::AtPoint{ index+1, ..}.
+    // That's why.
+    pub fn from_segment_opinion(index: usize, so: SegmentOp) -> MultilineOp {
+        match so {
+            SegmentOp::PointAlongSegment(at_point, percent_along) => match percent_along {
+                Percent::Zero => MultilineOp::Point(index, at_point),
+                Percent::One => MultilineOp::Point(index + 1, at_point),
+                _ => MultilineOp::PointAlongSegmentOf(index, at_point, percent_along),
+            },
+            SegmentOp::Subsegment(segment) => MultilineOp::SubsegmentOf(index, segment),
+            SegmentOp::EntireSegment => MultilineOp::EntireSubsegment(index),
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
+pub enum PolygonOp {
+    WithinArea,                            // within the area of the polygon.
+    Point(usize, Point),                   // on a point of the polygon.
+    PointAlongEdge(usize, Point, Percent), // a point some percent along an edge of this polygon.
+    PartiallyWithinArea,                   // partially within the area of the polygon.
+    SubsegmentOfEdge(usize, Segment),      // a subsegment of an edge of the polygon.
+    EntireEdge(usize),                     // an entire edge of the polygon.
+    AtSubpolygon(Polygon),                 // a subpolygon of the polygon.
+}
+
+impl PolygonOp {
+    pub fn from_segment_opinion(index: usize, so: SegmentOp) -> PolygonOp {
+        match so {
+            SegmentOp::PointAlongSegment(at_point, percent_along) => match percent_along {
+                Percent::Zero => PolygonOp::Point(index, at_point),
+                Percent::One => PolygonOp::Point(index + 1, at_point),
+                _ => PolygonOp::PointAlongEdge(index, at_point, percent_along),
+            },
+            SegmentOp::Subsegment(segment) => PolygonOp::SubsegmentOfEdge(index, segment),
+            SegmentOp::EntireSegment => PolygonOp::EntireEdge(index),
         }
     }
 }
