@@ -231,8 +231,27 @@ impl MultilineOpSet {
     }
 
     fn final_pass(&mut self) {
-        // TODO(ambuc): deduplicate the case where all of the subsegments are
-        // covered, and we need to resolve it up to EntireMultiline.
+        // check for the case where we have all the necessary ml segments to comprise the entire ml.
+        let mut idxs_to_remove = vec![];
+        for sg_idx in 0..self.original.to_segments().len() {
+            if let Some(idx) = self
+                .ml_ops
+                .iter()
+                .position(|x| matches!(x, MultilineOp::EntireSubsegment(i) if *i == sg_idx))
+            {
+                idxs_to_remove.push(idx);
+            }
+        }
+        dbg!(&self.ml_ops);
+        if idxs_to_remove.len() == self.original.to_segments().len() {
+            idxs_to_remove.sort();
+            idxs_to_remove.reverse();
+            for idx in idxs_to_remove {
+                self.ml_ops.remove(idx);
+                dbg!(&self.ml_ops);
+            }
+            self.ml_ops.push(MultilineOp::EntireMultiline);
+        }
     }
 }
 
