@@ -369,7 +369,6 @@ pub fn multiline_overlaps_multiline(
         )),
         (None, None) => Ok(None),
     }
-    //
 }
 
 pub fn polygon_overlaps_point(
