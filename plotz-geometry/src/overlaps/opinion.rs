@@ -44,16 +44,6 @@ impl SegmentOpSet {
         }
     }
 
-    // Returns true if any extant sg_ops totally cover the incoming sg_op.
-    pub fn any_ops_cover(&self, incoming: SegmentOp) -> Result<bool> {
-        for extant in &self.sg_ops {
-            if extant.totally_covers(&incoming, &self.original)? {
-                return Ok(true);
-            }
-        }
-        Ok(false)
-    }
-
     pub fn add(&mut self, sg_op: SegmentOp) -> Result<()> {
         // If the incoming op is covered by an extant one, discard it (by returning early).
         if self.any_ops_cover(sg_op)? {
@@ -126,6 +116,16 @@ impl SegmentOpSet {
         NonEmpty::from_vec(sg_ops)
     }
 
+    // Returns true if any extant sg_ops totally cover the incoming sg_op.
+    fn any_ops_cover(&self, incoming: SegmentOp) -> Result<bool> {
+        for extant in &self.sg_ops {
+            if extant.totally_covers(&incoming, &self.original)? {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
     fn final_pass(&mut self) {
         while let Some(idx) = self.sg_ops.iter().position(
             |x| matches!(x, SegmentOp::Subsegment(ss) if *ss == self.original || ss.flip() == self.original),
@@ -191,15 +191,6 @@ impl MultilineOpSet {
         }
     }
 
-    pub fn any_ops_cover(&self, incoming: MultilineOp) -> Result<bool> {
-        for extant in &self.ml_ops {
-            if extant.totally_covers(&incoming, &self.original)? {
-                return Ok(true);
-            }
-        }
-        Ok(false)
-    }
-
     pub fn add(&mut self, ml_op: MultilineOp) -> Result<()> {
         // If the incoming op is covered by an extant one, discard it.
         if self.any_ops_cover(ml_op)? {
@@ -226,6 +217,15 @@ impl MultilineOpSet {
         ml_ops.dedup();
 
         NonEmpty::from_vec(ml_ops)
+    }
+
+    fn any_ops_cover(&self, incoming: MultilineOp) -> Result<bool> {
+        for extant in &self.ml_ops {
+            if extant.totally_covers(&incoming, &self.original)? {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 
     fn final_pass(&mut self) {
@@ -307,14 +307,6 @@ impl PolygonOpSet {
             original: original.clone(),
         }
     }
-    pub fn any_ops_cover(&self, incoming: &PolygonOp) -> Result<bool> {
-        for extant in &self.pg_ops {
-            if extant.totally_covers(incoming, &self.original)? {
-                return Ok(true);
-            }
-        }
-        Ok(false)
-    }
     pub fn add(&mut self, pg_op: PolygonOp) -> Result<()> {
         // If the incoming op is covered by an extant one, discard it.
         if self.any_ops_cover(&pg_op)? {
@@ -336,5 +328,14 @@ impl PolygonOpSet {
         pg_ops.sort();
         pg_ops.dedup();
         NonEmpty::from_vec(pg_ops)
+    }
+
+    fn any_ops_cover(&self, incoming: &PolygonOp) -> Result<bool> {
+        for extant in &self.pg_ops {
+            if extant.totally_covers(incoming, &self.original)? {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 }
