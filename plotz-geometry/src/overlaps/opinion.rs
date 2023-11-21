@@ -242,13 +242,11 @@ impl MultilineOpSet {
                 idxs_to_remove.push(idx);
             }
         }
-        dbg!(&self.ml_ops);
         if idxs_to_remove.len() == self.original.to_segments().len() {
             idxs_to_remove.sort();
             idxs_to_remove.reverse();
             for idx in idxs_to_remove {
                 self.ml_ops.remove(idx);
-                dbg!(&self.ml_ops);
             }
             self.ml_ops.push(MultilineOp::EntireMultiline);
         }
