@@ -1,4 +1,6 @@
+use super::totally_covers;
 use crate::{
+    obj2::Obj2,
     shapes::{point::Point, polygon::Polygon, segment::Segment},
     utils::Percent,
 };
@@ -13,12 +15,28 @@ pub enum SegmentOp {
     EntireSegment,                     // the whole segment.
 }
 
+impl SegmentOp {
+    pub fn to_obj(&self, original_sg: &Segment) -> Obj2 {
+        match self {
+            SegmentOp::PointAlongSegment(p, _) => Obj2::from(*p),
+            SegmentOp::Subsegment(ss) => Obj2::from(*ss),
+            SegmentOp::EntireSegment => Obj2::from(*original_sg),
+        }
+    }
+
+    // a SegmentOp totally "covers" another SegmentOp it is equal to or larger than it.
+    pub fn totally_covers(&self, other: &SegmentOp, original_sg: &Segment) -> Result<bool> {
+        totally_covers(&self.to_obj(original_sg), &other.to_obj(original_sg))
+    }
+}
+
 #[derive(PartialEq, Eq, Copy, Clone, Debug, PartialOrd, Ord)]
 pub enum MultilineOp {
     Point(usize, Point),                        // one of the points in the multiline.
     PointAlongSegmentOf(usize, Point, Percent), // a point some percent along a segment of this multiline.
     SubsegmentOf(usize, Segment),               // a subsegment of a segment of this multiline.
     EntireSubsegment(usize),                    // an entire subsegment of this multiline
+    EntireMultiline,                            // the entire multiline // TODO(ambuc)
 }
 
 impl MultilineOp {
@@ -68,6 +86,102 @@ impl PolygonOp {
     }
 }
 
+#[derive(Clone, Default, Debug)]
+pub struct SegmentOpSet {
+    sg_ops: Vec<SegmentOp>,
+}
+impl SegmentOpSet {
+    pub fn add(&mut self, sg_op: SegmentOp, original: &Segment) -> Result<()> {
+        // If the incoming op is covered by an extant one, discard it.
+        for extant_op in self.sg_ops.iter() {
+            if extant_op.totally_covers(&sg_op, original)? {
+                return Ok(());
+            }
+        }
+
+        // If the incoming op covers extant ones, discard them.
+        let mut idxs_to_remove = vec![];
+        for (idx, sg_op_extant) in self.sg_ops.iter().enumerate() {
+            if sg_op.totally_covers(sg_op_extant, original)? {
+                idxs_to_remove.push(idx);
+            }
+        }
+        idxs_to_remove.reverse();
+        for idx_to_remove in idxs_to_remove {
+            self.sg_ops.remove(idx_to_remove);
+        }
+
+        match sg_op {
+            SegmentOp::Subsegment(s_new) => {
+                if self
+                    .sg_ops
+                    .iter()
+                    .any(|x| matches!(x, SegmentOp::Subsegment(ss) if *ss == s_new || ss.flip() == s_new))
+                {
+                    return Ok(());
+                }
+                // if there is already a segment which lines up with this one, deduplicate them.
+                while let Some(idx) = self.sg_ops.iter().position(|x| {
+                    matches!(
+                        x,
+                        SegmentOp::Subsegment(s_extant)
+                        if s_new.slope() == s_extant.slope() && s_extant.f == s_new.i
+                    )
+                }) {
+                    if let SegmentOp::Subsegment(s_extant) = self.sg_ops.remove(idx) {
+                        self.sg_ops
+                            .push(SegmentOp::Subsegment(Segment(s_extant.i, s_new.f)));
+                        return Ok(());
+                    } else {
+                        panic!("huh?");
+                    }
+                }
+                while let Some(idx) = self.sg_ops.iter().position(|x| {
+                    matches!(
+                        x,
+                        SegmentOp::Subsegment(s_extant)
+                        if s_new.slope() == s_extant.slope() && s_new.f == s_extant.i
+                    )
+                }) {
+                    if let SegmentOp::Subsegment(s_extant) = self.sg_ops.remove(idx) {
+                        self.sg_ops
+                            .push(SegmentOp::Subsegment(Segment(s_new.i, s_extant.f)));
+                        return Ok(());
+                    } else {
+                        panic!("huh?");
+                    }
+                }
+                // otherwise, OK to add.
+                self.sg_ops.push(sg_op);
+            }
+            _ => {
+                self.sg_ops.push(sg_op);
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn to_nonempty(self, original: &Segment) -> Option<NonEmpty<SegmentOp>> {
+        let SegmentOpSet { mut sg_ops } = self;
+
+        // final  find and replace.
+        while let Some(idx) = sg_ops.iter().position(
+            |x| matches!(x, SegmentOp::Subsegment(ss) if ss == original || ss.flip() == *original),
+        ) {
+            println!("final find and replace");
+            sg_ops.remove(idx);
+            sg_ops.push(SegmentOp::EntireSegment);
+        }
+
+        sg_ops.sort();
+        sg_ops.dedup();
+
+        NonEmpty::from_vec(sg_ops)
+    }
+}
+
+/*
 pub fn rewrite_segment_opinions(
     segment_opinions: &mut Vec<SegmentOp>,
     original_sg: &Segment,
@@ -126,6 +240,7 @@ pub fn rewrite_segment_opinions(
 
     Ok(())
 }
+*/
 
 pub fn rewrite_multiline_opinions(multiline_opinions: &mut Vec<MultilineOp>) -> Result<()> {
     multiline_opinions.dedup();

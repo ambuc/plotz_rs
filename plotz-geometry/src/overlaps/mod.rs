@@ -5,6 +5,7 @@ pub mod opinion;
 use self::opinion::*;
 use crate::{
     interpolate::interpolate_2d_checked,
+    obj2::Obj2,
     shapes::{
         multiline::Multiline,
         point::Point,
@@ -24,6 +25,77 @@ use nonempty::{nonempty, NonEmpty};
 // multiline || ✔️  | ✔️  |️ ✔️  | \  |
 //  curvearc || -️  | -️  |️ -  | -  |
 // ==========++====+====+====+====+==
+pub fn totally_covers(o1: &Obj2, o2: &Obj2) -> Result<bool> {
+    match (o1, o2) {
+        // if {Text, CurveArc, Group, PolygonWithCavities} is o1 or o2,
+        // then we haven't implemented this yet.
+        (
+            Obj2::Text(_) | Obj2::CurveArc(_) | Obj2::Group(_) | Obj2::PolygonWithCavities(_),
+            _,
+        )
+        | (
+            _,
+            Obj2::Text(_) | Obj2::CurveArc(_) | Obj2::Group(_) | Obj2::PolygonWithCavities(_),
+        ) => Err(anyhow!("unimplemented!")),
+
+        // obviously false:
+
+        // A point cannot totally cover a segment, multiline, or polygon.
+        (Obj2::Point(_), Obj2::Segment(_) | Obj2::Multiline(_) | Obj2::Polygon(_))
+        // A segment cannot totally cover a polygon.
+        | (Obj2::Segment(_), Obj2::Polygon(_))
+        // A segment cannot totally cover a multiline.
+        | (Obj2::Segment(_), Obj2::Multiline(_))
+        // A multiline cannot totally cover a polygon.
+        | (Obj2::Multiline(_), Obj2::Polygon(_)) => Ok(false),
+
+        // need to evaluate:
+
+        // p1 totally covers p2 i.f.f. it is the same.
+        (Obj2::Point(p1), Obj2::Point(p2)) => Ok(point_overlaps_point(p1, p2)?.is_some()),
+
+        // s totally covers p i.f.f. they overlap at all.
+        (Obj2::Segment(s), Obj2::Point(p)) => Ok(segment_overlaps_point(s, p)?.is_some()),
+
+        (Obj2::Segment(s1), Obj2::Segment(s2)) => {
+            Ok(matches!(segment_overlaps_segment(s1, s2)?, Some((_, SegmentOp::EntireSegment))))
+        },
+
+        (Obj2::Multiline(ml), Obj2::Point(p)) => {
+            Ok(multiline_overlaps_point(ml, p)?.is_some())
+        },
+        (Obj2::Multiline(ml), Obj2::Segment(sg)) => {
+            if let Some((_, sg_ops)) = multiline_overlaps_segment(ml, sg)? {
+                Ok(sg_ops.head == SegmentOp::EntireSegment && sg_ops.tail.is_empty())
+            } else {
+                Ok(false)
+            }
+        }
+        (Obj2::Multiline(ml1), Obj2::Multiline(ml2)) => {
+            if let Some((_, ml2_ops)) = multiline_overlaps_multiline(ml1, ml2)? {
+                Ok(ml2_ops.head == MultilineOp::EntireMultiline && ml2_ops.tail.is_empty())
+            } else {
+                Ok(false)
+            }
+        }
+        (Obj2::Polygon(pg), Obj2::Point(p)) => {
+            Ok(polygon_overlaps_point(pg, p)?.is_some())
+        }
+        (Obj2::Polygon(pg), Obj2::Segment(sg)) => {
+            if let Some((_, sg_ops)) = polygon_overlaps_segment(pg, sg)? {
+                Ok(sg_ops.head == SegmentOp::EntireSegment && sg_ops.tail.is_empty())
+            } else {
+                Ok(false)
+            }
+        }
+        (Obj2::Polygon(_pg), Obj2::Multiline(_ml)) => {
+            unimplemented!()
+        }
+        (Obj2::Polygon(_pg1), Obj2::Polygon(_pg2)) => {
+            unimplemented!()
+        }
+    }
+}
 
 pub fn point_overlaps_point(a: &Point, b: &Point) -> Result<Option<Point>> {
     if a == b {
@@ -248,22 +320,18 @@ pub fn multiline_overlaps_segment(
     sg: &Segment,
 ) -> Result<Option<(NonEmpty<MultilineOp>, NonEmpty<SegmentOp>)>> {
     let mut ml_opinions: Vec<MultilineOp> = vec![];
-    let mut sg_opinions: Vec<SegmentOp> = vec![];
+    let mut sg_op_set = SegmentOpSet::default();
 
     for (ml_sg_idx, ml_sg) in ml.to_segments().iter().enumerate() {
         if let Some((ml_sg_op, sg_op)) = segment_overlaps_segment(ml_sg, sg)? {
             ml_opinions.push(MultilineOp::from_segment_opinion(ml_sg_idx, ml_sg_op));
-            sg_opinions.push(sg_op);
+            sg_op_set.add(sg_op, sg)?;
         }
     }
 
     rewrite_multiline_opinions(&mut ml_opinions)?;
-    rewrite_segment_opinions(&mut sg_opinions, sg)?;
 
-    match (
-        NonEmpty::from_vec(ml_opinions),
-        NonEmpty::from_vec(sg_opinions),
-    ) {
+    match (NonEmpty::from_vec(ml_opinions), sg_op_set.to_nonempty(sg)) {
         (Some(total_ml_ops), Some(total_sg_ops)) => Ok(Some((total_ml_ops, total_sg_ops))),
         (Some(_), None) | (None, Some(_)) => Err(anyhow!(
             "unexpected case - how can one object see collisions but the other doesn't?"
@@ -342,20 +410,18 @@ pub fn polygon_overlaps_segment(
     segment: &Segment,
 ) -> Result<Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>> {
     let mut pg_op_set = PolygonOpSet::default();
-    let mut sg_ops: Vec<SegmentOp> = vec![];
+    let mut sg_op_set = SegmentOpSet::default();
     for (pg_sg_idx, pg_sg) in polygon.to_segments().iter().enumerate() {
         if let Some((pg_sg_op, sg_op)) = segment_overlaps_segment(pg_sg, segment)? {
             pg_op_set.add(
                 PolygonOp::from_segment_opinion(pg_sg_idx, pg_sg_op),
                 polygon,
             );
-            sg_ops.push(sg_op);
+            sg_op_set.add(sg_op, segment)?;
         }
     }
 
-    rewrite_segment_opinions(&mut sg_ops, segment)?;
-
-    match (pg_op_set.to_nonempty(), NonEmpty::from_vec(sg_ops)) {
+    match (pg_op_set.to_nonempty(), sg_op_set.to_nonempty(segment)) {
         (Some(total_pg_ops), Some(total_sg_ops)) => Ok(Some((total_pg_ops, total_sg_ops))),
         (None, None) => {
             // check the unusual case of no intersections, but the segment is totally contained within the polygon.
