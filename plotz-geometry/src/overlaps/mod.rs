@@ -320,18 +320,18 @@ pub fn multiline_overlaps_segment(
     sg: &Segment,
 ) -> Result<Option<(NonEmpty<MultilineOp>, NonEmpty<SegmentOp>)>> {
     let mut ml_opinions: Vec<MultilineOp> = vec![];
-    let mut sg_op_set = SegmentOpSet::default();
+    let mut sg_op_set = SegmentOpSet::new(/*original=*/ sg);
 
     for (ml_sg_idx, ml_sg) in ml.to_segments().iter().enumerate() {
         if let Some((ml_sg_op, sg_op)) = segment_overlaps_segment(ml_sg, sg)? {
             ml_opinions.push(MultilineOp::from_segment_opinion(ml_sg_idx, ml_sg_op));
-            sg_op_set.add(sg_op, sg)?;
+            sg_op_set.add(sg_op)?;
         }
     }
 
     rewrite_multiline_opinions(&mut ml_opinions)?;
 
-    match (NonEmpty::from_vec(ml_opinions), sg_op_set.to_nonempty(sg)) {
+    match (NonEmpty::from_vec(ml_opinions), sg_op_set.to_nonempty()) {
         (Some(total_ml_ops), Some(total_sg_ops)) => Ok(Some((total_ml_ops, total_sg_ops))),
         (Some(_), None) | (None, Some(_)) => Err(anyhow!(
             "unexpected case - how can one object see collisions but the other doesn't?"
@@ -409,18 +409,18 @@ pub fn polygon_overlaps_segment(
     segment: &Segment,
 ) -> Result<Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>> {
     let mut pg_op_set = PolygonOpSet::default();
-    let mut sg_op_set = SegmentOpSet::default();
+    let mut sg_op_set = SegmentOpSet::new(/*original=*/ segment);
     for (pg_sg_idx, pg_sg) in polygon.to_segments().iter().enumerate() {
         if let Some((pg_sg_op, sg_op)) = segment_overlaps_segment(pg_sg, segment)? {
             pg_op_set.add(
                 PolygonOp::from_segment_opinion(pg_sg_idx, pg_sg_op),
                 polygon,
             );
-            sg_op_set.add(sg_op, segment)?;
+            sg_op_set.add(sg_op)?;
         }
     }
 
-    match (pg_op_set.to_nonempty(), sg_op_set.to_nonempty(segment)) {
+    match (pg_op_set.to_nonempty(), sg_op_set.to_nonempty()) {
         (Some(total_pg_ops), Some(total_sg_ops)) => Ok(Some((total_pg_ops, total_sg_ops))),
         (None, None) => {
             // check the unusual case of no intersections, but the segment is totally contained within the polygon.

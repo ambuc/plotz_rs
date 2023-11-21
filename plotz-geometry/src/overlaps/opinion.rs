@@ -30,16 +30,24 @@ impl SegmentOp {
     }
 }
 
-#[derive(Clone, Default, Debug)]
+#[derive(Clone, Debug)]
 pub struct SegmentOpSet {
     sg_ops: Vec<SegmentOp>,
+    original: Segment,
 }
 
 impl SegmentOpSet {
-    pub fn add(&mut self, sg_op: SegmentOp, original: &Segment) -> Result<()> {
+    pub fn new(original: &Segment) -> SegmentOpSet {
+        SegmentOpSet {
+            sg_ops: vec![],
+            original: *original,
+        }
+    }
+
+    pub fn add(&mut self, sg_op: SegmentOp) -> Result<()> {
         // If the incoming op is covered by an extant one, discard it.
         for extant_op in self.sg_ops.iter() {
-            if extant_op.totally_covers(&sg_op, original)? {
+            if extant_op.totally_covers(&sg_op, &self.original)? {
                 return Ok(());
             }
         }
@@ -47,7 +55,7 @@ impl SegmentOpSet {
         // If the incoming op covers extant ones, discard them.
         let mut idxs_to_remove = vec![];
         for (idx, sg_op_extant) in self.sg_ops.iter().enumerate() {
-            if sg_op.totally_covers(sg_op_extant, original)? {
+            if sg_op.totally_covers(sg_op_extant, &self.original)? {
                 idxs_to_remove.push(idx);
             }
         }
@@ -108,10 +116,10 @@ impl SegmentOpSet {
         Ok(())
     }
 
-    pub fn to_nonempty(mut self, original: &Segment) -> Option<NonEmpty<SegmentOp>> {
-        self.final_pass(original);
+    pub fn to_nonempty(mut self) -> Option<NonEmpty<SegmentOp>> {
+        self.final_pass();
 
-        let SegmentOpSet { mut sg_ops } = self;
+        let SegmentOpSet { mut sg_ops, .. } = self;
 
         sg_ops.sort();
         sg_ops.dedup();
@@ -119,9 +127,9 @@ impl SegmentOpSet {
         NonEmpty::from_vec(sg_ops)
     }
 
-    fn final_pass(&mut self, original: &Segment) {
+    fn final_pass(&mut self) {
         while let Some(idx) = self.sg_ops.iter().position(
-            |x| matches!(x, SegmentOp::Subsegment(ss) if ss == original || ss.flip() == *original),
+            |x| matches!(x, SegmentOp::Subsegment(ss) if *ss == self.original || ss.flip() == self.original),
         ) {
             self.sg_ops.remove(idx);
             self.sg_ops.push(SegmentOp::EntireSegment);
