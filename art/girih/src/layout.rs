@@ -104,7 +104,7 @@ impl Layout {
             .any(|(extant_tile, test_pt)| {
                 matches!(
                     polygon_overlaps_point(&extant_tile.pg, test_pt),
-                    Ok(Some((PolygonOp::WithinArea, _)))
+                    Ok(Some((PolygonOp::PointWithinArea(_), _)))
                 )
             })
         {
@@ -133,12 +133,12 @@ impl Layout {
                     ({
                         matches!(
                             polygon_overlaps_point(&cand.pg, &trial_pt).unwrap(),
-                            Some((PolygonOp::WithinArea, _))
+                            Some((PolygonOp::PointWithinArea(_), _))
                         )
                     }) || self.placed_tiles.iter().any(|extant_tile| {
                         matches!(
                             polygon_overlaps_point(&extant_tile.pg, &trial_pt).unwrap(),
-                            Some((PolygonOp::WithinArea, _))
+                            Some((PolygonOp::PointWithinArea(_), _))
                         )
                     }),
                 );

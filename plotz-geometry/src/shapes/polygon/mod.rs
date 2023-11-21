@@ -170,8 +170,8 @@ impl Polygon {
     pub fn contains_pt_deprecated(&self, other: &Point) -> Result<PointLocation> {
         match polygon_overlaps_point(self, other)? {
             None => Ok(PointLocation::Outside),
-            Some((PolygonOp::WithinArea, _)) => Ok(PointLocation::Inside),
-            Some((PolygonOp::Point(index, _), _)) => Ok(PointLocation::OnPoint(index)),
+            Some((PolygonOp::PointWithinArea(_), _)) => Ok(PointLocation::Inside),
+            Some((PolygonOp::OnPoint(index, _), _)) => Ok(PointLocation::OnPoint(index)),
             Some((PolygonOp::PointAlongEdge(index, ..), _)) => Ok(PointLocation::OnSegment(index)),
             _ => Err(anyhow!("how did we get here?")),
         }
@@ -181,8 +181,8 @@ impl Polygon {
     pub fn point_is_inside_or_on_border_deprecated(&self, other: &Point) -> bool {
         matches!(
             polygon_overlaps_point(self, other).unwrap(),
-            Some((PolygonOp::WithinArea, _))
-                | Some((PolygonOp::Point(..), _))
+            Some((PolygonOp::PointWithinArea(_), _))
+                | Some((PolygonOp::OnPoint(..), _))
                 | Some((PolygonOp::PointAlongEdge(..), _))
         )
     }
@@ -191,7 +191,7 @@ impl Polygon {
     pub fn point_is_inside_deprecated(&self, other: &Point) -> bool {
         matches!(
             polygon_overlaps_point(self, other).unwrap(),
-            Some((PolygonOp::WithinArea, _))
+            Some((PolygonOp::PointWithinArea(_), _))
         )
     }
 

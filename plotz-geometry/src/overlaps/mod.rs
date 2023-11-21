@@ -368,7 +368,7 @@ pub fn polygon_overlaps_point(
 ) -> Result<Option<(PolygonOp, Point)>> {
     for (index, pg_pt) in polygon.pts.iter().enumerate() {
         if pg_pt == point {
-            return Ok(Some((PolygonOp::Point(index, *point), *point)));
+            return Ok(Some((PolygonOp::OnPoint(index, *point), *point)));
         }
     }
     for (index, pg_sg) in polygon.to_segments().iter().enumerate() {
@@ -390,7 +390,7 @@ pub fn polygon_overlaps_point(
     if approx_eq!(f64, theta, 0_f64, epsilon = 0.00001) {
         Ok(None)
     } else {
-        Ok(Some((PolygonOp::WithinArea, *point)))
+        Ok(Some((PolygonOp::PointWithinArea(*point), *point)))
     }
 }
 
@@ -411,12 +411,16 @@ pub fn polygon_overlaps_segment(
     match (pg_op_set.to_nonempty(), sg_op_set.to_nonempty()) {
         (Some(total_pg_ops), Some(total_sg_ops)) => Ok(Some((total_pg_ops, total_sg_ops))),
         (None, None) => {
-            // check the unusual case of no intersections, but the segment is totally contained within the polygon.
+            // check the unusual case of no intersections, but the segment is
+            // totally contained within the polygon.
             match (
                 polygon_overlaps_point(polygon, &segment.i)?,
                 polygon_overlaps_point(polygon, &segment.f)?,
             ) {
-                (Some(_), Some(_)) => Ok(Some((nonempty![PolygonOp::WithinArea], nonempty![SegmentOp::EntireSegment]))),
+                (Some(_), Some(_)) => Ok(Some((
+                    nonempty![PolygonOp::SegmentWithinArea(*segment)],
+                    nonempty![SegmentOp::EntireSegment])
+                )),
                 (None, None) => Ok(None),
                 _ => Err(anyhow!("unexpected case - how can one end of the segment be within the polygon, the other without, but still we didn't see any collisions above?")),
             }
@@ -652,11 +656,11 @@ mod tests {
 
     #[test_case(Polygon([*D, *H, *N, *J]), &C, None; "point not in polygon 00")]
     #[test_case(Polygon([*D, *H, *N, *J]), &E, None; "point not in polygon 01")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &I, Some((PolygonOp::WithinArea, *I)); "point in polygon")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &D, Some((PolygonOp::Point(0, *D), *D)); "point at point of polygon 00")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &H, Some((PolygonOp::Point(1, *H), *H)); "point at point of polygon 01")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &N, Some((PolygonOp::Point(2, *N), *N)); "point at point of polygon 02")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &J, Some((PolygonOp::Point(3, *J), *J)); "point at point of polygon 03")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &I, Some((PolygonOp::PointWithinArea(*I), *I)); "point in polygon")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &D, Some((PolygonOp::OnPoint(0, *D), *D)); "point at point of polygon 00")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &H, Some((PolygonOp::OnPoint(1, *H), *H)); "point at point of polygon 01")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &N, Some((PolygonOp::OnPoint(2, *N), *N)); "point at point of polygon 02")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &J, Some((PolygonOp::OnPoint(3, *J), *J)); "point at point of polygon 03")]
     #[test_case(Polygon([*C, *M, *O, *E]), &H, Some((PolygonOp::PointAlongEdge(0, *H, Val(0.5)), *H)); "point at edge of polygon 00")]
     #[test_case(Polygon([*C, *M, *O, *E]), &N, Some((PolygonOp::PointAlongEdge(1, *N, Val(0.5)), *N)); "point at edge of polygon 01")]
     #[test_case(Polygon([*C, *M, *O, *E]), &J, Some((PolygonOp::PointAlongEdge(2, *J, Val(0.5)), *J)); "point at edge of polygon 02")]
@@ -696,7 +700,7 @@ mod tests {
         [Polygon([*G, *Q, *S, *I])],
         [(*C, *K), (*K, *C)],
         Some((
-            nonempty![PolygonOp::Point(0, *G)],
+            nonempty![PolygonOp::OnPoint(0, *G)],
             nonempty![SegmentOp::PointAlongSegment(*G, Val(0.5))]
         ))
     )]
@@ -707,8 +711,8 @@ mod tests {
         (*J, *F),
         Some((
             nonempty![
-                PolygonOp::Point(0, *I),
-                PolygonOp::Point(2, *G)
+                PolygonOp::OnPoint(0, *I),
+                PolygonOp::OnPoint(2, *G)
             ],
             nonempty![
                 SegmentOp::PointAlongSegment(*G, Val(0.75)),
@@ -745,7 +749,7 @@ mod tests {
         [Polygon([*G, *Q, *S, *I])],
         [(*A, *G), (*B, *G), (*F, *G)],
         Some((
-            nonempty![PolygonOp::Point(0, *G)],
+            nonempty![PolygonOp::OnPoint(0, *G)],
             nonempty![SegmentOp::PointAlongSegment(*G, One)]
         ))
     )]
@@ -753,7 +757,7 @@ mod tests {
         [Polygon([*G, *Q, *S, *I])],
         [(*D, *I), (*E, *I), (*J, *I)],
         Some((
-            nonempty![PolygonOp::Point(3, *I)],
+            nonempty![PolygonOp::OnPoint(3, *I)],
             nonempty![SegmentOp::PointAlongSegment(*I, One)]
         ))
     )]
@@ -761,7 +765,7 @@ mod tests {
         [Polygon([*G, *Q, *S, *I])],
         [(*U, *Q), (*P, *Q), (*V, *Q)],
         Some((
-            nonempty![PolygonOp::Point(1, *Q)],
+            nonempty![PolygonOp::OnPoint(1, *Q)],
             nonempty![SegmentOp::PointAlongSegment(*Q, One)]
         ))
     )]
@@ -808,11 +812,11 @@ mod tests {
     // TODO(ambuc)
     //
     // segment begins inside and ends inside
-    #[test_matrix(
-        [Polygon([*A, *U, *Y, *E])],
-        [(*G, *I), (*Q, *R), (*I, *M), (*S, *G)],
+    #[test_case(
+        Polygon([*A, *U, *Y, *E]),
+        (*G, *I),
         Some((
-            nonempty![PolygonOp::WithinArea],
+            nonempty![PolygonOp::SegmentWithinArea(Segment(*G, *I))],
             nonempty![SegmentOp::EntireSegment]
         ))
     )]

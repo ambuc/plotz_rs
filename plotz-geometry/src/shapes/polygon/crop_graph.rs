@@ -191,7 +191,7 @@ impl<'a> CropGraph<'a> {
         while let Some(node) = self.graph.nodes().find(|node| {
             matches!(
                 polygon_overlaps_point(self.get(which), node).unwrap(),
-                Some((PolygonOp::WithinArea, _))
+                Some((PolygonOp::PointWithinArea(_), _))
             )
         }) {
             self.graph.remove_node(node);
