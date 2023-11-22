@@ -489,23 +489,18 @@ mod tests {
         point_overlaps_point(&a, &b).unwrap()
     }
 
-    #[test_case((*C, *D), *C, Some((SegmentOp::PointAlongSegment(*C, Zero), *C)); "at start 00")]
-    #[test_case((*C, *D), *D, Some((SegmentOp::PointAlongSegment(*D, One), *D)); "at end 00")]
-    #[test_case((*C, *I), *C, Some((SegmentOp::PointAlongSegment(*C, Zero), *C)); "at start 01")]
-    #[test_case((*C, *I), *I, Some((SegmentOp::PointAlongSegment(*I, One), *I)); "at end 01")]
-    #[test_case((*C, *E), *D, Some((SegmentOp::PointAlongSegment(*D, Val(0.5)), *D)); "halfway along 01")]
-    #[test_case((*C, *O), *I, Some((SegmentOp::PointAlongSegment(*I, Val(0.5)), *I)); "halfway along 02")]
-    #[test_case((*C, *W), *M, Some((SegmentOp::PointAlongSegment(*M, Val(0.5)), *M)); "halfway along 03")]
+    #[test_case((*C, *D), *C => Some((SegmentOp::PointAlongSegment(*C, Zero), *C)); "at start 00")]
+    #[test_case((*C, *D), *D => Some((SegmentOp::PointAlongSegment(*D, One), *D)); "at end 00")]
+    #[test_case((*C, *I), *C => Some((SegmentOp::PointAlongSegment(*C, Zero), *C)); "at start 01")]
+    #[test_case((*C, *I), *I => Some((SegmentOp::PointAlongSegment(*I, One), *I)); "at end 01")]
+    #[test_case((*C, *E), *D => Some((SegmentOp::PointAlongSegment(*D, Val(0.5)), *D)); "halfway along 01")]
+    #[test_case((*C, *O), *I => Some((SegmentOp::PointAlongSegment(*I, Val(0.5)), *I)); "halfway along 02")]
+    #[test_case((*C, *W), *M => Some((SegmentOp::PointAlongSegment(*M, Val(0.5)), *M)); "halfway along 03")]
     fn test_segment_overlaps_point(
         segment: impl Into<Segment>,
         point: Point,
-        expectation: Option<(SegmentOp, Point)>,
-    ) -> Result<()> {
-        assert_eq!(
-            segment_overlaps_point(&segment.into(), &point)?,
-            expectation
-        );
-        Ok(())
+    ) -> Option<(SegmentOp, Point)> {
+        segment_overlaps_point(&segment.into(), &point).unwrap()
     }
 
     #[test_case((*C, *D), (*C, *D), Some((SegmentOp::EntireSegment, SegmentOp::EntireSegment)); "same 00")]
