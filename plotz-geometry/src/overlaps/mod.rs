@@ -12,7 +12,7 @@ use crate::{
         polygon::{abp, Polygon},
         segment::Segment,
     },
-    utils::Percent::{self, One, Zero},
+    utils::Percent::{One, Zero},
 };
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
@@ -393,50 +393,36 @@ pub fn polygon_overlaps_segment(
     // ideally this also covers the special-case below, where there are no
     // intersections but the segment is totally contained within the polygon.
 
-    let mut cuts: Vec<(Point, Percent)> = sg_op_set
-        .sg_ops
-        .iter()
-        .filter_map(|x| match x {
-            SegmentOp::PointAlongSegment(pt, pct) => Some((*pt, *pct)),
-            _ => None,
-        })
-        .collect();
-    cuts.push((segment.i, Zero));
-    cuts.push((segment.f, One));
-    for op in sg_op_set.sg_ops.iter() {
-        if let SegmentOp::Subsegment(subsegment) = op {
-            cuts.push((
-                subsegment.i,
-                interpolate_2d_checked(segment.i, segment.f, subsegment.i)?,
-            ));
-            cuts.push((
-                subsegment.f,
-                interpolate_2d_checked(segment.i, segment.f, subsegment.f)?,
-            ));
-        }
-    }
-    cuts.sort_by_key(|(_, pct)| *pct);
-    cuts.dedup();
-
-    for s in (cuts.iter())
+    let cuts = sg_op_set.to_cuts()?;
+    let segments: Vec<Segment> = (cuts.iter())
         .zip(cuts.iter().skip(1))
         .map(|((p1, _), (p2, _))| Segment(*p1, *p2))
-    {
-        if polygon_overlaps_point(polygon, &s.midpoint())?.is_some() {
-            sg_op_set.add(SegmentOp::Subsegment(s))?;
-            match (
-                polygon_overlaps_point(polygon, &s.i)?,
-                polygon_overlaps_point(polygon, &s.f)?,
-            ) {
-                (
-                    Some((PolygonOp::PointAlongEdge(idx, _, _), _)),
-                    Some((PolygonOp::PointAlongEdge(jdx, _, _), _)),
-                ) if idx == jdx => {
-                    pg_op_set.add(PolygonOp::SubsegmentOfEdge(idx, s))?;
-                }
-                _ => {
-                    pg_op_set.add(PolygonOp::SegmentWithinArea(s))?;
-                }
+        .collect();
+
+    for s in segments {
+        // if this segment actually goes through the polygon (i.e., if its midpoint is within), then
+        if polygon_overlaps_point(polygon, &s.midpoint())?.is_none() {
+            continue;
+        }
+
+        // (a) add it to the segment ops set.
+        sg_op_set.add(SegmentOp::Subsegment(s))?;
+
+        // (b) add it to the polygon ops set.
+        match (
+            polygon_overlaps_point(polygon, &s.i)?,
+            polygon_overlaps_point(polygon, &s.f)?,
+        ) {
+            // but there's a catch -- if these points are together along the same edge,
+            (
+                Some((PolygonOp::PointAlongEdge(idx, _, _), _)),
+                Some((PolygonOp::PointAlongEdge(jdx, _, _), _)),
+            ) if idx == jdx => {
+                // then we need to add the type PolygonOp::SubsegmentOfEdge instead.
+                pg_op_set.add(PolygonOp::SubsegmentOfEdge(idx, s))?;
+            }
+            _ => {
+                pg_op_set.add(PolygonOp::SegmentWithinArea(s))?;
             }
         }
     }

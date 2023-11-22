@@ -1,8 +1,12 @@
 use super::totally_covers;
 use crate::{
+    interpolate::interpolate_2d_checked,
     obj2::Obj2,
     shapes::{multiline::Multiline, point::Point, polygon::Polygon, segment::Segment},
-    utils::Percent,
+    utils::{
+        Percent,
+        Percent::{One, Zero},
+    },
 };
 use anyhow::Result;
 use nonempty::NonEmpty;
@@ -99,6 +103,36 @@ impl SegmentOpSet {
         sg_ops.dedup();
 
         NonEmpty::from_vec(sg_ops)
+    }
+
+    // Returns a sorted, deduplicated vector of cut points along this segment.
+    pub fn to_cuts(&self) -> Result<Vec<(Point, Percent)>> {
+        let mut cuts: Vec<(Point, Percent)> = vec![];
+        // add 0 and 1.
+        cuts.push((self.original.i, Zero));
+        cuts.push((self.original.f, One));
+        // Add each existing cut point.
+        for op in &self.sg_ops {
+            match op {
+                SegmentOp::PointAlongSegment(pt, pct) => {
+                    cuts.push((*pt, *pct));
+                }
+                SegmentOp::Subsegment(ss) => {
+                    cuts.push((
+                        ss.i,
+                        interpolate_2d_checked(self.original.i, self.original.f, ss.i)?,
+                    ));
+                    cuts.push((
+                        ss.f,
+                        interpolate_2d_checked(self.original.i, self.original.f, ss.f)?,
+                    ));
+                }
+                SegmentOp::EntireSegment => {}
+            }
+        }
+        cuts.sort_by_key(|(_, pct)| *pct);
+        cuts.dedup();
+        Ok(cuts)
     }
 
     // Returns true if any extant sg_ops totally cover the incoming sg_op.
