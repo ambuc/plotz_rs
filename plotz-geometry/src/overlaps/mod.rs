@@ -481,13 +481,12 @@ mod tests {
         static ref Y: Point = Point(2, -2);
     }
 
-    #[test_case(*C, *C, Some(*C))]
-    #[test_case(*D, *D, Some(*D))]
-    #[test_case(*D, *H, None)]
-    #[test_case(*A, *B, None)]
-    fn test_point_overlaps_point(a: Point, b: Point, expectation: Option<Point>) -> Result<()> {
-        assert_eq!(point_overlaps_point(&a, &b)?, expectation);
-        Ok(())
+    #[test_case(*C, *C => Some(*C))]
+    #[test_case(*D, *D => Some(*D))]
+    #[test_case(*D, *H => None)]
+    #[test_case(*A, *B => None)]
+    fn test_point_overlaps_point(a: Point, b: Point) -> Option<Point> {
+        point_overlaps_point(&a, &b).unwrap()
     }
 
     #[test_case((*C, *D), *C, Some((SegmentOp::PointAlongSegment(*C, Zero), *C)); "at start 00")]
