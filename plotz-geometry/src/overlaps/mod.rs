@@ -629,24 +629,19 @@ mod tests {
         Ok(())
     }
 
-    #[test_case(Polygon([*D, *H, *N, *J]), &C, None; "point not in polygon 00")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &E, None; "point not in polygon 01")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &I, Some((PolygonOp::PointWithinArea(*I), *I)); "point in polygon")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &D, Some((PolygonOp::OnPoint(0, *D), *D)); "point at point of polygon 00")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &H, Some((PolygonOp::OnPoint(1, *H), *H)); "point at point of polygon 01")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &N, Some((PolygonOp::OnPoint(2, *N), *N)); "point at point of polygon 02")]
-    #[test_case(Polygon([*D, *H, *N, *J]), &J, Some((PolygonOp::OnPoint(3, *J), *J)); "point at point of polygon 03")]
-    #[test_case(Polygon([*C, *M, *O, *E]), &H, Some((PolygonOp::PointAlongEdge(0, *H, Val(0.5)), *H)); "point at edge of polygon 00")]
-    #[test_case(Polygon([*C, *M, *O, *E]), &N, Some((PolygonOp::PointAlongEdge(1, *N, Val(0.5)), *N)); "point at edge of polygon 01")]
-    #[test_case(Polygon([*C, *M, *O, *E]), &J, Some((PolygonOp::PointAlongEdge(2, *J, Val(0.5)), *J)); "point at edge of polygon 02")]
-    #[test_case(Polygon([*C, *M, *O, *E]), &D, Some((PolygonOp::PointAlongEdge(3, *D, Val(0.5)), *D)); "point at edge of polygon 03")]
-    fn test_polygon_overlaps_point(
-        pg: Result<Polygon>,
-        pt: &Point,
-        expectation: Option<(PolygonOp, Point)>,
-    ) -> Result<()> {
-        assert_eq!(polygon_overlaps_point(&pg?, pt)?, expectation);
-        Ok(())
+    #[test_case(Polygon([*D, *H, *N, *J]), &C => None; "point not in polygon 00")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &E => None; "point not in polygon 01")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &I => Some((PolygonOp::PointWithinArea(*I), *I)); "point in polygon")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &D => Some((PolygonOp::OnPoint(0, *D), *D)); "point at point of polygon 00")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &H => Some((PolygonOp::OnPoint(1, *H), *H)); "point at point of polygon 01")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &N => Some((PolygonOp::OnPoint(2, *N), *N)); "point at point of polygon 02")]
+    #[test_case(Polygon([*D, *H, *N, *J]), &J => Some((PolygonOp::OnPoint(3, *J), *J)); "point at point of polygon 03")]
+    #[test_case(Polygon([*C, *M, *O, *E]), &H => Some((PolygonOp::PointAlongEdge(0, *H, Val(0.5)), *H)); "point at edge of polygon 00")]
+    #[test_case(Polygon([*C, *M, *O, *E]), &N => Some((PolygonOp::PointAlongEdge(1, *N, Val(0.5)), *N)); "point at edge of polygon 01")]
+    #[test_case(Polygon([*C, *M, *O, *E]), &J => Some((PolygonOp::PointAlongEdge(2, *J, Val(0.5)), *J)); "point at edge of polygon 02")]
+    #[test_case(Polygon([*C, *M, *O, *E]), &D => Some((PolygonOp::PointAlongEdge(3, *D, Val(0.5)), *D)); "point at edge of polygon 03")]
+    fn test_polygon_overlaps_point(pg: Result<Polygon>, pt: &Point) -> Option<(PolygonOp, Point)> {
+        polygon_overlaps_point(&pg.unwrap(), pt).unwrap()
     }
 
     //           ^ (y)
