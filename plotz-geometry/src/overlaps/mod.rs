@@ -662,7 +662,7 @@ mod tests {
     // segment begins outside and ends outside and does pass through along two edges
     #[test_case(Polygon([*T, *N, *M, *H, *B, *F, *X]), (*T, *B) => Some((ne![PolygonOp::EntireEdge(0), PolygonOp::EntireEdge(3)], ne![SegmentOp::Subsegment(Segment(*H, *B)), SegmentOp::Subsegment(Segment(*T, *N))])))]
     // segment begins outside and ends outside and does pass through along an edge
-    #[test_case(Polygon([*I, *G, *K, *O]), (*F, *J) => Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::Subsegment(Segment(*I, *G))])); "foo")]
+    #[test_case(Polygon([*I, *G, *K, *O]), (*F, *J) => Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::Subsegment(Segment(*I, *G))])))]
     #[test_case(Polygon([*I, *G, *K, *O]), (*I, *G) => Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::EntireSegment])))]
     // segment begins outside and ends outside and does pass through along two edges
     #[test_case(Polygon([*I, *H, *M, *L, *G, *F, *P, *S]), (*I, *F) => Some((ne![ PolygonOp::EntireEdge(0), PolygonOp::EntireEdge(4) ], ne![ SegmentOp::Subsegment(Segment(*G, *F)), SegmentOp::Subsegment(Segment(*I, *H)) ])))]
@@ -680,13 +680,11 @@ mod tests {
     // segment begins at a point and ends outside and passes totally through the polygon
     #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *U) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *Q))], ne![SegmentOp::Subsegment(Segment(*I, *Q))])))]
     // segment begins at a point and ends at a point
-    // TODO(ambuc); think more carefully here about what happens if the point / edge we land on aren't the same.
     #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *G) => Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::EntireSegment])))]
     // segment begins at a point and ends on an edge
     #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *H) => Some((ne![PolygonOp::SubsegmentOfEdge(0, Segment(*I, *H))], ne![SegmentOp::EntireSegment])))]
     // segment begins at a point and ends inside
-    // TODO(ambuc); think more carefully here about what happens if the point / edge we land on aren't the same.
-    // #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *M) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *M))], ne![SegmentOp::EntireSegment])); "foo")]
+    #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *M) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *M))], ne![SegmentOp::EntireSegment])))]
     // segment begins on an edge and ends outside
     // TODO(ambuc)
     // segment begins on an edge and ends at a point
