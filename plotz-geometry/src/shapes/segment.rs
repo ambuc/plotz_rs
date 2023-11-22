@@ -3,11 +3,10 @@
 
 use crate::{
     bounded::{Bounded, Bounds},
-    crop::{CropType, Croppable, PointLocation},
-    interpolate,
+    crop::{CropType, Croppable},
     intersection::{Intersection, IntersectionResult},
     obj2::ObjType2d,
-    overlaps::{opinion::SegmentOp, segment_overlaps_segment},
+    overlaps::{opinion::SegmentOp, polygon_overlaps_segment, segment_overlaps_segment},
     shapes::{point::Point, polygon::Polygon, ray::Ray},
     Object,
 };
@@ -181,87 +180,40 @@ impl Croppable for Segment {
     where
         Self: Sized,
     {
-        assert_eq!(crop_type, CropType::Inclusive);
-
-        let frame_segments = frame.to_segments();
-        let mut resultants: Vec<Segment> = vec![];
-        let mut curr_pt = self.i;
-        let mut curr_pen_down = !matches!(
-            frame.contains_pt_deprecated(&self.i)?,
-            PointLocation::Outside
-        );
-
-        if let (PointLocation::Inside, PointLocation::Inside) = (
-            frame.contains_pt_deprecated(&self.i)?,
-            frame.contains_pt_deprecated(&self.f)?,
-        ) {
-            resultants.push(*self);
-        }
-
-        loop {
-            if curr_pt == self.f {
-                break;
-            }
-
-            let mut isxns = frame_segments
-                .iter()
-                .filter_map(|f| self.intersects(f))
-                .filter_map(|isxn_outcome| match isxn_outcome {
-                    IntersectionResult::Ok(isxn) => Some(isxn),
-                    _ => None,
-                })
-                .collect::<Vec<Intersection>>();
-            isxns.sort_by_key(|i| i.percent_along_a());
-            let (_, vs) = isxns.into_iter().partition(|i| {
-                i.percent_along_a().0
-                    <= interpolate::interpolate_2d_checked(self.i, self.f, curr_pt)
-                        .unwrap_or_else(|_| {
-                            panic!(
-                                "interpolate failed: a: {:?}, b: {:?}, i: {:?}",
-                                self.i, self.f, curr_pt,
-                            )
-                        })
-                        .as_f64()
-            });
-            isxns = vs;
-
-            match isxns.get(0) {
-                Some(intersection) => {
-                    let new_pt = interpolate::extrapolate_2d(
-                        self.i,
-                        self.f,
-                        intersection.percent_along_a().0,
-                    );
-
-                    // Not sure why. But escape the loop.
-                    if new_pt == curr_pt {
-                        return Ok(resultants);
+        match crop_type {
+            // the bits of |self| which are in |frame|.
+            CropType::Inclusive => {
+                match polygon_overlaps_segment(frame, self)? {
+                    Some((_, segmentops)) => {
+                        let mut res = vec![];
+                        for sgop in segmentops.iter() {
+                            match sgop {
+                                SegmentOp::PointAlongSegment(_, _) => {}
+                                SegmentOp::Subsegment(ss) => {
+                                    res.push(*ss);
+                                }
+                                SegmentOp::EntireSegment => {
+                                    res.push(*self);
+                                }
+                            }
+                        }
+                        //
+                        Ok(res)
                     }
-
-                    if !matches!(
-                        frame.contains_pt_deprecated(&new_pt)?,
-                        PointLocation::Outside
-                    ) && curr_pen_down
-                    {
-                        resultants.push(Segment(curr_pt, new_pt));
-                    }
-                    curr_pt = new_pt;
-                    curr_pen_down = !curr_pen_down;
-                }
-                None => {
-                    return Ok(resultants);
+                    None => Ok(vec![]),
                 }
             }
-        }
 
-        Ok(resultants)
+            // the bits of |self| which are _not_ in |frame|.
+            CropType::Exclusive => todo!(),
+        }
     }
 
     fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>>
     where
         Self: Sized,
     {
-        unimplemented!("we haven't implemented segment crop excluding yet.");
+        todo!()
     }
 }
 

@@ -705,17 +705,3 @@ mod tests {
         polygon_overlaps_segment(&pg.unwrap(), &sg.into()).unwrap()
     }
 }
-
-//           ^ (y)
-//           |
-//   a . b . c . d . e
-//           |
-//   f . g . h . i . j
-//           |
-// <-k---l---m---n---o-> (x)
-//           |
-//   p . q . r . s . t
-//           |
-//   u . v . w . x . y
-//           |
-//           v
