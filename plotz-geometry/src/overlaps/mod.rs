@@ -829,6 +829,7 @@ mod tests {
     )]
     //
     // segment begins at a point and ends at a point
+    // TODO(ambuc); think more carefully here about what happens if the point / edge we land on aren't the same.
     #[test_case(
         Polygon([*I, *G, *Q, *S]),
         (*I, *G),
@@ -837,14 +838,30 @@ mod tests {
             nonempty![SegmentOp::EntireSegment]
         ))
     )]
+    /*
     //
     // segment begins at a point and ends on an edge
-    // TODO(ambuc)
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]),
+        (*I, *H),
+        Some((
+            nonempty![PolygonOp::SubsegmentOfEdge(0, Segment(*I, *H))],
+            nonempty![SegmentOp::EntireSegment]
+        ))
+    )]
     //
     // segment begins at a point and ends inside
-    // TODO(ambuc)
+    // TODO(ambuc); think more carefully here about what happens if the point / edge we land on aren't the same.
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]),
+        (*I, *M),
+        Some((
+            nonempty![PolygonOp::SegmentWithinArea(Segment(*I, *M))],
+            nonempty![SegmentOp::EntireSegment]
+        )); "foo"
+    )]
     //
-
+    */
     // segment begins on an edge and ends outside
     // TODO(ambuc)
     //
