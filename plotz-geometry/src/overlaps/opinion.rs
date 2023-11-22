@@ -4,7 +4,7 @@ use crate::{
     shapes::{multiline::Multiline, point::Point, polygon::Polygon, segment::Segment},
     utils::Percent,
 };
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use nonempty::NonEmpty;
 use std::usize;
 
@@ -186,50 +186,14 @@ impl MultilineOpSet {
         self.ml_ops
             .retain(|extant| !ml_op.totally_covers(extant, &self.original).unwrap());
 
-        // TODO(ambuc): deduplicate adjacent subsegments -- coverage doesn't take care of that.
-
-        // need to deduplicate adjacent subsegments -- coverage doesn't take care of that.
-        if let MultilineOp::SubsegmentOf(s_idx, s_new) = ml_op {
-            if self.ml_ops.iter().any(|x| {
-                matches!(
-                    x,
-                    MultilineOp::SubsegmentOf(s_idx_extant, ss)
-                    if s_idx == *s_idx_extant && (*ss == s_new || ss.flip() == s_new)
-                )
-            }) {
-                // do not insert!
-                return Ok(());
+        match ml_op {
+            MultilineOp::SubsegmentOf(s_idx, s_new) => {
+                // need to deduplicate adjacent subsegments -- coverage doesn't take care of that.
+                self.add_subsegment_of(ml_op, s_idx, s_new)?;
             }
-
-            // if there is a segment which adds to this segment to make a larger segment,
-            // remove the extant one and add their sum instead.
-            if let Some(idx) = self.ml_ops.iter().position(|extant| match extant {
-                MultilineOp::SubsegmentOf(extant_edge_idx, extant_subsegment) => {
-                    *extant_edge_idx == s_idx && extant_subsegment.try_add(&s_new).is_some()
-                }
-                _ => false,
-            }) {
-                match self.ml_ops.remove(idx) {
-                    MultilineOp::SubsegmentOf(_, extant_subsegment) => {
-                        match extant_subsegment.try_add(&s_new) {
-                            Some(new_subsegment) => {
-                                if new_subsegment == self.original.to_segments()[s_idx] {
-                                    self.add(MultilineOp::EntireSubsegment(s_idx))?;
-                                } else {
-                                    self.add(MultilineOp::SubsegmentOf(s_idx, new_subsegment))?;
-                                }
-                                return Ok(());
-                            }
-                            None => return Err(anyhow!("what gives?")),
-                        }
-                    }
-                    _ => return Err(anyhow!("what gives?")),
-                }
+            _ => {
+                self.ml_ops.push(ml_op);
             }
-
-            self.ml_ops.push(ml_op);
-        } else {
-            self.ml_ops.push(ml_op);
         }
 
         Ok(())
@@ -275,6 +239,46 @@ impl MultilineOpSet {
             }
             self.ml_ops.push(MultilineOp::EntireMultiline);
         }
+    }
+
+    fn add_subsegment_of(
+        &mut self,
+        ml_op: MultilineOp,
+        s_idx: usize,
+        s_new: Segment,
+    ) -> Result<()> {
+        // if we already have this subsegment or its flip, don't insert it and just return.
+        if self.ml_ops.iter().any(|x| {
+            matches!(
+                x,
+                MultilineOp::SubsegmentOf(s_idx_extant, ss)
+                if s_idx == *s_idx_extant && (*ss == s_new || ss.flip() == s_new)
+            )
+        }) {
+            return Ok(());
+        }
+
+        // if this subsegment adjoins an existing one, (a) don't add the new
+        // one, (b) remove the existing one, and (c) add the joined segment
+        // instead.
+        if let Some((idx, resultant)) = self.ml_ops.iter().find_map(|extant| match extant {
+            MultilineOp::SubsegmentOf(idx_old, s_old) if *idx_old == s_idx => {
+                s_old.try_add(&s_new).map(|resultant| (idx_old, resultant))
+            }
+            _ => None,
+        }) {
+            self.ml_ops.remove(*idx);
+            if resultant == self.original.to_segments()[s_idx] {
+                self.add(MultilineOp::EntireSubsegment(s_idx))?;
+            } else {
+                self.add(MultilineOp::SubsegmentOf(s_idx, resultant))?;
+            }
+            return Ok(());
+        }
+
+        self.ml_ops.push(ml_op);
+
+        Ok(())
     }
 }
 
