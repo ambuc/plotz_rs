@@ -740,9 +740,30 @@ mod tests {
             nonempty![SegmentOp::Subsegment(Segment(*I, *G))]
         ))
     )]
+    #[test_case(
+        Polygon([*I, *G, *K, *O]), // trapezoid shape
+        (*I, *G),
+        Some((
+            nonempty![PolygonOp::EntireEdge(0)],
+            nonempty![SegmentOp::EntireSegment],
+        ))
+    )]
     //
     // segment begins outside and ends outside and does pass through along two edges
-    // TODO(ambuc)
+    #[test_case(
+        Polygon([*I, *H, *M, *L, *G, *F, *P, *S]),
+        (*I, *F),
+        Some((
+            nonempty![
+                PolygonOp::EntireEdge(0),
+                PolygonOp::EntireEdge(4)
+            ],
+            nonempty![
+                SegmentOp::Subsegment(Segment(*G, *F)),
+                SegmentOp::Subsegment(Segment(*I, *H))
+            ]
+        ))
+    )]
     //
     // segment begins outside and ends at point
     #[test_matrix(
