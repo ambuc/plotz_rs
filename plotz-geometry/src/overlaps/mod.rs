@@ -801,14 +801,42 @@ mod tests {
     )]
     //
     // segment begins outside and ends inside
-    // TODO(ambuc)
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]),
+        (*C, *M),
+        Some((
+            nonempty![PolygonOp::PointAlongEdge(0, *H, Val(0.5))],
+            nonempty![SegmentOp::PointAlongSegment(*H, Val(0.5))]
+        ))
+    )]
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]),
+        (*E, *M),
+        Some((
+            nonempty![PolygonOp::OnPoint(0, *I)],
+            nonempty![SegmentOp::PointAlongSegment(*I, Val(0.5))]
+        ))
+    )]
     //
-
     // segment begins at a point and ends outside
-    // TODO(ambuc)
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]),
+        (*I, *J),
+        Some((
+            nonempty![PolygonOp::OnPoint(0, *I)],
+            nonempty![SegmentOp::PointAlongSegment(*I, Zero)]
+        ))
+    )]
     //
     // segment begins at a point and ends at a point
-    // TODO(ambuc)
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]),
+        (*I, *G),
+        Some((
+            nonempty![PolygonOp::EntireEdge(0)],
+            nonempty![SegmentOp::EntireSegment]
+        ))
+    )]
     //
     // segment begins at a point and ends on an edge
     // TODO(ambuc)
