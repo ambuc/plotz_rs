@@ -4,7 +4,7 @@ use crate::{
     shapes::{multiline::Multiline, point::Point, polygon::Polygon, segment::Segment},
     utils::Percent,
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use nonempty::NonEmpty;
 use std::usize;
 
@@ -188,7 +188,49 @@ impl MultilineOpSet {
 
         // TODO(ambuc): deduplicate adjacent subsegments -- coverage doesn't take care of that.
 
-        self.ml_ops.push(ml_op);
+        // need to deduplicate adjacent subsegments -- coverage doesn't take care of that.
+        if let MultilineOp::SubsegmentOf(s_idx, s_new) = ml_op {
+            if self.ml_ops.iter().any(|x| {
+                matches!(
+                    x,
+                    MultilineOp::SubsegmentOf(s_idx_extant, ss)
+                    if s_idx == *s_idx_extant && (*ss == s_new || ss.flip() == s_new)
+                )
+            }) {
+                // do not insert!
+                return Ok(());
+            }
+
+            // if there is a segment which adds to this segment to make a larger segment,
+            // remove the extant one and add their sum instead.
+            if let Some(idx) = self.ml_ops.iter().position(|extant| match extant {
+                MultilineOp::SubsegmentOf(extant_edge_idx, extant_subsegment) => {
+                    *extant_edge_idx == s_idx && extant_subsegment.try_add(&s_new).is_some()
+                }
+                _ => false,
+            }) {
+                match self.ml_ops.remove(idx) {
+                    MultilineOp::SubsegmentOf(_, extant_subsegment) => {
+                        match extant_subsegment.try_add(&s_new) {
+                            Some(new_subsegment) => {
+                                if new_subsegment == self.original.to_segments()[s_idx] {
+                                    self.add(MultilineOp::EntireSubsegment(s_idx))?;
+                                } else {
+                                    self.add(MultilineOp::SubsegmentOf(s_idx, new_subsegment))?;
+                                }
+                                return Ok(());
+                            }
+                            None => return Err(anyhow!("what gives?")),
+                        }
+                    }
+                    _ => return Err(anyhow!("what gives?")),
+                }
+            }
+
+            self.ml_ops.push(ml_op);
+        } else {
+            self.ml_ops.push(ml_op);
+        }
 
         Ok(())
     }
