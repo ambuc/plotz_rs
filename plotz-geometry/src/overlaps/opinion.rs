@@ -32,7 +32,7 @@ impl SegmentOp {
 
 #[derive(Clone, Debug)]
 pub struct SegmentOpSet {
-    sg_ops: Vec<SegmentOp>,
+    pub sg_ops: Vec<SegmentOp>,
     original: Segment,
 }
 
@@ -348,7 +348,6 @@ impl PolygonOpSet {
             .retain(|extant| !pg_op.totally_covers(extant, &self.original).unwrap());
 
         // TODO(ambuc):  inline deduplication
-
         self.pg_ops.push(pg_op);
 
         Ok(())

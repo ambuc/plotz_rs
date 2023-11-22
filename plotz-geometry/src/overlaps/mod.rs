@@ -12,11 +12,11 @@ use crate::{
         polygon::{abp, Polygon},
         segment::Segment,
     },
-    utils::Percent::{One, Zero},
+    utils::Percent::{self, One, Zero},
 };
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
-use nonempty::{nonempty, NonEmpty};
+use nonempty::NonEmpty;
 
 //           || pt | sg | ml | ca |
 // ==========++====+====+====+====+==
@@ -386,35 +386,64 @@ pub fn polygon_overlaps_segment(
         }
     }
 
-    // must check for funky situations like:
-    // 'what if we begin on a point/edge and end outside and pass through and it covers the whole multiline?
-    // stuff like that.
-    // TODO
-    // TODO
-    // TODO
-    // TODO
-    // TODO
-    // TODO
-    // TODO
-    // TODO
+    // or we need to look at the subsegment(s) of our original segment (i.e.,
+    // how it has been segmented by intersections) and for each segment, if it
+    // is totally within the polygon, add it to sg_op_set. maybe even modify
+    // pg_op_set here too.
+    // ideally this also covers the special-case below, where there are no
+    // intersections but the segment is totally contained within the polygon.
+
+    let mut cuts: Vec<(Point, Percent)> = sg_op_set
+        .sg_ops
+        .iter()
+        .filter_map(|x| match x {
+            SegmentOp::PointAlongSegment(pt, pct) => Some((*pt, *pct)),
+            _ => None,
+        })
+        .collect();
+    cuts.push((segment.i, Zero));
+    cuts.push((segment.f, One));
+    for op in sg_op_set.sg_ops.iter() {
+        if let SegmentOp::Subsegment(subsegment) = op {
+            cuts.push((
+                subsegment.i,
+                interpolate_2d_checked(segment.i, segment.f, subsegment.i)?,
+            ));
+            cuts.push((
+                subsegment.f,
+                interpolate_2d_checked(segment.i, segment.f, subsegment.f)?,
+            ));
+        }
+    }
+    cuts.sort_by_key(|(_, pct)| *pct);
+    cuts.dedup();
+
+    for s in (cuts.iter())
+        .zip(cuts.iter().skip(1))
+        .map(|((p1, _), (p2, _))| Segment(*p1, *p2))
+    {
+        if polygon_overlaps_point(polygon, &s.midpoint())?.is_some() {
+            sg_op_set.add(SegmentOp::Subsegment(s))?;
+            match (
+                polygon_overlaps_point(polygon, &s.i)?,
+                polygon_overlaps_point(polygon, &s.f)?,
+            ) {
+                (
+                    Some((PolygonOp::PointAlongEdge(idx, _, _), _)),
+                    Some((PolygonOp::PointAlongEdge(jdx, _, _), _)),
+                ) if idx == jdx => {
+                    pg_op_set.add(PolygonOp::SubsegmentOfEdge(idx, s))?;
+                }
+                _ => {
+                    pg_op_set.add(PolygonOp::SegmentWithinArea(s))?;
+                }
+            }
+        }
+    }
 
     match (pg_op_set.to_nonempty(), sg_op_set.to_nonempty()) {
         (Some(total_pg_ops), Some(total_sg_ops)) => Ok(Some((total_pg_ops, total_sg_ops))),
-        (None, None) => {
-            // check the unusual case of no intersections, but the segment is
-            // totally contained within the polygon.
-            match (
-                polygon_overlaps_point(polygon, &segment.i)?,
-                polygon_overlaps_point(polygon, &segment.f)?,
-            ) {
-                (Some(_), Some(_)) => Ok(Some((
-                    nonempty![PolygonOp::SegmentWithinArea(*segment)],
-                    nonempty![SegmentOp::EntireSegment])
-                )),
-                (None, None) => Ok(None),
-                _ => Err(anyhow!("unexpected case - how can one end of the segment be within the polygon, the other without, but still we didn't see any collisions above?")),
-            }
-        }
+        (None, None) => Ok(None),
         x => Err(anyhow!(
             "unexpected case - how can one object see collisions but the other doesn't?: {:?}",
             x
@@ -638,20 +667,6 @@ mod tests {
         polygon_overlaps_point(&pg.unwrap(), pt).unwrap()
     }
 
-    //           ^ (y)
-    //           |
-    //   a . b . c . d . e
-    //           |
-    //   f . g . h . i . j
-    //           |
-    // <-k---l---m---n---o-> (x)
-    //           |
-    //   p . q . r . s . t
-    //           |
-    //   u . v . w . x . y
-    //           |
-    //           v
-
     // segment begins outside and ends outside and does not pass through
     #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*A, *E), (*E, *A), (*B, *F), (*T, *X), (*O, *J)] => None)]
     // segment begins outside and ends outside and does pass through at a point
@@ -661,7 +676,7 @@ mod tests {
     // segment begins outside and ends outside and does pass through along two edges
     #[test_case(Polygon([*T, *N, *M, *H, *B, *F, *X]), (*T, *B) => Some((ne![PolygonOp::EntireEdge(0), PolygonOp::EntireEdge(3)], ne![SegmentOp::Subsegment(Segment(*H, *B)), SegmentOp::Subsegment(Segment(*T, *N))])))]
     // segment begins outside and ends outside and does pass through along an edge
-    #[test_case(Polygon([*I, *G, *K, *O]), (*F, *J) => Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::Subsegment(Segment(*I, *G))])))]
+    #[test_case(Polygon([*I, *G, *K, *O]), (*F, *J) => Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::Subsegment(Segment(*I, *G))])); "foo")]
     #[test_case(Polygon([*I, *G, *K, *O]), (*I, *G) => Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::EntireSegment])))]
     // segment begins outside and ends outside and does pass through along two edges
     #[test_case(Polygon([*I, *H, *M, *L, *G, *F, *P, *S]), (*I, *F) => Some((ne![ PolygonOp::EntireEdge(0), PolygonOp::EntireEdge(4) ], ne![ SegmentOp::Subsegment(Segment(*G, *F)), SegmentOp::Subsegment(Segment(*I, *H)) ])))]
@@ -672,11 +687,12 @@ mod tests {
     // segment begins outside and ends on an edge
     #[test_matrix([Polygon([*I, *G, *Q, *S])], [(*C, *H), (*B, *H), (*D, *H)] => Some((ne![PolygonOp::PointAlongEdge(0, *H, Val(0.5))], ne![SegmentOp::PointAlongSegment(*H, One)])))]
     // segment begins outside and ends inside
-    #[test_case(Polygon([*I, *G, *Q, *S]), (*C, *M) => Some((ne![PolygonOp::PointAlongEdge(0, *H, Val(0.5))], ne![SegmentOp::PointAlongSegment(*H, Val(0.5))])))]
-    #[test_case(Polygon([*I, *G, *Q, *S]), (*E, *M) => Some((ne![PolygonOp::OnPoint(0, *I)], ne![SegmentOp::PointAlongSegment(*I, Val(0.5))])))]
+    #[test_case(Polygon([*I, *G, *Q, *S]), (*C, *M) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*H, *M))], ne![SegmentOp::Subsegment(Segment(*H, *M))])))]
+    #[test_case(Polygon([*I, *G, *Q, *S]), (*E, *M) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *M))], ne![SegmentOp::Subsegment(Segment(*I, *M))])))]
     // segment begins at a point and ends outside
     #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *J) => Some((ne![PolygonOp::OnPoint(0, *I)], ne![SegmentOp::PointAlongSegment(*I, Zero)])))]
-    // #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *U) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *Q))], ne![SegmentOp::Subsegment(Segment(*I, *Q))])))]
+    // segment begins at a point and ends outside and passes totally through the polygon
+    #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *U) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *Q))], ne![SegmentOp::Subsegment(Segment(*I, *Q))])))]
     // segment begins at a point and ends at a point
     // TODO(ambuc); think more carefully here about what happens if the point / edge we land on aren't the same.
     #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *G) => Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::EntireSegment])))]
@@ -708,3 +724,17 @@ mod tests {
         polygon_overlaps_segment(&pg.unwrap(), &sg.into()).unwrap()
     }
 }
+
+//           ^ (y)
+//           |
+//   a . b . c . d . e
+//           |
+//   f . g . h . i . j
+//           |
+// <-k---l---m---n---o-> (x)
+//           |
+//   p . q . r . s . t
+//           |
+//   u . v . w . x . y
+//           |
+//           v
