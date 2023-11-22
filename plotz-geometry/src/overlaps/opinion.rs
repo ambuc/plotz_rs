@@ -4,7 +4,7 @@ use crate::{
     shapes::{multiline::Multiline, point::Point, polygon::Polygon, segment::Segment},
     utils::Percent,
 };
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use nonempty::NonEmpty;
 use std::usize;
 
@@ -62,52 +62,20 @@ impl SegmentOpSet {
                 return Ok(());
             }
 
-            // TODO(ambuc): this logic can be simplified by implementing
-            // something like Segment::try_add(&Segment)
-            // TODO
-            // TODO
-            // TODO
-            // TODO
-            // TODO
-            // TODO
-            // TODO
-            // TODO
-            // TODO
-
-            // if there is already a segment which lines up with this one, deduplicate them.
-            if let Some(idx) = self.sg_ops.iter().position(|x| {
-                matches!(
-                    x,
-                    SegmentOp::Subsegment(s_extant)
-                    if s_new.slope() == s_extant.slope() && s_extant.f == s_new.i
-                )
-            }) {
-                if let SegmentOp::Subsegment(s_extant) = self.sg_ops.remove(idx) {
-                    self.sg_ops
-                        .push(SegmentOp::Subsegment(Segment(s_extant.i, s_new.f)));
-                    // do not insert the new value.
-                    return Ok(());
-                } else {
-                    return Err(anyhow!("I thought you found a subsegment? what gives"));
+            if let Some((idx, resultant)) = (|| {
+                for (idx, extant) in self.sg_ops.iter().enumerate() {
+                    if let SegmentOp::Subsegment(extant) = extant {
+                        if let Some(resultant) = extant.try_add(&s_new) {
+                            return Some((idx, resultant));
+                        }
+                    }
                 }
+                None
+            })() {
+                self.sg_ops.remove(idx);
+                self.sg_ops.push(SegmentOp::Subsegment(resultant));
+                return Ok(());
             }
-            if let Some(idx) = self.sg_ops.iter().position(|x| {
-                matches!(
-                    x,
-                    SegmentOp::Subsegment(s_extant)
-                    if s_new.slope() == s_extant.slope() && s_new.f == s_extant.i
-                )
-            }) {
-                if let SegmentOp::Subsegment(s_extant) = self.sg_ops.remove(idx) {
-                    self.sg_ops
-                        .push(SegmentOp::Subsegment(Segment(s_new.i, s_extant.f)));
-                    // do not insert the new value.
-                    return Ok(());
-                } else {
-                    return Err(anyhow!("I thought you found a subsegment? what gives"));
-                }
-            }
-            // TODO(ambuc); there might be more tail-to-tail and tip-to-top things to cover here.
 
             // otherwise, OK to add.
             self.sg_ops.push(sg_op);
