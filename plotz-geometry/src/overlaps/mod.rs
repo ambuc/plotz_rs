@@ -696,6 +696,7 @@ mod tests {
     // segment begins inside and ends outside
     #[test_case(Polygon([*I, *G, *Q, *S]), (*M, *O) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*M, *N))], ne![SegmentOp::Subsegment(Segment(*M, *N))])))]
     // segment begins inside and ends at a point
+    #[test_case(Polygon([*I, *G, *Q, *S]), (*M, *I) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*M, *I))], ne![SegmentOp::EntireSegment])))]
     // TODO(ambuc)
     // segment begins inside and ends on an edge
     // TODO(ambuc)
