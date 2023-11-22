@@ -791,7 +791,14 @@ mod tests {
         ))
     )]
     // segment begins outside and ends on an edge
-    // TODO(ambuc)
+    #[test_matrix(
+        [Polygon([*I, *G, *Q, *S])],
+        [(*C, *H), (*B, *H), (*D, *H)],
+        Some((
+            nonempty![PolygonOp::PointAlongEdge(0, *H, Percent::Val(0.5))],
+            nonempty![SegmentOp::PointAlongSegment(*H, One)]
+        ))
+    )]
     //
     // segment begins outside and ends inside
     // TODO(ambuc)
