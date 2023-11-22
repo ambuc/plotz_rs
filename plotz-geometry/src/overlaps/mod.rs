@@ -605,28 +605,26 @@ mod tests {
     //   u . v . w . x . y
     //           |
     //           v
-    #[test_case(Multiline([*C, *D, *E]), Multiline([*H, *I, *J]), None; "none 01")]
-    #[test_case(Multiline([*C, *D, *E]), Multiline([*M, *N, *O]), None; "none 02")]
-    #[test_case(Multiline([*C, *I, *O]), Multiline([*D, *J]), None; "none diagonal")]
-    #[test_case(Multiline([*C, *D, *E]), Multiline([*C, *H, *M]), Some((ne![MultilineOp::Point(0, *C)], ne![MultilineOp::Point(0, *C)])); "AtPoint 0, AtPoint 0")]
-    #[test_case(Multiline([*C, *D, *E]), Multiline([*M, *H, *C]), Some((ne![MultilineOp::Point(0, *C)], ne![MultilineOp::Point(2, *C)])); "AtPoint 0, AtPoint 2")]
-    #[test_case(Multiline([*E, *D, *C]), Multiline([*M, *H, *C]), Some((ne![MultilineOp::Point(2, *C)], ne![MultilineOp::Point(2, *C)])); "AtPoint 2, AtPoint 2")]
-    #[test_case(Multiline([*C, *I, *O]), Multiline([*M, *I, *E]), Some((ne![MultilineOp::Point(1, *I)], ne![MultilineOp::Point(1, *I)])); "AtPoint 1, AtPoint 1")]
-    #[test_case(Multiline([*C, *O]), Multiline([*E, *M]), Some((ne![MultilineOp::PointAlongSegmentOf(0, *I, Val(0.5))], ne![MultilineOp::PointAlongSegmentOf(0, *I, Val(0.5))])); "crosshairs")]
-    #[test_case(Multiline([*C, *D, *E]), Multiline([*C, *D, *I]), Some((ne![MultilineOp::EntireSubsegment(0)], ne![MultilineOp::EntireSubsegment(0)])); "partial collision, entire subsegment 0 0")]
-    #[test_case(Multiline([*E, *D, *C]), Multiline([*I, *D, *C]), Some((ne![MultilineOp::EntireSubsegment(1)], ne![MultilineOp::EntireSubsegment(1)])); "partial collision, entire subsegment 1 1")]
-    #[test_case(Multiline([*C, *D, *E]), Multiline([*D, *E, *J]), Some((ne![MultilineOp::EntireSubsegment(1)], ne![MultilineOp::EntireSubsegment(0)])); "partial collision, entire subsegment 1 0")]
-    #[test_case(Multiline([*C, *D, *E]), Multiline([*E, *D, *C]), Some((ne![MultilineOp::EntireMultiline], ne![MultilineOp::EntireMultiline])); "partial collision, entire subsegment 01 01 flipped")]
-    #[test_case(Multiline([*C, *D, *E, *J, *O]), Multiline([*C, *D, *I, *J, *O]), Some((ne![MultilineOp::EntireSubsegment(0), MultilineOp::EntireSubsegment(3)], ne![MultilineOp::EntireSubsegment(0), MultilineOp::EntireSubsegment(3)])); "shared segment, then diversion, then another shared segment")]
-    #[test_case(Multiline([*C, *D, *E, *J, *O]), Multiline([*C, *D, *I, *J]), Some((ne![MultilineOp::Point(3, *J), MultilineOp::EntireSubsegment(0)], ne![MultilineOp::Point(3, *J), MultilineOp::EntireSubsegment(0)])); "shared segment, then diversion, then atpoint")]
-    #[test_case( Multiline([*A, *B, *C]), Multiline([*A, *C, *E]), Some(( ne![ MultilineOp::EntireMultiline, ], ne![ MultilineOp::EntireSubsegment(0), ])))]
+    #[test_case(Multiline([*C, *D, *E]), Multiline([*H, *I, *J]) => None; "none 01")]
+    #[test_case(Multiline([*C, *D, *E]), Multiline([*M, *N, *O]) => None; "none 02")]
+    #[test_case(Multiline([*C, *I, *O]), Multiline([*D, *J]) => None; "none diagonal")]
+    #[test_case(Multiline([*C, *D, *E]), Multiline([*C, *H, *M]) => Some((ne![MultilineOp::Point(0, *C)], ne![MultilineOp::Point(0, *C)])); "AtPoint 0, AtPoint 0")]
+    #[test_case(Multiline([*C, *D, *E]), Multiline([*M, *H, *C]) => Some((ne![MultilineOp::Point(0, *C)], ne![MultilineOp::Point(2, *C)])); "AtPoint 0, AtPoint 2")]
+    #[test_case(Multiline([*E, *D, *C]), Multiline([*M, *H, *C]) => Some((ne![MultilineOp::Point(2, *C)], ne![MultilineOp::Point(2, *C)])); "AtPoint 2, AtPoint 2")]
+    #[test_case(Multiline([*C, *I, *O]), Multiline([*M, *I, *E]) => Some((ne![MultilineOp::Point(1, *I)], ne![MultilineOp::Point(1, *I)])); "AtPoint 1, AtPoint 1")]
+    #[test_case(Multiline([*C, *O]), Multiline([*E, *M]) => Some((ne![MultilineOp::PointAlongSegmentOf(0, *I, Val(0.5))], ne![MultilineOp::PointAlongSegmentOf(0, *I, Val(0.5))])); "crosshairs")]
+    #[test_case(Multiline([*C, *D, *E]), Multiline([*C, *D, *I]) => Some((ne![MultilineOp::EntireSubsegment(0)], ne![MultilineOp::EntireSubsegment(0)])); "partial collision, entire subsegment 0 0")]
+    #[test_case(Multiline([*E, *D, *C]), Multiline([*I, *D, *C]) => Some((ne![MultilineOp::EntireSubsegment(1)], ne![MultilineOp::EntireSubsegment(1)])); "partial collision, entire subsegment 1 1")]
+    #[test_case(Multiline([*C, *D, *E]), Multiline([*D, *E, *J]) => Some((ne![MultilineOp::EntireSubsegment(1)], ne![MultilineOp::EntireSubsegment(0)])); "partial collision, entire subsegment 1 0")]
+    #[test_case(Multiline([*C, *D, *E]), Multiline([*E, *D, *C]) => Some((ne![MultilineOp::EntireMultiline], ne![MultilineOp::EntireMultiline])); "partial collision, entire subsegment 01 01 flipped")]
+    #[test_case(Multiline([*C, *D, *E, *J, *O]), Multiline([*C, *D, *I, *J, *O]) => Some((ne![MultilineOp::EntireSubsegment(0), MultilineOp::EntireSubsegment(3)], ne![MultilineOp::EntireSubsegment(0), MultilineOp::EntireSubsegment(3)])); "shared segment, then diversion, then another shared segment")]
+    #[test_case(Multiline([*C, *D, *E, *J, *O]), Multiline([*C, *D, *I, *J]) => Some((ne![MultilineOp::Point(3, *J), MultilineOp::EntireSubsegment(0)], ne![MultilineOp::Point(3, *J), MultilineOp::EntireSubsegment(0)])); "shared segment, then diversion, then atpoint")]
+    #[test_case( Multiline([*A, *B, *C]), Multiline([*A, *C, *E]) => Some(( ne![ MultilineOp::EntireMultiline, ], ne![ MultilineOp::EntireSubsegment(0), ])))]
     fn test_multiline_overlaps_multiline(
         ml1: Multiline,
         ml2: Multiline,
-        expectation: Option<(NonEmpty<MultilineOp>, NonEmpty<MultilineOp>)>,
-    ) -> Result<()> {
-        assert_eq!(multiline_overlaps_multiline(&ml1, &ml2)?, expectation);
-        Ok(())
+    ) -> Option<(NonEmpty<MultilineOp>, NonEmpty<MultilineOp>)> {
+        multiline_overlaps_multiline(&ml1, &ml2).unwrap()
     }
 
     #[test_case(Polygon([*D, *H, *N, *J]), &C => None; "point not in polygon 00")]
