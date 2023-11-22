@@ -529,21 +529,19 @@ mod tests {
         Ok(())
     }
 
-    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *A, Some((ne![MultilineOp::Point(0, *A)], *A)); "multiline point at index 0")]
-    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *E, Some((ne![MultilineOp::Point(2, *E)], *E)); "multiline point at index 2")]
-    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *Y, Some((ne![MultilineOp::Point(4, *Y)], *Y)); "multiline point at index 4")]
-    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *B, Some((ne![MultilineOp::PointAlongSegmentOf(0, *B, Val(0.5))], *B)); "multiline point along segment 0")]
-    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *D, Some((ne![MultilineOp::PointAlongSegmentOf(1, *D, Val(0.5))], *D)); "multiline point along segment 1")]
-    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *J, Some((ne![MultilineOp::PointAlongSegmentOf(2, *J, Val(0.5))], *J)); "multiline point along segment 2")]
-    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *T, Some((ne![MultilineOp::PointAlongSegmentOf(3, *T, Val(0.5))], *T)); "multiline point along segment 3")]
-    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *M, None; "unrelated")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *A => Some((ne![MultilineOp::Point(0, *A)], *A)); "multiline point at index 0")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *E => Some((ne![MultilineOp::Point(2, *E)], *E)); "multiline point at index 2")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *Y => Some((ne![MultilineOp::Point(4, *Y)], *Y)); "multiline point at index 4")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *B => Some((ne![MultilineOp::PointAlongSegmentOf(0, *B, Val(0.5))], *B)); "multiline point along segment 0")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *D => Some((ne![MultilineOp::PointAlongSegmentOf(1, *D, Val(0.5))], *D)); "multiline point along segment 1")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *J => Some((ne![MultilineOp::PointAlongSegmentOf(2, *J, Val(0.5))], *J)); "multiline point along segment 2")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *T => Some((ne![MultilineOp::PointAlongSegmentOf(3, *T, Val(0.5))], *T)); "multiline point along segment 3")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *M => None; "unrelated")]
     fn test_multiline_overlaps_point(
         multiline: Multiline,
         point: Point,
-        expectation: Option<(NonEmpty<MultilineOp>, Point)>,
-    ) -> Result<()> {
-        assert_eq!(multiline_overlaps_point(&multiline, &point)?, expectation);
-        Ok(())
+    ) -> Option<(NonEmpty<MultilineOp>, Point)> {
+        multiline_overlaps_point(&multiline, &point).unwrap()
     }
 
     #[test_case(Multiline([*C, *E, *O]), (*M, *N) => None; "none 00")]
