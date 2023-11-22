@@ -438,12 +438,6 @@ impl Croppable for CurveArc {
 
         Ok(r)
     }
-    fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>>
-    where
-        Self: Sized,
-    {
-        unimplemented!("TODO");
-    }
 }
 
 impl Object for CurveArc {

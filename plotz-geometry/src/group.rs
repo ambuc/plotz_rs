@@ -56,12 +56,6 @@ where
                 .collect::<Result<Vec<(Obj2, T)>>>()?,
         )])
     }
-    fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>>
-    where
-        Self: Sized,
-    {
-        unimplemented!("TODO");
-    }
 }
 
 impl<T> Object for Group<T> {

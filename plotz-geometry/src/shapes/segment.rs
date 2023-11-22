@@ -208,13 +208,6 @@ impl Croppable for Segment {
             CropType::Exclusive => todo!(),
         }
     }
-
-    fn crop_excluding(&self, _other: &Polygon) -> Result<Vec<Self::Output>>
-    where
-        Self: Sized,
-    {
-        todo!()
-    }
 }
 
 impl Object for Segment {
