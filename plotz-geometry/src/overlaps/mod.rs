@@ -653,38 +653,38 @@ mod tests {
     //           v
 
     // segment begins outside and ends outside and does not pass through
-    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*A, *E), (*E, *A), (*B, *F), (*T, *X), (*O, *J)], None)]
+    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*A, *E), (*E, *A), (*B, *F), (*T, *X), (*O, *J)] => None)]
     // segment begins outside and ends outside and does pass through at a point
-    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*C, *K), (*K, *C)], Some((ne![PolygonOp::OnPoint(0, *G)], ne![SegmentOp::PointAlongSegment(*G, Val(0.5))])))]
+    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*C, *K), (*K, *C)] => Some((ne![PolygonOp::OnPoint(0, *G)], ne![SegmentOp::PointAlongSegment(*G, Val(0.5))])))]
     // segment begins outside and ends outside and does pass through at two points
-    #[test_case(Polygon([*I, *M, *G, *K, *O]), (*J, *F), Some((ne![ PolygonOp::OnPoint(0, *I), PolygonOp::OnPoint(2, *G)], ne![SegmentOp::PointAlongSegment(*G, Val(0.75)), SegmentOp::PointAlongSegment(*I, Val(0.25))])))]
+    #[test_case(Polygon([*I, *M, *G, *K, *O]), (*J, *F) => Some((ne![ PolygonOp::OnPoint(0, *I), PolygonOp::OnPoint(2, *G)], ne![SegmentOp::PointAlongSegment(*G, Val(0.75)), SegmentOp::PointAlongSegment(*I, Val(0.25))])))]
     // segment begins outside and ends outside and does pass through along two edges
-    #[test_case(Polygon([*T, *N, *M, *H, *B, *F, *X]), (*T, *B), Some((ne![PolygonOp::EntireEdge(0), PolygonOp::EntireEdge(3)], ne![SegmentOp::Subsegment(Segment(*H, *B)), SegmentOp::Subsegment(Segment(*T, *N))])))]
+    #[test_case(Polygon([*T, *N, *M, *H, *B, *F, *X]), (*T, *B) => Some((ne![PolygonOp::EntireEdge(0), PolygonOp::EntireEdge(3)], ne![SegmentOp::Subsegment(Segment(*H, *B)), SegmentOp::Subsegment(Segment(*T, *N))])))]
     // segment begins outside and ends outside and does pass through along an edge
-    #[test_case(Polygon([*I, *G, *K, *O]), (*F, *J), Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::Subsegment(Segment(*I, *G))])))]
-    #[test_case(Polygon([*I, *G, *K, *O]), (*I, *G), Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::EntireSegment])))]
+    #[test_case(Polygon([*I, *G, *K, *O]), (*F, *J) => Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::Subsegment(Segment(*I, *G))])))]
+    #[test_case(Polygon([*I, *G, *K, *O]), (*I, *G) => Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::EntireSegment])))]
     // segment begins outside and ends outside and does pass through along two edges
-    #[test_case(Polygon([*I, *H, *M, *L, *G, *F, *P, *S]), (*I, *F), Some((ne![ PolygonOp::EntireEdge(0), PolygonOp::EntireEdge(4) ], ne![ SegmentOp::Subsegment(Segment(*G, *F)), SegmentOp::Subsegment(Segment(*I, *H)) ])))]
+    #[test_case(Polygon([*I, *H, *M, *L, *G, *F, *P, *S]), (*I, *F) => Some((ne![ PolygonOp::EntireEdge(0), PolygonOp::EntireEdge(4) ], ne![ SegmentOp::Subsegment(Segment(*G, *F)), SegmentOp::Subsegment(Segment(*I, *H)) ])))]
     // segment begins outside and ends at point
-    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*A, *G), (*B, *G), (*F, *G)], Some((ne![PolygonOp::OnPoint(0, *G)], ne![SegmentOp::PointAlongSegment(*G, One)])))]
-    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*D, *I), (*E, *I), (*J, *I)], Some((ne![PolygonOp::OnPoint(3, *I)], ne![SegmentOp::PointAlongSegment(*I, One)])))]
-    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*U, *Q), (*P, *Q), (*V, *Q)], Some((ne![PolygonOp::OnPoint(1, *Q)], ne![SegmentOp::PointAlongSegment(*Q, One)])))]
+    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*A, *G), (*B, *G), (*F, *G)] => Some((ne![PolygonOp::OnPoint(0, *G)], ne![SegmentOp::PointAlongSegment(*G, One)])))]
+    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*D, *I), (*E, *I), (*J, *I)] => Some((ne![PolygonOp::OnPoint(3, *I)], ne![SegmentOp::PointAlongSegment(*I, One)])))]
+    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*U, *Q), (*P, *Q), (*V, *Q)] => Some((ne![PolygonOp::OnPoint(1, *Q)], ne![SegmentOp::PointAlongSegment(*Q, One)])))]
     // segment begins outside and ends on an edge
-    #[test_matrix([Polygon([*I, *G, *Q, *S])], [(*C, *H), (*B, *H), (*D, *H)], Some((ne![PolygonOp::PointAlongEdge(0, *H, Val(0.5))], ne![SegmentOp::PointAlongSegment(*H, One)])))]
+    #[test_matrix([Polygon([*I, *G, *Q, *S])], [(*C, *H), (*B, *H), (*D, *H)] => Some((ne![PolygonOp::PointAlongEdge(0, *H, Val(0.5))], ne![SegmentOp::PointAlongSegment(*H, One)])))]
     // segment begins outside and ends inside
-    #[test_case(Polygon([*I, *G, *Q, *S]), (*C, *M), Some((ne![PolygonOp::PointAlongEdge(0, *H, Val(0.5))], ne![SegmentOp::PointAlongSegment(*H, Val(0.5))])))]
-    #[test_case(Polygon([*I, *G, *Q, *S]), (*E, *M), Some((ne![PolygonOp::OnPoint(0, *I)], ne![SegmentOp::PointAlongSegment(*I, Val(0.5))])))]
+    #[test_case(Polygon([*I, *G, *Q, *S]), (*C, *M) => Some((ne![PolygonOp::PointAlongEdge(0, *H, Val(0.5))], ne![SegmentOp::PointAlongSegment(*H, Val(0.5))])))]
+    #[test_case(Polygon([*I, *G, *Q, *S]), (*E, *M) => Some((ne![PolygonOp::OnPoint(0, *I)], ne![SegmentOp::PointAlongSegment(*I, Val(0.5))])))]
     // segment begins at a point and ends outside
-    #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *J), Some((ne![PolygonOp::OnPoint(0, *I)], ne![SegmentOp::PointAlongSegment(*I, Zero)])))]
-    // #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *U), Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *Q))], ne![SegmentOp::Subsegment(Segment(*I, *Q))])))]
+    #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *J) => Some((ne![PolygonOp::OnPoint(0, *I)], ne![SegmentOp::PointAlongSegment(*I, Zero)])))]
+    // #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *U) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *Q))], ne![SegmentOp::Subsegment(Segment(*I, *Q))])))]
     // segment begins at a point and ends at a point
     // TODO(ambuc); think more carefully here about what happens if the point / edge we land on aren't the same.
-    #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *G), Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::EntireSegment])))]
+    #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *G) => Some((ne![PolygonOp::EntireEdge(0)], ne![SegmentOp::EntireSegment])))]
     // segment begins at a point and ends on an edge
-    #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *H), Some((ne![PolygonOp::SubsegmentOfEdge(0, Segment(*I, *H))], ne![SegmentOp::EntireSegment])))]
+    #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *H) => Some((ne![PolygonOp::SubsegmentOfEdge(0, Segment(*I, *H))], ne![SegmentOp::EntireSegment])))]
     // segment begins at a point and ends inside
     // TODO(ambuc); think more carefully here about what happens if the point / edge we land on aren't the same.
-    // #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *M), Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *M))], ne![SegmentOp::EntireSegment])); "foo")]
+    // #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *M) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *M))], ne![SegmentOp::EntireSegment])); "foo")]
     // segment begins on an edge and ends outside
     // TODO(ambuc)
     // segment begins on an edge and ends at a point
@@ -700,13 +700,11 @@ mod tests {
     // segment begins inside and ends on an edge
     // TODO(ambuc)
     // segment begins inside and ends inside
-    #[test_case(Polygon([*A, *U, *Y, *E]), (*G, *I), Some((ne![PolygonOp::SegmentWithinArea(Segment(*G, *I))], ne![SegmentOp::EntireSegment])))]
+    #[test_case(Polygon([*A, *U, *Y, *E]), (*G, *I) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*G, *I))], ne![SegmentOp::EntireSegment])))]
     fn test_polygon_overlaps_segment(
         pg: Result<Polygon>,
         sg: impl Into<Segment>,
-        expectation: Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)>,
-    ) -> Result<()> {
-        assert_eq!(polygon_overlaps_segment(&pg?, &sg.into())?, expectation);
-        Ok(())
+    ) -> Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)> {
+        polygon_overlaps_segment(&pg.unwrap(), &sg.into()).unwrap()
     }
 }
