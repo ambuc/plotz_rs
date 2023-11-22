@@ -12,7 +12,7 @@ use crate::{
         polygon::{abp, Polygon},
         segment::Segment,
     },
-    utils::Percent,
+    utils::Percent::{One, Zero},
 };
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
@@ -107,9 +107,9 @@ pub fn point_overlaps_point(a: &Point, b: &Point) -> Result<Option<Point>> {
 
 pub fn segment_overlaps_point(s: &Segment, p: &Point) -> Result<Option<(SegmentOp, Point)>> {
     if s.i == *p {
-        Ok(Some((SegmentOp::PointAlongSegment(*p, Percent::Zero), *p)))
+        Ok(Some((SegmentOp::PointAlongSegment(*p, Zero), *p)))
     } else if s.f == *p {
-        Ok(Some((SegmentOp::PointAlongSegment(*p, Percent::One), *p)))
+        Ok(Some((SegmentOp::PointAlongSegment(*p, One), *p)))
     } else if approx_eq!(
         f64,
         s.length(),
@@ -129,11 +129,6 @@ pub fn segment_overlaps_segment(
     sb: &Segment,
 ) -> Result<Option<(SegmentOp, SegmentOp)>> {
     // NB: sa and sb are _not_ guaranteed to point the same way.
-
-    if sa == sb || *sa == sb.flip() {
-        return Ok(Some((SegmentOp::EntireSegment, SegmentOp::EntireSegment)));
-    }
-
     if approx_eq!(f64, sa.slope(), sb.slope()) || approx_eq!(f64, sa.slope(), sb.flip().slope()) {
         let isxn_segment: Option<Segment> = match (
             segment_overlaps_point(sb, &sa.i)?,
@@ -145,42 +140,25 @@ pub fn segment_overlaps_segment(
             (None, None, None, None) => None,
 
             // ERR: same
-            //
-            // |-->|
-            // |-->|
             (Some(_), Some(_), Some(_), Some(_)) => {
-                return Err(anyhow!(
-                    "these are the same line; sa==sb should have triggered."
-                ));
+                return Ok(Some((SegmentOp::EntireSegment, SegmentOp::EntireSegment)));
             }
 
-            // |-->|
-            // |--->|
-            // or
-            //  |-->|
-            // |--->|
-            // or
-            //  |-->|
-            // |---->|
+            // |-->|  //  |-->| //  |-->|
+            // |--->| // |--->| // |---->|
             (Some(_), Some(_), _, _) => Some(*sa),
 
-            // |---->|
-            // |-->|
-            // or
-            // |---->|
-            //  |-->|
-            // |--->|
-            //  |-->|
+            // |---->| // |---->| // |--->|
+            // |-->|   //  |-->|  //  |-->|
             (_, _, Some(_), Some(_)) => Some(*sb),
 
             (Some(_), None, None, Some(_)) => {
                 if sa.i == sb.f {
                     //     |-->|
                     // |-->|
-                    let pt = sa.i;
                     return Ok(Some((
-                        SegmentOp::PointAlongSegment(pt, Percent::Zero),
-                        SegmentOp::PointAlongSegment(pt, Percent::One),
+                        SegmentOp::PointAlongSegment(sa.i, Zero),
+                        SegmentOp::PointAlongSegment(sa.i, One),
                     )));
                 }
                 //    |--->|
@@ -192,10 +170,9 @@ pub fn segment_overlaps_segment(
                 if sa.f == sb.i {
                     // |-->|
                     //     |-->|
-                    let pt = sa.f;
                     return Ok(Some((
-                        SegmentOp::PointAlongSegment(pt, Percent::One),
-                        SegmentOp::PointAlongSegment(pt, Percent::Zero),
+                        SegmentOp::PointAlongSegment(sa.f, One),
+                        SegmentOp::PointAlongSegment(sa.f, Zero),
                     )));
                 }
                 // |--->|
@@ -208,10 +185,9 @@ pub fn segment_overlaps_segment(
                 if sa.i == sb.i {
                     // |<--|
                     //     |-->|
-                    let pt = sa.i;
                     return Ok(Some((
-                        SegmentOp::PointAlongSegment(pt, Percent::Zero),
-                        SegmentOp::PointAlongSegment(pt, Percent::Zero),
+                        SegmentOp::PointAlongSegment(sa.i, Zero),
+                        SegmentOp::PointAlongSegment(sa.i, Zero),
                     )));
                 }
                 // |<---|
@@ -224,10 +200,9 @@ pub fn segment_overlaps_segment(
                 if sa.f == sb.f {
                     //     |<--|
                     // |-->|
-                    let pt = sa.f;
                     return Ok(Some((
-                        SegmentOp::PointAlongSegment(pt, Percent::One),
-                        SegmentOp::PointAlongSegment(pt, Percent::One),
+                        SegmentOp::PointAlongSegment(sa.f, One),
+                        SegmentOp::PointAlongSegment(sa.f, One),
                     )));
                 }
                 //   |<--|
@@ -447,10 +422,10 @@ pub fn polygon_overlaps_segment(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::Percent::Val;
     use lazy_static::lazy_static;
     use nonempty::nonempty as ne;
     use test_case::{test_case, test_matrix};
-    use Percent::{One, Val, Zero};
 
     //           ^ (y)
     //           |
@@ -703,7 +678,7 @@ mod tests {
     #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*D, *I), (*E, *I), (*J, *I)], Some((ne![PolygonOp::OnPoint(3, *I)], ne![SegmentOp::PointAlongSegment(*I, One)])))]
     #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*U, *Q), (*P, *Q), (*V, *Q)], Some((ne![PolygonOp::OnPoint(1, *Q)], ne![SegmentOp::PointAlongSegment(*Q, One)])))]
     // segment begins outside and ends on an edge
-    #[test_matrix([Polygon([*I, *G, *Q, *S])], [(*C, *H), (*B, *H), (*D, *H)], Some((ne![PolygonOp::PointAlongEdge(0, *H, Percent::Val(0.5))], ne![SegmentOp::PointAlongSegment(*H, One)])))]
+    #[test_matrix([Polygon([*I, *G, *Q, *S])], [(*C, *H), (*B, *H), (*D, *H)], Some((ne![PolygonOp::PointAlongEdge(0, *H, Val(0.5))], ne![SegmentOp::PointAlongSegment(*H, One)])))]
     // segment begins outside and ends inside
     #[test_case(Polygon([*I, *G, *Q, *S]), (*C, *M), Some((ne![PolygonOp::PointAlongEdge(0, *H, Val(0.5))], ne![SegmentOp::PointAlongSegment(*H, Val(0.5))])))]
     #[test_case(Polygon([*I, *G, *Q, *S]), (*E, *M), Some((ne![PolygonOp::OnPoint(0, *I)], ne![SegmentOp::PointAlongSegment(*I, Val(0.5))])))]
