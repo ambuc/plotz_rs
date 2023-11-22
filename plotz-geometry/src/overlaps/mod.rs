@@ -399,7 +399,8 @@ pub fn polygon_overlaps_segment(
             .collect();
 
         for s in segments {
-            // if this segment actually goes through the polygon (i.e., if its midpoint is within), then
+            // if this segment actually goes through the polygon (i.e., if its
+            // midpoint is within), then
             if polygon_overlaps_point(polygon, &s.midpoint())?.is_none() {
                 continue;
             }
@@ -432,6 +433,13 @@ pub fn polygon_overlaps_segment(
     } else {
         Ok(None)
     }
+}
+
+pub fn polygon_overlaps_multiline(
+    _polygon: &Polygon,
+    _multiline: &Multiline,
+) -> Result<Option<(NonEmpty<PolygonOp>, NonEmpty<MultilineOp>)>> {
+    unimplemented!()
 }
 
 #[cfg(test)]
@@ -703,5 +711,87 @@ mod tests {
         sg: impl Into<Segment>,
     ) -> Option<(NonEmpty<PolygonOp>, NonEmpty<SegmentOp>)> {
         polygon_overlaps_segment(&pg.unwrap(), &sg.into()).unwrap()
+    }
+
+    // yeah.... 4^3==64 test cases. that's life in the big city
+
+    // multiline begins outside, pivots outside, and ends outside.
+    // multiline begins outside, pivots outside, and ends on a point.
+    // multiline begins outside, pivots outside, and ends on an edge.
+    // multiline begins outside, pivots outside, and ends inside.
+    // multiline begins outside, pivots on a point, and ends outside.
+    // multiline begins outside, pivots on a point, and ends on a point.
+    // multiline begins outside, pivots on a point, and ends on an edge.
+    // multiline begins outside, pivots on a point, and ends inside.
+    // multiline begins outside, pivots on an edge, and ends outside.
+    // multiline begins outside, pivots on an edge, and ends on a point.
+    // multiline begins outside, pivots on an edge, and ends on an edge.
+    // multiline begins outside, pivots on an edge, and ends inside.
+    // multiline begins outside, pivots inside, and ends outside.
+    // multiline begins outside, pivots inside, and ends on a point.
+    // multiline begins outside, pivots inside, and ends on an edge.
+    // multiline begins outside, pivots inside, and ends inside.
+
+    // multiline begins on a point, pivots outside, and ends outside.
+    // multiline begins on a point, pivots outside, and ends on a point.
+    // multiline begins on a point, pivots outside, and ends on an edge.
+    // multiline begins on a point, pivots outside, and ends inside.
+    // multiline begins on a point, pivots on a point, and ends outside.
+    // multiline begins on a point, pivots on a point, and ends on a point.
+    // multiline begins on a point, pivots on a point, and ends on an edge.
+    // multiline begins on a point, pivots on a point, and ends inside.
+    // multiline begins on a point, pivots on an edge, and ends outside.
+    // multiline begins on a point, pivots on an edge, and ends on a point.
+    // multiline begins on a point, pivots on an edge, and ends on an edge.
+    // multiline begins on a point, pivots on an edge, and ends inside.
+    // multiline begins on a point, pivots inside, and ends outside.
+    // multiline begins on a point, pivots inside, and ends on a point.
+    // multiline begins on a point, pivots inside, and ends on an edge.
+    // multiline begins on a point, pivots inside, and ends inside.
+
+    // multiline begins on an edge, pivots outside, and ends outside.
+    // multiline begins on an edge, pivots outside, and ends on a point.
+    // multiline begins on an edge, pivots outside, and ends on an edge.
+    // multiline begins on an edge, pivots outside, and ends inside.
+    // multiline begins on an edge, pivots on a point, and ends outside.
+    // multiline begins on an edge, pivots on a point, and ends on a point.
+    // multiline begins on an edge, pivots on a point, and ends on an edge.
+    // multiline begins on an edge, pivots on a point, and ends inside.
+    // multiline begins on an edge, pivots on an edge, and ends outside.
+    // multiline begins on an edge, pivots on an edge, and ends on a point.
+    // multiline begins on an edge, pivots on an edge, and ends on an edge.
+    // multiline begins on an edge, pivots on an edge, and ends inside.
+    // multiline begins on an edge, pivots inside, and ends outside.
+    // multiline begins on an edge, pivots inside, and ends on a point.
+    // multiline begins on an edge, pivots inside, and ends on an edge.
+    // multiline begins on an edge, pivots inside, and ends inside.
+
+    // multiline begins inside, pivots outside, and ends outside.
+    // multiline begins inside, pivots outside, and ends on a point.
+    // multiline begins inside, pivots outside, and ends on an edge.
+    // multiline begins inside, pivots outside, and ends inside.
+    // multiline begins inside, pivots on a point, and ends outside.
+    // multiline begins inside, pivots on a point, and ends on a point.
+    // multiline begins inside, pivots on a point, and ends on an edge.
+    // multiline begins inside, pivots on a point, and ends inside.
+    // multiline begins inside, pivots on an edge, and ends outside.
+    // multiline begins inside, pivots on an edge, and ends on a point.
+    // multiline begins inside, pivots on an edge, and ends on an edge.
+    // multiline begins inside, pivots on an edge, and ends inside.
+    // multiline begins inside, pivots inside, and ends outside.
+    // multiline begins inside, pivots inside, and ends on a point.
+    // multiline begins inside, pivots inside, and ends on an edge.
+    // multiline begins inside, pivots inside, and ends inside.
+
+    // plus more test cases around intersecting a point twice, or an edge twice,
+    // or something like that.
+
+    // plus more test cases around 'doubling back', if multilines can do that kind of thing.
+
+    fn test_polygon_overlaps_multiline(
+        pg: Result<Polygon>,
+        ml: Multiline,
+    ) -> Option<(NonEmpty<PolygonOp>, NonEmpty<MultilineOp>)> {
+        polygon_overlaps_multiline(&pg.unwrap(), &ml).unwrap()
     }
 }
