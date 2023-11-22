@@ -3,7 +3,7 @@
 
 use crate::{
     bounded::{Bounded, Bounds},
-    crop::{CropType, Croppable, PointLocation},
+    crop::{CropType, Croppable},
     group::Group,
     overlaps::{polygon_overlaps_point, polygon_overlaps_segment},
     shapes::{
@@ -15,7 +15,6 @@ use crate::{
 };
 use anyhow::Result;
 use enum_dispatch::enum_dispatch;
-use itertools::Itertools;
 use std::{fmt::Debug, ops::*};
 
 pub enum ObjType2d {
@@ -57,9 +56,19 @@ impl Croppable for Obj2 {
             },
             Obj2::Segment(sg) => match polygon_overlaps_segment(frame, sg)? {
                 Some((_, sgops)) => Ok(sgops.into_iter().map(|sgop| sgop.to_obj(sg)).collect()),
-                None => todo!(),
+                None => Ok(vec![]),
             },
-            Obj2::Multiline(_ml) => todo!("when polygon_overlaps_multiline is implemented."),
+            Obj2::Multiline(ml) => {
+                Ok(ml
+                    .to_segments()
+                    .iter()
+                    .map(|sg| Obj2::from(*sg))
+                    .flat_map(|o| o.crop(frame, crop_type))
+                    .flatten()
+                    .collect::<Vec<Obj2>>())
+
+                // todo!("when polygon_overlaps_multiline is implemented."),
+            }
             Obj2::Polygon(pg) => Ok(pg
                 .crop(frame, crop_type)?
                 .into_iter()
@@ -69,61 +78,6 @@ impl Croppable for Obj2 {
             Obj2::CurveArc(_) => todo!(),
             Obj2::Text(_) => todo!(),
             Obj2::Group(_) => todo!(),
-        }
-    }
-
-    fn crop_excluding(&self, other: &Polygon) -> Result<Vec<Self::Output>>
-    where
-        Self: Sized,
-    {
-        match &self {
-            Obj2::Point(pt) => {
-                if matches!(other.contains_pt_deprecated(pt), Ok(PointLocation::Outside)) {
-                    Ok(vec![])
-                } else {
-                    Ok(vec![self.clone()])
-                }
-            }
-            Obj2::Multiline(ml) => Ok(ml
-                .to_segments()
-                .into_iter()
-                .map(|sg| sg.crop_excluding(other))
-                .flatten_ok()
-                .collect::<Result<Vec<_>>>()?
-                .into_iter()
-                .map(Obj2::from)
-                .collect::<Vec<_>>()),
-            Obj2::Polygon(pg) => Ok(pg
-                .crop_excluding(other)?
-                .into_iter()
-                .map(Obj2::from)
-                .collect::<Vec<_>>()),
-            Obj2::PolygonWithCavities(_) => unimplemented!("TODO: implement cropping for Pgc."),
-            Obj2::Segment(sg) => Ok(sg
-                .crop_excluding(other)?
-                .into_iter()
-                .map(Obj2::from)
-                .collect::<Vec<_>>()),
-            Obj2::CurveArc(ca) => Ok(ca
-                .crop_excluding(other)?
-                .into_iter()
-                .map(Obj2::from)
-                .collect::<Vec<_>>()),
-            Obj2::Text(ch) => {
-                if matches!(
-                    other.contains_pt_deprecated(&ch.pt),
-                    Ok(PointLocation::Outside)
-                ) {
-                    Ok(vec![])
-                } else {
-                    Ok(vec![self.clone()])
-                }
-            }
-            Obj2::Group(g) => Ok(g
-                .crop_excluding(other)?
-                .into_iter()
-                .map(Obj2::from)
-                .collect::<Vec<_>>()),
         }
     }
 }
