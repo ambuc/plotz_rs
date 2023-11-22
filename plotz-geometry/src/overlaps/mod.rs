@@ -340,10 +340,12 @@ pub fn polygon_overlaps_point(
     polygon: &Polygon,
     point: &Point,
 ) -> Result<Option<(PolygonOp, Point)>> {
+    // PolygonOp::OnPoint special case.
     if let Some(idx) = polygon.pts.iter().position(|x| x == point) {
         return Ok(Some((PolygonOp::OnPoint(idx, *point), *point)));
     }
 
+    // PolygonOp::PointAlongEdge special case.
     for (index, pg_sg) in polygon.to_segments().iter().enumerate() {
         if let Some((SegmentOp::PointAlongSegment(at_point, percent_along), _)) =
             segment_overlaps_point(pg_sg, point)?
@@ -355,6 +357,8 @@ pub fn polygon_overlaps_point(
         }
     }
 
+    // PolygonOp::PointWithinArea or None.
+    // https://en.wikipedia.org/wiki/Point_in_polygon#Winding_number_algorithm
     let theta: f64 = (polygon.pts.iter())
         .zip(polygon.pts.iter().cycle().skip(1))
         .map(|(i, j)| abp(point, i, j))
@@ -367,7 +371,6 @@ pub fn polygon_overlaps_point(
     }
 }
 
-// NB: the list of PolygonOp operations is not sorted.
 pub fn polygon_overlaps_segment(
     polygon: &Polygon,
     segment: &Segment,
