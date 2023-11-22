@@ -4,7 +4,7 @@ use crate::{
     shapes::{multiline::Multiline, point::Point, polygon::Polygon, segment::Segment},
     utils::Percent,
 };
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use nonempty::NonEmpty;
 use std::usize;
 
@@ -64,19 +64,21 @@ impl SegmentOpSet {
 
             // if there is a segment which adds to this segment to make a larger segment,
             // remove the extant one and add their sum instead.
-            if let Some(idx) = self.sg_ops.iter().position(|extant| {
-                matches!(
-                    extant,
-                    SegmentOp::Subsegment(extant_sg) if s_new.try_add(extant_sg).is_some()
-                )
-            }) {
-                if let SegmentOp::Subsegment(s_extant) = self.sg_ops.remove(idx) {
-                    let resultant = s_extant.try_add(&s_new).unwrap();
-                    self.sg_ops.push(SegmentOp::Subsegment(resultant));
-                    return Ok(());
-                } else {
-                    return Err(anyhow!("how can this be?"));
-                }
+            if let Some((idx, resultant)) = self
+                .sg_ops
+                .iter()
+                .enumerate()
+                .filter_map(|(idx, extant)| match extant {
+                    SegmentOp::Subsegment(extant_sg) => {
+                        s_new.try_add(extant_sg).map(|resultant| (idx, resultant))
+                    }
+                    _ => None,
+                })
+                .next()
+            {
+                self.sg_ops.remove(idx);
+                self.sg_ops.push(SegmentOp::Subsegment(resultant));
+                return Ok(());
             }
 
             // otherwise, OK to add.
