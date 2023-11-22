@@ -152,63 +152,66 @@ pub fn segment_overlaps_segment(
             // |-->|   //  |-->|  //  |-->|
             (_, _, Some(_), Some(_)) => Some(*sb),
 
-            (Some(_), None, None, Some(_)) => {
-                if sa.i == sb.f {
-                    //     |-->|
-                    // |-->|
-                    return Ok(Some((
-                        SegmentOp::PointAlongSegment(sa.i, Zero),
-                        SegmentOp::PointAlongSegment(sa.i, One),
-                    )));
-                }
-                //    |--->|
-                // |--->|
-                Some(Segment(sa.i, sb.f))
+            //     |-->|
+            // |-->|
+            (
+                Some((z1 @ SegmentOp::PointAlongSegment(_, One), _)),
+                None,
+                None,
+                Some((z2 @ SegmentOp::PointAlongSegment(_, Zero), _)),
+            ) => {
+                return Ok(Some((z2, z1)));
             }
 
-            (None, Some(_), Some(_), None) => {
-                if sa.f == sb.i {
-                    // |-->|
-                    //     |-->|
-                    return Ok(Some((
-                        SegmentOp::PointAlongSegment(sa.f, One),
-                        SegmentOp::PointAlongSegment(sa.f, Zero),
-                    )));
-                }
-                // |--->|
-                //    |--->|
-                Some(Segment(sb.i, sa.f))
+            //    |--->|
+            // |--->|
+            (Some(_), None, None, Some(_)) => Some(Segment(sa.i, sb.f)),
+
+            // |-->|
+            //     |-->|
+            (
+                None,
+                Some((z1 @ SegmentOp::PointAlongSegment(_, Zero), _)),
+                Some((z2 @ SegmentOp::PointAlongSegment(_, One), _)),
+                None,
+            ) => {
+                return Ok(Some((z2, z1)));
             }
 
-            // Head-to-head collision.
-            (Some(_), None, Some(_), None) => {
-                if sa.i == sb.i {
-                    // |<--|
-                    //     |-->|
-                    return Ok(Some((
-                        SegmentOp::PointAlongSegment(sa.i, Zero),
-                        SegmentOp::PointAlongSegment(sa.i, Zero),
-                    )));
-                }
-                // |<---|
-                //    |--->|
-                Some(Segment(sa.i, sb.i))
+            // |--->|
+            //    |--->|
+            (None, Some(_), Some(_), None) => Some(Segment(sb.i, sa.f)),
+
+            // |<--|
+            //     |-->|
+            (
+                Some((z1 @ SegmentOp::PointAlongSegment(_, Zero), _)),
+                None,
+                Some((z2 @ SegmentOp::PointAlongSegment(_, Zero), _)),
+                None,
+            ) => {
+                return Ok(Some((z1, z2)));
             }
+
+            // |<---|
+            //    |--->|
+            (Some(_), None, Some(_), None) => Some(Segment(sa.i, sb.i)),
 
             // Tail-to-tail collision.
-            (None, Some(_), None, Some(_)) => {
-                if sa.f == sb.f {
-                    //     |<--|
-                    // |-->|
-                    return Ok(Some((
-                        SegmentOp::PointAlongSegment(sa.f, One),
-                        SegmentOp::PointAlongSegment(sa.f, One),
-                    )));
-                }
-                //   |<--|
-                // |-->|
-                Some(Segment(sa.f, sb.f))
+            //     |<--|
+            // |-->|
+            (
+                None,
+                Some((z1 @ SegmentOp::PointAlongSegment(_, One), _)),
+                None,
+                Some((z2 @ SegmentOp::PointAlongSegment(_, One), _)),
+            ) => {
+                return Ok(Some((z1, z2)));
             }
+
+            //   |<--|
+            // |-->|
+            (None, Some(_), None, Some(_)) => Some(Segment(sa.f, sb.f)),
 
             _ => {
                 return Err(anyhow!("this should not be possible."));
