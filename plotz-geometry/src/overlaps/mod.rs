@@ -340,11 +340,10 @@ pub fn polygon_overlaps_point(
     polygon: &Polygon,
     point: &Point,
 ) -> Result<Option<(PolygonOp, Point)>> {
-    for (index, pg_pt) in polygon.pts.iter().enumerate() {
-        if pg_pt == point {
-            return Ok(Some((PolygonOp::OnPoint(index, *point), *point)));
-        }
+    if let Some(idx) = polygon.pts.iter().position(|x| x == point) {
+        return Ok(Some((PolygonOp::OnPoint(idx, *point), *point)));
     }
+
     for (index, pg_sg) in polygon.to_segments().iter().enumerate() {
         if let Some((SegmentOp::PointAlongSegment(at_point, percent_along), _)) =
             segment_overlaps_point(pg_sg, point)?
