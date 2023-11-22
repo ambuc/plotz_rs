@@ -306,12 +306,10 @@ pub fn multiline_overlaps_segment(
         }
     }
 
-    match (ml_op_set.to_nonempty(), sg_op_set.to_nonempty()) {
-        (Some(total_ml_ops), Some(total_sg_ops)) => Ok(Some((total_ml_ops, total_sg_ops))),
-        (Some(_), None) | (None, Some(_)) => Err(anyhow!(
-            "unexpected case - how can one object see collisions but the other doesn't?"
-        )),
-        (None, None) => Ok(None),
+    if let (Some(ml_ops), Some(sg_ops)) = (ml_op_set.to_nonempty(), sg_op_set.to_nonempty()) {
+        Ok(Some((ml_ops, sg_ops)))
+    } else {
+        Ok(None)
     }
 }
 
@@ -331,12 +329,10 @@ pub fn multiline_overlaps_multiline(
         }
     }
 
-    match (ml1_op_set.to_nonempty(), ml2_op_set.to_nonempty()) {
-        (Some(total_ml1_ops), Some(total_ml2_ops)) => Ok(Some((total_ml1_ops, total_ml2_ops))),
-        (Some(_), None) | (None, Some(_)) => Err(anyhow!(
-            "unexpected case - how can one object see collisions but the other doesn't?"
-        )),
-        (None, None) => Ok(None),
+    if let (Some(ml1_ops), Some(ml2_ops)) = (ml1_op_set.to_nonempty(), ml2_op_set.to_nonempty()) {
+        Ok(Some((ml1_ops, ml2_ops)))
+    } else {
+        Ok(None)
     }
 }
 
@@ -393,47 +389,46 @@ pub fn polygon_overlaps_segment(
     // ideally this also covers the special-case below, where there are no
     // intersections but the segment is totally contained within the polygon.
 
-    let cuts = sg_op_set.to_cuts()?;
-    let segments: Vec<Segment> = (cuts.iter())
-        .zip(cuts.iter().skip(1))
-        .map(|((p1, _), (p2, _))| Segment(*p1, *p2))
-        .collect();
+    {
+        let cuts = sg_op_set.to_cuts()?;
+        let segments: Vec<Segment> = (cuts.iter())
+            .zip(cuts.iter().skip(1))
+            .map(|((p1, _), (p2, _))| Segment(*p1, *p2))
+            .collect();
 
-    for s in segments {
-        // if this segment actually goes through the polygon (i.e., if its midpoint is within), then
-        if polygon_overlaps_point(polygon, &s.midpoint())?.is_none() {
-            continue;
-        }
-
-        // (a) add it to the segment ops set.
-        sg_op_set.add(SegmentOp::Subsegment(s))?;
-
-        // (b) add it to the polygon ops set.
-        match (
-            polygon_overlaps_point(polygon, &s.i)?,
-            polygon_overlaps_point(polygon, &s.f)?,
-        ) {
-            // but there's a catch -- if these points are together along the same edge,
-            (
-                Some((PolygonOp::PointAlongEdge(idx, _, _), _)),
-                Some((PolygonOp::PointAlongEdge(jdx, _, _), _)),
-            ) if idx == jdx => {
-                // then we need to add the type PolygonOp::SubsegmentOfEdge instead.
-                pg_op_set.add(PolygonOp::SubsegmentOfEdge(idx, s))?;
+        for s in segments {
+            // if this segment actually goes through the polygon (i.e., if its midpoint is within), then
+            if polygon_overlaps_point(polygon, &s.midpoint())?.is_none() {
+                continue;
             }
-            _ => {
-                pg_op_set.add(PolygonOp::SegmentWithinArea(s))?;
+
+            // (a) add it to the segment ops set.
+            sg_op_set.add(SegmentOp::Subsegment(s))?;
+
+            // (b) add it to the polygon ops set.
+            match (
+                polygon_overlaps_point(polygon, &s.i)?,
+                polygon_overlaps_point(polygon, &s.f)?,
+            ) {
+                // but there's a catch -- if these points are together along the same edge,
+                (
+                    Some((PolygonOp::PointAlongEdge(idx, _, _), _)),
+                    Some((PolygonOp::PointAlongEdge(jdx, _, _), _)),
+                ) if idx == jdx => {
+                    // then we need to add the type PolygonOp::SubsegmentOfEdge instead.
+                    pg_op_set.add(PolygonOp::SubsegmentOfEdge(idx, s))?;
+                }
+                _ => {
+                    pg_op_set.add(PolygonOp::SegmentWithinArea(s))?;
+                }
             }
         }
     }
 
-    match (pg_op_set.to_nonempty(), sg_op_set.to_nonempty()) {
-        (Some(total_pg_ops), Some(total_sg_ops)) => Ok(Some((total_pg_ops, total_sg_ops))),
-        (None, None) => Ok(None),
-        x => Err(anyhow!(
-            "unexpected case - how can one object see collisions but the other doesn't?: {:?}",
-            x
-        )),
+    if let (Some(pg_ops), Some(sg_ops)) = (pg_op_set.to_nonempty(), sg_op_set.to_nonempty()) {
+        Ok(Some((pg_ops, sg_ops)))
+    } else {
+        Ok(None)
     }
 }
 
@@ -699,8 +694,6 @@ mod tests {
     #[test_case(Polygon([*I, *G, *Q, *S]), (*M, *I) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*M, *I))], ne![SegmentOp::EntireSegment])))]
     // segment begins inside and ends on an edge
     #[test_case(Polygon([*I, *G, *Q, *S]), (*M, *N) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*M, *N))], ne![SegmentOp::EntireSegment])))]
-    // TODO(ambuc)
-    // TODO(ambuc)
     // segment begins inside and ends inside
     #[test_case(Polygon([*A, *U, *Y, *E]), (*G, *I) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*G, *I))], ne![SegmentOp::EntireSegment])))]
     fn test_polygon_overlaps_segment(
