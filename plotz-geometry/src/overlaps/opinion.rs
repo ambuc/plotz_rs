@@ -61,6 +61,19 @@ impl SegmentOpSet {
                 // do not insert!
                 return Ok(());
             }
+
+            // TODO(ambuc): this logic can be simplified by implementing
+            // something like Segment::try_add(&Segment)
+            // TODO
+            // TODO
+            // TODO
+            // TODO
+            // TODO
+            // TODO
+            // TODO
+            // TODO
+            // TODO
+
             // if there is already a segment which lines up with this one, deduplicate them.
             if let Some(idx) = self.sg_ops.iter().position(|x| {
                 matches!(

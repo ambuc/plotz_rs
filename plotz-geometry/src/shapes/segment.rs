@@ -12,6 +12,7 @@ use crate::{
     Object,
 };
 use anyhow::Result;
+use float_eq::float_ne;
 use float_ord::FloatOrd;
 use std::{
     f64::consts::{FRAC_PI_2, PI},
@@ -129,6 +130,34 @@ impl Segment {
     pub fn rays_perpendicular_both(&self) -> (Ray, Ray) {
         let ray = self.ray_perpendicular();
         (ray.clone().rotate(PI), ray)
+    }
+
+    /// Tries to adjoin another segment to this one.
+    /// Succeeds if ai-af==bi-bf or bi-bf==ai-af.
+    ///          or ai-af==bf-bi or bi-bf==af-ai.
+    /// Does not perform 0--2 + 2--1 => 0--1 subtraction.
+    /// Returns None if not possible.
+    pub fn try_add(&self, other: &Self) -> Option<Segment> {
+        // if their cross product isn't 0, then they aren't parallel or antiparallel.
+        if float_ne!(self.cross_z(other), 0.0, ulps <= 10) {
+            return None;
+        }
+
+        for (cond, resultant) in [
+            // tail-to-tip and facing the same direction
+            (self.f == other.i, Segment(self.i, other.f)),
+            // tail-to-tail and facing opposite direcitons
+            (self.f == other.f, Segment(self.i, other.i)),
+            // tip-to-tail and facing the same direction
+            (self.i == other.f, Segment(other.i, self.f)),
+            // tip-to-tip and facing opposite directions
+            (self.i == other.i, Segment(self.f, other.f)),
+        ] {
+            if cond && self.length() + other.length() == resultant.length() {
+                return Some(resultant);
+            }
+        }
+        None
     }
 }
 
@@ -253,6 +282,8 @@ impl Object for Segment {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use lazy_static::lazy_static;
+    use test_case::test_case;
 
     #[test]
     fn test_slope() {
@@ -477,5 +508,62 @@ mod tests {
         assert_eq!(b.x_max_y_min(), Point(1, 1));
         assert_eq!(b.x_max_y_max(), Point(1, 2));
         Ok(())
+    }
+
+    //           ^ (y)
+    //           |
+    //   a . b . c . d . e
+    //           |
+    //   f . g . h . i . j
+    //           |
+    // <-k---l---m---n---o-> (x)
+    //           |
+    //   p . q . r . s . t
+    //           |
+    //   u . v . w . x . y
+    //           |
+    //           v
+    lazy_static! {
+        static ref A: Point = Point(-2, 2);
+        static ref B: Point = Point(-1, 2);
+        static ref C: Point = Point(0, 2);
+        static ref D: Point = Point(1, 2);
+        static ref E: Point = Point(2, 2);
+        static ref F: Point = Point(-2, 1);
+        static ref G: Point = Point(-1, 1);
+        static ref H: Point = Point(0, 1);
+        static ref I: Point = Point(1, 1);
+        static ref J: Point = Point(2, 1);
+        static ref K: Point = Point(-2, 0);
+        static ref L: Point = Point(-1, 0);
+        static ref M: Point = Point(0, 0);
+        static ref N: Point = Point(1, 0);
+        static ref O: Point = Point(2, 0);
+        static ref P: Point = Point(-2, -1);
+        static ref Q: Point = Point(-1, -1);
+        static ref R: Point = Point(0, -1);
+        static ref S: Point = Point(1, -1);
+        static ref T: Point = Point(2, -1);
+        static ref U: Point = Point(-2, -2);
+        static ref V: Point = Point(-1, -2);
+        static ref W: Point = Point(0, -2);
+        static ref X: Point = Point(1, -2);
+        static ref Y: Point = Point(2, -2);
+    }
+
+    #[test_case((*A, *B), (*B, *G), None)]
+    #[test_case((*L, *M), (*M, *T), None)]
+    #[test_case((*L, *M), (*M, *W), None)]
+    #[test_case((*L, *M), (*M, *P), None)]
+    #[test_case((*L, *M), (*M, *F), None)]
+    #[test_case((*L, *M), (*M, *J), None)]
+    #[test_case((*L, *M), (*M, *N), Some(Segment(*L, *N)))]
+    #[test_case((*L, *M), (*N, *M), Some(Segment(*L, *N)))]
+    #[test_case((*M, *L), (*N, *M), Some(Segment(*N, *L)))]
+    #[test_case((*M, *L), (*M, *N), Some(Segment(*L, *N)))]
+    fn test_try_add(sa: impl Into<Segment>, sb: impl Into<Segment>, expectation: Option<Segment>) {
+        let sa = sa.into();
+        let sb = sb.into();
+        assert_eq!(sa.try_add(&sb), expectation);
     }
 }
