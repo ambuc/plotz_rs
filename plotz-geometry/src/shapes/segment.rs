@@ -182,27 +182,17 @@ impl Croppable for Segment {
     {
         match crop_type {
             // the bits of |self| which are in |frame|.
-            CropType::Inclusive => {
-                match polygon_overlaps_segment(frame, self)? {
-                    Some((_, segmentops)) => {
-                        let mut res = vec![];
-                        for sgop in segmentops.iter() {
-                            match sgop {
-                                SegmentOp::PointAlongSegment(_, _) => {}
-                                SegmentOp::Subsegment(ss) => {
-                                    res.push(*ss);
-                                }
-                                SegmentOp::EntireSegment => {
-                                    res.push(*self);
-                                }
-                            }
-                        }
-                        //
-                        Ok(res)
-                    }
-                    None => Ok(vec![]),
-                }
-            }
+            CropType::Inclusive => match polygon_overlaps_segment(frame, self)? {
+                Some((_, segmentops)) => Ok(segmentops
+                    .iter()
+                    .filter_map(|sgop| match sgop {
+                        SegmentOp::PointAlongSegment(_, _) => None,
+                        SegmentOp::Subsegment(ss) => Some(*ss),
+                        SegmentOp::EntireSegment => Some(*self),
+                    })
+                    .collect()),
+                None => Ok(vec![]),
+            },
 
             // the bits of |self| which are _not_ in |frame|.
             CropType::Exclusive => todo!(),
