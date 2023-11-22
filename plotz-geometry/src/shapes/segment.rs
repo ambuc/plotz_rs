@@ -183,7 +183,7 @@ impl Croppable for Segment {
         match crop_type {
             // the bits of |self| which are in |frame|.
             CropType::Inclusive => match polygon_overlaps_segment(frame, self)? {
-                Some((_, segmentops)) => Ok(segmentops
+                Some((_polygonops, segmentops)) => Ok(segmentops
                     .iter()
                     .filter_map(|sgop| match sgop {
                         SegmentOp::PointAlongSegment(_, _) => None,

@@ -101,8 +101,16 @@ impl Multiline {
 impl Croppable for Multiline {
     type Output = Multiline;
 
-    fn crop(&self, _other: &Polygon, _crop_type: CropType) -> Result<Vec<Self::Output>> {
-        todo!("https://github.com/ambuc/plotz_rs/issues/7")
+    fn crop(&self, _other: &Polygon, crop_type: CropType) -> Result<Vec<Self::Output>> {
+        match crop_type {
+            // the bits of |self| which are in |frame|.
+            CropType::Inclusive => {
+                // match polygon_overlaps_multiline(..)
+                todo!()
+            }
+            // the bits of |self| which are _not_ in |frame|.
+            CropType::Exclusive => todo!(),
+        }
     }
 }
 
