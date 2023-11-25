@@ -366,8 +366,8 @@ pub enum PolygonOp {
     SegmentWithin(Segment), // a segment is  within the area of the polygon.
 
     SubsegmentOfEdge(usize, Segment), // a subsegment of an edge of the polygon.
-    EntireEdge(usize),                // an entire edge of the polygon.
-    AtSubpolygon(Polygon),            // a subpolygon of the polygon.
+    Edge(usize),                      // an entire edge of the polygon.
+    Subpolygon(Polygon),              // a subpolygon of the polygon.
     Entire,
 }
 
@@ -380,7 +380,7 @@ impl PolygonOp {
                 _ => PolygonOp::PointAlongEdge(index, at_point, percent_along),
             },
             SegmentOp::Subsegment(segment) => PolygonOp::SubsegmentOfEdge(index, segment),
-            SegmentOp::Entire => PolygonOp::EntireEdge(index),
+            SegmentOp::Entire => PolygonOp::Edge(index),
         }
     }
     pub fn to_obj(&self, original: &Polygon) -> Obj2 {
@@ -389,8 +389,8 @@ impl PolygonOp {
             | PolygonOp::OnPoint(_, p)
             | PolygonOp::PointAlongEdge(_, p, _) => Obj2::from(*p),
             PolygonOp::SegmentWithin(sg) | PolygonOp::SubsegmentOfEdge(_, sg) => Obj2::from(*sg),
-            PolygonOp::EntireEdge(idx) => Obj2::from(original.to_segments()[*idx]),
-            PolygonOp::AtSubpolygon(pg) => Obj2::from(pg.clone()),
+            PolygonOp::Edge(idx) => Obj2::from(original.to_segments()[*idx]),
+            PolygonOp::Subpolygon(pg) => Obj2::from(pg.clone()),
             PolygonOp::Entire => Obj2::from(original.clone()),
         }
     }
