@@ -3,7 +3,7 @@
 use crate::{
     crop::{CropType, PointLocation},
     intersection::{Intersection, IntersectionResult},
-    overlaps::{opinion::PolygonOp, polygon_overlaps_point},
+    overlaps::{opinion::polygon_opinion::PolygonOp, polygon_overlaps_point},
     shapes::{
         point::{is_colinear_n, Point},
         polygon::Polygon,

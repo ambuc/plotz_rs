@@ -6,7 +6,9 @@ use crate::{
     crop::{CropType, Croppable},
     intersection::{Intersection, IntersectionResult},
     obj2::ObjType2d,
-    overlaps::{opinion::SegmentOp, polygon_overlaps_segment, segment_overlaps_segment},
+    overlaps::{
+        opinion::segment_opinion::SegmentOp, polygon_overlaps_segment, segment_overlaps_segment,
+    },
     shapes::{point::Point, polygon::Polygon, ray::Ray},
     Object,
 };

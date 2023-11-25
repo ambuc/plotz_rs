@@ -4,7 +4,7 @@ use plotz_geometry::{
     bounded::Bounded,
     crop::PointLocation,
     overlaps::{
-        opinion::{PolygonOp, SegmentOp},
+        opinion::{polygon_opinion::PolygonOp, segment_opinion::SegmentOp},
         polygon_overlaps_point,
     },
     shapes::{

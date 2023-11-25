@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 use indicatif::ProgressBar;
 use itertools::Itertools;
 use plotz_geometry::{
-    overlaps::{opinion::PolygonOp, polygon_overlaps_point},
+    overlaps::{opinion::polygon_opinion::PolygonOp, polygon_overlaps_point},
     shapes::{point::Point, polygon::Polygon, segment::Segment},
 };
 use rand::seq::SliceRandom;

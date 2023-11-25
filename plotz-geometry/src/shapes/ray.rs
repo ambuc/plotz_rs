@@ -2,7 +2,7 @@
 #![allow(missing_docs)]
 
 use crate::{
-    overlaps::{opinion::SegmentOp, segment_overlaps_segment},
+    overlaps::{opinion::segment_opinion::SegmentOp, segment_overlaps_segment},
     shapes::{
         point::{Point, PolarPt},
         segment::Segment,

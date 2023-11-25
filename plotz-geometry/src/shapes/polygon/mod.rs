@@ -10,7 +10,7 @@ use crate::{
     crop::{CropType, Croppable, PointLocation},
     intersection::IntersectionResult,
     obj2::ObjType2d,
-    overlaps::{opinion::PolygonOp, polygon_overlaps_point},
+    overlaps::{opinion::polygon_opinion::PolygonOp, polygon_overlaps_point},
     shapes::{point::Point, segment::Segment},
     *,
 };

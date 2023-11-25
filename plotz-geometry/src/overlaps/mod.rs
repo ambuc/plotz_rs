@@ -1,10 +1,15 @@
 #![allow(missing_docs)]
 
 pub mod opinion;
-use self::opinion::*;
+
 use crate::{
     interpolate::interpolate_2d_checked,
     obj2::Obj2,
+    overlaps::opinion::{
+        multiline_opinion::{MultilineOp, MultilineOpSet},
+        polygon_opinion::{PolygonOp, PolygonOpSet},
+        segment_opinion::{SegmentOp, SegmentOpSet},
+    },
     shapes::{
         multiline::Multiline,
         point::Point,
