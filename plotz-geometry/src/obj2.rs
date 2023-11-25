@@ -5,7 +5,7 @@ use crate::{
     bounded::{Bounded, Bounds},
     crop::{CropType, Croppable},
     group::Group,
-    overlaps::{polygon_overlaps_point, polygon_overlaps_segment},
+    overlaps::{polygon_overlaps_multiline, polygon_overlaps_point, polygon_overlaps_segment},
     shapes::{
         curve::CurveArc, multiline::Multiline, point::Point, polygon::Polygon,
         polygon_with_cavity::PolygonWithCavities, segment::Segment, text::Text,
@@ -58,17 +58,10 @@ impl Croppable for Obj2 {
                 Some((_, sgops)) => Ok(sgops.into_iter().map(|sgop| sgop.to_obj(sg)).collect()),
                 None => Ok(vec![]),
             },
-            Obj2::Multiline(ml) => {
-                Ok(ml
-                    .to_segments()
-                    .iter()
-                    .map(|sg| Obj2::from(*sg))
-                    .flat_map(|o| o.crop(frame, crop_type))
-                    .flatten()
-                    .collect::<Vec<Obj2>>())
-
-                // todo!("when polygon_overlaps_multiline is implemented."),
-            }
+            Obj2::Multiline(ml) => match polygon_overlaps_multiline(frame, ml)? {
+                Some((_, mlops)) => Ok(mlops.into_iter().map(|mlop| mlop.to_obj(ml)).collect()),
+                None => Ok(vec![]),
+            },
             Obj2::Polygon(pg) => Ok(pg
                 .crop(frame, crop_type)?
                 .into_iter()
