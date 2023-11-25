@@ -157,11 +157,11 @@ impl SegmentOpSet {
 #[derive(PartialEq, Eq, Copy, Clone, Debug, PartialOrd, Ord)]
 
 pub enum MultilineOp {
-    Point(usize, Point),                      // one of the points in the multiline.
-    PointAlongSegment(usize, Point, Percent), // a point some percent along a segment of this multiline.
-    SubsegmentOf(usize, Segment),             // a subsegment of a segment of this multiline.
-    Segment(usize),                           // an entire segment of this multiline
-    Entire,                                   // the entire multiline // TODO(ambuc)
+    Point(/*point index*/ usize, Point), // one of the points in the multiline.
+    SegmentPoint(/*segment index*/ usize, Point, Percent), // a point some percent along a segment of this multiline.
+    Subsegment(/*segment index*/ usize, Segment), // a subsegment of a segment of this multiline.
+    Segment(/*segment index*/ usize),             // an entire segment of this multiline
+    Entire,                                       // the entire multiline // TODO(ambuc)
 }
 
 impl MultilineOp {
@@ -178,16 +178,16 @@ impl MultilineOp {
             SegmentOp::Point(at_point, percent_along) => match percent_along {
                 Percent::Zero => MultilineOp::Point(index, at_point),
                 Percent::One => MultilineOp::Point(index + 1, at_point),
-                _ => MultilineOp::PointAlongSegment(index, at_point, percent_along),
+                _ => MultilineOp::SegmentPoint(index, at_point, percent_along),
             },
-            SegmentOp::Subsegment(segment) => MultilineOp::SubsegmentOf(index, segment),
+            SegmentOp::Subsegment(segment) => MultilineOp::Subsegment(index, segment),
             SegmentOp::Entire => MultilineOp::Segment(index),
         }
     }
     pub fn to_obj(&self, original_ml: &Multiline) -> Obj2 {
         match self {
-            MultilineOp::Point(_, p) | MultilineOp::PointAlongSegment(_, p, _) => Obj2::from(*p),
-            MultilineOp::SubsegmentOf(_, sg) => Obj2::from(*sg),
+            MultilineOp::Point(_, p) | MultilineOp::SegmentPoint(_, p, _) => Obj2::from(*p),
+            MultilineOp::Subsegment(_, sg) => Obj2::from(*sg),
             MultilineOp::Segment(idx) => Obj2::from(original_ml.to_segments()[*idx]),
             MultilineOp::Entire => Obj2::from(original_ml.clone()),
         }
@@ -221,7 +221,7 @@ impl MultilineOpSet {
             .retain(|extant| !ml_op.totally_covers(extant, &self.original).unwrap());
 
         match ml_op {
-            MultilineOp::SubsegmentOf(s_idx, s_new) => {
+            MultilineOp::Subsegment(s_idx, s_new) => {
                 // need to deduplicate adjacent subsegments -- coverage doesn't take care of that.
                 self.add_subsegment_of(ml_op, s_idx, s_new)?;
             }
@@ -285,7 +285,7 @@ impl MultilineOpSet {
         if self.ml_ops.iter().any(|x| {
             matches!(
                 x,
-                MultilineOp::SubsegmentOf(s_idx_extant, ss)
+                MultilineOp::Subsegment(s_idx_extant, ss)
                 if s_idx == *s_idx_extant && (*ss == s_new || ss.flip() == s_new)
             )
         }) {
@@ -296,7 +296,7 @@ impl MultilineOpSet {
         // one, (b) remove the existing one, and (c) add the joined segment
         // instead.
         if let Some((idx, resultant)) = self.ml_ops.iter().find_map(|extant| match extant {
-            MultilineOp::SubsegmentOf(idx_old, s_old) if *idx_old == s_idx => {
+            MultilineOp::Subsegment(idx_old, s_old) if *idx_old == s_idx => {
                 s_old.try_add(&s_new).map(|resultant| (idx_old, resultant))
             }
             _ => None,
@@ -305,7 +305,7 @@ impl MultilineOpSet {
             if resultant == self.original.to_segments()[s_idx] {
                 self.add(MultilineOp::Segment(s_idx))?;
             } else {
-                self.add(MultilineOp::SubsegmentOf(s_idx, resultant))?;
+                self.add(MultilineOp::Subsegment(s_idx, resultant))?;
             }
             return Ok(());
         }
