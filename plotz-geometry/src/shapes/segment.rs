@@ -188,7 +188,7 @@ impl Croppable for Segment {
                     .filter_map(|sgop| match sgop {
                         SegmentOp::PointAlongSegment(_, _) => None,
                         SegmentOp::Subsegment(ss) => Some(*ss),
-                        SegmentOp::EntireSegment => Some(*self),
+                        SegmentOp::Entire => Some(*self),
                     })
                     .collect()),
                 None => Ok(vec![]),

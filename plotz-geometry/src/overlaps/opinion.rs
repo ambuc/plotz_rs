@@ -16,7 +16,7 @@ use std::usize;
 pub enum SegmentOp {
     PointAlongSegment(Point, Percent), // a point some percent along this segment.
     Subsegment(Segment),               // a subsegment of this segment.
-    EntireSegment,                     // the whole segment.
+    Entire,                            // the whole segment.
 }
 
 impl SegmentOp {
@@ -24,7 +24,7 @@ impl SegmentOp {
         match self {
             SegmentOp::PointAlongSegment(p, _) => Obj2::from(*p),
             SegmentOp::Subsegment(ss) => Obj2::from(*ss),
-            SegmentOp::EntireSegment => Obj2::from(*original_sg),
+            SegmentOp::Entire => Obj2::from(*original_sg),
         }
     }
 
@@ -127,7 +127,7 @@ impl SegmentOpSet {
                         interpolate_2d_checked(self.original.i, self.original.f, ss.f)?,
                     ));
                 }
-                SegmentOp::EntireSegment => {}
+                SegmentOp::Entire => {}
             }
         }
         cuts.sort_by_key(|(_, pct)| *pct);
@@ -150,7 +150,7 @@ impl SegmentOpSet {
             |x| matches!(x, SegmentOp::Subsegment(ss) if *ss == self.original || ss.flip() == self.original),
         ) {
             self.sg_ops.remove(idx);
-            self.sg_ops.push(SegmentOp::EntireSegment);
+            self.sg_ops.push(SegmentOp::Entire);
         }
     }
 }
@@ -161,7 +161,7 @@ pub enum MultilineOp {
     PointAlongSegmentOf(usize, Point, Percent), // a point some percent along a segment of this multiline.
     SubsegmentOf(usize, Segment),               // a subsegment of a segment of this multiline.
     EntireSubsegment(usize),                    // an entire subsegment of this multiline
-    EntireMultiline,                            // the entire multiline // TODO(ambuc)
+    Entire,                                     // the entire multiline // TODO(ambuc)
 }
 
 impl MultilineOp {
@@ -181,7 +181,7 @@ impl MultilineOp {
                 _ => MultilineOp::PointAlongSegmentOf(index, at_point, percent_along),
             },
             SegmentOp::Subsegment(segment) => MultilineOp::SubsegmentOf(index, segment),
-            SegmentOp::EntireSegment => MultilineOp::EntireSubsegment(index),
+            SegmentOp::Entire => MultilineOp::EntireSubsegment(index),
         }
     }
     pub fn to_obj(&self, original_ml: &Multiline) -> Obj2 {
@@ -189,7 +189,7 @@ impl MultilineOp {
             MultilineOp::Point(_, p) | MultilineOp::PointAlongSegmentOf(_, p, _) => Obj2::from(*p),
             MultilineOp::SubsegmentOf(_, sg) => Obj2::from(*sg),
             MultilineOp::EntireSubsegment(idx) => Obj2::from(original_ml.to_segments()[*idx]),
-            MultilineOp::EntireMultiline => Obj2::from(original_ml.clone()),
+            MultilineOp::Entire => Obj2::from(original_ml.clone()),
         }
     }
     pub fn totally_covers(&self, other: &Self, original_ml: &Multiline) -> Result<bool> {
@@ -271,7 +271,7 @@ impl MultilineOpSet {
             for idx in idxs_to_remove {
                 self.ml_ops.remove(idx);
             }
-            self.ml_ops.push(MultilineOp::EntireMultiline);
+            self.ml_ops.push(MultilineOp::Entire);
         }
     }
 
@@ -368,6 +368,7 @@ pub enum PolygonOp {
     SubsegmentOfEdge(usize, Segment), // a subsegment of an edge of the polygon.
     EntireEdge(usize),                // an entire edge of the polygon.
     AtSubpolygon(Polygon),            // a subpolygon of the polygon.
+    Entire,
 }
 
 impl PolygonOp {
@@ -379,7 +380,7 @@ impl PolygonOp {
                 _ => PolygonOp::PointAlongEdge(index, at_point, percent_along),
             },
             SegmentOp::Subsegment(segment) => PolygonOp::SubsegmentOfEdge(index, segment),
-            SegmentOp::EntireSegment => PolygonOp::EntireEdge(index),
+            SegmentOp::Entire => PolygonOp::EntireEdge(index),
         }
     }
     pub fn to_obj(&self, original: &Polygon) -> Obj2 {
@@ -392,6 +393,7 @@ impl PolygonOp {
             }
             PolygonOp::EntireEdge(idx) => Obj2::from(original.to_segments()[*idx]),
             PolygonOp::AtSubpolygon(pg) => Obj2::from(pg.clone()),
+            PolygonOp::Entire => Obj2::from(original.clone()),
         }
     }
     pub fn totally_covers(&self, other: &Self, original_pg: &Polygon) -> Result<bool> {
