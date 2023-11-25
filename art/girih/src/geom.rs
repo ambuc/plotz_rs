@@ -225,14 +225,14 @@ impl PlacedTile {
 
         let tile_contains = |sg: &Segment| {
             (match polygon_overlaps_point(&self.pg, &sg.i).unwrap() {
-                Some((PolygonOp::PointWithin(_), _))
-                | Some((PolygonOp::OnPoint(..), _))
-                | Some((PolygonOp::PointAlongEdge(..), _)) => true,
+                Some((PolygonOp::AreaPoint(_), _))
+                | Some((PolygonOp::Point(..), _))
+                | Some((PolygonOp::EdgePoint(..), _)) => true,
                 _ => false,
             }) && (match polygon_overlaps_point(&self.pg, &sg.f).unwrap() {
-                Some((PolygonOp::PointWithin(_), _))
-                | Some((PolygonOp::OnPoint(..), _))
-                | Some((PolygonOp::PointAlongEdge(..), _)) => true,
+                Some((PolygonOp::AreaPoint(_), _))
+                | Some((PolygonOp::Point(..), _))
+                | Some((PolygonOp::EdgePoint(..), _)) => true,
                 _ => false,
             })
         };
@@ -252,17 +252,17 @@ impl PlacedTile {
                     let pt_inside = match (
                         {
                             match polygon_overlaps_point(&self.pg, &s.i).unwrap() {
-                                Some((PolygonOp::PointWithin(_), _))
-                                | Some((PolygonOp::OnPoint(..), _))
-                                | Some((PolygonOp::PointAlongEdge(..), _)) => true,
+                                Some((PolygonOp::AreaPoint(_), _))
+                                | Some((PolygonOp::Point(..), _))
+                                | Some((PolygonOp::EdgePoint(..), _)) => true,
                                 _ => false,
                             }
                         },
                         {
                             match polygon_overlaps_point(&self.pg, &s.f).unwrap() {
-                                Some((PolygonOp::PointWithin(_), _))
-                                | Some((PolygonOp::OnPoint(..), _))
-                                | Some((PolygonOp::PointAlongEdge(..), _)) => true,
+                                Some((PolygonOp::AreaPoint(_), _))
+                                | Some((PolygonOp::Point(..), _))
+                                | Some((PolygonOp::EdgePoint(..), _)) => true,
                                 _ => false,
                             }
                         },

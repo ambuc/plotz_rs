@@ -357,17 +357,13 @@ impl MultilineOpSet {
 
 #[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
 pub enum PolygonOp {
-    PointWithin(Point),    // a point is within the area of the polygon.
-    OnPoint(usize, Point), // on a point of the polygon.
-    PointAlongEdge(usize, Point, Percent), // a point some percent along an edge of this polygon.
-
-    // NB: this doesn't represent 'totally' within, i.e. the points of the
-    // segment might be on the points of edges of the polygon.
-    SegmentWithin(Segment), // a segment is  within the area of the polygon.
-
-    SubsegmentOfEdge(usize, Segment), // a subsegment of an edge of the polygon.
-    Edge(usize),                      // an entire edge of the polygon.
-    Subpolygon(Polygon),              // a subpolygon of the polygon.
+    AreaPoint(Point),                    // a point is within the area of the polygon.
+    Point(/*point index*/ usize, Point), // on a point of the polygon.
+    EdgePoint(/*edge index*/ usize, Point, Percent), // a point some percent along an edge of this polygon.
+    AreaSegment(Segment), // a segment is  within the area of the polygon.
+    EdgeSubsegment(/*edge index*/ usize, Segment), // a subsegment of an edge of the polygon.
+    Edge(/*edge index*/ usize), // an entire edge of the polygon.
+    Subpolygon(Polygon),  // a subpolygon of the polygon.
     Entire,
 }
 
@@ -375,20 +371,20 @@ impl PolygonOp {
     pub fn from_segment_opinion(index: usize, so: SegmentOp) -> PolygonOp {
         match so {
             SegmentOp::Point(at_point, percent_along) => match percent_along {
-                Percent::Zero => PolygonOp::OnPoint(index, at_point),
-                Percent::One => PolygonOp::OnPoint(index + 1, at_point),
-                _ => PolygonOp::PointAlongEdge(index, at_point, percent_along),
+                Percent::Zero => PolygonOp::Point(index, at_point),
+                Percent::One => PolygonOp::Point(index + 1, at_point),
+                _ => PolygonOp::EdgePoint(index, at_point, percent_along),
             },
-            SegmentOp::Subsegment(segment) => PolygonOp::SubsegmentOfEdge(index, segment),
+            SegmentOp::Subsegment(segment) => PolygonOp::EdgeSubsegment(index, segment),
             SegmentOp::Entire => PolygonOp::Edge(index),
         }
     }
     pub fn to_obj(&self, original: &Polygon) -> Obj2 {
         match self {
-            PolygonOp::PointWithin(p)
-            | PolygonOp::OnPoint(_, p)
-            | PolygonOp::PointAlongEdge(_, p, _) => Obj2::from(*p),
-            PolygonOp::SegmentWithin(sg) | PolygonOp::SubsegmentOfEdge(_, sg) => Obj2::from(*sg),
+            PolygonOp::AreaPoint(p) | PolygonOp::Point(_, p) | PolygonOp::EdgePoint(_, p, _) => {
+                Obj2::from(*p)
+            }
+            PolygonOp::AreaSegment(sg) | PolygonOp::EdgeSubsegment(_, sg) => Obj2::from(*sg),
             PolygonOp::Edge(idx) => Obj2::from(original.to_segments()[*idx]),
             PolygonOp::Subpolygon(pg) => Obj2::from(pg.clone()),
             PolygonOp::Entire => Obj2::from(original.clone()),
