@@ -160,7 +160,7 @@ pub enum MultilineOp {
     Point(usize, Point),                      // one of the points in the multiline.
     PointAlongSegment(usize, Point, Percent), // a point some percent along a segment of this multiline.
     SubsegmentOf(usize, Segment),             // a subsegment of a segment of this multiline.
-    EntireSubsegment(usize),                  // an entire subsegment of this multiline
+    Segment(usize),                           // an entire segment of this multiline
     Entire,                                   // the entire multiline // TODO(ambuc)
 }
 
@@ -181,14 +181,14 @@ impl MultilineOp {
                 _ => MultilineOp::PointAlongSegment(index, at_point, percent_along),
             },
             SegmentOp::Subsegment(segment) => MultilineOp::SubsegmentOf(index, segment),
-            SegmentOp::Entire => MultilineOp::EntireSubsegment(index),
+            SegmentOp::Entire => MultilineOp::Segment(index),
         }
     }
     pub fn to_obj(&self, original_ml: &Multiline) -> Obj2 {
         match self {
             MultilineOp::Point(_, p) | MultilineOp::PointAlongSegment(_, p, _) => Obj2::from(*p),
             MultilineOp::SubsegmentOf(_, sg) => Obj2::from(*sg),
-            MultilineOp::EntireSubsegment(idx) => Obj2::from(original_ml.to_segments()[*idx]),
+            MultilineOp::Segment(idx) => Obj2::from(original_ml.to_segments()[*idx]),
             MultilineOp::Entire => Obj2::from(original_ml.clone()),
         }
     }
@@ -260,7 +260,7 @@ impl MultilineOpSet {
             if let Some(idx) = self
                 .ml_ops
                 .iter()
-                .position(|x| matches!(x, MultilineOp::EntireSubsegment(i) if *i == sg_idx))
+                .position(|x| matches!(x, MultilineOp::Segment(i) if *i == sg_idx))
             {
                 idxs_to_remove.push(idx);
             }
@@ -303,7 +303,7 @@ impl MultilineOpSet {
         }) {
             self.ml_ops.remove(*idx);
             if resultant == self.original.to_segments()[s_idx] {
-                self.add(MultilineOp::EntireSubsegment(s_idx))?;
+                self.add(MultilineOp::Segment(s_idx))?;
             } else {
                 self.add(MultilineOp::SubsegmentOf(s_idx, resultant))?;
             }
