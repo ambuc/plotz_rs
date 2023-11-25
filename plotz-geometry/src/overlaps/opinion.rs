@@ -314,6 +314,45 @@ impl MultilineOpSet {
 
         Ok(())
     }
+
+    /*
+    // returns a sorted vector of sorted, deduplicated vectors of cut points along each subsegment of this multiline.
+    pub fn to_cuts(&self) -> Result<Vec<Vec<(Point, Percent)>>> {
+        let mut cuts: Vec<Vec<(Point, Percent)>> = vec![];
+        for (_sg_idx, sg) in self.original.to_segments().iter().enumerate() {
+            let mut cuts_sg: Vec<(Point, Percent)> = vec![];
+            cuts_sg.push((sg.i, Zero));
+            cuts_sg.push((sg.i, One));
+            cuts.push(cuts_sg);
+        }
+
+        for op in &self.ml_ops {
+            match op {
+                MultilineOp::PointAlongSegmentOf(sg_idx, pt, pct) => {
+                    cuts[*sg_idx].push((*pt, *pct));
+                }
+                MultilineOp::SubsegmentOf(sg_idx, ss) => {
+                    let sg = self.original.to_segments()[*sg_idx];
+                    cuts[*sg_idx].push((ss.i, interpolate_2d_checked(sg.i, sg.f, ss.i)?));
+                    cuts[*sg_idx].push((ss.f, interpolate_2d_checked(sg.i, sg.f, ss.f)?));
+                }
+                MultilineOp::Point(..)
+                | MultilineOp::EntireSubsegment(..)
+                | MultilineOp::EntireMultiline => {
+                    // do nothing -- a junction along a multiline is already, a
+                    // cut point.
+                }
+            }
+        }
+
+        for cuts_sg in cuts.iter_mut() {
+            cuts_sg.sort_by_key(|(_, pct)| *pct);
+            cuts_sg.dedup();
+        }
+
+        Ok(cuts)
+    }
+    */
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]

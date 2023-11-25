@@ -1,7 +1,6 @@
 #![allow(missing_docs)]
 
 pub mod opinion;
-
 use self::opinion::*;
 use crate::{
     interpolate::interpolate_2d_checked,
@@ -436,10 +435,27 @@ pub fn polygon_overlaps_segment(
 }
 
 pub fn polygon_overlaps_multiline(
-    _polygon: &Polygon,
-    _multiline: &Multiline,
+    polygon: &Polygon,
+    multiline: &Multiline,
 ) -> Result<Option<(NonEmpty<PolygonOp>, NonEmpty<MultilineOp>)>> {
-    unimplemented!()
+    let mut pg_op_set = PolygonOpSet::new(/*original=*/ polygon);
+    let mut ml_op_set = MultilineOpSet::new(/*original=*/ multiline);
+    for (ml_sg_idx, ml_sg) in multiline.to_segments().iter().enumerate() {
+        if let Some((pg_ops, sg_ops)) = polygon_overlaps_segment(polygon, ml_sg)? {
+            for pg_op in pg_ops.into_iter() {
+                pg_op_set.add(pg_op)?;
+            }
+            for sg_op in sg_ops.into_iter() {
+                ml_op_set.add(MultilineOp::from_segment_opinion(ml_sg_idx, sg_op))?;
+            }
+        }
+    }
+
+    if let (Some(pg_ops), Some(ml_ops)) = (pg_op_set.to_nonempty(), ml_op_set.to_nonempty()) {
+        Ok(Some((pg_ops, ml_ops)))
+    } else {
+        Ok(None)
+    }
 }
 
 #[cfg(test)]
@@ -715,10 +731,49 @@ mod tests {
 
     // yeah.... 4^3==64 test cases. that's life in the big city
 
+    //           ^ (y)
+    //           |
+    //   a . b . c . d . e
+    //           |
+    //   f . g . h . i . j
+    //           |
+    // <-k---l---m---n---o-> (x)
+    //           |
+    //   p . q . r . s . t
+    //           |
+    //   u . v . w . x . y
+    //           |
+    //           v
+
     // multiline begins outside, pivots outside, and ends outside.
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]), Multiline([*A, *C, *E])
+        => None
+    )]
     // multiline begins outside, pivots outside, and ends on a point.
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]), Multiline([*A, *C, *I])
+        => Some((
+            ne![PolygonOp::OnPoint(0, *I)],
+            ne![MultilineOp::Point(2, *I)]
+        ))
+    )]
     // multiline begins outside, pivots outside, and ends on an edge.
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]), Multiline([*A, *C, *H])
+        => Some((
+            ne![PolygonOp::PointAlongEdge(0, *H, Val(0.5))],
+            ne![MultilineOp::Point(2, *H)]
+        ))
+    )]
     // multiline begins outside, pivots outside, and ends inside.
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]), Multiline([*A, *C, *M])
+        => Some((
+            ne![PolygonOp::SegmentWithinArea(Segment(*H, *M))],
+            ne![MultilineOp::SubsegmentOf(1, Segment(*H, *M))]
+        ))
+    )]
     // multiline begins outside, pivots on a point, and ends outside.
     // multiline begins outside, pivots on a point, and ends on a point.
     // multiline begins outside, pivots on a point, and ends on an edge.
