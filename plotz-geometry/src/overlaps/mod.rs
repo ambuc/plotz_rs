@@ -807,19 +807,6 @@ mod tests {
             ne![MultilineOp::SubsegmentOf(1, Segment(*G, *M))]
         ))
     )]
-    //           ^ (y)
-    //           |
-    //   a . b . c . d . e
-    //           |
-    //   f . g . h . i . j
-    //           |
-    // <-k---l---m---n---o-> (x)
-    //           |
-    //   p . q . r . s . t
-    //           |
-    //   u . v . w . x . y
-    //           |
-    //           v
     // multiline begins outside, pivots on a point, and ends outside. no other intersections
     #[test_case(
         Polygon([*I, *G, *Q, *S]), Multiline([*B, *G, *F])
@@ -851,6 +838,26 @@ mod tests {
             ne![MultilineOp::EntireSubsegment(1)],
         ))
     )]
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]), Multiline([*B, *G, *S])
+        => Some((
+            ne![PolygonOp::SegmentWithinArea(Segment(*G, *S))],
+            ne![MultilineOp::EntireSubsegment(1)],
+        ))
+    )]
+    //           ^ (y)
+    //           |
+    //   a . b . c . d . e
+    //           |
+    //   f . g . h . i . j
+    //           |
+    // <-k---l---m---n---o-> (x)
+    //           |
+    //   p . q . r . s . t
+    //           |
+    //   u . v . w . x . y
+    //           |
+    //           v
     // multiline begins outside, pivots on a point, and ends on an edge.
     #[test_case(
         Polygon([*I, *G, *Q, *S]), Multiline([*B, *G, *H])
