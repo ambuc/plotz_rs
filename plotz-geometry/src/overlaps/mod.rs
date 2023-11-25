@@ -845,7 +845,7 @@ mod tests {
             ne![MultilineOp::EntireSubsegment(1)],
         ))
     )]
-    // multiline begins outside, pivots on a point, and ends on an edge.
+    // multiline begins outside, pivots on a point, and ends on an edge. no other intersections
     #[test_case(
         Polygon([*I, *G, *Q, *S]), Multiline([*B, *G, *H])
         => Some((
@@ -853,11 +853,36 @@ mod tests {
             ne![MultilineOp::EntireSubsegment(1)],
         ))
     )]
+    // multiline begins outside, pivots on a point, and ends on an edge. different segments
     #[test_case(
         Polygon([*I, *G, *Q, *S]), Multiline([*B, *G, *N])
         => Some((
             ne![PolygonOp::SegmentWithinArea(Segment(*G, *N))],
             ne![MultilineOp::EntireSubsegment(1)],
+        ))
+    )]
+    // multiline begins outside, pivots on a point, and ends inside.
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]), Multiline([*C, *I, *M])
+        => Some((
+            ne![PolygonOp::SegmentWithinArea(Segment(*I, *M))],
+            ne![MultilineOp::EntireSubsegment(1)]
+        ))
+    )]
+    // multiline begins outside, pivots on an edge, and ends outside. no other intersections
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]), Multiline([*B, *H, *D])
+        => Some((
+            ne![PolygonOp::PointAlongEdge(0, *H, Val(0.5))],
+            ne![MultilineOp::Point(1, *H)]
+        ))
+    )]
+    // multiline begins outside, pivots on an edge, and ends outside. one segment intersection
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]), Multiline([*B, *H, *P])
+        => Some((
+            ne![PolygonOp::SegmentWithinArea(Segment(*H, *L))],
+            ne![MultilineOp::SubsegmentOf(1, Segment(*H, *L))]
         ))
     )]
     //           ^ (y)
@@ -873,8 +898,6 @@ mod tests {
     //   u . v . w . x . y
     //           |
     //           v
-    // multiline begins outside, pivots on a point, and ends inside.
-    // multiline begins outside, pivots on an edge, and ends outside.
     // multiline begins outside, pivots on an edge, and ends on a point.
     // multiline begins outside, pivots on an edge, and ends on an edge.
     // multiline begins outside, pivots on an edge, and ends inside.
