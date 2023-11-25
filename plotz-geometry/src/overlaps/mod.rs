@@ -885,6 +885,22 @@ mod tests {
             ne![MultilineOp::SubsegmentOf(1, Segment(*H, *L))]
         ))
     )]
+    // multiline begins outside, pivots on an edge, and ends on a point. no overlaps
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]), Multiline([*B, *H, *I])
+        => Some((
+            ne![PolygonOp::SubsegmentOfEdge(0, Segment(*H, *I))],
+            ne![MultilineOp::EntireSubsegment(1)]
+        ))
+    )]
+    // multiline begins outside, pivots on an edge, and ends on a point. one segment overlap
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]), Multiline([*B, *H, *S])
+        => Some((
+            ne![PolygonOp::SegmentWithinArea(Segment(*H, *S))],
+            ne![MultilineOp::EntireSubsegment(1)]
+        ))
+    )]
     //           ^ (y)
     //           |
     //   a . b . c . d . e
@@ -898,7 +914,6 @@ mod tests {
     //   u . v . w . x . y
     //           |
     //           v
-    // multiline begins outside, pivots on an edge, and ends on a point.
     // multiline begins outside, pivots on an edge, and ends on an edge.
     // multiline begins outside, pivots on an edge, and ends inside.
     // multiline begins outside, pivots inside, and ends outside.
