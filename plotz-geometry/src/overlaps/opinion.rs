@@ -357,12 +357,12 @@ impl MultilineOpSet {
 
 #[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
 pub enum PolygonOp {
-    AreaPoint(Point),                    // a point is within the area of the polygon.
     Point(/*point index*/ usize, Point), // on a point of the polygon.
     EdgePoint(/*edge index*/ usize, Point, Percent), // a point some percent along an edge of this polygon.
+    EdgeSubsegment(/*edge index*/ usize, Segment),   // a subsegment of an edge of the polygon.
+    Edge(/*edge index*/ usize),                      // an entire edge of the polygon.
+    AreaPoint(Point),                                // a point is within the area of the polygon.
     AreaSegment(Segment), // a segment is  within the area of the polygon.
-    EdgeSubsegment(/*edge index*/ usize, Segment), // a subsegment of an edge of the polygon.
-    Edge(/*edge index*/ usize), // an entire edge of the polygon.
     Subpolygon(Polygon),  // a subpolygon of the polygon.
     Entire,
 }

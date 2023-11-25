@@ -830,6 +830,8 @@ mod tests {
 
     // plus more test cases around 'doubling back', if multilines can do that kind of thing.
 
+    // plus a test case for MutlilineOp::Entire.
+
     fn test_polygon_overlaps_multiline(
         pg: Result<Polygon>,
         ml: Multiline,
