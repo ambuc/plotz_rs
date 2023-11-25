@@ -624,19 +624,6 @@ mod tests {
         multiline_overlaps_segment(&ml, &sg).unwrap()
     }
 
-    //           ^ (y)
-    //           |
-    //   a . b . c . d . e
-    //           |
-    //   f . g . h . i . j
-    //           |
-    // <-k---l---m---n---o-> (x)
-    //           |
-    //   p . q . r . s . t
-    //           |
-    //   u . v . w . x . y
-    //           |
-    //           v
     #[test_case(Multiline([*C, *D, *E]), Multiline([*H, *I, *J]) => None; "none 01")]
     #[test_case(Multiline([*C, *D, *E]), Multiline([*M, *N, *O]) => None; "none 02")]
     #[test_case(Multiline([*C, *I, *O]), Multiline([*D, *J]) => None; "none diagonal")]
