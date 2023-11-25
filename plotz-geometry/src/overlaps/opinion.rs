@@ -357,13 +357,13 @@ impl MultilineOpSet {
 
 #[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
 pub enum PolygonOp {
-    PointWithinArea(Point), // a point is within the area of the polygon.
-    OnPoint(usize, Point),  // on a point of the polygon.
+    PointWithin(Point),    // a point is within the area of the polygon.
+    OnPoint(usize, Point), // on a point of the polygon.
     PointAlongEdge(usize, Point, Percent), // a point some percent along an edge of this polygon.
 
     // NB: this doesn't represent 'totally' within, i.e. the points of the
     // segment might be on the points of edges of the polygon.
-    SegmentWithinArea(Segment), // a segment is  within the area of the polygon.
+    SegmentWithin(Segment), // a segment is  within the area of the polygon.
 
     SubsegmentOfEdge(usize, Segment), // a subsegment of an edge of the polygon.
     EntireEdge(usize),                // an entire edge of the polygon.
@@ -385,12 +385,10 @@ impl PolygonOp {
     }
     pub fn to_obj(&self, original: &Polygon) -> Obj2 {
         match self {
-            PolygonOp::PointWithinArea(p)
+            PolygonOp::PointWithin(p)
             | PolygonOp::OnPoint(_, p)
             | PolygonOp::PointAlongEdge(_, p, _) => Obj2::from(*p),
-            PolygonOp::SegmentWithinArea(sg) | PolygonOp::SubsegmentOfEdge(_, sg) => {
-                Obj2::from(*sg)
-            }
+            PolygonOp::SegmentWithin(sg) | PolygonOp::SubsegmentOfEdge(_, sg) => Obj2::from(*sg),
             PolygonOp::EntireEdge(idx) => Obj2::from(original.to_segments()[*idx]),
             PolygonOp::AtSubpolygon(pg) => Obj2::from(pg.clone()),
             PolygonOp::Entire => Obj2::from(original.clone()),
