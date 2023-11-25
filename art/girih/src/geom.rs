@@ -204,7 +204,7 @@ impl PlacedTile {
                 // ztex lies at the intersection of a_ray and the tower.
                 let ztex = match (tower_a.intersects(&a_ray)?, tower_b.intersects(&a_ray)?) {
                     (Some((op, _)), _) | (_, Some((op, _))) => match op {
-                        SegmentOp::PointAlongSegment(at_point, _) => at_point,
+                        SegmentOp::Point(at_point, _) => at_point,
                         _ => panic!("oh"),
                     },
                     _ => panic!("oh"),
@@ -274,7 +274,7 @@ impl PlacedTile {
 
                     match (perp_ray_1.intersects_sg(&s)?, perp_ray_2.intersects_sg(&s)?) {
                         (Some((op, _)), _) | (_, Some((op, _))) => match op {
-                            SegmentOp::PointAlongSegment(at_point, _) => {
+                            SegmentOp::Point(at_point, _) => {
                                 s_ver.push(Segment(pt_inside, at_point))
                             }
                             _ => panic!("oh"),

@@ -79,10 +79,8 @@ impl Segment {
 
     pub fn intersects(&self, other: &Segment) -> Option<IntersectionResult> {
         // TODO(ambuc): remove Segment::intersects entirely.
-        if let Ok(Some((
-            SegmentOp::PointAlongSegment(pt, a_pct),
-            SegmentOp::PointAlongSegment(_, b_pct),
-        ))) = segment_overlaps_segment(self, other)
+        if let Ok(Some((SegmentOp::Point(pt, a_pct), SegmentOp::Point(_, b_pct)))) =
+            segment_overlaps_segment(self, other)
         {
             Some(IntersectionResult::Ok(Intersection { pt, a_pct, b_pct }))
         } else {
@@ -186,7 +184,7 @@ impl Croppable for Segment {
                 Some((_polygonops, segmentops)) => Ok(segmentops
                     .iter()
                     .filter_map(|sgop| match sgop {
-                        SegmentOp::PointAlongSegment(_, _) => None,
+                        SegmentOp::Point(_, _) => None,
                         SegmentOp::Subsegment(ss) => Some(*ss),
                         SegmentOp::Entire => Some(*self),
                     })

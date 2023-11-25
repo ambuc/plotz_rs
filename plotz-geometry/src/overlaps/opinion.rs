@@ -14,15 +14,15 @@ use std::usize;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug, PartialOrd, Ord)]
 pub enum SegmentOp {
-    PointAlongSegment(Point, Percent), // a point some percent along this segment.
-    Subsegment(Segment),               // a subsegment of this segment.
-    Entire,                            // the whole segment.
+    Point(Point, Percent), // a point some percent along this segment.
+    Subsegment(Segment),   // a subsegment of this segment.
+    Entire,                // the whole segment.
 }
 
 impl SegmentOp {
     pub fn to_obj(&self, original_sg: &Segment) -> Obj2 {
         match self {
-            SegmentOp::PointAlongSegment(p, _) => Obj2::from(*p),
+            SegmentOp::Point(p, _) => Obj2::from(*p),
             SegmentOp::Subsegment(ss) => Obj2::from(*ss),
             SegmentOp::Entire => Obj2::from(*original_sg),
         }
@@ -114,7 +114,7 @@ impl SegmentOpSet {
         // Add each existing cut point.
         for op in &self.sg_ops {
             match op {
-                SegmentOp::PointAlongSegment(pt, pct) => {
+                SegmentOp::Point(pt, pct) => {
                     cuts.push((*pt, *pct));
                 }
                 SegmentOp::Subsegment(ss) => {
@@ -157,11 +157,11 @@ impl SegmentOpSet {
 #[derive(PartialEq, Eq, Copy, Clone, Debug, PartialOrd, Ord)]
 
 pub enum MultilineOp {
-    Point(usize, Point),                        // one of the points in the multiline.
-    PointAlongSegmentOf(usize, Point, Percent), // a point some percent along a segment of this multiline.
-    SubsegmentOf(usize, Segment),               // a subsegment of a segment of this multiline.
-    EntireSubsegment(usize),                    // an entire subsegment of this multiline
-    Entire,                                     // the entire multiline // TODO(ambuc)
+    Point(usize, Point),                      // one of the points in the multiline.
+    PointAlongSegment(usize, Point, Percent), // a point some percent along a segment of this multiline.
+    SubsegmentOf(usize, Segment),             // a subsegment of a segment of this multiline.
+    EntireSubsegment(usize),                  // an entire subsegment of this multiline
+    Entire,                                   // the entire multiline // TODO(ambuc)
 }
 
 impl MultilineOp {
@@ -175,10 +175,10 @@ impl MultilineOp {
     // That's why.
     pub fn from_segment_opinion(index: usize, so: SegmentOp) -> MultilineOp {
         match so {
-            SegmentOp::PointAlongSegment(at_point, percent_along) => match percent_along {
+            SegmentOp::Point(at_point, percent_along) => match percent_along {
                 Percent::Zero => MultilineOp::Point(index, at_point),
                 Percent::One => MultilineOp::Point(index + 1, at_point),
-                _ => MultilineOp::PointAlongSegmentOf(index, at_point, percent_along),
+                _ => MultilineOp::PointAlongSegment(index, at_point, percent_along),
             },
             SegmentOp::Subsegment(segment) => MultilineOp::SubsegmentOf(index, segment),
             SegmentOp::Entire => MultilineOp::EntireSubsegment(index),
@@ -186,7 +186,7 @@ impl MultilineOp {
     }
     pub fn to_obj(&self, original_ml: &Multiline) -> Obj2 {
         match self {
-            MultilineOp::Point(_, p) | MultilineOp::PointAlongSegmentOf(_, p, _) => Obj2::from(*p),
+            MultilineOp::Point(_, p) | MultilineOp::PointAlongSegment(_, p, _) => Obj2::from(*p),
             MultilineOp::SubsegmentOf(_, sg) => Obj2::from(*sg),
             MultilineOp::EntireSubsegment(idx) => Obj2::from(original_ml.to_segments()[*idx]),
             MultilineOp::Entire => Obj2::from(original_ml.clone()),
@@ -374,7 +374,7 @@ pub enum PolygonOp {
 impl PolygonOp {
     pub fn from_segment_opinion(index: usize, so: SegmentOp) -> PolygonOp {
         match so {
-            SegmentOp::PointAlongSegment(at_point, percent_along) => match percent_along {
+            SegmentOp::Point(at_point, percent_along) => match percent_along {
                 Percent::Zero => PolygonOp::OnPoint(index, at_point),
                 Percent::One => PolygonOp::OnPoint(index + 1, at_point),
                 _ => PolygonOp::PointAlongEdge(index, at_point, percent_along),

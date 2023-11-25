@@ -106,16 +106,16 @@ pub fn point_overlaps_point(a: &Point, b: &Point) -> Result<Option<Point>> {
 
 pub fn segment_overlaps_point(s: &Segment, p: &Point) -> Result<Option<(SegmentOp, Point)>> {
     if s.i == *p {
-        Ok(Some((SegmentOp::PointAlongSegment(*p, Zero), *p)))
+        Ok(Some((SegmentOp::Point(*p, Zero), *p)))
     } else if s.f == *p {
-        Ok(Some((SegmentOp::PointAlongSegment(*p, One), *p)))
+        Ok(Some((SegmentOp::Point(*p, One), *p)))
     } else if approx_eq!(
         f64,
         s.length(),
         Segment(s.i, *p).length() + Segment(*p, s.f).length()
     ) {
         Ok(Some((
-            SegmentOp::PointAlongSegment(*p, interpolate_2d_checked(s.i, s.f, *p)?),
+            SegmentOp::Point(*p, interpolate_2d_checked(s.i, s.f, *p)?),
             *p,
         )))
     } else {
@@ -154,10 +154,10 @@ pub fn segment_overlaps_segment(
             //     |-->|
             // |-->|
             (
-                Some((z1 @ SegmentOp::PointAlongSegment(_, One), _)),
+                Some((z1 @ SegmentOp::Point(_, One), _)),
                 None,
                 None,
-                Some((z2 @ SegmentOp::PointAlongSegment(_, Zero), _)),
+                Some((z2 @ SegmentOp::Point(_, Zero), _)),
             ) => {
                 return Ok(Some((z2, z1)));
             }
@@ -170,8 +170,8 @@ pub fn segment_overlaps_segment(
             //     |-->|
             (
                 None,
-                Some((z1 @ SegmentOp::PointAlongSegment(_, Zero), _)),
-                Some((z2 @ SegmentOp::PointAlongSegment(_, One), _)),
+                Some((z1 @ SegmentOp::Point(_, Zero), _)),
+                Some((z2 @ SegmentOp::Point(_, One), _)),
                 None,
             ) => {
                 return Ok(Some((z2, z1)));
@@ -184,9 +184,9 @@ pub fn segment_overlaps_segment(
             // |<--|
             //     |-->|
             (
-                Some((z1 @ SegmentOp::PointAlongSegment(_, Zero), _)),
+                Some((z1 @ SegmentOp::Point(_, Zero), _)),
                 None,
-                Some((z2 @ SegmentOp::PointAlongSegment(_, Zero), _)),
+                Some((z2 @ SegmentOp::Point(_, Zero), _)),
                 None,
             ) => {
                 return Ok(Some((z1, z2)));
@@ -201,9 +201,9 @@ pub fn segment_overlaps_segment(
             // |-->|
             (
                 None,
-                Some((z1 @ SegmentOp::PointAlongSegment(_, One), _)),
+                Some((z1 @ SegmentOp::Point(_, One), _)),
                 None,
-                Some((z2 @ SegmentOp::PointAlongSegment(_, One), _)),
+                Some((z2 @ SegmentOp::Point(_, One), _)),
             ) => {
                 return Ok(Some((z1, z2)));
             }
@@ -267,8 +267,8 @@ pub fn segment_overlaps_segment(
     if (0_f64..=1_f64).contains(&s) && (0_f64..=1_f64).contains(&t) {
         let pt = Point(p0_x + (t * s1_x), p0_y + (t * s1_y));
         return Ok(Some((
-            SegmentOp::PointAlongSegment(pt, interpolate_2d_checked(sa.i, sa.f, pt)?),
-            SegmentOp::PointAlongSegment(pt, interpolate_2d_checked(sb.i, sb.f, pt)?),
+            SegmentOp::Point(pt, interpolate_2d_checked(sa.i, sa.f, pt)?),
+            SegmentOp::Point(pt, interpolate_2d_checked(sb.i, sb.f, pt)?),
         )));
     }
 
@@ -346,7 +346,7 @@ pub fn polygon_overlaps_point(
 
     // PolygonOp::PointAlongEdge special case.
     for (index, pg_sg) in polygon.to_segments().iter().enumerate() {
-        if let Some((SegmentOp::PointAlongSegment(at_point, percent_along), _)) =
+        if let Some((SegmentOp::Point(at_point, percent_along), _)) =
             segment_overlaps_point(pg_sg, point)?
         {
             return Ok(Some((
@@ -522,13 +522,13 @@ mod tests {
         point_overlaps_point(&a, &b).unwrap()
     }
 
-    #[test_case((*C, *D), *C => Some((SegmentOp::PointAlongSegment(*C, Zero), *C)); "at start 00")]
-    #[test_case((*C, *D), *D => Some((SegmentOp::PointAlongSegment(*D, One), *D)); "at end 00")]
-    #[test_case((*C, *I), *C => Some((SegmentOp::PointAlongSegment(*C, Zero), *C)); "at start 01")]
-    #[test_case((*C, *I), *I => Some((SegmentOp::PointAlongSegment(*I, One), *I)); "at end 01")]
-    #[test_case((*C, *E), *D => Some((SegmentOp::PointAlongSegment(*D, Val(0.5)), *D)); "halfway along 01")]
-    #[test_case((*C, *O), *I => Some((SegmentOp::PointAlongSegment(*I, Val(0.5)), *I)); "halfway along 02")]
-    #[test_case((*C, *W), *M => Some((SegmentOp::PointAlongSegment(*M, Val(0.5)), *M)); "halfway along 03")]
+    #[test_case((*C, *D), *C => Some((SegmentOp::Point(*C, Zero), *C)); "at start 00")]
+    #[test_case((*C, *D), *D => Some((SegmentOp::Point(*D, One), *D)); "at end 00")]
+    #[test_case((*C, *I), *C => Some((SegmentOp::Point(*C, Zero), *C)); "at start 01")]
+    #[test_case((*C, *I), *I => Some((SegmentOp::Point(*I, One), *I)); "at end 01")]
+    #[test_case((*C, *E), *D => Some((SegmentOp::Point(*D, Val(0.5)), *D)); "halfway along 01")]
+    #[test_case((*C, *O), *I => Some((SegmentOp::Point(*I, Val(0.5)), *I)); "halfway along 02")]
+    #[test_case((*C, *W), *M => Some((SegmentOp::Point(*M, Val(0.5)), *M)); "halfway along 03")]
     fn test_segment_overlaps_point(
         segment: impl Into<Segment>,
         point: Point,
@@ -544,18 +544,18 @@ mod tests {
     #[test_case((*B, *E), (*D, *C), Some((SegmentOp::Subsegment(Segment(*D, *C)), SegmentOp::Entire)); "total collision, flip")]
     #[test_case((*B, *D), (*C, *E), Some((SegmentOp::Subsegment(Segment(*C, *D)), SegmentOp::Subsegment(Segment(*C, *D)))); "partial collision")]
     #[test_case((*B, *D), (*E, *C), Some((SegmentOp::Subsegment(Segment(*C, *D)), SegmentOp::Subsegment(Segment(*D, *C)))); "partial collision, flip")]
-    #[test_case((*A, *C), (*C, *E), Some((SegmentOp::PointAlongSegment(*C, One), SegmentOp::PointAlongSegment(*C, Zero))); "at point end to start")]
-    #[test_case((*A, *C), (*E, *C), Some((SegmentOp::PointAlongSegment(*C, One), SegmentOp::PointAlongSegment(*C, One))); "at point end to end")]
-    #[test_case((*C, *A), (*E, *C), Some((SegmentOp::PointAlongSegment(*C, Zero), SegmentOp::PointAlongSegment(*C, One))); "at point head to end")]
-    #[test_case((*C, *A), (*C, *E), Some((SegmentOp::PointAlongSegment(*C, Zero), SegmentOp::PointAlongSegment(*C, Zero))); "at point head to head")]
+    #[test_case((*A, *C), (*C, *E), Some((SegmentOp::Point(*C, One), SegmentOp::Point(*C, Zero))); "at point end to start")]
+    #[test_case((*A, *C), (*E, *C), Some((SegmentOp::Point(*C, One), SegmentOp::Point(*C, One))); "at point end to end")]
+    #[test_case((*C, *A), (*E, *C), Some((SegmentOp::Point(*C, Zero), SegmentOp::Point(*C, One))); "at point head to end")]
+    #[test_case((*C, *A), (*C, *E), Some((SegmentOp::Point(*C, Zero), SegmentOp::Point(*C, Zero))); "at point head to head")]
     #[test_case((*A, *E), (*A, *C), Some((SegmentOp::Subsegment(Segment(*A, *C)), SegmentOp::Entire)); "subsegment 00")]
     #[test_case((*A, *C), (*A, *E), Some((SegmentOp::Entire, SegmentOp::Subsegment(Segment(*A, *C)))); "subsegment 00, flip")]
     #[test_case((*A, *E), (*B, *D), Some((SegmentOp::Subsegment(Segment(*B, *D)), SegmentOp::Entire)); "subsegment 01")]
     #[test_case((*A, *E), (*C, *E), Some((SegmentOp::Subsegment(Segment(*C, *E)), SegmentOp::Entire)); "subsegment 02")]
-    #[test_case((*C, *O), (*E, *M), Some((SegmentOp::PointAlongSegment(*I, Val(0.5)), SegmentOp::PointAlongSegment(*I, Val(0.5)))); "crosshairs 00")]
-    #[test_case((*O, *C), (*M, *E), Some((SegmentOp::PointAlongSegment(*I, Val(0.5)), SegmentOp::PointAlongSegment(*I, Val(0.5)))); "crosshairs 01")]
-    #[test_case((*C, *O), (*M, *E), Some((SegmentOp::PointAlongSegment(*I, Val(0.5)), SegmentOp::PointAlongSegment(*I, Val(0.5)))); "crosshairs 02")]
-    #[test_case((*O, *C), (*E, *M), Some((SegmentOp::PointAlongSegment(*I, Val(0.5)), SegmentOp::PointAlongSegment(*I, Val(0.5)))); "crosshairs 03")]
+    #[test_case((*C, *O), (*E, *M), Some((SegmentOp::Point(*I, Val(0.5)), SegmentOp::Point(*I, Val(0.5)))); "crosshairs 00")]
+    #[test_case((*O, *C), (*M, *E), Some((SegmentOp::Point(*I, Val(0.5)), SegmentOp::Point(*I, Val(0.5)))); "crosshairs 01")]
+    #[test_case((*C, *O), (*M, *E), Some((SegmentOp::Point(*I, Val(0.5)), SegmentOp::Point(*I, Val(0.5)))); "crosshairs 02")]
+    #[test_case((*O, *C), (*E, *M), Some((SegmentOp::Point(*I, Val(0.5)), SegmentOp::Point(*I, Val(0.5)))); "crosshairs 03")]
     fn test_segment_overlaps_segment(
         a: impl Into<Segment>,
         b: impl Into<Segment>,
@@ -575,10 +575,10 @@ mod tests {
     #[test_case(Multiline([*A, *C, *E, *O, *Y]), *A => Some((ne![MultilineOp::Point(0, *A)], *A)); "multiline point at index 0")]
     #[test_case(Multiline([*A, *C, *E, *O, *Y]), *E => Some((ne![MultilineOp::Point(2, *E)], *E)); "multiline point at index 2")]
     #[test_case(Multiline([*A, *C, *E, *O, *Y]), *Y => Some((ne![MultilineOp::Point(4, *Y)], *Y)); "multiline point at index 4")]
-    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *B => Some((ne![MultilineOp::PointAlongSegmentOf(0, *B, Val(0.5))], *B)); "multiline point along segment 0")]
-    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *D => Some((ne![MultilineOp::PointAlongSegmentOf(1, *D, Val(0.5))], *D)); "multiline point along segment 1")]
-    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *J => Some((ne![MultilineOp::PointAlongSegmentOf(2, *J, Val(0.5))], *J)); "multiline point along segment 2")]
-    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *T => Some((ne![MultilineOp::PointAlongSegmentOf(3, *T, Val(0.5))], *T)); "multiline point along segment 3")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *B => Some((ne![MultilineOp::PointAlongSegment(0, *B, Val(0.5))], *B)); "multiline point along segment 0")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *D => Some((ne![MultilineOp::PointAlongSegment(1, *D, Val(0.5))], *D)); "multiline point along segment 1")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *J => Some((ne![MultilineOp::PointAlongSegment(2, *J, Val(0.5))], *J)); "multiline point along segment 2")]
+    #[test_case(Multiline([*A, *C, *E, *O, *Y]), *T => Some((ne![MultilineOp::PointAlongSegment(3, *T, Val(0.5))], *T)); "multiline point along segment 3")]
     #[test_case(Multiline([*A, *C, *E, *O, *Y]), *M => None; "unrelated")]
     fn test_multiline_overlaps_point(
         multiline: Multiline,
@@ -591,24 +591,24 @@ mod tests {
     #[test_case(Multiline([*C, *E, *J]), (*M, *N) => None; "none 01")]
     #[test_case(Multiline([*C, *E, *O]), (*H, *N) => None; "none 02")]
     #[test_case(Multiline([*C, *I, *O]), (*D, *J) => None; "none 03")]
-    #[test_case(Multiline([*C, *E, *O]), (*C, *M) => Some((ne![MultilineOp::Point(0, *C)], ne![SegmentOp::PointAlongSegment(*C, Zero)])); "at point at point 00")]
-    #[test_case(Multiline([*E, *O, *M]), (*E, *C) => Some((ne![MultilineOp::Point(0, *E)], ne![SegmentOp::PointAlongSegment(*E, Zero)])); "at point at point 01")]
-    #[test_case(Multiline([*O, *M, *C]), (*O, *E) => Some((ne![MultilineOp::Point(0, *O)], ne![SegmentOp::PointAlongSegment(*O, Zero)])); "at point at point 02")]
-    #[test_case(Multiline([*C, *I, *O]), (*C, *M) => Some((ne![MultilineOp::Point(0, *C)], ne![SegmentOp::PointAlongSegment(*C, Zero)])); "at point at point 03")]
-    #[test_case(Multiline([*C, *E, *O]), (*M, *C) => Some((ne![MultilineOp::Point(0, *C)], ne![SegmentOp::PointAlongSegment(*C, One)])); "at point at point 04")]
-    #[test_case(Multiline([*E, *O, *M]), (*C, *E) => Some((ne![MultilineOp::Point(0, *E)], ne![SegmentOp::PointAlongSegment(*E, One)])); "at point at point 05")]
-    #[test_case(Multiline([*O, *M, *C]), (*E, *O) => Some((ne![MultilineOp::Point(0, *O)], ne![SegmentOp::PointAlongSegment(*O, One)])); "at point at point 06")]
-    #[test_case(Multiline([*C, *I, *O]), (*M, *C) => Some((ne![MultilineOp::Point(0, *C)], ne![SegmentOp::PointAlongSegment(*C, One)])); "at point at point 07")]
-    #[test_case(Multiline([*D, *I, *N]), (*C, *E) => Some((ne![MultilineOp::Point(0, *D)], ne![SegmentOp::PointAlongSegment(*D, Val(0.5))])); "at point at point 08")]
-    #[test_case(Multiline([*H, *I, *J]), (*M, *C) => Some((ne![MultilineOp::Point(0, *H)], ne![SegmentOp::PointAlongSegment(*H, Val(0.5))])); "at point at point 09")]
-    #[test_case(Multiline([*D, *I, *N]), (*I, *J) => Some((ne![MultilineOp::Point(1, *I)], ne![SegmentOp::PointAlongSegment(*I, Zero)])); "at point at point 10")]
-    #[test_case(Multiline([*D, *I, *N]), (*H, *I) => Some((ne![MultilineOp::Point(1, *I)], ne![SegmentOp::PointAlongSegment(*I, One)])); "at point at point 11")]
-    #[test_case(Multiline([*D, *I, *N]), (*H, *J) => Some((ne![MultilineOp::Point(1, *I)], ne![SegmentOp::PointAlongSegment(*I, Val(0.5))])); "at point at point 12")]
-    #[test_case(Multiline([*D, *I, *N]), (*N, *O) => Some((ne![MultilineOp::Point(2, *N)], ne![SegmentOp::PointAlongSegment(*N, Zero)])); "at point at point 13")]
-    #[test_case(Multiline([*D, *I, *N]), (*M, *N) => Some((ne![MultilineOp::Point(2, *N)], ne![SegmentOp::PointAlongSegment(*N, One)])); "at point at point 14")]
-    #[test_case(Multiline([*D, *I, *N]), (*M, *O) => Some((ne![MultilineOp::Point(2, *N)], ne![SegmentOp::PointAlongSegment(*N, Val(0.5))])); "at point at point 15")]
-    #[test_case(Multiline([*C, *E, *O]), (*C, *O) => Some((ne![MultilineOp::Point(0, *C), MultilineOp::Point(2, *O) ], ne![ SegmentOp::PointAlongSegment(*C, Zero), SegmentOp::PointAlongSegment(*O, One)])); "segment bookends 1")]
-    #[test_case(Multiline([*C, *E, *O]), (*D, *J) => Some((ne![MultilineOp::PointAlongSegmentOf(0, *D, Val(0.5)), MultilineOp::PointAlongSegmentOf(1, *J, Val(0.5)) ], ne![ SegmentOp::PointAlongSegment(*D, Zero), SegmentOp::PointAlongSegment(*J, One)])); "segment bookends 2")]
+    #[test_case(Multiline([*C, *E, *O]), (*C, *M) => Some((ne![MultilineOp::Point(0, *C)], ne![SegmentOp::Point(*C, Zero)])); "at point at point 00")]
+    #[test_case(Multiline([*E, *O, *M]), (*E, *C) => Some((ne![MultilineOp::Point(0, *E)], ne![SegmentOp::Point(*E, Zero)])); "at point at point 01")]
+    #[test_case(Multiline([*O, *M, *C]), (*O, *E) => Some((ne![MultilineOp::Point(0, *O)], ne![SegmentOp::Point(*O, Zero)])); "at point at point 02")]
+    #[test_case(Multiline([*C, *I, *O]), (*C, *M) => Some((ne![MultilineOp::Point(0, *C)], ne![SegmentOp::Point(*C, Zero)])); "at point at point 03")]
+    #[test_case(Multiline([*C, *E, *O]), (*M, *C) => Some((ne![MultilineOp::Point(0, *C)], ne![SegmentOp::Point(*C, One)])); "at point at point 04")]
+    #[test_case(Multiline([*E, *O, *M]), (*C, *E) => Some((ne![MultilineOp::Point(0, *E)], ne![SegmentOp::Point(*E, One)])); "at point at point 05")]
+    #[test_case(Multiline([*O, *M, *C]), (*E, *O) => Some((ne![MultilineOp::Point(0, *O)], ne![SegmentOp::Point(*O, One)])); "at point at point 06")]
+    #[test_case(Multiline([*C, *I, *O]), (*M, *C) => Some((ne![MultilineOp::Point(0, *C)], ne![SegmentOp::Point(*C, One)])); "at point at point 07")]
+    #[test_case(Multiline([*D, *I, *N]), (*C, *E) => Some((ne![MultilineOp::Point(0, *D)], ne![SegmentOp::Point(*D, Val(0.5))])); "at point at point 08")]
+    #[test_case(Multiline([*H, *I, *J]), (*M, *C) => Some((ne![MultilineOp::Point(0, *H)], ne![SegmentOp::Point(*H, Val(0.5))])); "at point at point 09")]
+    #[test_case(Multiline([*D, *I, *N]), (*I, *J) => Some((ne![MultilineOp::Point(1, *I)], ne![SegmentOp::Point(*I, Zero)])); "at point at point 10")]
+    #[test_case(Multiline([*D, *I, *N]), (*H, *I) => Some((ne![MultilineOp::Point(1, *I)], ne![SegmentOp::Point(*I, One)])); "at point at point 11")]
+    #[test_case(Multiline([*D, *I, *N]), (*H, *J) => Some((ne![MultilineOp::Point(1, *I)], ne![SegmentOp::Point(*I, Val(0.5))])); "at point at point 12")]
+    #[test_case(Multiline([*D, *I, *N]), (*N, *O) => Some((ne![MultilineOp::Point(2, *N)], ne![SegmentOp::Point(*N, Zero)])); "at point at point 13")]
+    #[test_case(Multiline([*D, *I, *N]), (*M, *N) => Some((ne![MultilineOp::Point(2, *N)], ne![SegmentOp::Point(*N, One)])); "at point at point 14")]
+    #[test_case(Multiline([*D, *I, *N]), (*M, *O) => Some((ne![MultilineOp::Point(2, *N)], ne![SegmentOp::Point(*N, Val(0.5))])); "at point at point 15")]
+    #[test_case(Multiline([*C, *E, *O]), (*C, *O) => Some((ne![MultilineOp::Point(0, *C), MultilineOp::Point(2, *O) ], ne![ SegmentOp::Point(*C, Zero), SegmentOp::Point(*O, One)])); "segment bookends 1")]
+    #[test_case(Multiline([*C, *E, *O]), (*D, *J) => Some((ne![MultilineOp::PointAlongSegment(0, *D, Val(0.5)), MultilineOp::PointAlongSegment(1, *J, Val(0.5)) ], ne![ SegmentOp::Point(*D, Zero), SegmentOp::Point(*J, One)])); "segment bookends 2")]
     #[test_case(Multiline([*C, *D, *E]), (*C, *D) => Some((ne![MultilineOp::EntireSubsegment(0)], ne![SegmentOp::Entire])); "partial collision")]
     #[test_case(Multiline([*C, *D, *E]), (*D, *C) => Some((ne![MultilineOp::EntireSubsegment(0)], ne![SegmentOp::Entire])); "partial collision 02")]
     #[test_case(Multiline([*C, *D, *E]), (*D, *E) => Some((ne![MultilineOp::EntireSubsegment(1)], ne![SegmentOp::Entire])); "partial collision 03")]
@@ -617,12 +617,12 @@ mod tests {
     #[test_case(Multiline([*C, *D, *E]), (*E, *C) => Some((ne![MultilineOp::Entire], ne![ SegmentOp::Entire ])); "total collision 01 flip")]
     #[test_case(Multiline([*C, *D, *E]), (Point(0.5,2), Point(1.5,2)) => Some(( ne![ MultilineOp::SubsegmentOf(0, Segment(Point(0.5,2),Point(1,2))), MultilineOp::SubsegmentOf(1, Segment(Point(1,2), Point(1.5,2))) ], ne![SegmentOp::Entire])); "total collision half shift 01")]
     #[test_case(Multiline([*C, *D, *E]), (Point(1.5,2), Point(0.5,2)) => Some(( ne![ MultilineOp::SubsegmentOf(0, Segment(Point(0.5,2),Point(1,2))), MultilineOp::SubsegmentOf(1, Segment(Point(1,2), Point(1.5,2))) ], ne![SegmentOp::Entire])); "total collision half shift 01 flip")]
-    #[test_case(Multiline([*H, *J, *O]), (*D, *N) => Some((ne![MultilineOp::PointAlongSegmentOf(0, *I, Val(0.5))], ne![SegmentOp::PointAlongSegment(*I, Val(0.5))])); "at point on segment at point on segment 00")]
-    #[test_case(Multiline([*H, *J, *O]), (*I, *N) => Some((ne![MultilineOp::PointAlongSegmentOf(0, *I, Val(0.5))], ne![SegmentOp::PointAlongSegment(*I, Zero)])); "at point on segment at point on segment 01")]
-    #[test_case(Multiline([*H, *J, *O]), (*D, *I) => Some((ne![MultilineOp::PointAlongSegmentOf(0, *I, Val(0.5))], ne![SegmentOp::PointAlongSegment(*I, One)])); "at point on segment at point on segment 02")]
-    #[test_case(Multiline([*M, *H, *J]), (*D, *N) => Some((ne![MultilineOp::PointAlongSegmentOf(1, *I, Val(0.5))], ne![SegmentOp::PointAlongSegment(*I, Val(0.5))])); "at point on segment at point on segment 03")]
-    #[test_case(Multiline([*M, *H, *J]), (*I, *N) => Some((ne![MultilineOp::PointAlongSegmentOf(1, *I, Val(0.5))], ne![SegmentOp::PointAlongSegment(*I, Zero)])); "at point on segment at point on segment 04")]
-    #[test_case(Multiline([*M, *H, *J]), (*D, *I) => Some((ne![MultilineOp::PointAlongSegmentOf(1, *I, Val(0.5))], ne![SegmentOp::PointAlongSegment(*I, One)])); "at point on segment at point on segment 05")]
+    #[test_case(Multiline([*H, *J, *O]), (*D, *N) => Some((ne![MultilineOp::PointAlongSegment(0, *I, Val(0.5))], ne![SegmentOp::Point(*I, Val(0.5))])); "at point on segment at point on segment 00")]
+    #[test_case(Multiline([*H, *J, *O]), (*I, *N) => Some((ne![MultilineOp::PointAlongSegment(0, *I, Val(0.5))], ne![SegmentOp::Point(*I, Zero)])); "at point on segment at point on segment 01")]
+    #[test_case(Multiline([*H, *J, *O]), (*D, *I) => Some((ne![MultilineOp::PointAlongSegment(0, *I, Val(0.5))], ne![SegmentOp::Point(*I, One)])); "at point on segment at point on segment 02")]
+    #[test_case(Multiline([*M, *H, *J]), (*D, *N) => Some((ne![MultilineOp::PointAlongSegment(1, *I, Val(0.5))], ne![SegmentOp::Point(*I, Val(0.5))])); "at point on segment at point on segment 03")]
+    #[test_case(Multiline([*M, *H, *J]), (*I, *N) => Some((ne![MultilineOp::PointAlongSegment(1, *I, Val(0.5))], ne![SegmentOp::Point(*I, Zero)])); "at point on segment at point on segment 04")]
+    #[test_case(Multiline([*M, *H, *J]), (*D, *I) => Some((ne![MultilineOp::PointAlongSegment(1, *I, Val(0.5))], ne![SegmentOp::Point(*I, One)])); "at point on segment at point on segment 05")]
     fn test_multiline_overlaps_segment(
         ml: Multiline,
         sg: impl Into<Segment>,
@@ -638,7 +638,7 @@ mod tests {
     #[test_case(Multiline([*C, *D, *E]), Multiline([*M, *H, *C]) => Some((ne![MultilineOp::Point(0, *C)], ne![MultilineOp::Point(2, *C)])); "AtPoint 0, AtPoint 2")]
     #[test_case(Multiline([*E, *D, *C]), Multiline([*M, *H, *C]) => Some((ne![MultilineOp::Point(2, *C)], ne![MultilineOp::Point(2, *C)])); "AtPoint 2, AtPoint 2")]
     #[test_case(Multiline([*C, *I, *O]), Multiline([*M, *I, *E]) => Some((ne![MultilineOp::Point(1, *I)], ne![MultilineOp::Point(1, *I)])); "AtPoint 1, AtPoint 1")]
-    #[test_case(Multiline([*C, *O]), Multiline([*E, *M]) => Some((ne![MultilineOp::PointAlongSegmentOf(0, *I, Val(0.5))], ne![MultilineOp::PointAlongSegmentOf(0, *I, Val(0.5))])); "crosshairs")]
+    #[test_case(Multiline([*C, *O]), Multiline([*E, *M]) => Some((ne![MultilineOp::PointAlongSegment(0, *I, Val(0.5))], ne![MultilineOp::PointAlongSegment(0, *I, Val(0.5))])); "crosshairs")]
     #[test_case(Multiline([*C, *D, *E]), Multiline([*C, *D, *I]) => Some((ne![MultilineOp::EntireSubsegment(0)], ne![MultilineOp::EntireSubsegment(0)])); "partial collision, entire subsegment 0 0")]
     #[test_case(Multiline([*E, *D, *C]), Multiline([*I, *D, *C]) => Some((ne![MultilineOp::EntireSubsegment(1)], ne![MultilineOp::EntireSubsegment(1)])); "partial collision, entire subsegment 1 1")]
     #[test_case(Multiline([*C, *D, *E]), Multiline([*D, *E, *J]) => Some((ne![MultilineOp::EntireSubsegment(1)], ne![MultilineOp::EntireSubsegment(0)])); "partial collision, entire subsegment 1 0")]
@@ -671,9 +671,9 @@ mod tests {
     // segment begins outside and ends outside and does not pass through
     #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*A, *E), (*E, *A), (*B, *F), (*T, *X), (*O, *J)] => None)]
     // segment begins outside and ends outside and does pass through at a point
-    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*C, *K), (*K, *C)] => Some((ne![PolygonOp::OnPoint(0, *G)], ne![SegmentOp::PointAlongSegment(*G, Val(0.5))])))]
+    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*C, *K), (*K, *C)] => Some((ne![PolygonOp::OnPoint(0, *G)], ne![SegmentOp::Point(*G, Val(0.5))])))]
     // segment begins outside and ends outside and does pass through at two points
-    #[test_case(Polygon([*I, *M, *G, *K, *O]), (*J, *F) => Some((ne![ PolygonOp::OnPoint(0, *I), PolygonOp::OnPoint(2, *G)], ne![SegmentOp::PointAlongSegment(*G, Val(0.75)), SegmentOp::PointAlongSegment(*I, Val(0.25))])))]
+    #[test_case(Polygon([*I, *M, *G, *K, *O]), (*J, *F) => Some((ne![ PolygonOp::OnPoint(0, *I), PolygonOp::OnPoint(2, *G)], ne![SegmentOp::Point(*G, Val(0.75)), SegmentOp::Point(*I, Val(0.25))])))]
     // segment begins outside and ends outside and does pass through along two edges
     #[test_case(Polygon([*T, *N, *M, *H, *B, *F, *X]), (*T, *B) => Some((ne![PolygonOp::EntireEdge(0), PolygonOp::EntireEdge(3)], ne![SegmentOp::Subsegment(Segment(*H, *B)), SegmentOp::Subsegment(Segment(*T, *N))])))]
     // segment begins outside and ends outside and does pass through along an edge
@@ -682,16 +682,16 @@ mod tests {
     // segment begins outside and ends outside and does pass through along two edges
     #[test_case(Polygon([*I, *H, *M, *L, *G, *F, *P, *S]), (*I, *F) => Some((ne![ PolygonOp::EntireEdge(0), PolygonOp::EntireEdge(4) ], ne![ SegmentOp::Subsegment(Segment(*G, *F)), SegmentOp::Subsegment(Segment(*I, *H)) ])))]
     // segment begins outside and ends at point
-    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*A, *G), (*B, *G), (*F, *G)] => Some((ne![PolygonOp::OnPoint(0, *G)], ne![SegmentOp::PointAlongSegment(*G, One)])))]
-    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*D, *I), (*E, *I), (*J, *I)] => Some((ne![PolygonOp::OnPoint(3, *I)], ne![SegmentOp::PointAlongSegment(*I, One)])))]
-    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*U, *Q), (*P, *Q), (*V, *Q)] => Some((ne![PolygonOp::OnPoint(1, *Q)], ne![SegmentOp::PointAlongSegment(*Q, One)])))]
+    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*A, *G), (*B, *G), (*F, *G)] => Some((ne![PolygonOp::OnPoint(0, *G)], ne![SegmentOp::Point(*G, One)])))]
+    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*D, *I), (*E, *I), (*J, *I)] => Some((ne![PolygonOp::OnPoint(3, *I)], ne![SegmentOp::Point(*I, One)])))]
+    #[test_matrix([Polygon([*G, *Q, *S, *I])], [(*U, *Q), (*P, *Q), (*V, *Q)] => Some((ne![PolygonOp::OnPoint(1, *Q)], ne![SegmentOp::Point(*Q, One)])))]
     // segment begins outside and ends on an edge
-    #[test_matrix([Polygon([*I, *G, *Q, *S])], [(*C, *H), (*B, *H), (*D, *H)] => Some((ne![PolygonOp::PointAlongEdge(0, *H, Val(0.5))], ne![SegmentOp::PointAlongSegment(*H, One)])))]
+    #[test_matrix([Polygon([*I, *G, *Q, *S])], [(*C, *H), (*B, *H), (*D, *H)] => Some((ne![PolygonOp::PointAlongEdge(0, *H, Val(0.5))], ne![SegmentOp::Point(*H, One)])))]
     // segment begins outside and ends inside
     #[test_case(Polygon([*I, *G, *Q, *S]), (*C, *M) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*H, *M))], ne![SegmentOp::Subsegment(Segment(*H, *M))])))]
     #[test_case(Polygon([*I, *G, *Q, *S]), (*E, *M) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *M))], ne![SegmentOp::Subsegment(Segment(*I, *M))])))]
     // segment begins at a point and ends outside
-    #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *J) => Some((ne![PolygonOp::OnPoint(0, *I)], ne![SegmentOp::PointAlongSegment(*I, Zero)])))]
+    #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *J) => Some((ne![PolygonOp::OnPoint(0, *I)], ne![SegmentOp::Point(*I, Zero)])))]
     // segment begins at a point and ends outside and passes totally through the polygon
     #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *U) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *Q))], ne![SegmentOp::Subsegment(Segment(*I, *Q))])))]
     // segment begins at a point and ends at a point
@@ -701,7 +701,7 @@ mod tests {
     // segment begins at a point and ends inside
     #[test_case(Polygon([*I, *G, *Q, *S]), (*I, *M) => Some((ne![PolygonOp::SegmentWithinArea(Segment(*I, *M))], ne![SegmentOp::Entire])))]
     // segment begins on an edge and ends outside
-    #[test_case(Polygon([*I, *G, *Q, *S]), (*N, *O) => Some((ne![PolygonOp::PointAlongEdge(3, *N, Val(0.5))], ne![SegmentOp::PointAlongSegment(*N, Zero)])))]
+    #[test_case(Polygon([*I, *G, *Q, *S]), (*N, *O) => Some((ne![PolygonOp::PointAlongEdge(3, *N, Val(0.5))], ne![SegmentOp::Point(*N, Zero)])))]
     // segment begins on an edge and ends at a point
     #[test_case(Polygon([*I, *G, *Q, *S]), (*N, *I) => Some((ne![PolygonOp::SubsegmentOfEdge(3, Segment(*N, *I))], ne![SegmentOp::Entire])))]
     // segment begins on an edge and ends on an edge
@@ -730,7 +730,7 @@ mod tests {
     // multiline begins outside, pivots outside, and ends outside. intersects along edge of polygon
     #[test_case( Polygon([*I, *G, *Q, *S]), Multiline([*A, *F, *J]) => Some(( ne![PolygonOp::EntireEdge(0)], ne![MultilineOp::SubsegmentOf(1, Segment(*I, *G))])))]
     // multiline begins outside, pivots outside, and ends outside. intersects through one point of polygon
-    #[test_case( Polygon([*I, *G, *Q, *S]), Multiline([*A, *C, *K]) => Some(( ne![PolygonOp::OnPoint(1, *G)], ne![MultilineOp::PointAlongSegmentOf(1, *G, Val(0.5))])))]
+    #[test_case( Polygon([*I, *G, *Q, *S]), Multiline([*A, *C, *K]) => Some(( ne![PolygonOp::OnPoint(1, *G)], ne![MultilineOp::PointAlongSegment(1, *G, Val(0.5))])))]
     // multiline begins outside, pivots outside, and ends outside. intersects through two points of polygon
     #[test_case( Polygon([*I, *G, *Q, *S]), Multiline([*E, *A, *Y]) => Some(( ne![PolygonOp::SegmentWithinArea(Segment(*G, *S))], ne![MultilineOp::SubsegmentOf(1, Segment(*G, *S))])))]
     // multiline begins outside, pivots outside, and ends on a point. no intersections
