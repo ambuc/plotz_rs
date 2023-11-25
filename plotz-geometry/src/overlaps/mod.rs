@@ -845,6 +845,21 @@ mod tests {
             ne![MultilineOp::EntireSubsegment(1)],
         ))
     )]
+    // multiline begins outside, pivots on a point, and ends on an edge.
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]), Multiline([*B, *G, *H])
+        => Some((
+            ne![PolygonOp::SubsegmentOfEdge(0, Segment(*G, *H))],
+            ne![MultilineOp::EntireSubsegment(1)],
+        ))
+    )]
+    #[test_case(
+        Polygon([*I, *G, *Q, *S]), Multiline([*B, *G, *N])
+        => Some((
+            ne![PolygonOp::SegmentWithinArea(Segment(*G, *N))],
+            ne![MultilineOp::EntireSubsegment(1)],
+        ))
+    )]
     //           ^ (y)
     //           |
     //   a . b . c . d . e
@@ -858,14 +873,6 @@ mod tests {
     //   u . v . w . x . y
     //           |
     //           v
-    // multiline begins outside, pivots on a point, and ends on an edge.
-    #[test_case(
-        Polygon([*I, *G, *Q, *S]), Multiline([*B, *G, *H])
-        => Some((
-            ne![PolygonOp::SubsegmentOfEdge(0, Segment(*G, *H))],
-            ne![MultilineOp::EntireSubsegment(1)],
-        ))
-    )]
     // multiline begins outside, pivots on a point, and ends inside.
     // multiline begins outside, pivots on an edge, and ends outside.
     // multiline begins outside, pivots on an edge, and ends on a point.
