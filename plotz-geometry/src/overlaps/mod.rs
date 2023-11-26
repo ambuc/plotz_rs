@@ -20,7 +20,7 @@ use crate::{
 };
 use anyhow::{anyhow, Result};
 use float_cmp::approx_eq;
-use nonempty::NonEmpty;
+use nonempty::{nonempty, NonEmpty};
 
 //           || pt | sg | ml | ca |
 // ==========++====+====+====+====+==
@@ -464,10 +464,41 @@ pub fn polygon_overlaps_multiline(
 }
 
 pub fn polygon_overlaps_polygon(
-    _pg1: &Polygon,
-    _pg2: &Polygon,
+    pg1: &Polygon,
+    pg2: &Polygon,
 ) -> Result<Option<(NonEmpty<PolygonOp>, NonEmpty<PolygonOp>)>> {
-    unimplemented!()
+    if pg1 == pg2 {
+        return Ok(Some((
+            nonempty![PolygonOp::Entire],
+            nonempty![PolygonOp::Entire],
+        )));
+    }
+
+    // so basically, i am very dumb
+    // but
+    // what if a polygon were just a multiline which also uh
+    // had area
+
+    let mut pg1_ops_set = PolygonOpSet::new(/*original=*/ pg1);
+    let mut pg2_ops_set = PolygonOpSet::new(/*original=*/ pg2);
+
+    let ml1: Multiline = (*pg1).clone().into();
+    let ml2: Multiline = (*pg2).clone().into();
+
+    if let Some((ml1_ops, ml2_ops)) = multiline_overlaps_multiline(&ml1, &ml2)? {
+        for ml1_op in ml1_ops.into_iter() {
+            pg1_ops_set.add(PolygonOp::from_multiline_opinion(ml1_op))?;
+        }
+        for ml2_op in ml2_ops.into_iter() {
+            pg2_ops_set.add(PolygonOp::from_multiline_opinion(ml2_op))?;
+        }
+    }
+
+    if let (Some(pg1_ops), Some(pg2_ops)) = (pg1_ops_set.to_nonempty(), pg2_ops_set.to_nonempty()) {
+        Ok(Some((pg1_ops, pg2_ops)))
+    } else {
+        Ok(None)
+    }
 }
 
 #[cfg(test)]
@@ -861,7 +892,7 @@ mod tests {
     #[test_case(
         Polygon([*B, *A, *F, *G]),
         Polygon([*D, *C, *H, *I])
-        => ignore None
+        =>  None
     )]
     fn test_polygon_overlaps_polygon(
         pg1: Result<Polygon>,

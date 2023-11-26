@@ -11,6 +11,8 @@ use anyhow::Result;
 use nonempty::NonEmpty;
 use std::usize;
 
+use super::multiline_opinion::MultilineOp;
+
 #[derive(PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
 pub enum PolygonOp {
     Point(/*point index*/ usize, Point), // on a point of the polygon.
@@ -33,6 +35,16 @@ impl PolygonOp {
             },
             SegmentOp::Subsegment(segment) => PolygonOp::EdgeSubsegment(index, segment),
             SegmentOp::Entire => PolygonOp::Edge(index),
+        }
+    }
+    pub fn from_multiline_opinion(mo: MultilineOp) -> PolygonOp {
+        match mo {
+            MultilineOp::Point(idx, pt) => PolygonOp::Point(idx, pt),
+            MultilineOp::SegmentPoint(idx, pt, pct) => PolygonOp::EdgePoint(idx, pt, pct),
+            MultilineOp::Subsegment(idx, ss) => PolygonOp::EdgeSubsegment(idx, ss),
+            MultilineOp::Segment(idx) => PolygonOp::Edge(idx),
+            MultilineOp::Entire => PolygonOp::Entire,
+            // of course, nothing maps to PolygonOp::{AreaPoint,AreaSegment,SubPolygon}.
         }
     }
     pub fn to_obj(&self, original: &Polygon) -> Obj2 {

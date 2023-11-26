@@ -73,6 +73,12 @@ impl TryFrom<Vec<Point>> for Multiline {
     }
 }
 
+impl From<Polygon> for Multiline {
+    fn from(value: Polygon) -> Self {
+        Multiline(value.pts)
+    }
+}
+
 #[allow(non_snake_case)]
 pub fn Multiline(a: impl IntoIterator<Item = impl Into<Point>>) -> Multiline {
     a.into_iter()
