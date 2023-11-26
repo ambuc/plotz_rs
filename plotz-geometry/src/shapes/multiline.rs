@@ -73,6 +73,22 @@ impl TryFrom<Vec<Point>> for Multiline {
     }
 }
 
+impl TryFrom<&[Point]> for Multiline {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &[Point]) -> Result<Self> {
+        if value.is_empty() {
+            return Err(anyhow!("Prospective ML was empty!"));
+        }
+        if value.first().unwrap() == value.last().unwrap() {
+            return Err(anyhow!("Hey, multilines can't be cycles!"));
+        }
+        Ok(Multiline {
+            pts: value.to_vec(),
+        })
+    }
+}
+
 impl From<Polygon> for Multiline {
     fn from(value: Polygon) -> Self {
         Multiline(value.pts)
