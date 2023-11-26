@@ -474,11 +474,6 @@ pub fn polygon_overlaps_polygon(
         )));
     }
 
-    // so basically, i am very dumb
-    // but
-    // what if a polygon were just a multiline which also uh
-    // had area
-
     let mut pg1_ops_set = PolygonOpSet::new(/*original=*/ pg1);
     let mut pg2_ops_set = PolygonOpSet::new(/*original=*/ pg2);
 
@@ -507,6 +502,7 @@ mod tests {
     use crate::utils::Percent::Val;
     use lazy_static::lazy_static;
     use nonempty::nonempty as ne;
+    use pretty_assertions::assert_eq as pretty_assert_eq;
     use test_case::{test_case, test_matrix};
 
     //           ^ (y)
@@ -600,10 +596,10 @@ mod tests {
         let a = a.into();
         let b = b.into();
         if let Some((o1, o2)) = expectation {
-            assert_eq!(segment_overlaps_segment(&a, &b)?, Some((o1, o2)));
-            assert_eq!(segment_overlaps_segment(&b, &a)?, Some((o2, o1)));
+            pretty_assert_eq!(segment_overlaps_segment(&a, &b)?, Some((o1, o2)));
+            pretty_assert_eq!(segment_overlaps_segment(&b, &a)?, Some((o2, o1)));
         } else {
-            assert_eq!(segment_overlaps_segment(&a, &b)?, expectation);
+            pretty_assert_eq!(segment_overlaps_segment(&a, &b)?, expectation);
         }
         Ok(())
     }
@@ -889,15 +885,14 @@ mod tests {
     //           |
     //           v
 
-    #[test_case(
-        Polygon([*B, *A, *F, *G]),
-        Polygon([*D, *C, *H, *I])
-        =>  None
-    )]
+    #[test_case(Polygon([*B, *A, *F, *G]), Polygon([*D, *C, *H, *I]), None; "no overlap")]
+    #[test_case(Polygon([*B, *A, *F, *G]), Polygon([*B, *A, *F, *G]), Some((ne![PolygonOp::Entire], ne![PolygonOp::Entire])); "entire overlap")]
     fn test_polygon_overlaps_polygon(
         pg1: Result<Polygon>,
         pg2: Result<Polygon>,
-    ) -> Option<(NonEmpty<PolygonOp>, NonEmpty<PolygonOp>)> {
-        polygon_overlaps_polygon(&pg1.unwrap(), &pg2.unwrap()).unwrap()
+        expectation: Option<(NonEmpty<PolygonOp>, NonEmpty<PolygonOp>)>,
+    ) -> Result<()> {
+        pretty_assert_eq!(polygon_overlaps_polygon(&pg1?, &pg2?)?, expectation);
+        Ok(())
     }
 }
