@@ -554,18 +554,23 @@ mod tests {
         point_overlaps_point(&a, &b).unwrap()
     }
 
-    #[test_case((*C, *D), *C => Some((SegmentOp::Point(*C, Zero), *C)); "at start 00")]
-    #[test_case((*C, *D), *D => Some((SegmentOp::Point(*D, One), *D)); "at end 00")]
-    #[test_case((*C, *I), *C => Some((SegmentOp::Point(*C, Zero), *C)); "at start 01")]
-    #[test_case((*C, *I), *I => Some((SegmentOp::Point(*I, One), *I)); "at end 01")]
-    #[test_case((*C, *E), *D => Some((SegmentOp::Point(*D, Val(0.5)), *D)); "halfway along 01")]
-    #[test_case((*C, *O), *I => Some((SegmentOp::Point(*I, Val(0.5)), *I)); "halfway along 02")]
-    #[test_case((*C, *W), *M => Some((SegmentOp::Point(*M, Val(0.5)), *M)); "halfway along 03")]
+    #[test_case((*C, *D), *C, Some((SegmentOp::Point(*C, Zero), *C)); "at start 00")]
+    #[test_case((*C, *D), *D, Some((SegmentOp::Point(*D, One), *D)); "at end 00")]
+    #[test_case((*C, *I), *C, Some((SegmentOp::Point(*C, Zero), *C)); "at start 01")]
+    #[test_case((*C, *I), *I, Some((SegmentOp::Point(*I, One), *I)); "at end 01")]
+    #[test_case((*C, *E), *D, Some((SegmentOp::Point(*D, Val(0.5)), *D)); "halfway along 01")]
+    #[test_case((*C, *O), *I, Some((SegmentOp::Point(*I, Val(0.5)), *I)); "halfway along 02")]
+    #[test_case((*C, *W), *M, Some((SegmentOp::Point(*M, Val(0.5)), *M)); "halfway along 03")]
     fn test_segment_overlaps_point(
         segment: impl Into<Segment>,
         point: Point,
-    ) -> Option<(SegmentOp, Point)> {
-        segment_overlaps_point(&segment.into(), &point).unwrap()
+        expectation: Option<(SegmentOp, Point)>,
+    ) -> Result<()> {
+        pretty_assert_eq!(
+            segment_overlaps_point(&segment.into(), &point)?,
+            expectation
+        );
+        Ok(())
     }
 
     #[test_case((*C, *D), (*C, *D), Some((SegmentOp::Entire, SegmentOp::Entire)); "same 00")]
